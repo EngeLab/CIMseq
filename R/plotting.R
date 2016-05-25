@@ -23,11 +23,11 @@ setMethod("plotErccFraq", c("Counts", "missing"), function(x, y, ...)
     geom_jitter()
 })
 
+
 #' @rdname plotMarkers
 #' @export
 setGeneric("plotMarkers", function(x, y, ...
 ){ standardGeneric("plotMarkers") })
-
 
 #' @rdname plotMarkers
 #' @export
