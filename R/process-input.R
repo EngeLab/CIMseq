@@ -2,50 +2,50 @@
 #'@include All-classes.R
 NULL
 
-#' Title
+#' spCounts
 #'
 #' Subtitle
 #'
-#' Description
+#' Imports count and count.ercc data to a sp.scRNAseq object.
 #'
-#' @name importCounts
-#' @rdname importCounts
-#' @aliases importCounts
+#' @name spCounts
+#' @rdname spCounts
+#' @aliases spCounts
 #' @param counts Counts matrix with samples as columns and genes as rows.
 #' @param ... additional arguments to pass on
-#' @return The importCounts function returns an object of class counts
+#' @return The spCounts function returns an object of class spCounts.
 #' @author Jason T. Serviss
-#' @keywords importCounts
+#' @keywords spCounts
 #' @examples
 #'
 #' #use demo data
 #' data(Doublet_project_data)
 #'
 #' #run function
-#' counts.log <- norm.log.counts(counts)
+#'
 #'
 NULL
 
-#' @rdname importCounts
+#' @rdname spCounts
 #' @export
 
-setGeneric("importCounts", function(counts, ...
-){ standardGeneric("importCounts") })
+setGeneric("spCounts", function(counts, ...
+){ standardGeneric("spCounts") })
 
-#' @rdname importCounts
+#' @rdname spCounts
 #' @export
-setMethod("importCounts", "matrix",
+setMethod("spCounts", "matrix",
 function(
     counts,
     counts.ercc,
-    multID = '1000102901',
+    sampleType = '1000102901',
     ...
 ){
-    new("Counts",
+    new("spCounts",
         counts=counts,
         counts.log=.norm.log.counts(counts),
         counts.ercc=counts.ercc,
-        multID=.sampleType(multID)
+        sampleType=.sampleType(sampleType)
     )
 })
 
@@ -56,24 +56,24 @@ function(
     counts.log <- log2(counts.norm)
 }
 
-.sampleType <- function(multID) {
+.sampleType <- function(sampleType) {
     dbl <- rep("Singlet", length=length(colnames(counts)))
-    dbl[grepl(multID, colnames(counts))] <- "Doublet"
+    dbl[grepl(sampleType, colnames(counts))] <- "Doublet"
     return(dbl)
 }
 
-#' Title
+#' Filter Cells
 #'
 #' Select a cutoff for bad cells based on actin expression.
 #'
-#' Description
+#' A method to filter low quality cells from the analysis.
 #'
 #' @name filterCells
 #' @rdname filterCells
 #' @aliases filterCells
 #' @param x Dataset of class Counts.
-#' @param quantile.cut
-#' @param gene.name
+#' @param quantile.cut "p" argument to qnorm.
+#' @param gene.name Gene to filter on.
 #' @param ... additional arguments to pass on
 #' @return The filterCells function returns an object of class Counts.
 #' @author Jason T. Serviss
@@ -97,7 +97,7 @@ setGeneric("filterCells", function(x, ...
 
 #' @rdname filterCells
 #' @export
-setMethod("filterCells", "Counts",
+setMethod("filterCells", "spCounts",
     function(
         x,
         quantile.cut = 0.001,

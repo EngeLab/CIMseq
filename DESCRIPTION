@@ -1,13 +1,34 @@
 Package: sp.scRNAseq
 Title: What the Package Does (one line, title case)
 Version: 0.0.0.9000
-Authors@R: Jason T. Serviss
+Author: Jason T. Serviss
 Description: What the package does (one paragraph).
-Depends: R (>= 3.3.0)
-Imports: RColorBrewer, ggplot2, rgl, mclust, optimx, tsne 
-Suggests: knitr, rmarkdown, testthat, BiocStyle
+Depends:
+    R (>= 3.3.0)
+Imports:
+    RColorBrewer,
+    ggplot2,
+    rgl,
+    mclust,
+    optimx,
+    tsne
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat,
+    BiocStyle
 VignetteBuilder: knitr
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: no
+Collate:
+    'sp.scRNAseq-package.R'
+    'All-classes.R'
+    'expData.R'
+    'initialize-methods.R'
+    'plotting.R'
+    'process-input.R'
+    'show-methods.R'
+    'unsupervised.R'
+RoxygenNote: 5.0.1

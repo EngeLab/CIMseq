@@ -33,6 +33,6 @@ NULL
         }
     }
 }
-#' @rdname pcp
+#' @rdname spCounts
 #' @export
-setMethod("show", "Counts", function(object){ .showCounts(object) })
+setMethod("show", "spCounts", function(object){ .showCounts(object) })

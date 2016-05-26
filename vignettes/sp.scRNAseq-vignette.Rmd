@@ -1,58 +1,120 @@
 ---
-title: "Vignette Title"
-author: "Vignette Author"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
+title: "sp.scRNAseq Vignette"
+author: "Jason T. Serviss"
+date: '`r Sys.Date()`'
+output:
+    html_document:
+        theme: flatly
+        toc: yes
+        code_folding: hide
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+    %\VignetteIndexEntry{ClusterSignificance Vignette} 
+    %\VignetteEngine{knitr::rmarkdown} 
+    %\usepackage[utf8]{inputenc}
+    %\SweaveUTF8
 ---
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+<style>
+    .col2 {
+        columns: 2 200px;         /* number of columns and width in pixels*/
+        -webkit-columns: 2 200px; /* chrome, safari */
+        -moz-columns: 2 200px;    /* firefox */
+    }
+</style>
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+```{r style, echo = FALSE, results = 'asis'}
+BiocStyle::markdown()
 
-## Vignette Info
-
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
-
-## Styles
-
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
-
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
-
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
+##Introduction
+Interaction maps from incompletely dissociated primary tissue
+Advances in singlecell
+biology has enabled us to investigate isolated single cells at an
+unprecedented resolution. Current methods can measure subtle changes in cell state, revealing
+specialized minor subpopulations within a cell type. However, functional characterization of such
+subpopulations is still challenging. A promising approach to untangling functional
+characterization is spatial transcriptomics, where genomewide
+measurements of gene
+expression are enriched with spatial attributes. Such approaches allow us to determine the
+relative positions of cell subpopulations. Unfortunately, current spatial transcriptomic
+approaches suffer either from problems with sensitivity, are limited to a restricted panel of
+genes, or the spatial attributes are of low resolution.
+In order to deconvolute the cell connectome, we sort multiplets of incompletely dissociated cells
+along with single cells from the same sample. The single cells provide a set of blueprints of
+possible subcell
+types, and subsequently we machine learning approaches to infer the
+composition of multiplets. Using this method we can measure the composition of a very large
+number of multiplets onto a lattice consisting of subcell
+types of arbitrary complexity.
 
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
+## ERCC counts 
+```{r erccPlot, fig.align='center', fig.width=12, fig.height=10}
+library(sp.scRNAseq)
+data(expData)
+plotErccFrac(expData)
 ```
 
-Also a quote using `>`:
+## Markers {.tabset}
+### INS and GCG
+```{r marker1, fig.align='center', fig.width=12, fig.height=10}
+plotMarkers(expData, marker1='INS', marker2='GCG')
+```
 
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
+No INS/GCG doublets
+
+### INS and THY1
+```{r marker2, fig.align='center', fig.width=12, fig.height=10}
+plotMarkers(expData, marker1='INS', marker2='THY1')
+```
+
+Only doublets, should be bona fide... These might be an interesting subpopulation to check out
+
+### GCG and THY1
+```{r marker3, fig.align='center', fig.width=12, fig.height=10}
+plotMarkers(expData, marker1='GCG', marker2='THY1')
+```
+
+Also interesting
+
+### INS and NEUROG3
+```{r marker4, fig.align='center', fig.width=12, fig.height=10}
+plotMarkers(expData, marker1='INS', marker2='NEUROG3')
+```
+
+Frequently coexpressed in single cells
+
+### NEUROG3 and THY1
+```{r marker5, fig.align='center', fig.width=12, fig.height=10}
+plotMarkers(expData, marker1='NEUROG3', marker2='THY1')
+```
+
+One doublet neurogenin+ / mesenchymal cells.
+
+### FLT1 and THY1
+```{r marker6, fig.align='center', fig.width=12, fig.height=10}
+plotMarkers(expData, marker1='FLT1', marker2='THY1')
+```
+
+Endothelial / Mesenchymal doublets
+
+### EPCAM and THY1
+```{r marker7, fig.align='center', fig.width=12, fig.height=10}
+plotMarkers(expData, marker1='EPCAM', marker2='THY1')
+```
+
+Epithelial / Mesenchymal doublets
+
+### PROM1 and THY1
+```{r marker8, fig.align='center', fig.width=12, fig.height=10}
+plotMarkers(expData, marker1='PROM1', marker2='THY1')
+```
+
+Ductal / Mesenchymal doublets
+
+### PROM1 and FLT1
+```{r marker9, fig.align='center', fig.width=12, fig.height=10}
+plotMarkers(expData, marker1='PROM1', marker2='FLT1')
+```
+
+Ductal / Endothelial doublets

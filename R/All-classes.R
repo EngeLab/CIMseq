@@ -1,23 +1,22 @@
-#'@include sp.scRNAseq-package.R
+#' @include sp.scRNAseq-package.R
 NULL
 
-#' @rdname counts
+#' @rdname spCounts
 #' @export
-.Counts <- setClass("Counts", representation(
+.Counts <- setClass("spCounts", representation(
     counts="matrix",
     counts.log="matrix",
     counts.ercc="matrix",
-    multID="character"
+    sampleType="character"
 ))
 
-
-#' @rdname counts
+#' @rdname spCounts
 setGeneric("getData", function(x, ...
 ){ standardGeneric("getData") })
 
-#' @rdname counts
+#' @rdname spCounts
 #' @export
-setMethod("getData", "Counts", function(x, n=NULL)
+setMethod("getData", "spCounts", function(x, n=NULL)
 {
     if(class(n)=="character"){
         slot(x,n)
