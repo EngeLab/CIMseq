@@ -27,7 +27,7 @@ NULL
 #' @rdname run.tsne
 #' @export
 
-setGeneric("run.tsne", function("spCounts", ...
+setGeneric("run.tsne", function(x, ...
 ){ standardGeneric("run.tsne") })
 
 

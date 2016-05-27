@@ -2,101 +2,84 @@
 #'@include All-classes.R
 NULL
 
-#' Plot Ercc Fraction
+#' spPlot
 #'
 #' Subtitle
 #'
 #' Imports count and count.ercc data to a sp.scRNAseq object.
 #'
-#' @name plotErccFrac
-#' @rdname plotErccFrac
-#' @aliases plotErccFrac
-#' @param counts Counts object.
-#' @param ... Additional arguments to pass on
-#' @return Ercc fraction plot.
+#' @name spPlot
+#' @rdname spPlot
+#' @aliases spPlot
+#' @param counts Counts matrix with samples as columns and genes as rows.
+#' @param type Can be "ercc", "markers", or .......
+#' @param markers A character vector with 2 markers to plot.
+#' @param ... additional arguments to pass on
+#' @return The spPlot function returns an object of class spCounts.
 #' @author Jason T. Serviss
-#' @keywords plotErccFrac
+#' @keywords spPlot
 #' @examples
 #'
 #' #use demo data
 #' data(Doublet_project_data)
 #'
 #' #run function
-#' plotErccFrac(expData)
+#' spPlot(x, type="ercc")
 #'
 NULL
 
-#' @rdname plotErccFrac
+#' @rdname spPlot
 #' @export
 
-setGeneric("plotErccFrac", function(x, ...
-){ standardGeneric("plotErccFrac") })
+setGeneric("spPlot", function(counts, ...
+){ standardGeneric("spPlot") })
 
-
-#' @rdname plotErccFrac
+#' @rdname spPlot
 #' @export
 #' @import ggplot2
 
-setMethod("plotErccFrac", "spCounts", function(x, ...)
-{
+setMethod("spPlot", "spCounts", function(
+    counts,
+    type,
+    markers = NULL,
+    ...
+){
+    if( type == "ercc" ) {
+        p <- .erccPlot(counts)
+        p
+        return(p)
+    }
+    if( type == "markers" ) {
+        p <- .markersPlot(counts, markers)
+        p
+        return(p)
+    }
+})
+
+.erccPlot <- function(x) {
     counts <- getData(x, "counts")
     counts.ercc <- getData(x, "counts.ercc")
     groups <- getData(x, "sampleType")
     frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
     d <- data.frame(sampleType = groups, frac.ercc=frac.ercc)
-    ggplot(d, aes(x=sampleType, y=frac.ercc))+
+    
+    p <- ggplot(d, aes(x=sampleType, y=frac.ercc))+
     geom_jitter()
-})
+    
+    return(p)
+}
 
-#' Plot Markers
-#'
-#' Subtitle
-#'
-#' Imports count and count.ercc data to a sp.scRNAseq object.
-#'
-#' @name plotMarkers
-#' @rdname plotMarkers
-#' @aliases plotMarkers
-#' @param counts Counts object.
-#' @param marker1 Marker to plot on the x-axis.
-#' @param marker2 Marker to plot on the y-axis.
-#' @param ... Additional arguments to pass on
-#' @return Ercc fraction plot.
-#' @author Jason T. Serviss
-#' @keywords plotMarkers
-#' @examples
-#'
-#' #use demo data
-#' data(Doublet_project_data)
-#'
-#' #run function
-#' plotMarkers(expData, marker1="A1BG", marker2="A1CF")
-#'
-NULL
-
-#' @rdname plotMarkers
-#' @export
-setGeneric("plotMarkers", function(x, ...
-){ standardGeneric("plotMarkers") })
-
-#' @rdname plotMarkers
-#' @export
-#' @import ggplot2
-
-setMethod("plotMarkers", "spCounts", function(
-    x,
-    marker1,
-    marker2,
-    ...
-){
+.markersPlot <- function(x, markers) {
     counts.log <- getData(x, "counts.log")
     groups <- getData(x, "sampleType")
     d <- data.frame(
         sampleType = groups,
-        marker1 = counts.log[marker1, ],
-        marker2 = counts.log[marker2, ]
+        marker1 = counts.log[markers[1], ],
+        marker2 = counts.log[markers[2], ]
     )
-    ggplot(d, aes(x=marker1, y=marker2, colour=sampleType))+
+    
+    p <- ggplot(d, aes(x=marker1, y=marker2, colour=sampleType))+
     geom_point()
-})
-
+    
+    return(p)
+}
