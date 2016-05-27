@@ -142,33 +142,34 @@ setMethod("spPlot", "spCounts", function(
 setMethod("spPlot", "spUnsupervised", function(
     x,
     type,
-    markers,
+    markers = NULL,
     ...
 ){
     if( type == "clusters" ) {
-        p <- .spClustersPlot(spUnsupervised)
+        p <- .spClustersPlot(x)
         p
         return(p)
     }
     if( type == "markers" ) {
-        p <- .spMarkersPlot(counts, markers)
+        p <- .spMarkersPlot(x, markers)
         p
         return(p)
     }
 })
 
-.spClustersPlot <- function() {
-    tsne <- getData(spUnsupervised, "tsne")
-    mclust <- getData(spUnsupervised, "mclust")
+.spClustersPlot <- function(x) {
+    
+    tsne <- getData(x, "tsne")
+    mclust <- getData(x, "mclust")
     classification <- mclust$classification
     
-    d <- cbind(as.data.frame(tsne[ ,1:2]), class=classification)
+    d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
     
-    p <- ggplot(d, aes(x=1, y=2, colours=class))+
+    p <- ggplot(d, aes(x=V1, y=V2, colour=factor(classification)))+
     geom_point()
 }
 
-.spMarkersPlot <- function() {
+.spMarkersPlot <- function(spUnsupervised) {
     
 }
 
