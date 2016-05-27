@@ -111,6 +111,7 @@ setMethod("filterCells", "spCounts",
     cl.act.sd <- sqrt(sum((cl.act[cl.act > cl.act.m] - cl.act.m)^2)/(sum(cl.act  > cl.act.m)-1))
     my.cut <- qnorm(p=quantile.cut, mean=cl.act.m, sd=cl.act.sd)
     good.cells <- counts.log['ACTB',] > my.cut
+    
     x@counts <- counts[ ,good.cells]
     x@counts.log <- counts.log[ ,good.cells]
     return(x)

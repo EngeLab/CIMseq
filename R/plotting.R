@@ -31,7 +31,7 @@ NULL
 #' @rdname spPlot
 #' @export
 
-setGeneric("spPlot", function(counts, ...
+setGeneric("spPlot", function(x, ...
 ){ standardGeneric("spPlot") })
 
 #' @rdname spPlot
@@ -40,7 +40,7 @@ setGeneric("spPlot", function(counts, ...
 #' @importFrom ggthemes theme_few scale_colour_economist
 
 setMethod("spPlot", "spCounts", function(
-    counts,
+    x,
     type,
     markers = NULL,
     ...
@@ -134,8 +134,43 @@ setMethod("spPlot", "spCounts", function(
 }
 
 
+#' @rdname spPlot
+#' @export
+#' @import ggplot2
+#' @importFrom ggthemes theme_few scale_colour_economist
 
+setMethod("spPlot", "spUnsupervised", function(
+    x,
+    type,
+    markers,
+    ...
+){
+    if( type == "clusters" ) {
+        p <- .spClustersPlot(spUnsupervised)
+        p
+        return(p)
+    }
+    if( type == "markers" ) {
+        p <- .spMarkersPlot(counts, markers)
+        p
+        return(p)
+    }
+})
 
+.spClustersPlot <- function() {
+    tsne <- getData(spUnsupervised, "tsne")
+    mclust <- getData(spUnsupervised, "mclust")
+    classification <- mclust$classification
+    
+    d <- cbind(as.data.frame(tsne[ ,1:2]), class=classification)
+    
+    p <- ggplot(d, aes(x=1, y=2, colours=class))+
+    geom_point()
+}
+
+.spMarkersPlot <- function() {
+    
+}
 
 
 

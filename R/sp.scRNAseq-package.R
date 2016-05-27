@@ -15,7 +15,5 @@
 #' @import methods
 #' @import ggplot2
 #'
-#' @importFrom mclust Mclust
-#'
 NULL
 

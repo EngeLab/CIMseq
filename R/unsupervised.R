@@ -34,19 +34,30 @@ setGeneric("spUnsupervised", function(spCounts, ...
 #' @rdname spUnsupervised
 #' @export
 #' @importFrom tsne tsne
+#' @importFrom mclust Mclust
 
 setMethod("spUnsupervised", "spCounts", function(
     spCounts,
-    plot.callback,
-    k = 3,
-    max_iter = 5000,
-    perplexity = 30,
+    max = 2000,
+    plot.callback = NULL,
+    k = 2,
+    max_iter = 10000,
+    perplexity = 10,
     initial_dims = 50,
+    Gmax = 50,
     ...
 ){
-    counts.log <- getData(counts.log)
+    counts.log <- getData(spCounts, "counts.log")
+    sampleType <- getData(spCounts, "sampleType")
     maxs <- order(apply(counts.log, 1, max), decreasing=T)
-    my.dist <- as.dist(1-cor(2^counts.log[maxs[1:2000], ], method="p"))
+    my.dist <- as.dist(
+        1-cor(
+            2^counts.log[maxs[1:max],
+            sampleType != "Doublets"],
+            method="p")
+    )
+    
+    set.seed(3)
     my.tsne <- tsne(
         my.dist,
         k = k,
@@ -57,6 +68,12 @@ setMethod("spUnsupervised", "spCounts", function(
         ...
     )
     rownames(my.tsne) <- rownames(my.dist)
+    mod1 <- Mclust(my.tsne, G=1:Gmax)
+    
+    new("spUnsupervised",
+        counts.log=counts.log,
+        dist=as.matrix(my.dist),
+        tsne=my.tsne,
+        mclust=unclass(mod1)
+    )
 })
-
-

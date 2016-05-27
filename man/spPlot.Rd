@@ -4,20 +4,23 @@
 \name{spPlot}
 \alias{spPlot}
 \alias{spPlot,spCounts-method}
+\alias{spPlot,spUnsupervised-method}
 \title{spPlot}
 \usage{
-spPlot(counts, ...)
+spPlot(x, ...)
 
-\S4method{spPlot}{spCounts}(counts, type, markers = NULL, ...)
+\S4method{spPlot}{spCounts}(x, type, markers = NULL, ...)
+
+\S4method{spPlot}{spUnsupervised}(x, type, markers, ...)
 }
 \arguments{
-\item{counts}{Counts matrix with samples as columns and genes as rows.}
-
 \item{...}{additional arguments to pass on}
 
 \item{type}{Can be "ercc", "markers", or .......}
 
 \item{markers}{A character vector with 2 markers to plot.}
+
+\item{counts}{Counts matrix with samples as columns and genes as rows.}
 }
 \value{
 The spPlot function returns an object of class spCounts.

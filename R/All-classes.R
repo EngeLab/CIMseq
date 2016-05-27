@@ -29,12 +29,10 @@ setMethod("getData", "spCounts", function(x, n=NULL)
 .Counts <- setClass("spUnsupervised", representation(
     counts.log="matrix",
     dist="matrix",
-    tsne="matrix"
+    tsne="matrix",
+    mclust="list"
 ))
 
-#' @rdname spUnsupervised
-setGeneric("getData", function(x, ...
-){ standardGeneric("getData") })
 
 #' @rdname spUnsupervised
 #' @export

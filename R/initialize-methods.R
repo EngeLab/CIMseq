@@ -30,13 +30,15 @@ setMethod("initialize","spUnsupervised", function(
     ...,
     counts.log,
     dist,
-    tsne
+    tsne,
+    mclust
 ){
     callNextMethod(
-    .Object,
-    ...,
-    counts.log = counts.log,
-    dist = dist,
-    tsne = tsne
+        .Object,
+        ...,
+        counts.log = counts.log,
+        dist = dist,
+        tsne = tsne,
+        mclust = mclust
     )
 })
