@@ -21,3 +21,22 @@ setMethod("initialize","spCounts", function(
         sampleType = sampleType
     )
 })
+
+#' @rdname spUnsupervised
+#' @export
+
+setMethod("initialize","spUnsupervised", function(
+    .Object,
+    ...,
+    counts.log,
+    dist,
+    tsne
+){
+    callNextMethod(
+    .Object,
+    ...,
+    counts.log = counts.log,
+    dist = dist,
+    tsne = tsne
+    )
+})

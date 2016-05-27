@@ -16,6 +16,10 @@ getData(x, ...)
 
 \S4method{getData}{spCounts}(x, n = NULL)
 
+getData(x, ...)
+
+\S4method{getData}{spCounts}(x, n = NULL)
+
 \S4method{initialize}{spCounts}(.Object, ..., counts, counts.log, counts.ercc,
   sampleType)
 

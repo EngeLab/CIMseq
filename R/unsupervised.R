@@ -8,14 +8,14 @@ NULL
 #'
 #' Imports count and count.ercc data to a sp.scRNAseq object.
 #'
-#' @name run.tsne
-#' @rdname run.tsne
-#' @aliases run.tsne
+#' @name spUnsupervised
+#' @rdname spUnsupervised
+#' @aliases spUnsupervised
 #' @param counts Counts object.
 #' @param ... Additional arguments to pass on
 #' @return Ercc fraction plot.
 #' @author Jason T. Serviss
-#' @keywords run.tsne
+#' @keywords spUnsupervised
 #' @examples
 #'
 #' #use demo data
@@ -24,19 +24,19 @@ NULL
 #'
 NULL
 
-#' @rdname run.tsne
+#' @rdname spUnsupervised
 #' @export
 
-setGeneric("run.tsne", function(x, ...
-){ standardGeneric("run.tsne") })
+setGeneric("spUnsupervised", function(spCounts, ...
+){ standardGeneric("spUnsupervised") })
 
 
-#' @rdname run.tsne
+#' @rdname spUnsupervised
 #' @export
 #' @importFrom tsne tsne
 
-setMethod("run.tsne", "spCounts", function(
-    x,
+setMethod("spUnsupervised", "spCounts", function(
+    spCounts,
     plot.callback,
     k = 3,
     max_iter = 5000,

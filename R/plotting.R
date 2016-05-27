@@ -37,6 +37,7 @@ setGeneric("spPlot", function(counts, ...
 #' @rdname spPlot
 #' @export
 #' @import ggplot2
+#' @importFrom ggthemes theme_few scale_colour_economist
 
 setMethod("spPlot", "spCounts", function(
     counts,
@@ -64,7 +65,31 @@ setMethod("spPlot", "spCounts", function(
     d <- data.frame(sampleType = groups, frac.ercc=frac.ercc)
     
     p <- ggplot(d, aes(x=sampleType, y=frac.ercc))+
-    geom_jitter()
+    geom_jitter()+
+    labs(
+        x="Sample type",
+        y="Fraction of ERCC",
+        title="Fraction ERCC in singlets/doublets"
+    )+
+    scale_colour_economist()+
+    theme_few()+
+    theme(
+        legend.position="top",
+        legend.title=element_blank(),
+        legend.text=element_text(size=15),
+        axis.title=element_text(size=17),
+        axis.text=element_text(size=15),
+        plot.title=element_text(
+            hjust=0.5,
+            family="Arial",
+            face="bold",
+            size=24,
+            margin=margin(b=15)
+        )
+    )+
+    guides(
+        colour=guide_legend(override.aes=list(size=5))
+    )
     
     return(p)
 }
@@ -79,7 +104,47 @@ setMethod("spPlot", "spCounts", function(
     )
     
     p <- ggplot(d, aes(x=marker1, y=marker2, colour=sampleType))+
-    geom_point()
+    geom_point(size=5, alpha=0.7)+
+    labs(
+        x=paste("log2( Normalized counts: ", markers[1], " )", sep=""),
+        y=paste("log2( Normalized counts: ", markers[2], " )", sep=""),
+        title="Cell Identity Markers"
+    )+
+    scale_colour_economist(name="sampleType")+
+    theme_few()+
+    theme(
+        legend.position="top",
+        legend.title=element_blank(),
+        legend.text=element_text(size=15),
+        axis.title=element_text(size=17),
+        axis.text=element_text(size=15),
+        plot.title=element_text(
+            hjust=0.5,
+            family="Arial",
+            face="bold",
+            size=24,
+            margin=margin(b=15)
+        )
+    )+
+    guides(
+        colour=guide_legend(override.aes=list(size=5))
+    )
     
     return(p)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
