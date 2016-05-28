@@ -46,12 +46,12 @@ setMethod("spPlot", "spCounts", function(
     ...
 ){
     if( type == "ercc" ) {
-        p <- .erccPlot(counts)
+        p <- .erccPlot(x)
         p
         return(p)
     }
     if( type == "markers" ) {
-        p <- .markersPlot(counts, markers)
+        p <- .markersPlot(x, markers)
         p
         return(p)
     }
@@ -166,7 +166,31 @@ setMethod("spPlot", "spUnsupervised", function(
     d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
     
     p <- ggplot(d, aes(x=V1, y=V2, colour=factor(classification)))+
-    geom_point()
+    geom_point()+
+    labs(
+        x="Dim 1",
+        y="Dim 2",
+        title="Clusters"
+    )+
+    scale_colour_economist(name="sampleType")+
+    theme_few()+
+    theme(
+        legend.position="top",
+        legend.title=element_blank(),
+        legend.text=element_text(size=15),
+        axis.title=element_text(size=17),
+        axis.text=element_text(size=15),
+        plot.title=element_text(
+            hjust=0.5,
+            family="Arial",
+            face="bold",
+            size=24,
+            margin=margin(b=15)
+        )
+    )+
+    guides(
+        colour=guide_legend(override.aes=list(size=5))
+    )
 }
 
 .spMarkersPlot <- function(spUnsupervised) {

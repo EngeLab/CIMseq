@@ -24,6 +24,8 @@ vignette: >
 
 ```{r style, echo = FALSE, results = 'asis'}
 BiocStyle::markdown()
+knitr::opts_chunk$set(fig.align='center', fig.width=8, fig.height=6)
+library(mclust)
 ```
 
 ##Introduction
@@ -48,71 +50,71 @@ number of multiplets onto a lattice consisting of subcell
 types of arbitrary complexity.
 
 ## ERCC counts 
-```{r erccPlot, fig.align='center', fig.width=12, fig.height=10}
+```{r erccPlot}
 library(sp.scRNAseq)
 data(expData)
 spPlot(expData, type="ercc")
 ```
 
-## Markers {.tabset}
+## Cellular identity markers {.tabset}
 ### INS and GCG
-```{r marker1, fig.align='center', fig.width=12, fig.height=10}
+```{r marker1}
 spPlot(expData, type="markers", markers=c('INS', 'GCG'))
 ```
 
 No INS/GCG doublets
 
 ### INS and THY1
-```{r marker2, fig.align='center', fig.width=12, fig.height=10}
+```{r marker2}
 spPlot(expData, type="markers", markers=c('INS', 'THY1'))
 ```
 
 Only doublets, should be bona fide... These might be an interesting subpopulation to check out
 
 ### GCG and THY1
-```{r marker3, fig.align='center', fig.width=12, fig.height=10}
+```{r marker3}
 spPlot(expData, type="markers", markers=c('GCG', 'THY1'))
 ```
 
 Also interesting
 
 ### INS and NEUROG3
-```{r marker4, fig.align='center', fig.width=12, fig.height=10}
+```{r marker4}
 spPlot(expData, type="markers", markers=c('INS', 'NEUROG3'))
 ```
 
 Frequently coexpressed in single cells
 
 ### NEUROG3 and THY1
-```{r marker5, fig.align='center', fig.width=12, fig.height=10}
+```{r marker5}
 spPlot(expData, type="markers", markers=c('NEUROG3', 'THY1'))
 ```
 
 One doublet neurogenin+ / mesenchymal cells.
 
 ### FLT1 and THY1
-```{r marker6, fig.align='center', fig.width=12, fig.height=10}
+```{r marker6}
 spPlot(expData, type="markers", markers=c('FLT1', 'THY1'))
 ```
 
 Endothelial / Mesenchymal doublets
 
 ### EPCAM and THY1
-```{r marker7, fig.align='center', fig.width=12, fig.height=10}
+```{r marker7}
 spPlot(expData, type="markers", markers=c('EPCAM', 'THY1'))
 ```
 
 Epithelial / Mesenchymal doublets
 
 ### PROM1 and THY1
-```{r marker8, fig.align='center', fig.width=12, fig.height=10}
+```{r marker8}
 spPlot(expData, type="markers", markers=c('PROM1', 'THY1'))
 ```
 
 Ductal / Mesenchymal doublets
 
 ### PROM1 and FLT1
-```{r marker9, fig.align='center', fig.width=12, fig.height=10}
+```{r marker9}
 spPlot(expData, type="markers", markers=c('PROM1', 'FLT1'))
 ```
 
@@ -123,3 +125,9 @@ Ductal / Endothelial doublets
 
 
 <br></br><br></br>
+
+## Single cell unsupervised ML
+```{r unsupervised, echo=FALSE, message=FALSE}
+scGroups <- spUnsupervised(expData, max_iter=10000)
+spPlot(scGroups, type="clusters")
+```

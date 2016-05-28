@@ -34,7 +34,7 @@ setGeneric("spUnsupervised", function(spCounts, ...
 #' @rdname spUnsupervised
 #' @export
 #' @importFrom tsne tsne
-#' @importFrom mclust Mclust
+#' @importFrom mclust Mclust mclustBIC
 
 setMethod("spUnsupervised", "spCounts", function(
     spCounts,
@@ -45,6 +45,7 @@ setMethod("spUnsupervised", "spCounts", function(
     perplexity = 10,
     initial_dims = 50,
     Gmax = 50,
+    seed = 11,
     ...
 ){
     counts.log <- getData(spCounts, "counts.log")
@@ -57,7 +58,7 @@ setMethod("spUnsupervised", "spCounts", function(
             method="p")
     )
     
-    set.seed(3)
+    set.seed(seed)
     my.tsne <- tsne(
         my.dist,
         k = k,
@@ -68,6 +69,8 @@ setMethod("spUnsupervised", "spCounts", function(
         ...
     )
     rownames(my.tsne) <- rownames(my.dist)
+    
+    set.seed(seed)
     mod1 <- Mclust(my.tsne, G=1:Gmax)
     
     new("spUnsupervised",
