@@ -11,7 +11,7 @@ spPlot(x, ...)
 
 \S4method{spPlot}{spCounts}(x, type, markers = NULL, ...)
 
-\S4method{spPlot}{spUnsupervised}(x, type, markers, ...)
+\S4method{spPlot}{spUnsupervised}(x, type, markers = NULL, ...)
 }
 \arguments{
 \item{...}{additional arguments to pass on}

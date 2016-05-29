@@ -50,11 +50,11 @@ setMethod("spUnsupervised", "spCounts", function(
 ){
     counts.log <- getData(spCounts, "counts.log")
     sampleType <- getData(spCounts, "sampleType")
-    maxs <- order(apply(counts.log, 1, max), decreasing=T)
+    maxs <- order(apply(counts.log, 1, max), decreasing=T) ##use feature selection here instead of highest expressed?
     my.dist <- as.dist(
         1-cor(
             2^counts.log[maxs[1:max],
-            sampleType != "Doublets"],
+            sampleType != "Doublet"],
             method="p")
     )
     

@@ -22,7 +22,7 @@ spUnsupervised(spCounts, ...)
 
 \S4method{spUnsupervised}{spCounts}(spCounts, max = 2000,
   plot.callback = NULL, k = 2, max_iter = 10000, perplexity = 10,
-  initial_dims = 50, Gmax = 50, ...)
+  initial_dims = 50, Gmax = 50, seed = 11, ...)
 }
 \arguments{
 \item{...}{Additional arguments to pass on}

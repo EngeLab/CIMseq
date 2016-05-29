@@ -11,7 +11,8 @@ Imports:
     rgl,
     mclust,
     optimx,
-    tsne
+    tsne,
+    caret
 Suggests:
     knitr,
     rmarkdown,
@@ -30,5 +31,6 @@ Collate:
     'plotting.R'
     'process-input.R'
     'show-methods.R'
+    'supervised.R'
     'unsupervised.R'
 RoxygenNote: 5.0.1
