@@ -100,9 +100,28 @@ h2o.confusionMatrix(m2, valid=TRUE)  # get confusion matrix in the validation da
 
 
 library('sp.scRNAseq')
+
+##try combining single cells to doublets
+sampleType <- getData(expData, "sampleType")
+counts <- getData(expData, "counts")
+counts.log <- getData(expData, "counts.log")
 scGroups <- spUnsupervised(expData)
 mclust <- getData(scGroups, "mclust")
 classification <- mclust$classification
+
+
+sngG1 <- counts.log[ ,sampleType=="Singlet" & classification == 2]
+sngG2 <- counts.log[ ,sampleType=="Singlet" & classification == 11]
+
+data <- data.frame(
+    one = rowMeans(cbind(sng[,1], sng[,2])),
+    two = rowMeans(cbind(sng[,3], sng[,4])),
+    three = rowMeans(cbind(sng[,5], sng[,6])),
+    four = rowMeans(cbind(sng[,7], sng[,8])),
+    five = rowMeans(cbind(sng[,9], sng[,10])),
+    six = rowMeans(cbind(sng[,11], sng[,12]))
+)
+
 
 counts.log <- getData(expData, "counts.log")
 sampleType <- getData(expData, "sampleType")

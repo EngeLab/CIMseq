@@ -9,7 +9,7 @@ setMethod("show", "spCounts", function(object){ .showCounts(object) })
 .showCounts <- function(object
 ){
     names <- slotNames(object)
-    cat("Class:","Counts\n")
+    cat("Class:","spCounts\n")
     cat("Contains: \n")
     for(i in 1:length(names)){
         cat(paste(i,". ", names[i], "\n",sep=""))
@@ -31,7 +31,7 @@ setMethod("show", "spUnsupervised", function(object){ .showUnsupervised(object) 
 .showUnsupervised <- function(object
 ){
     names <- slotNames(object)
-    cat("Class:","Counts\n")
+    cat("Class:","spUnsupervised\n")
     cat("Contains: \n")
     for(i in 1:length(names)){
         

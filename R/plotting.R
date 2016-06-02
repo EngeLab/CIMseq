@@ -164,6 +164,7 @@ setMethod("spPlot", "spUnsupervised", function(
     classification <- mclust$classification
     
     d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
+    colors <- .setColors()
     
     p <- ggplot(d, aes(x=V1, y=V2, colour=factor(classification)))+
     geom_point()+
@@ -172,7 +173,7 @@ setMethod("spPlot", "spUnsupervised", function(
         y="Dim 2",
         title="Clusters"
     )+
-    scale_colour_economist(name="sampleType")+
+    scale_colour_manual(name="sampleType", values=colors)+
     theme_few()+
     theme(
         legend.position="top",
@@ -193,18 +194,51 @@ setMethod("spPlot", "spUnsupervised", function(
     )
 }
 
-.spMarkersPlot <- function(spUnsupervised) {
+.spMarkersPlot <- function(x, markers) {
+    markers <- c("EPCAM", "THY1", "FLT1", "INS", "GCG", "NEUROG3", "PROM1", "SST")
+
+    tsne <- getData(x, "tsne")
+    counts.log <- getData(expData, "counts.log")
+    sampleType <- getData(expData, "sampleType")
     
+    colors <- .setColors()
+    targets <- colors[1:length(markers)]
+    values <- counts.log[markers, ]
+    
+    cols <- col.from.targets(targets, values)
+    
+    cex=1
+    rim.modifier=0.85
+    plot(tsne, col="black", pch=19, cex=cex)
+    points(tsne, col=cols, pch=19, cex=cex*rim.modifier)
+    legend("bottomright", legend=markers, fill=colors)
+
+    
+}
+
+col.from.targets <- function(targets, values) {
+    
+    v <- t(apply(values, 1, function(x) {(x-min(x))/(max(x)-min(x))}))
+    fractions <- apply(v, 2, function(x) {x/sum(x)})
+    fractions[is.nan(fractions)] <- 1.0/(dim(fractions)[1])
+    
+    targets.rgb <- col2rgb(targets)
+    res <- vector("character", length=length(targets))
+    
+    for(i in 1:(dim(values)[2])) {
+        mytarget.rgb <- 255-t(apply(targets.rgb, 1, function(x) {(255-x) * v[,i]}))
+        mytarget.rgb <- rowSums(t(apply(mytarget.rgb, 1, function(x) {x * fractions[,i]})))
+        res[i] <- rgb(red=mytarget.rgb['red']/256, green=mytarget.rgb['green']/256, blue=mytarget.rgb['blue']/256)
+    }
+    return(res)
 }
 
 
 
-
-
-
-
-
-
+.setColors <- function() {
+    colors <- c('#0075DC', '#005C31', '#4C005C', '#2BCE48', '#FFCC99', '#808080', '#94FFB5', '#8F7C00', '#9DCC00', '#C20088', '#003380', '#FFA405', '#FFA8BB', '#426600', '#FF0010', '#5EF1F2', '#00998F', '#E0FF66', '#740AFF', '#990000', '#FFFF80', '#FFFF00', '#FF5005', '#993D59', '#00FFEF', '#FF6440', '#CC1D14', '#40FF6C', '#893D99', '#4800FF', '#FFDD40', '#CC9914', '#993D3D', '#CCCA14', '#3D996E', '#993D3D', '#191919')
+    return(colors)
+}
 
 
 
