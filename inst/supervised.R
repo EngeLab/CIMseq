@@ -1,158 +1,117 @@
+data(expData)
+data(unsupervised)
 
-spSupervised <- function(scGroups) {
-    tsne <- getData(scGroups, "tsne")
-    mclust <- getData(scGroups, "mclust")
-    classification <- mclust$classification
-    tsne <- as.data.frame(tsne)
-    tsne$class <- classification
-    
-    library(caret)
-    inTrain <- createDataPartition(y = tsne$class, p = .75, list = FALSE)
-    training <- tsne[inTrain, ]
-    testing <- tsne[-inTrain, ]
-    testClass <- testing[ ,1:2]
-    testing$class <- NULL
-    
-    set.seed(11)
-    
-    mod1 <- train(rownames(training) ~ .,
-        data = training,
-        method = "nnet",
-        trControl = trainControl(method = "CV", number = 10)
-    )
-    
-    set.seed(11)
+classification <- getData(unsupervised, "mclust")$classification
+counts.log <- getData(expData, "counts.log")
+sampleType <- getData(expData, "sampleType")
+dbl <- counts.log[ ,sampleType == "Doublet"]
+sng <- counts.log[ ,sampleType == "Singlet"]
 
-    mod2 <- train(rownames(training) ~ .,
-        data = training,
-        method = "rbfDDA",
-        trControl = trainControl(method = "CV", number = 10)
-    )
-    
-    grid <-  expand.grid(
-        hidden_dropout = 0,
-        visible_dropout = 0,
-        layer1 = 1:5,
-        layer2 = 1:3,
-        layer3 = 1:3
-    )
-    
-    set.seed(11)
-    
-    mod3 <- train(rownames(training) ~ .,
-        data = training,
-        method = "dnn",
-        trControl = trainControl(method = "CV", number = 10),
-        tuneGrid = grid
-    )
-    
-    mx.set.seed(0)
-    
-    grid <-  expand.grid(
-        hidden_dropout = 0,
-        visible_dropout = 0,
-        layer1 = 1:5,
-        layer2 = 1:5,
-        layer3 = 1:5
-    )
-    
-    traMxnet <- data.matrix(training)
-    
-    mod4 <- train(rownames(training) ~ .,
-        data = training,
-        method = "mx.mlp",
-        trControl = trainControl(method = "CV", number = 10),
-        tuneGrid = grid
-    )
-    
+
+
+.averageGroupExpression <- function(classes, sng) {
+    classes <- unique(classes)
+    means <- lapply(classes, function(x) {
+        ingroup <- classes == x
+        log2(rowMeans(2^sng[,ingroup]))
+    })
+    means <- as.matrix(as.data.frame(means))
+    colnames(means) <- classes
+    return(means)
 }
 
-#mxnet
-#C50 library(C50)
-#R CMD javareconf
-#C4.5 library(RWeka)
-
-#H2O multiclass
-
-library(h2o)
-h2o.init(nthreads=-1, max_mem_size="2G")
-h2o.removeAll()
-D = h2o.importFile(path = normalizePath("covtype.full.csv"))
-h2o.summary(D)
-
-data = h2o.splitFrame(D,ratios=c(.7,.15),destination_frames = c("train","test","valid"))
-names(data) <- c("Train","Test","Valid")
-
-y = "Cover_Type"
-x = names(data$Train)
-x = x[-which(x==y)]
-
-m1 = h2o.glm(training_frame = data$Train, validation_frame = data$Valid, x = x, y = y,family='multinomial',solver='L_BFGS')
-h2o.confusionMatrix(m1, valid=TRUE)
-
-
-m2 = h2o.glm(training_frame = data$Train, validation_frame = data$Valid, x = x, y = y,family='multinomial',solver='L_BFGS', lambda = 0)
-h2o.confusionMatrix(m2, valid=FALSE) # get confusion matrix in the training data
-h2o.confusionMatrix(m2, valid=TRUE)  # get confusion matrix in the validation data
+clusterMeans <- .averageGroupExpression(classification, sng)
+fractions <- rep(1.0/(dim(clusterMeans)[2]), (dim(clusterMeans)[2]))
 
 
 
 
 
-library('sp.scRNAseq')
-
-##try combining single cells to doublets
-sampleType <- getData(expData, "sampleType")
-counts <- getData(expData, "counts")
-counts.log <- getData(expData, "counts.log")
-scGroups <- spUnsupervised(expData)
-mclust <- getData(scGroups, "mclust")
-classification <- mclust$classification
+maxs <- order(apply(counts.log, 1, max), decreasing=T)
+clusterMeans.top2000 <- 2^clusterMeans[maxs[1:2000],]
+dbl.top2000 <- 2^dbl[maxs[1:2000],]
 
 
-sngG1 <- counts.log[ ,sampleType=="Singlet" & classification == 2]
-sngG2 <- counts.log[ ,sampleType=="Singlet" & classification == 11]
-
-data <- data.frame(
-    one = rowMeans(cbind(sng[,1], sng[,2])),
-    two = rowMeans(cbind(sng[,3], sng[,4])),
-    three = rowMeans(cbind(sng[,5], sng[,6])),
-    four = rowMeans(cbind(sng[,7], sng[,8])),
-    five = rowMeans(cbind(sng[,9], sng[,10])),
-    six = rowMeans(cbind(sng[,11], sng[,12]))
-)
+optim.res.all.2 <- lapply(1:(dim(dbl)[2]), function(i) {
+    optimx(par=fractions, fn=dist.to.slice, gr=NULL, cell.types=clusterMeans.top2000, slice=dbl.top2000[,i], method=c("L-BFGS-B"), lower=0.0, upper=1.0)
+})
 
 
+groups.mat <- as.matrix(data.frame(lapply(optim.res.all.2, function(x) {unlist(x[1:12])})))
+heatmap(t(groups.mat), col=colorRampPalette(c("white", "red"))(100), ColSideColors=jet.colors(max(mod1$classification))[unique(mod1$classification)])
+
+dist.to.slice <- function(fractions, cell.types, slice) {
+    a <- make.synthetic.slice(cell.types, fractions)
+    if(any(is.na(a))) {
+        cat("NA in make synthetic slice!\n")
+        cat(paste(fractions, sep="\t"), "\n")
+    }
+    cost <- sum(abs(a - slice))
+    cost
+}
+
+# Distance function for the optimization - could possibly be better.
+dist.to.slice <- function(fractions, cell.types, slice) {
+    
+    tmp <- make.synthetic.slice(cell.types, fractions)
+    fractions <- tmp[[1]]
+    a <- tmp[[2]]
+    if(any(is.na(a))) {
+        cat("NA in make synthetic slice!\n")
+        cat(paste(fractions, sep="\t"), "\n")
+    }
+    cost <- sum(abs(a - slice))
+    cost
+}
+
+# Support function for the optimization
+make.synthetic.slice <- function(cell.types, fractions) {
+    fractions <- fractions/sum(fractions)
+    res <- apply(cell.types, 1, function(x) {sum(x*fractions)})
+    return(list(fractions, res))
+}
+
+##############try with test data
+classification <- getData(unsupervised, "mclust")$classification
 counts.log <- getData(expData, "counts.log")
 sampleType <- getData(expData, "sampleType")
 sng <- counts.log[ ,sampleType == "Singlet"]
-dbl <- counts.log[ , sampleType == "Doublet"]
+
+clusterMeans <- .averageGroupExpression(classification, sng)
+clusterMeans <- clusterMeans[ ,c('4', '7', '8')]
+fractions <- rep(1.0/(dim(clusterMeans)[2]), (dim(clusterMeans)[2]))
+
+maxs <- order(apply(counts.log, 1, max), decreasing=T)
+clusterMeans.top2000 <- 2^clusterMeans[maxs[1:2000],]
+dbl.top2000 <- 2^testData[maxs[1:2000],]
 
 
-sng <- as.data.frame(t(sng))
-sng$class <- as.factor(classification)
-sng.hex <- as.h2o(sng)
+optim.res.all.2 <- lapply(1:(dim(testData)[2]), function(i) {
+    optimx(par=fractions, fn=dist.to.slice, gr=NULL, cell.types=clusterMeans.top2000, slice=dbl.top2000[,i], method=c("L-BFGS-B"), lower=0, upper=1.0)
+})
 
-data = h2o.splitFrame(sng.hex,ratios=c(.7,.15), destination_frames = c("train","test","valid"))
-names(data) <- c("Train", "Test", "Valid")
 
-y = "class"
-x = names(data$Train)
-x = x[-which(x==y)]
+groups.mat <- as.matrix(data.frame(lapply(optim.res.all.2, function(x) {unlist(x[1:3])})))
+colnames(groups.mat) <- colnames(testData)
 
-m1 = h2o.glm(training_frame = data$Train, validation_frame = data$Valid, x = x, y = y, family='multinomial', solver='L_BFGS')
 
-h2o.confusionMatrix(m1, valid=FALSE) # get confusion matrix in the training data
-h2o.confusionMatrix(m1, valid=TRUE)  # get confusion matrix in the validation data
 
-fit = h2o.predict(object = m1, newdata = data$Test)
-as.data.frame(fit)$predict
-as.data.frame(data$Test)$class
 
-dbl <- as.data.frame(t(dbl))
-dbl.hex <- as.h2o(dbl)
-fit2 = h2o.predict(object = m1, newdata = dbl.hex)
-as.data.frame(fit2)$predict
+
+
+
+
+
+##################try slsqp
+
+
+library(nloptr)
+#, lower=0, upper=1.0
+slsqp <- lapply(1:(dim(testData)[2]), function(i) {
+    slsqp(x0=fractions, fn=dist.to.slice, gr=NULL, cell.types=clusterMeans.top2000, slice=dbl.top2000[,i])
+})
+
+
 
 
 

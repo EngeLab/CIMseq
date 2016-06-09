@@ -97,6 +97,7 @@ cell.types <- as.matrix(as.data.frame(lapply(unique(mod1$classification), functi
     ingroup <- mod1$classification == x
     log2(rowMeans(2^counts.log.nodoubles[,ingroup]))
 })))
+colnames(cell.types) <- unique(mod1$classification)
 heatmap(cell.types[maxs[1:2000],], scale = 'none')
 
 # Use optimx to find the combination of cell types that best would approximate the doublet/mutliplet expression data.

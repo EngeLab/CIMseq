@@ -167,7 +167,7 @@ setMethod("spPlot", "spUnsupervised", function(
     colors <- .setColors()
     
     p <- ggplot(d, aes(x=V1, y=V2, colour=factor(classification)))+
-    geom_point()+
+    geom_point(size=3)+
     labs(
         x="Dim 1",
         y="Dim 2",
