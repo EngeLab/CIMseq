@@ -106,18 +106,26 @@ setMethod("filterCells", "spCounts",
 ){
     counts.log <- getData(x, "counts.log")
     counts <- getData(x, "counts")
-    cl.act <- counts.log[gene.name,]
-    cl.act.m <- median(cl.act)
-    cl.act.sd <- sqrt(sum((cl.act[cl.act > cl.act.m] - cl.act.m)^2)/(sum(cl.act  > cl.act.m)-1))
-    my.cut <- qnorm(p=quantile.cut, mean=cl.act.m, sd=cl.act.sd)
-    good.cells <- counts.log['ACTB',] > my.cut
+    counts.ercc <- getData(x, "counts.ercc")
+    sampleType <- getData(x, "sampleType")
+    
+    good.cells <- counts.log['ACTB',] > .get.cutoff.lognorm(counts.log, quantile.cut, gene.name)
     
     x@counts <- counts[ ,good.cells]
     x@counts.log <- counts.log[ ,good.cells]
+    x@counts.ercc <- counts.ercc[ ,good.cells]
+    x@sampleType <- sampleType[good.cells]
+    
     return(x)
 })
 
-
+.get.cutoff.lognorm <- function(my.counts.log, quantile.cut, gene.name) {
+    cl.act <- my.counts.log[gene.name,]
+    cl.act.m <- median(cl.act)
+    cl.act.sd <- sqrt(sum((cl.act[cl.act > cl.act.m] - cl.act.m)^2)/(sum(cl.act  > cl.act.m)-1))
+    my.cut <- qnorm(p=quantile.cut, mean=cl.act.m, sd=cl.act.sd)
+    my.cut
+}
 
 
 

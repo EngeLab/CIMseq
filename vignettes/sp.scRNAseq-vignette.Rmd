@@ -6,7 +6,7 @@ output:
     html_document:
         theme: flatly
         toc: yes
-        code_folding: hide
+        code_folding: show
 vignette: >
     %\VignetteIndexEntry{ClusterSignificance Vignette} 
     %\VignetteEngine{knitr::rmarkdown} 
@@ -25,7 +25,8 @@ vignette: >
 ```{r style, echo = FALSE, results = 'asis'}
 BiocStyle::markdown()
 knitr::opts_chunk$set(fig.align='center', fig.width=8, fig.height=6)
-library(mclust)
+library(sp.scRNAseq)
+library(printr)
 ```
 
 ##Introduction
@@ -49,14 +50,90 @@ composition of multiplets. Using this method we can measure the composition of a
 number of multiplets onto a lattice consisting of subcell
 types of arbitrary complexity.
 
+## Package funcions and pre-analysis processing
+
+```{r, echo=FALSE}
+pathToFiles <- system.file('previousData/Doublet_project_data.rda', package='sp.scRNAseq')
+load(pathToFiles)
+rm(counts.log, groups.mat, optim.res.all.2, pathToFiles)
+```
+
+To begin we must have read count data from both singlet and multuplet samples in a 
+matrix with genes as rows (name indicated by rowname) and samples as columns (name
+indicated by colname). As well, we need the ERCC spike-in counts in the same format
+as the counts.
+
+```{r}
+counts[1:3, 1:3]
+```
+
+```{r}
+counts.ercc[1:3, 1:3]
+```
+
+To begin we want to initialize an object of class spCounts. We accomplish
+this in the following manner:
+
+```{r}
+expData <- spCounts(
+    counts=counts,
+    counts.ercc=counts.ercc,
+    sampleType = '1000102901'
+)
+```
+
+The *sampleType* argument specifies an identifier in the sample names that indicates 
+that the sample is a multuplet (and not a singlet). 
+
+This results in a object of class spCounts with 4 slots. We can view the slots and a
+summary of their contens with the command `show(expData`. The screen output shows 
+that *expData* contains 4 slots; *counts*, *counts.log*, *counts.ercc*, and *sampleType*.
+When the object is initialized the counts.log slot is filled using the internal 
+`.norm.log.counts()` function. In addition, the sampleType slot is now filled with a 
+character vector indicating if each individual sample is a singlet or multuplet.
+
+```{r}
+show(expData)
+```
+
+```{r}
+sp.scRNAseq:::.norm.log.counts
+```
+
+Each slot can be accessed using the `getData()` function shown below:
+
+```{r}
+c <- getData(expData, "counts")
+c[1:3, 1:3]
+```
+
+We next want to filter the samples based on their quality, disregarding samples which
+may be of poor quality and hinder the downstream analysis. We can accomplish this with 
+the `filterCells` function demonstrated below.
+
+```{r}
+expData <- filterCells(expData)
+```
+
+Various types of plots can be generated during the analysis process using the `spPlot()`
+function and specifying the *type* argument dependant on which plot is desired.
+
+<br></br><br></br>
+
 ## ERCC counts 
+
+The ERCC counts can be viewed in each sample type by using the `spPlot()` function and specifying type as *ercc*.
+
 ```{r erccPlot}
-library(sp.scRNAseq)
-data(expData)
 spPlot(expData, type="ercc")
 ```
 
 ## Cellular identity markers {.tabset}
+
+We can also plot cellular markers using the `spPlot()` function using type as *markers*. 
+We also need to use the *markers* argument to identify which 2 markers we are interested
+in plotting. Select the tabs below to see the markers plotted for this dataset.
+
 ### INS and GCG
 ```{r marker1}
 spPlot(expData, type="markers", markers=c('INS', 'GCG'))
@@ -127,7 +204,19 @@ Ductal / Endothelial doublets
 <br></br><br></br>
 
 ## Single cell unsupervised ML
-```{r unsupervised, echo=FALSE, message=FALSE}
-scGroups <- spUnsupervised(expData, max_iter=10000)
-spPlot(scGroups, type="clusters")
+
+We now want to use an unsupervised clustering method to deduce the types of cells present in the single cells. To do this we first utilize the TSNE method to cluster the single cells afterwhich, we utilize the MCLUST package to identify discrete culsters in the results. This can be performed using the command below:
+
+```{r unsupervised, echo=FALSE, message=FALSE, eval=FALSE}
+unsupervised <- spUnsupervised(expData, max_iter=10000)
 ```
+
+The results can be plotted again using the `spPlot()`function and specifying *clusters* as the type argument.
+
+```{r}
+spPlot(unsupervised, type="clusters")
+```
+
+The results indicate that 12 discrete clusters are identified in the singlets. 
+
+## Multuplet identification
