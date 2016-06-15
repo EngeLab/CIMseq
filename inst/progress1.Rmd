@@ -1,0 +1,159 @@
+---
+title: "Progress 1"
+author: "Jason T. Serviss"
+date: '`r Sys.Date()`'
+output:
+    html_document:
+        theme: flatly
+        toc: yes
+---
+
+<style>
+    .col2 {
+        columns: 2 200px;         /* number of columns and width in pixels*/
+        -webkit-columns: 2 200px; /* chrome, safari */
+        -moz-columns: 2 200px;    /* firefox */
+    }
+</style>
+
+```{r style, echo = FALSE, results = 'hide'}
+BiocStyle::markdown()
+library(knitr)
+library(printr)
+library(optimx)
+
+##the function below allows dynamic insertion of the function source code of S3 and S4 methods
+insert_funS3 = function(name) {
+  read_chunk(lines = capture.output(dump(name, '')), labels = paste(name, 'source', sep = '-'))
+}
+insert_funS4 = function(name, signature) {
+  read_chunk(lines = format(getMethod(name, signature)@.Data), labels = paste(name, 'source', sep = '-'))
+}
+```
+
+
+To evaluate the success/failure of specific methods which attempt to deduce cell types in the multuplets, I wanted to create a dataset of multuplets using the single cells. To do this I first used tsne to investigate the "types" of single cells. I did this using the [spUnsupervised][] function (which is basically uses the code you wrote but in a S4 method). The results were then saved to a dataset and are plotted below.   
+
+```{r, fig.align='center', fig.width=8, fig.height=6}
+library(sp.scRNAseq)
+data(unsupervised)
+spPlot(unsupervised, type="clusters")
+```
+
+```{r importAssembleTestData, echo=FALSE}
+pathToFiles <- system.file('testData.R', package='sp.scRNAseq')
+source(pathToFiles)
+```
+
+I used 3 of the groups from the usupervised clustering to combine single cells into multuplets. Groups four, seven, and eight were used since they seemed relativley unique from each other and included a relativley large number of single cells. The final dataset was compiled with the [assembleTestData][] function and includes 3 sets of doublets and 1 set of triplets:
+
+```{r}
+data(testData)
+table(gsub(
+    "([a-zA-Z]*)[0-9]*", 
+    "\\1", 
+    dimnames(testData)[2][[1]]
+))
+```
+
+I then wanted to try different constrained optimization methods to see how well they perform on the dataset. I started using the optimx package as you had previously done to try to get a feeling for what is happening and what I expect as a result. To begin with I selected a subset of the total dataset to examine the outcome.
+
+```{r defineOptimixFunctions, echo=FALSE}
+dist.to.slice <- function(fractions, cell.types, slice) {
+    
+    tmp <- make.synthetic.slice(cell.types, fractions)
+    fractions <- tmp[[1]]
+    a <- tmp[[2]]
+    if(any(is.na(a))) {
+        cat("NA in make synthetic slice!\n")
+        cat(paste(fractions, sep="\t"), "\n")
+    }
+    cost <- sum(abs(a - slice))
+    cost
+}
+
+# Support function for the optimization
+make.synthetic.slice <- function(cell.types, fractions) {
+    fractions <- fractions/sum(fractions)
+    res <- apply(cell.types, 1, function(x) {sum(x*fractions)})
+    return(list(fractions, res))
+}
+
+.averageGroupExpression <- function(classes, sng) {
+    classes <- unique(classes)
+    means <- lapply(classes, function(x) {
+        ingroup <- classes == x
+        log2(rowMeans(2^sng[,ingroup]))
+    })
+    means <- as.matrix(as.data.frame(means))
+    colnames(means) <- classes
+    return(means)
+}
+```
+
+```{r optimix1, eval=TRUE}
+classification <- getData(unsupervised, "mclust")$classification
+counts.log <- getData(expData, "counts.log")
+sampleType <- getData(expData, "sampleType")
+sng <- counts.log[ ,sampleType == "Singlet"]
+
+clusterMeans <- .averageGroupExpression(classification, sng)
+clusterMeans <- clusterMeans[ ,c('4', '7', '8')]
+fractions <- rep(1.0/(dim(clusterMeans)[2]), (dim(clusterMeans)[2]))
+
+maxs <- order(apply(counts.log, 1, max), decreasing=T)
+clusterMeans.top2000 <- 2^clusterMeans[maxs[1:2000],]
+dbl.top2000 <- 2^testData[maxs[1:2000],]
+
+set.seed(3)
+samp <- sample(1:ncol(dbl.top2000), replace=FALSE, size=10)
+dbl.top2000 <- dbl.top2000[ ,samp]
+
+optim.res.all.2 <- lapply(1:(dim(dbl.top2000)[2]), function(i) {
+    optimx(par=fractions, fn=dist.to.slice, gr=NULL, cell.types=clusterMeans.top2000, slice=dbl.top2000[,i], method=c("L-BFGS-B"), lower=0, upper=1.0)
+})
+
+groups.mat <- as.matrix(data.frame(lapply(optim.res.all.2, function(x) {unlist(x[1:3])})))
+colnames(groups.mat) <- colnames(dbl.top2000)
+
+head(groups.mat)
+```
+
+
+## Functions {.tabset}
+
+```{r functionDefinitions, echo=FALSE}
+insert_funS4("spUnsupervised", "spCounts")
+insert_funS4("spPlot", "spUnsupervised")
+insert_funS3("assembleTestData")
+insert_funS3("dist.to.slice")
+insert_funS3("make.synthetic.slice")
+insert_funS3(".averageGroupExpression")
+
+
+```
+
+### spUnsupervised
+```{r spUnsupervised-source, results='hide'}
+```
+
+### spPlot
+```{r spPlot-source, results='hide'}
+```
+
+### assembleTestData
+```{r assembleTestData-source, results='hide'}
+```
+
+### dist.to.slice
+```{r dist.to.slice-source, results='hide'}
+```
+
+### make.synthetic.slice
+```{r make.synthetic.slice-source, results='hide'}
+```
+
+### .averageGroupExpression
+```{r .averageGroupExpression-source, results='hide'}
+```
+
