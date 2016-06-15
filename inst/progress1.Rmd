@@ -59,24 +59,19 @@ table(gsub(
 I then wanted to try different constrained optimization methods to see how well they perform on the dataset. I started using the optimx package as you had previously done to try to get a feeling for what is happening and what I expect as a result. To begin with I selected a subset of the total dataset to examine the outcome.
 
 ```{r defineOptimixFunctions, echo=FALSE}
+make.synthetic.slice <- function(cell.types, fractions) {
+    fractions <- fractions/sum(fractions)
+    res <- apply(cell.types, 1, function(x) {sum(x*fractions)})
+}
+
 dist.to.slice <- function(fractions, cell.types, slice) {
-    
-    tmp <- make.synthetic.slice(cell.types, fractions)
-    fractions <- tmp[[1]]
-    a <- tmp[[2]]
+    a <- make.synthetic.slice(cell.types, fractions)
     if(any(is.na(a))) {
         cat("NA in make synthetic slice!\n")
         cat(paste(fractions, sep="\t"), "\n")
     }
     cost <- sum(abs(a - slice))
     cost
-}
-
-# Support function for the optimization
-make.synthetic.slice <- function(cell.types, fractions) {
-    fractions <- fractions/sum(fractions)
-    res <- apply(cell.types, 1, function(x) {sum(x*fractions)})
-    return(list(fractions, res))
 }
 
 .averageGroupExpression <- function(classes, sng) {
@@ -92,32 +87,55 @@ make.synthetic.slice <- function(cell.types, fractions) {
 ```
 
 ```{r optimix1, eval=TRUE}
+##get relevant data and subset singlets
 classification <- getData(unsupervised, "mclust")$classification
 counts.log <- getData(expData, "counts.log")
 sampleType <- getData(expData, "sampleType")
 sng <- counts.log[ ,sampleType == "Singlet"]
 
+##calculate the average groups xpression and subset groups to be examined
 clusterMeans <- .averageGroupExpression(classification, sng)
 clusterMeans <- clusterMeans[ ,c('4', '7', '8')]
 fractions <- rep(1.0/(dim(clusterMeans)[2]), (dim(clusterMeans)[2]))
 
+##subset highly expressed genes to use
 maxs <- order(apply(counts.log, 1, max), decreasing=T)
-clusterMeans.top2000 <- 2^clusterMeans[maxs[1:2000],]
-dbl.top2000 <- 2^testData[maxs[1:2000],]
+clusterMeans.top2000 <- 2^clusterMeans[maxs[1:1000],]
+dbl.top2000 <- 2^testData[maxs[1:1000],]
 
+##subset a number of the testData examples to use
 set.seed(3)
-samp <- sample(1:ncol(dbl.top2000), replace=FALSE, size=10)
-dbl.top2000 <- dbl.top2000[ ,samp]
+type <- gsub("([a-zA-Z]*)[0-9]*", "\\1", names(testData))
+l <- list(
+    testData[ ,type==unique(type)[1]],
+    testData[ ,type==unique(type)[1]],
+    testData[ ,type==unique(type)[1]],
+    testData[ ,type==unique(type)[1]]
+)
+names(l) <- unique(type)
+set.seed(3)
+l <- lapply(l, function(x) x[,sample(1:ncol(x), replace=FALSE, size=5)])
 
 optim.res.all.2 <- lapply(1:(dim(dbl.top2000)[2]), function(i) {
-    optimx(par=fractions, fn=dist.to.slice, gr=NULL, cell.types=clusterMeans.top2000, slice=dbl.top2000[,i], method=c("L-BFGS-B"), lower=0, upper=1.0)
+    optimx(par=fractions, fn=dist.to.slice, gr=NULL, cell.types=clusterMeans.top2000, slice=dbl.top2000[,i], method=c("L-BFGS-B"), lower=0, upper=1)
 })
 
 groups.mat <- as.matrix(data.frame(lapply(optim.res.all.2, function(x) {unlist(x[1:3])})))
 colnames(groups.mat) <- colnames(dbl.top2000)
+rownames(groups.mat) <- c(4,7,8)
 
-head(groups.mat)
+out <- as.data.frame(groups.mat, row.names = 1:nrow(groups.mat))
+out$groups <- rownames(groups.mat)
+out <- out[order(out$groups), ]
+m <- reshape2::melt(out, id.vars="groups")
+plyr::ddply(m, c("groups", "variable"), summarize, sum=sum(value))
 ```
+
+So first maybe it is best for me to try to describe what I think is happening here...
+
+My understanding of constrined optimization is the following; basically, we are representing something as a mathmatical function and we are trying to, in this case, find the minimum of that function. The function paramaters, in our case, are the fractions of each single cell type that make up the multuplet. The function is equal to the difference between the sum of the observed gene expression values in the different cell types and the gene expression values if the multuplet were an equal combination of all possible cell types. Or more simply stated, the "cost". So, via constrained optimization, we are trying to find the fractions of singlets that explains the multuplet with the minimum cost. The "constrained" part comes from the fact that, since we know some things about the paramaters, we can "constrain" them by saying to the optimization function that the paramaters must "follow these rules".
+
+So for the test dataset there are 3 possible cell types that the multuplet can be comprised of, cell type 4, 7, or 8. So the paramaters we start with are 0.33, 0.33, and 0.33, i.e. each cell type contributes an equal amount to the multuplet. We only use the top 2000 genes with the highest expression and 
 
 
 ## Functions {.tabset}
@@ -136,24 +154,30 @@ insert_funS3(".averageGroupExpression")
 ### spUnsupervised
 ```{r spUnsupervised-source, results='hide'}
 ```
+<br></br>
 
 ### spPlot
 ```{r spPlot-source, results='hide'}
 ```
+<br></br>
 
 ### assembleTestData
 ```{r assembleTestData-source, results='hide'}
 ```
+<br></br>
 
 ### dist.to.slice
 ```{r dist.to.slice-source, results='hide'}
 ```
+<br></br>
 
 ### make.synthetic.slice
 ```{r make.synthetic.slice-source, results='hide'}
 ```
+<br></br>
 
 ### .averageGroupExpression
 ```{r .averageGroupExpression-source, results='hide'}
 ```
+<br></br>
 

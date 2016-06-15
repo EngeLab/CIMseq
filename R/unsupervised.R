@@ -50,6 +50,7 @@ setMethod("spUnsupervised", "spCounts", function(
 ){
     counts.log <- getData(spCounts, "counts.log")
     sampleType <- getData(spCounts, "sampleType")
+    
     maxs <- order(apply(counts.log, 1, max), decreasing=T) ##use feature selection here instead of highest expressed?
     my.dist <- as.dist(
         1-cor(
@@ -80,3 +81,11 @@ setMethod("spUnsupervised", "spCounts", function(
         mclust=unclass(mod1)
     )
 })
+
+.ntopF <- function(data = y, n = ntop) {
+    if(is.numeric(n)){
+        rv = genefilter::rowVars(data)
+        select = order(rv, decreasing=TRUE)[seq_len(min(n, length(rv)))]
+        return(select)
+    }
+}
