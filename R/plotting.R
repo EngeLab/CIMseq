@@ -60,9 +60,9 @@ setMethod("spPlot", "spCounts", function(
 .erccPlot <- function(x) {
     counts <- getData(x, "counts")
     counts.ercc <- getData(x, "counts.ercc")
-    groups <- getData(x, "sampleType")
+    sampleType <- getData(x, "sampleType")
     frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
-    d <- data.frame(sampleType = groups, frac.ercc=frac.ercc)
+    d <- data.frame(sampleType = sampleType, frac.ercc=frac.ercc)
     
     p <- ggplot(d, aes(x=sampleType, y=frac.ercc))+
     geom_jitter()+
@@ -71,7 +71,6 @@ setMethod("spPlot", "spCounts", function(
         y="Fraction of ERCC",
         title="Fraction ERCC in singlets/doublets"
     )+
-    scale_colour_economist()+
     theme_few()+
     theme(
         legend.position="top",
@@ -103,6 +102,7 @@ setMethod("spPlot", "spCounts", function(
         marker2 = counts.log[markers[2], ]
     )
     
+    colors <- .setColors()[1:2]
     p <- ggplot(d, aes(x=marker1, y=marker2, colour=sampleType))+
     geom_point(size=5, alpha=0.7)+
     labs(
@@ -110,7 +110,7 @@ setMethod("spPlot", "spCounts", function(
         y=paste("log2( Normalized counts: ", markers[2], " )", sep=""),
         title="Cell Identity Markers"
     )+
-    scale_colour_economist(name="sampleType")+
+    scale_colour_manual(name="sampleType", values=colors)+
     theme_few()+
     theme(
         legend.position="top",

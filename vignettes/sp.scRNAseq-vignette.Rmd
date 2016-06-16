@@ -1,6 +1,6 @@
 ---
 title: "sp.scRNAseq Vignette"
-author: "Jason T. Serviss"
+author: "Jason T. Serviss and Martin F. Enge"
 date: '`r Sys.Date()`'
 output:
     html_document:
@@ -27,6 +27,15 @@ BiocStyle::markdown()
 knitr::opts_chunk$set(fig.align='center', fig.width=8, fig.height=6)
 library(sp.scRNAseq)
 library(printr)
+library(knitr)
+
+##the function below allows dynamic insertion of the function source code of S3 and S4 methods
+insert_funS3 = function(name) {
+  read_chunk(lines = capture.output(dump(name, '')), labels = paste(name, 'source', sep = '-'))
+}
+insert_funS4 = function(name, signature) {
+  read_chunk(lines = format(getMethod(name, signature)@.Data), labels = paste(name, signature, 'source', sep = '-'))
+}
 ```
 
 ##Introduction
@@ -59,7 +68,7 @@ rm(counts.log, groups.mat, optim.res.all.2, pathToFiles)
 ```
 
 To begin we must have read count data from both singlet and multuplet samples in a 
-matrix with genes as rows (name indicated by rowname) and samples as columns (name
+matrix with genes as rows (gene name indicated by rowname) and samples as columns (sample name
 indicated by colname). As well, we need the ERCC spike-in counts in the same format
 as the counts.
 
@@ -72,7 +81,7 @@ counts.ercc[1:3, 1:3]
 ```
 
 To begin we want to initialize an object of class spCounts. We accomplish
-this in the following manner:
+this with the [spCounts][Functions] function in the following manner:
 
 ```{r}
 expData <- spCounts(
@@ -86,21 +95,20 @@ The *sampleType* argument specifies an identifier in the sample names that indic
 that the sample is a multuplet (and not a singlet). 
 
 This results in a object of class spCounts with 4 slots. We can view the slots and a
-summary of their contens with the command `show(expData`. The screen output shows 
-that *expData* contains 4 slots; *counts*, *counts.log*, *counts.ercc*, and *sampleType*.
-When the object is initialized the counts.log slot is filled using the internal 
-`.norm.log.counts()` function. In addition, the sampleType slot is now filled with a 
-character vector indicating if each individual sample is a singlet or multuplet.
+summary of their contens with the command [show][Functions]. 
+The screen output shows that *expData* contains 4 slots; *counts*, *counts.log*, 
+*counts.ercc*, and *sampleType*. When the object is initialized the counts.log slot 
+is filled using the internal [.norm.log.counts][Functions] function. In addition, 
+the sampleType slot is filled with the [.sampleType][Functions] function and 
+contains a character vector indicating if each individual sample is a singlet 
+or multuplet.
 
 ```{r}
 show(expData)
 ```
 
-```{r}
-sp.scRNAseq:::.norm.log.counts
-```
-
-Each slot can be accessed using the `getData()` function shown below:
+Each slot can be accessed using the [getData][Functions] function 
+shown below:
 
 ```{r}
 c <- getData(expData, "counts")
@@ -109,20 +117,22 @@ c[1:3, 1:3]
 
 We next want to filter the samples based on their quality, disregarding samples which
 may be of poor quality and hinder the downstream analysis. We can accomplish this with 
-the `filterCells` function demonstrated below.
+the [filterCells][Functions] function demonstrated below.
 
 ```{r}
 expData <- filterCells(expData)
 ```
 
-Various types of plots can be generated during the analysis process using the `spPlot()`
-function and specifying the *type* argument dependant on which plot is desired.
+Various types of plots can be generated during the analysis process using the 
+[spPlot][Functions] function and specifying the *type* argument 
+dependant on which plot is desired.
 
 <br></br><br></br>
 
 ## ERCC counts 
 
-The ERCC counts can be viewed in each sample type by using the `spPlot()` function and specifying type as *ercc*.
+The ERCC counts can be viewed in each sample type by using the 
+[spPlot][Functions] function and specifying type as *ercc*.
 
 ```{r erccPlot}
 spPlot(expData, type="ercc")
@@ -130,7 +140,7 @@ spPlot(expData, type="ercc")
 
 ## Cellular identity markers {.tabset}
 
-We can also plot cellular markers using the `spPlot()` function using type as *markers*. 
+We can also plot cellular markers using the [spPlot][Functions] function using type as *markers*. 
 We also need to use the *markers* argument to identify which 2 markers we are interested
 in plotting. Select the tabs below to see the markers plotted for this dataset.
 
@@ -205,18 +215,186 @@ Ductal / Endothelial doublets
 
 ## Single cell unsupervised ML
 
-We now want to use an unsupervised clustering method to deduce the types of cells present in the single cells. To do this we first utilize the TSNE method to cluster the single cells afterwhich, we utilize the MCLUST package to identify discrete culsters in the results. This can be performed using the command below:
+We now want to use an unsupervised clustering method to deduce the types of cells present 
+in the single cells. To do this we first utilize the TSNE method to cluster the single cells 
+afterwhich, we utilize the MCLUST package to identify discrete culsters in the results. This 
+can be performed and the results plotted using the commands below:
 
-```{r unsupervised, echo=FALSE, message=FALSE, eval=FALSE}
-unsupervised <- spUnsupervised(expData, max_iter=10000)
+```{r, echo=FALSE}
+data(unsupervised)
 ```
 
-The results can be plotted again using the `spPlot()`function and specifying *clusters* as the type argument.
+```{r unsupervised, echo=TRUE, message=FALSE, eval=FALSE}
+unsupervised <- spUnsupervised(expData)
+```
 
-```{r}
+```{r clustersPlot}
 spPlot(unsupervised, type="clusters")
 ```
 
-The results indicate that 12 discrete clusters are identified in the singlets. 
+The results indicate that 7 discrete clusters are identified in the singlets. 
 
 ## Multuplet identification
+
+To be continued....
+
+
+## Functions {.tabset}
+
+```{r functions, echo=FALSE}
+#spCounts
+insert_funS4("spCounts", "matrix")
+norm.log.counts <- sp.scRNAseq:::.norm.log.counts
+insert_funS3("norm.log.counts")
+sampleType <- sp.scRNAseq:::.sampleType
+insert_funS3("sampleType")
+
+#show for signature spCounts
+insert_funS4("show", "spCounts")
+showCounts <- sp.scRNAseq:::.showCounts
+insert_funS3("showCounts")
+showMatrix <- sp.scRNAseq:::.showMatrix
+insert_funS3("showMatrix")
+showBasics <- sp.scRNAseq:::.showBasics
+insert_funS3("showBasics")
+
+#show for signature spUnsupervised
+insert_funS4("show", "spUnsupervised")
+showUnsupervised <- sp.scRNAseq:::.showUnsupervised
+insert_funS3("showUnsupervised")
+showList <- sp.scRNAseq:::.showList
+insert_funS3("showList")
+
+#getData for signature spCounts
+insert_funS4("getData", "spCounts")
+
+#getData for signature spCounts
+insert_funS4("getData", "spUnsupervised")
+
+#filterCells
+insert_funS4("filterCells", "spCounts")
+
+#spPlot for signature spCounts
+insert_funS4("spPlot", "spCounts")
+erccPlot <- sp.scRNAseq:::.erccPlot
+insert_funS3("erccPlot")
+markersPlot <- sp.scRNAseq:::.markersPlot
+insert_funS3("markersPlot")
+
+#spPlot for signature spUnsupervised
+insert_funS4("spPlot", "spUnsupervised")
+spClustersPlot <- sp.scRNAseq:::.spClustersPlot
+insert_funS3("spClustersPlot")
+spMarkersPlot <- sp.scRNAseq:::.spClustersPlot
+insert_funS3("spMarkersPlot")
+
+#spUnsupervised
+insert_funS4("spUnsupervised", "spCounts")
+ntopF <- sp.scRNAseq:::.ntopF
+insert_funS3("ntopF")
+
+```
+
+###spCounts
+
+```{r spCounts-source, results='hide'}
+```
+
+**.norm.log.counts**
+```{r norm.log.counts-source, results='hide'}
+```
+
+**.sampleType**
+```{r sampleType-source, results='hide'}
+```
+
+<br></br>
+
+###show
+
+####Signature spCounts
+```{r show-spCounts-source, results='hide'}
+```
+
+**.showCounts**
+```{r showCounts-source, results='hide'}
+```
+
+**.showMatrix**
+```{r showMatrix-source, results='hide'}
+```
+
+**.showBasics**
+```{r showBasics-source, results='hide'}
+```
+
+####Signature spUnsupervised
+```{r show-spUnsupervised-source, results='hide'}
+```
+
+**.showUnsupervised**
+```{r showUnsupervised-source, results='hide'}
+```
+
+**.showList**
+```{r showList-source, results='hide'}
+```
+
+<br></br>
+
+###getData
+
+####Signature spCounts
+```{r getData-spCounts-source, results='hide'}
+```
+
+####Signature spUnsupervised
+```{r getData-spUnsupervised-source, results='hide'}
+```
+
+<br></br>
+
+###filterCells
+```{r filterCells-spCounts-source, results='hide'}
+```
+
+<br></br>
+
+###spPlot
+
+####Signature spCounts
+```{r spPlot-spCounts-source, results='hide'}
+```
+
+**.erccPlot**
+```{r erccPlot-source, results='hide'}
+```
+
+**.markersPlot**
+```{r markersPlot-source, results='hide'}
+```
+
+####Signature spUnsupervised
+
+```{r spPlot-spUnsupervised-source, results='hide'}
+```
+
+**.spClustersPlot**
+```{r spClustersPlot-source, results='hide'}
+```
+
+**.spMarkersPlot**
+```{r spMarkersPlot-source, results='hide'}
+```
+
+<br></br>
+
+###spUnsupervised
+```{r spUnsupervised-spCounts-source, results='hide'}
+```
+
+**.ntopF**
+```{r ntopF-source, results='hide'}
+```
+
+<br></br>

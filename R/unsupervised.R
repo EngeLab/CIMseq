@@ -38,27 +38,42 @@ setGeneric("spUnsupervised", function(spCounts, ...
 
 setMethod("spUnsupervised", "spCounts", function(
     spCounts,
-    max = 2000,
+    max = 3000,
     plot.callback = NULL,
     k = 2,
-    max_iter = 10000,
+    max_iter = 20000,
     perplexity = 10,
     initial_dims = 50,
     Gmax = 50,
-    seed = 11,
+    seed = 33,
+    type = "variance",
     ...
 ){
     counts.log <- getData(spCounts, "counts.log")
     sampleType <- getData(spCounts, "sampleType")
     
-    maxs <- order(apply(counts.log, 1, max), decreasing=T) ##use feature selection here instead of highest expressed?
-    my.dist <- as.dist(
-        1-cor(
-            2^counts.log[maxs[1:max],
-            sampleType != "Doublet"],
-            method="p")
-    )
+    if(type == "variance") {
+        select <- .ntopF(counts.log[ ,sampleType=="Singlet"], max)
+        
+        my.dist <- as.dist(
+            1-cor(
+                2^counts.log[select, sampleType == "Singlet"],
+                method="p"
+            )
+        )
+    }
     
+    if(type == "max") {
+        maxs <- order(apply(counts.log, 1, max), decreasing=T)
+        my.dist <- as.dist(
+            1-cor(
+                2^counts.log[maxs[1:max],
+                sampleType != "Doublet"],
+                method="p")
+        )
+    }
+
+
     set.seed(seed)
     my.tsne <- tsne(
         my.dist,
