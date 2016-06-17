@@ -45,8 +45,8 @@ setMethod("spUnsupervised", "spCounts", function(
     perplexity = 10,
     initial_dims = 50,
     Gmax = 50,
-    seed = 33,
-    type = "variance",
+    seed = 11,
+    type = "max",
     ...
 ){
     counts.log <- getData(spCounts, "counts.log")
