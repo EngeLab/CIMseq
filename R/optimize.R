@@ -58,7 +58,7 @@ function(
     #maxs <- order(apply(counts.log, 1, max), decreasing=T)
     maxs <- order(apply(counts.log, 1, var), decreasing=T)
     cellTypes <- 2^clusterMeans[maxs[1:2000],]
-    slice <- 2^testData[maxs[1:2000],]
+    slice <- 2^testData2[maxs[1:2000],]
     
     ##run pySwarm
     .defineImport(cellTypes, slice, fractions)
@@ -118,7 +118,8 @@ function(
         ub = np.asarray([1] * len(fractions))
         args = (cellTypes, slice, col)
         xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=constraints)
-        return { \'xopt\':xopt, \'fopt\':fopt }'
+        dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist))
+        return { \'xopt\':dictionary, \'fopt\':fopt }'
         
     #python.exec(cmd1)
     python.exec(cmd1)
@@ -132,7 +133,7 @@ function(
         python.exec(paste('result = optimize(cellTypes, slice, fractions, col=', pp, ')', sep=""))
         result[[(pp+1)]] = list(
             currentFopt = python.get(paste('result[\'fopt\']')),
-            currentXopt = python.get(paste('result[\'xopt\'].tolist()'))
+            currentXopt = python.get(paste('result[\'xopt\']'))
         )
     }
     return(result)

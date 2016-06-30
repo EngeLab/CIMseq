@@ -10,7 +10,7 @@ assembleTestData <- function() {
     
     testData <- data.frame()
 
-    ##7 and 8 as doublets
+    ##4 and 7 as doublets
     g1 <- sng[ ,classification == 4]
     g2 <- sng[ ,classification == 7]
     int <- min(ncol(g1), ncol(g2))
@@ -30,7 +30,7 @@ assembleTestData <- function() {
     }
     names <- paste("fourSeven", 1:(int^2), sep="")
     
-    ##4 and 8 as doublets
+    ##4 and 9 as doublets
     g1 <- sng[ ,classification == 4]
     g2 <- sng[ ,classification == 9]
     int <- min(ncol(g1), ncol(g2))
@@ -45,7 +45,7 @@ assembleTestData <- function() {
     }
     names <- c(names, paste("fourNine", 1:(int^2), sep=""))
     
-    ##4 and 7 as doublets
+    ##7 and 9 as doublets
     g1 <- sng[ ,classification == 7]
     g2 <- sng[ ,classification == 9]
     int <- min(ncol(g1), ncol(g2))
@@ -60,7 +60,7 @@ assembleTestData <- function() {
     }
     names <- c(names, paste("sevenNine", 1:(int^2), sep=""))
     
-    ##4, 8, and 7 as triplets
+    ##4, 7, and 9 as triplets
     g1 <- sng[ ,classification == 4]
     g2 <- sng[ ,classification == 7]
     g3 <- sng[ ,classification == 9]
@@ -84,3 +84,60 @@ assembleTestData <- function() {
     save(testData, file="data/testData.rda", compress="bzip2")
     return(testData)
 }
+
+
+
+
+.averageGroupExpression <- function(classes, sng) {
+    classes <- unique(classes)
+    means <- lapply(classes, function(x) {
+        ingroup <- classes == x
+        log2(rowMeans(2^sng[,ingroup]))
+    })
+    means <- as.matrix(as.data.frame(means))
+    colnames(means) <- classes
+    return(means)
+}
+
+
+assembleTestData2 <- function() {
+    load('data/expData.rda')
+    load('data/unsupervised.rda')
+    
+    counts.log <- getData(expData, "counts.log")
+    sampleType <- getData(expData, "sampleType")
+    sng <- counts.log[ ,sampleType == "Singlet"]
+    classification <- getData(unsupervised, "mclust")$classification
+    means <- .averageGroupExpression(classification, sng)
+    
+    fourSeven <- rowMeans(data.frame(means[ ,'4'], means[ ,'7']))
+    sevenNine <- rowMeans(data.frame(means[ ,'7'], means[ ,'9']))
+    fourNine <- rowMeans(data.frame(means[ ,'4'], means[ ,'9']))
+    fourSevenNine <- rowMeans(data.frame(means[ ,'4'], means[ ,'7'], means[ ,'9']))
+    
+    testData2 <- data.frame(fourSeven = fourSeven, sevenNine = sevenNine, fourNine = fourNine, fourSevenNine = fourSevenNine)
+    save(testData2, file="data/testData2.rda", compress="bzip2")
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
