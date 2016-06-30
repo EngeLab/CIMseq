@@ -28,6 +28,7 @@ Collate:
     'All-classes.R'
     'expData.R'
     'initialize-methods.R'
+    'optimize.R'
     'plotting.R'
     'process-input.R'
     'show-methods.R'

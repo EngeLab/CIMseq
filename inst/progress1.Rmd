@@ -60,11 +60,18 @@ I then wanted to try different constrained optimization methods to see how well 
 
 ```{r defineOptimixFunctions, echo=FALSE}
 make.synthetic.slice <- function(cell.types, fractions) {
-    fractions <- fractions/sum(fractions)
-    res <- apply(cell.types, 1, function(x) {sum(x*fractions)})
+    fractions <- fractions/sum(fractions) #this makes sure that the sum of the fractions is always 1
+    cat(fractions, "\n\n")
+    res <- apply(cell.types, 1, function(x) {sum(x*fractions)}) #this gives the value for each gene in the multuplet dependant on the fractions variable
+    return(res)
 }
 
 dist.to.slice <- function(fractions, cell.types, slice) {
+    #o <- sort(fractions, decreasing=T)
+    min <- 1/length(fractions)
+    fractions[fractions < min] <- min
+    #fractions[-1:-5] <- 0 # Consider only top 5 fractions
+    
     a <- make.synthetic.slice(cell.types, fractions)
     if(any(is.na(a))) {
         cat("NA in make synthetic slice!\n")
@@ -107,30 +114,50 @@ dbl.top2000 <- 2^testData[maxs[1:1000],]
 set.seed(3)
 type <- gsub("([a-zA-Z]*)[0-9]*", "\\1", names(testData))
 l <- list(
-    testData[ ,type==unique(type)[1]],
-    testData[ ,type==unique(type)[1]],
-    testData[ ,type==unique(type)[1]],
-    testData[ ,type==unique(type)[1]]
+    dbl.top2000[ ,type==unique(type)[1]],
+    dbl.top2000[ ,type==unique(type)[2]],
+    dbl.top2000[ ,type==unique(type)[3]],
+    dbl.top2000[ ,type==unique(type)[4]]
 )
 names(l) <- unique(type)
 set.seed(3)
-l <- lapply(l, function(x) x[,sample(1:ncol(x), replace=FALSE, size=5)])
+samp <- lapply(l, function(x) x[,sample(1:ncol(x), replace=FALSE, size=5)])
+dbl.top2000 <- matrix(c(unlist(samp)), ncol=length(samp)*5)
+colnames(dbl.top2000) <- unlist(lapply(samp, function(x) colnames(x)))
 
+##run optimization
 optim.res.all.2 <- lapply(1:(dim(dbl.top2000)[2]), function(i) {
     optimx(par=fractions, fn=dist.to.slice, gr=NULL, cell.types=clusterMeans.top2000, slice=dbl.top2000[,i], method=c("L-BFGS-B"), lower=0, upper=1)
 })
 
-groups.mat <- as.matrix(data.frame(lapply(optim.res.all.2, function(x) {unlist(x[1:3])})))
+##analyze results
+groups.mat <- data.frame(lapply(optim.res.all.2, function(x) {unlist(x[1:3])}))
 colnames(groups.mat) <- colnames(dbl.top2000)
-rownames(groups.mat) <- c(4,7,8)
-
-out <- as.data.frame(groups.mat, row.names = 1:nrow(groups.mat))
-out$groups <- rownames(groups.mat)
-out <- out[order(out$groups), ]
-m <- reshape2::melt(out, id.vars="groups")
-plyr::ddply(m, c("groups", "variable"), summarize, sum=sum(value))
+groups.mat[is.na(groups.mat) == TRUE] <- 0
+heatmap(t(groups.mat))
 ```
 
+
+```{r}
+library(nloptr)
+#, lower=0, upper=1.0
+slsqp <- lapply(1:(dim(dbl.top2000)[2]), function(i) {
+    slsqp(x0=fractions, fn=dist.to.slice, gr=NULL, cell.types=clusterMeans.top2000, slice=dbl.top2000[,i])
+})
+groups.mat2 <- data.frame(lapply(slsqp, function(x) {unlist(x[1:3])}))[1:3, ]
+colnames(groups.mat2) <- colnames(dbl.top2000)
+heatmap(t(groups.mat2))
+```
+
+```{r}
+library(pso)
+pso <- lapply(1:(dim(dbl.top2000)[2]), function(i) {
+    psoptim(par = fractions, fn = dist.to.slice, cell.types=clusterMeans.top2000, slice=dbl.top2000[,i], lower=0, upper=1)
+})
+groups.mat3 <- as.data.frame(lapply(pso, function(x) x$par))
+colnames(groups.mat3) <- colnames(dbl.top2000)
+apply(groups.mat3, 2, function(x) x/sum(x))
+```
 So first maybe it is best for me to try to describe what I think is happening here...
 
 My understanding of constrined optimization is the following; basically, we are representing something as a mathmatical function and we are trying to, in this case, find the minimum of that function. The function paramaters, in our case, are the fractions of each single cell type that make up the multuplet. The function is equal to the difference between the sum of the observed gene expression values in the different cell types and the gene expression values if the multuplet were an equal combination of all possible cell types. Or more simply stated, the "cost". So, via constrained optimization, we are trying to find the fractions of singlets that explains the multuplet with the minimum cost. The "constrained" part comes from the fact that, since we know some things about the paramaters, we can "constrain" them by saying to the optimization function that the paramaters must "follow these rules".

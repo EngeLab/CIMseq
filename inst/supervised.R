@@ -71,16 +71,7 @@ make.synthetic.slice <- function(cell.types, fractions) {
     return(list(fractions, res))
 }
 
-.averageGroupExpression <- function(classes, sng) {
-    classes <- unique(classes)
-    means <- lapply(classes, function(x) {
-        ingroup <- classes == x
-        log2(rowMeans(2^sng[,ingroup]))
-    })
-    means <- as.matrix(as.data.frame(means))
-    colnames(means) <- classes
-    return(means)
-}
+
 ##############try with test data
 classification <- getData(unsupervised, "mclust")$classification
 counts.log <- getData(expData, "counts.log")

@@ -20,9 +20,9 @@
 
 spUnsupervised(spCounts, ...)
 
-\S4method{spUnsupervised}{spCounts}(spCounts, max = 2000,
-  plot.callback = NULL, k = 2, max_iter = 10000, perplexity = 10,
-  initial_dims = 50, Gmax = 50, seed = 11, ...)
+\S4method{spUnsupervised}{spCounts}(spCounts, max = 3000,
+  plot.callback = NULL, k = 2, max_iter = 20000, perplexity = 10,
+  initial_dims = 50, Gmax = 50, seed = 11, type = "max", ...)
 }
 \arguments{
 \item{...}{Additional arguments to pass on}
