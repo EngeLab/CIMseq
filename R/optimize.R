@@ -117,11 +117,10 @@ function(
         lb = np.asarray([0] * len(fractions))
         ub = np.asarray([1] * len(fractions))
         args = (cellTypes, slice, col)
-        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=constraints)
-        dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist))
+        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=constraints, maxiter=100)
+        dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist()))
         return { \'xopt\':dictionary, \'fopt\':fopt }'
         
-    #python.exec(cmd1)
     python.exec(cmd1)
 }
 
@@ -136,6 +135,7 @@ function(
             currentXopt = python.get(paste('result[\'xopt\']'))
         )
     }
+    names(result) <- colnames(slice)
     return(result)
 }
 
