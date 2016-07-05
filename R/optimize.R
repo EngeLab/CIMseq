@@ -117,7 +117,7 @@ function(
         lb = np.asarray([0] * len(fractions))
         ub = np.asarray([1] * len(fractions))
         args = (cellTypes, slice, col)
-        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=constraints, maxiter=100)
+        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=constraints, maxiter=100, swarmsize=100)
         dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist()))
         return { \'xopt\':dictionary, \'fopt\':fopt }'
         
@@ -148,13 +148,12 @@ function(
 
 ##calculates the average expression for each singlet group
 .averageGroupExpression <- function(classes, sng) {
-    classes <- unique(classes)
-    means <- lapply(classes, function(x) {
-        ingroup <- classes == x
-        log2(rowMeans(2^sng[,ingroup]))
+    c <- unique(classes)
+    means <- lapply(c, function(x) {
+        log2(rowMeans(2^sng[,classes == x]))
     })
     means <- as.matrix(as.data.frame(means))
-    colnames(means) <- classes
+    colnames(means) <- c
     return(means)
 }
 
@@ -185,7 +184,7 @@ function(
     #fractions[i] = np.float64(fractions[i]) / s
     
         func = lambda x: sum(np.asarray(x) * np.asarray(fractions))
-        return cellTypes.apply(func, axis=1)'
+        return cellTypes.apply(func, axis=0)'
     
     cmd2 <- 'def distToSlice(fractions, *args):
         cellTypes, slice, col = args

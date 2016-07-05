@@ -89,13 +89,12 @@ assembleTestData <- function() {
 
 
 .averageGroupExpression <- function(classes, sng) {
-    classes <- unique(classes)
-    means <- lapply(classes, function(x) {
-        ingroup <- classes == x
-        log2(rowMeans(2^sng[,ingroup]))
+    c <- unique(classes)
+    means <- lapply(c, function(x) {
+        log2(rowMeans(2^sng[,classes == x]))
     })
     means <- as.matrix(as.data.frame(means))
-    colnames(means) <- classes
+    colnames(means) <- c
     return(means)
 }
 
