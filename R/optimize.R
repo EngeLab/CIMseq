@@ -57,8 +57,8 @@ function(
     #subset top 2000 genes for use with optimization
     #maxs <- order(apply(counts.log, 1, max), decreasing=T)
     maxs <- order(apply(counts.log, 1, var), decreasing=T)
-    cellTypes <- 2^clusterMeans[maxs[1:2000],]
-    slice <- 2^testData2[maxs[1:2000],]
+    cellTypes <- clusterMeans[maxs[1:2000],] #log scale
+    slice <- testData2[maxs[1:2000],] #log scale
     
     ##run pySwarm
     .defineImport(cellTypes, slice, fractions)

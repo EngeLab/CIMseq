@@ -91,7 +91,7 @@ assembleTestData <- function() {
 .averageGroupExpression <- function(classes, sng) {
     c <- unique(classes)
     means <- lapply(c, function(x) {
-        log2(rowMeans(2^sng[,classes == x]))
+        rowMeans(sng[,classes == x])
     })
     means <- as.matrix(as.data.frame(means))
     colnames(means) <- c
@@ -103,9 +103,9 @@ assembleTestData2 <- function() {
     load('data/expData.rda')
     load('data/unsupervised.rda')
     
-    counts.log <- getData(expData, "counts.log")
+    counts <- getData(expData, "counts")
     sampleType <- getData(expData, "sampleType")
-    sng <- counts.log[ ,sampleType == "Singlet"]
+    sng <- counts[ ,sampleType == "Singlet"]
     classification <- getData(unsupervised, "mclust")$classification
     means <- .averageGroupExpression(classification, sng)
     
