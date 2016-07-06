@@ -42,11 +42,12 @@ function(
     spUnsupervised,
     ...
 ){
+    
     #input and input checks
-    classification <- getData(spUnsupervised, "mclust")$classification
-    counts.log <- getData(spCounts, "counts.log")
+    counts <- getData(spCounts, "counts")
     sampleType <- getData(spCounts, "sampleType")
-    sng <- counts.log[ ,sampleType == "Singlet"]
+    sng <- counts[ ,sampleType == "Singlet"]
+    classification <- getData(spUnsupervised, "mclust")$classification
     
     #calculate average expression
     clusterMeans <- .averageGroupExpression(classification, sng)
@@ -56,9 +57,13 @@ function(
     
     #subset top 2000 genes for use with optimization
     #maxs <- order(apply(counts.log, 1, max), decreasing=T)
-    maxs <- order(apply(counts.log, 1, var), decreasing=T)
-    cellTypes <- clusterMeans[maxs[1:2000],] #log scale
-    slice <- testData2[maxs[1:2000],] #log scale
+    maxs <- order(apply(counts, 1, var), decreasing=T)
+    cellTypes <- as.data.frame(clusterMeans[maxs[1:2000],]) #log scale
+    slice <- as.data.frame(testData2[maxs[1:2000],]) #log scale
+    
+    #add index for reordering in python
+    cellTypes$index <- 1:nrow(cellTypes)
+    slice$index <- 1:nrow(slice)
     
     ##run pySwarm
     .defineImport(cellTypes, slice, fractions)
@@ -150,7 +155,7 @@ function(
 .averageGroupExpression <- function(classes, sng) {
     c <- unique(classes)
     means <- lapply(c, function(x) {
-        log2(rowMeans(2^sng[,classes == x]))
+        rowMeans(sng[,classes == x])
     })
     means <- as.matrix(as.data.frame(means))
     colnames(means) <- c
@@ -162,13 +167,19 @@ function(
     python.exec('import pandas as pd')
     python.exec('import numpy as np')
     
-    python.assign('cellTypesDictionary', as.data.frame(cellTypes))
-    python.assign('sliceDictionary', as.data.frame(slice))
+    python.assign('cellTypesDictionary', cellTypes)
+    python.assign('sliceDictionary', slice)
     python.assign('fractions', fractions)
     
     python.exec('cellTypes = pd.DataFrame(cellTypesDictionary)')
     python.exec('slice = pd.DataFrame(sliceDictionary)')
     python.exec('fractions = np.asarray(fractions)')
+    
+    python.exec('cellTypes.sort_values(by=\'index\', ascending=\'True\')')
+    python.exec('slice.sort_values(by=\'index\', ascending=\'True\')')
+
+    python.exec('cellTypes = cellTypes.drop(\'index\', 1)')
+    python.exec('slice = slice.drop(\'index\', 1)')
 }
 
 ##define cost function(s) in python session
@@ -183,23 +194,23 @@ function(
     #for i, f in enumerate(fractions):
     #fractions[i] = np.float64(fractions[i]) / s
     
-        func = lambda x: sum(np.asarray(x) * np.asarray(fractions))
-        return cellTypes.apply(func, axis=0)'
+    func = lambda x: sum(np.asarray(x) * np.asarray(fractions))
+    return cellTypes.apply(func, axis=1)'
     
     cmd2 <- 'def distToSlice(fractions, *args):
-        cellTypes, slice, col = args
-        a = makeSyntheticSlice(cellTypes, fractions)
-        for i in a:
-            if math.isnan(i):
-                print "NaN in make synthetic slice!"
-                print a
+    cellTypes, slice, col = args
+    a = makeSyntheticSlice(cellTypes, fractions)
+    for i in a:
+        if math.isnan(i):
+            print "NaN in make synthetic slice!"
+            print a
     
-        diff = []
-        for index, row in cellTypes.iterrows():
-            d = a[index] - slice.iloc[index, col]
-            diff.append(abs(d))
-        cost = sum(diff)
-        return cost'
+    diff = []
+    for index, row in cellTypes.iterrows():
+        d = a[index] - slice.iloc[index, col]
+        diff.append(abs(d))
+    cost = sum(diff)
+    return cost'
     
     python.exec(cmd1)
     python.exec(cmd2)
