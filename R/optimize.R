@@ -56,10 +56,18 @@ function(
     fractions <- rep(1.0/(dim(clusterMeans)[2]), (dim(clusterMeans)[2]))
     
     #subset top 2000 genes for use with optimization
-    #maxs <- order(apply(counts.log, 1, max), decreasing=T)
-    maxs <- order(apply(counts, 1, var), decreasing=T)
-    cellTypes <- as.data.frame(clusterMeans[maxs[1:2000],]) #log scale
-    slice <- as.data.frame(testData2[maxs[1:2000],]) #log scale
+        #use mean expression
+        #maxs <- order(apply(counts.log, 1, max), decreasing=T)
+    
+        #use variance
+        #maxs <- order(apply(counts, 1, var), decreasing=T)
+        #cellTypes <- as.data.frame(clusterMeans[maxs[1:2000],]) #log scale
+        #slice <- as.data.frame(testData2[maxs[1:2000],]) #log scale
+        
+        #use PCA
+        genes <- .PCAsubset(counts, sampleType, 100)
+        cellTypes <- as.data.frame(clusterMeans[rownames(clusterMeans) %in% genes, ])
+        slice <- as.data.frame(testData2[rownames(clusterMeans) %in% genes, ])
     
     #add index for reordering in python
     cellTypes$index <- 1:nrow(cellTypes)
@@ -122,7 +130,7 @@ function(
         lb = np.asarray([0] * len(fractions))
         ub = np.asarray([1] * len(fractions))
         args = (cellTypes, slice, col)
-        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=constraints, maxiter=100, swarmsize=100)
+        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=constraints, maxiter=10000, swarmsize=1000)
         dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist()))
         return { \'xopt\':dictionary, \'fopt\':fopt }'
         
@@ -216,7 +224,24 @@ function(
     python.exec(cmd2)
 }
 
-
+.PCAsubset <- function(counts, sampleType, cutoff) {
+    
+    #subset singlets
+    sng <- counts[ ,sampleType == "Singlet"]
+    
+    #remove 0's
+    c <- counts[rowMeans(sng) != 0, ]
+    
+    #run PCA
+    pca <- prcomp(t(c), center=TRUE, scale=TRUE)
+    
+    #order and return genes
+    rotation <- as.data.frame(pca$rotation)
+    genes <- rownames(rotation[order(rotation$PC1), ])
+    cut <- cutoff/2
+    selected <- c(genes[1:cut], genes[(length(genes) - (cut-1)):length(genes)])
+    return(selected)
+}
 
 
 

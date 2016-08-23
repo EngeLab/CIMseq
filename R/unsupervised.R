@@ -104,3 +104,15 @@ setMethod("spUnsupervised", "spCounts", function(
         return(select)
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
