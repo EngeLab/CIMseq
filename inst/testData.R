@@ -119,8 +119,113 @@ assembleTestData2 <- function() {
 }
 
 
+syntheticSinglets <- function(save = FALSE) {
+    ngenes <- 2000
+    ncells <- 100
+    cellTypes <- 10
+    for( i in 1:cellTypes) {
+        set.seed(i)
+        meanExprs <- 2^runif(ngenes, 0, 5)
+        counts <- matrix(rnbinom(ngenes*ncells, mu=meanExprs, size=i), nrow=ngenes)
+        if( i == 1 ) {
+            singlets <- counts
+        } else {
+            singlets <- cbind(singlets, counts)
+        }
+    }
+    colnames(singlets) <- paste(sort(rep(letters, ncells))[1:(cellTypes*ncells)], 1:100, sep="")
+    singlets <- as.data.frame(singlets)
+    
+    if( save == TRUE ) {
+        save(singlets, file="data/syntheticSng.rda", compress="bzip2")
+    }
+    
+    return(singlets)
+}
 
+syntheticMultupletsA <- function(save = FALSE) {
+    singlets <- syntheticSinglets()
+    newColNames <- unlist(strsplit(colnames(singlets), "[0-9]"))
+    colnames(singlets) <- newColNames[newColNames != ""]
+    
+    mean <- .averageGroupExpression(classes = colnames(singlets), sng = singlets)
+    
+    #doublets
+    combos <- combn(unique(colnames(singlets)), 2)
+    
+    for(y in 1:ncol(combos)) {
+        current <- combos[ ,y]
+        new <- data.frame(rowMeans(mean[ , colnames(mean) %in% current]))
+        
+        if( y == 1 ) {
+            multuplets <- new
+            names <- paste(current, collapse="")
+        } else {
+            multuplets <- cbind(multuplets, new)
+            names <- c(names, paste(current, collapse=""))
+        }
+    }
+    
+    colnames(multuplets) <- names
+    
+    #triplets
+    newNames <- colnames(multuplets)
+    combos <- combn(unique(colnames(singlets)), 3)
+    
+    for(u in 1:ncol(combos)) {
+        current <- combos[ ,u]
+        new <- data.frame(rowMeans(mean[ , colnames(mean) %in% current]))
+        multuplets <- cbind(multuplets, new)
+        newNames <- c(newNames,  paste(current, collapse=""))
+    }
+    colnames(multuplets) <- newNames
+    
+    if( save == TRUE ) {
+        save(syntheticMultupletsA, file="data/syntheticMultupletsA.rda", compress="bzip2")
+    }
+    
+    return(multuplets)
+}
 
+#syntheticMultupletsB <- function() {
+#    singlets <- syntheticSinglets()
+#    names <- unique(colnames(singlets))
+#
+#    for( i in 1:length(names) ) {
+#        type1 <- singlets[ ,colnames(singlets) == names[i]]
+#
+#        for(y in 1:length(names) ) {
+#            type2 <- singlets[ ,colnames(singlets) == names[y]]
+#
+#            for( j in 1:ncol(type1) ) {
+#
+#                for( k in 1:ncol(type2) ) {
+#                    cell1 <- type1[ ,j]
+#                    cell2 <- type2[ ,k]
+#                    name1 <- paste(names[i], j, sep="")
+#                    name2 <- paste(names[y], k, sep="")
+#                    comb <- data.frame(
+#                        rowMeans(
+#                            cbind(
+#                                data.frame(cell1),
+#                                data.frame(cell2)
+#                            )
+#                        )
+#                    )
+#
+#                    if( i ==1 & y==1 & j==1 & k==1) {
+#                        output <- comb
+#                        newNames <- paste(name1, name2, sep="")
+#                    } else {
+#                        output <- cbind(output, comb)
+#                        newNames <- c(newNames, paste(name1, name2, sep=""))
+#                    }
+#
+#                }
+#            }
+#        }
+#    }
+#}
 
 
 
