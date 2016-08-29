@@ -87,37 +87,12 @@ function(
 
 ##define optimization and constraint functions
 #constraint 1
-.con1 <- function() {
+con1 <- function() {
     cmd1 <- 'def con1(fractions, *args):
-        if sum(fractions) == 1:
+        if sum(fractions) > 0.1:
             return 0
         else:
             return -1'
-    
-    python.exec(cmd1)
-}
-
-#constraint 2
-.con2 <- function() {
-    cmd1 <- 'from collections import Counter'
-    cmd2 <- 'def con2(fractions, *args):
-        limit = 1/np.float64(len(fractions))
-        oc1 = list(set([i for i in fractions if i < limit and i != 0.0]))
-        if sum([Counter(fractions)[k] for k in oc1]) == 0:
-            return 0
-        else:
-            return -1'
-    
-    python.exec(cmd1)
-    python.exec(cmd2)
-}
-
-#all constraints
-.constraints <- function() {
-    cmd1 <- 'def constraints(fractions, *args):
-        cons1 = con1(fractions, *args)
-        cons2 = con2(fractions, *args)
-        return [cons1, cons2]'
     
     python.exec(cmd1)
 }
@@ -130,7 +105,7 @@ function(
         lb = np.asarray([0] * len(fractions))
         ub = np.asarray([1] * len(fractions))
         args = (cellTypes, slice, col)
-        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=constraints, maxiter=10000, swarmsize=1000)
+        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=con1, maxiter=10, swarmsize=250, minstep=1e-16, minfunc=1e-16)
         dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist()))
         return { \'xopt\':dictionary, \'fopt\':fopt }'
         

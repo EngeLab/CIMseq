@@ -181,7 +181,7 @@ syntheticMultupletsA <- function(save = FALSE) {
     colnames(multuplets) <- newNames
     
     if( save == TRUE ) {
-        save(syntheticMultupletsA, file="data/syntheticMultupletsA.rda", compress="bzip2")
+        save(multuplets, file="data/syntheticMultupletsA.rda", compress="bzip2")
     }
     
     return(multuplets)
