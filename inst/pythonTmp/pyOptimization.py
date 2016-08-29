@@ -60,6 +60,7 @@ def optimize(fractions, cellTypes, slice, col):
     return { 'xopt':dictionary, 'fopt':fopt }
 
 #test
+"""
 #fourSeven
 result0 = optimize(fractions, cellTypes, slice, 0)
 #fourNine
@@ -68,64 +69,16 @@ result1 = optimize(fractions, cellTypes, slice, 1)
 result2 = optimize(fractions, cellTypes, slice, 2)
 #fourSevenNine
 result3 = optimize(fractions, cellTypes, slice, 3)
+"""
 
 #run optimization
-"""xopt = {}
-fopt = {}
-for col in range(len(slice.columns)):
-    print "analyzing multuplet number: " + str(col)
-    result = optimize(fractions, cellTypes, slice, col)
-    xopt = {col: result['xopt']}
-    fopt = {col: result['fopt']}"""
+sampleNames = slice.columns.values
+df = pd.DataFrame(columns=['sample', 'xopt', 'fopt'])
 
+for y in range(slice.shape[1]):
+    currentSample = sampleNames[y]
+    result = optimize(fractions, cellTypes, slice, y)
+    tmp = pd.DataFrame({'sample':currentSample, 'xopt': [result['xopt']], 'fopt': result['fopt']})
+    df = df.append(tmp)
 
-##################################
-#try with minimize
-from scipy.optimize import minimize
-
-cons = (
-{
-    'type': 'eq',
-    'fun': lambda fractions: 1 - sum(fractions)
-},
-{
-    'type': 'eq',
-    'fun': lambda fractions: sum([Counter(fractions)[k] for k in list(set([i for i in fractions if i < 1/np.float64(len(fractions)) and i != 0.0]))])
-})
-
-args = (cellTypes, slice, 5)
-bnds = ((0, 1), (0, 1), (0, 1))
-res = minimize(distToSlice, [0, 0, 0], args=args, constraints=cons, method='SLSQP', options={'disp': True, 'maxiter': 100}, bounds=bnds, tol=1e-10)
-
-##################################
-#try with pyOpt
-import pyOpt
-
-def objfunc(fractions, *args):
-    f = distToSlice(fractions, *args)
-    g = constraints(fractions, *args)
-    fail = 0
-    return f,g, fail
-
-opt_prob = pyOpt.Optimization('test', objfunc)
-
-#Define Problem Design Variables (3 Continuous Variables)
-lb = [0] * len(fractions)
-up = [1] * len(fractions)
-opt_prob.addVarGroup('fractions', len(fractions), type='c', lower=lb, upper=up)
-
-#add name of variable in objective function which includes the function to be minimized's output
-opt_prob.addObj('f', optimum=0.0)
-
-#add constraints
-opt_prob.addConGroup('name', len(fractions), type='i', lower=lb, upper=up, equal='i')
-
-#initialize optimizers
-slsqp = pyOpt.SLSQP()
-
-#optimize
-args = (cellTypes, slice, 5)
-[fstr, xstr, inform] = slsqp(opt_prob, *args)
-
-
-
+df.to_csv("~/Desktop/seqOptResults.txt", sep='\t')
