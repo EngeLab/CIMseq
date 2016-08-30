@@ -3,6 +3,7 @@ import numpy as np
 import math
 from pyswarm import pso
 from collections import Counter
+from random import randint
 
 #import data
 with open('/Users/jasonserviss/Github/sp.scRNAseq/inst/pythonTmp/cellTypes.txt') as f:
@@ -55,7 +56,7 @@ def optimize(fractions, cellTypes, slice, col):
     lb = np.asarray([0] * len(fractions))
     ub = np.asarray([1] * len(fractions))
     args = (cellTypes, slice, col)
-    xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=con1, maxiter=1000, swarmsize=250, minstep=1e-16, minfunc=1e-16)
+    xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=con1, maxiter=10, swarmsize=150)
     dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist()))
     return { 'xopt':dictionary, 'fopt':fopt }
 
@@ -74,10 +75,12 @@ result3 = optimize(fractions, cellTypes, slice, 3)
 #run optimization
 sampleNames = slice.columns.values
 df = pd.DataFrame(columns=['sample', 'xopt', 'fopt'])
+r = slice.shape[1]
 
-for y in range(slice.shape[1]):
-    currentSample = sampleNames[y]
-    result = optimize(fractions, cellTypes, slice, y)
+for y in range(10):
+    s = randint(0,r)
+    currentSample = sampleNames[s]
+    result = optimize(fractions, cellTypes, slice, s)
     tmp = pd.DataFrame({'sample':currentSample, 'xopt': [result['xopt']], 'fopt': result['fopt']})
     df = df.append(tmp)
 

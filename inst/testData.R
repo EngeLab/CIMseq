@@ -109,12 +109,35 @@ assembleTestData2 <- function() {
     classification <- getData(unsupervised, "mclust")$classification
     means <- .averageGroupExpression(classification, sng)
     
-    fourSeven <- rowMeans(data.frame(means[ ,'4'], means[ ,'7']))
-    sevenNine <- rowMeans(data.frame(means[ ,'7'], means[ ,'9']))
-    fourNine <- rowMeans(data.frame(means[ ,'4'], means[ ,'9']))
-    fourSevenNine <- rowMeans(data.frame(means[ ,'4'], means[ ,'7'], means[ ,'9']))
+    #doublets
+    comb <- combn(seq(1, length(unique(classification)), 1), 2)
     
-    testData2 <- data.frame(fourSeven = fourSeven, sevenNine = sevenNine, fourNine = fourNine, fourSevenNine = fourSevenNine)
+    for( i in 1:ncol(comb)) {
+        currentMult <- rowMeans(data.frame(means[ ,comb[1,i]], means[ ,comb[2,i]]))
+        name <- paste(comb[1,i], comb[2,i], sep=".")
+        
+        if( i == 1) {
+            dataset <- data.frame(one = currentMult)
+            names <- name
+        } else {
+            dataset <- cbind(dataset, currentMult)
+            names <- c(names, name)
+        }
+    }
+    
+    #triplets
+    comb <- combn(seq(1, length(unique(classification)), 1), 3)
+    
+    for( i in 1:ncol(comb)) {
+        currentMult <- rowMeans(data.frame(means[ ,comb[1,i]], means[ ,comb[2,i]], means[ ,comb[3,i]]))
+        name <- paste(comb[1,i], comb[2,i], comb[3,i], sep=".")
+        
+        dataset <- cbind(dataset, currentMult)
+        names <- c(names, name)
+    }
+    
+    colnames(dataset) <- names
+    testData2 <- dataset
     save(testData2, file="data/testData2.rda", compress="bzip2")
 }
 
