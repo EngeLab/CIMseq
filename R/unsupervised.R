@@ -88,6 +88,7 @@ setMethod("spUnsupervised", "spCounts", function(
     
     set.seed(seed)
     mod1 <- Mclust(my.tsne, G=1:Gmax)
+    mod1$classification <- chartr("123456789", "ABCDEFGHI", mod1$classification)
     
     new("spUnsupervised",
         counts.log=counts.log,

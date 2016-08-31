@@ -110,7 +110,7 @@ assembleTestData2 <- function() {
     means <- .averageGroupExpression(classification, sng)
     
     #doublets
-    comb <- combn(seq(1, length(unique(classification)), 1), 2)
+    comb <- combn(unique(classification), 2)
     
     for( i in 1:ncol(comb)) {
         currentMult <- rowMeans(data.frame(means[ ,comb[1,i]], means[ ,comb[2,i]]))
@@ -126,7 +126,7 @@ assembleTestData2 <- function() {
     }
     
     #triplets
-    comb <- combn(seq(1, length(unique(classification)), 1), 3)
+    comb <- combn(unique(classification), 3)
     
     for( i in 1:ncol(comb)) {
         currentMult <- rowMeans(data.frame(means[ ,comb[1,i]], means[ ,comb[2,i]], means[ ,comb[3,i]]))
@@ -166,7 +166,7 @@ syntheticSinglets <- function(save = FALSE) {
     return(singlets)
 }
 
-syntheticMultupletsA <- function(save = FALSE) {
+syntheticMultuplets <- function(save = FALSE) {
     singlets <- syntheticSinglets()
     newColNames <- unlist(strsplit(colnames(singlets), "[0-9]"))
     colnames(singlets) <- newColNames[newColNames != ""]
@@ -204,7 +204,7 @@ syntheticMultupletsA <- function(save = FALSE) {
     colnames(multuplets) <- newNames
     
     if( save == TRUE ) {
-        save(multuplets, file="data/syntheticMultupletsA.rda", compress="bzip2")
+        save(multuplets, file="data/syntheticMultuplets.rda", compress="bzip2")
     }
     
     return(multuplets)

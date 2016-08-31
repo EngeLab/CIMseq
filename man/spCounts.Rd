@@ -38,7 +38,7 @@ The spCounts function returns an object of class spCounts.
 Subtitle
 }
 \details{
-Imports count and count.ercc data to a sp.scRNAseq object.
+Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
 }
 \examples{
 

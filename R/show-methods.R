@@ -93,27 +93,35 @@ setMethod("show", "spUnsupervised", function(object){ .showUnsupervised(object) 
 
 .showMatrix <- function(obj) {
     
-    if(nrow(obj) <= 10) {
-        additionalRows <- 0
+    if(all(is.na(obj)) == TRUE) {
+        
+        print("NA")
+        cat("\n-----------\n\n")
+        
     } else {
-        additionalRows <- nrow(obj) - 10
-    }
-    
-    if(ncol(obj) <= 5) {
-        additionalColumns <- 0
-    } else {
-        additionalColumns <- ncol(obj) - 5
-    }
-    
-    p <- S4Vectors:::makePrettyMatrixForCompactPrinting(
-        obj,
-        function(x){
-            x[,1:2]
+        
+        if(nrow(obj) <= 10) {
+            additionalRows <- 0
+        } else {
+            additionalRows <- nrow(obj) - 10
         }
-    )
-    print(p)
-    cat("...\n")
-    cat(paste("<", additionalRows, " more elements>", sep=""))
-    cat(paste("<", additionalColumns, " more columns>", sep=""))
-    cat("\n-----------\n\n")
+        
+        if(ncol(obj) <= 5) {
+            additionalColumns <- 0
+        } else {
+            additionalColumns <- ncol(obj) - 5
+        }
+        
+        p <- S4Vectors:::makePrettyMatrixForCompactPrinting(
+            obj,
+            function(x){
+                x[,1:2]
+            }
+        )
+        print(p)
+        cat("...\n")
+        cat(paste("<", additionalRows, " more elements>", sep=""))
+        cat(paste("<", additionalColumns, " more columns>", sep=""))
+        cat("\n-----------\n\n")
+    }
 }

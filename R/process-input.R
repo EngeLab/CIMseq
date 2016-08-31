@@ -6,7 +6,7 @@ NULL
 #'
 #' Subtitle
 #'
-#' Imports count and count.ercc data to a sp.scRNAseq object.
+#' Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
 #'
 #' @name spCounts
 #' @rdname spCounts
