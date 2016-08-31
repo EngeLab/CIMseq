@@ -45,7 +45,7 @@ function(
         counts=counts,
         counts.log=.norm.log.counts(counts),
         counts.ercc=counts.ercc,
-        sampleType=.sampleType(sampleType)
+        sampleType=.sampleType(sampleType, counts)
     )
 })
 
@@ -56,7 +56,7 @@ function(
     counts.log <- log2(counts.norm)
 }
 
-.sampleType <- function(sampleType) {
+.sampleType <- function(sampleType, counts) {
     dbl <- rep("Singlet", length=length(colnames(counts)))
     dbl[grepl(sampleType, colnames(counts))] <- "Multuplet"
     return(dbl)

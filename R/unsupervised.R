@@ -68,7 +68,7 @@ setMethod("spUnsupervised", "spCounts", function(
         my.dist <- as.dist(
             1-cor(
                 2^counts.log[maxs[1:max],
-                sampleType != "Doublet"],
+                sampleType != "Multuplet"],
                 method="p")
         )
     }
