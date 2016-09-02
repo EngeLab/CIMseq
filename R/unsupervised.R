@@ -67,7 +67,7 @@ setMethod("spUnsupervised", "spCounts", function(
         maxs <- order(apply(counts.log, 1, max), decreasing=T)
         my.dist <- as.dist(
             1-cor(
-                2^counts.log[maxs[1:max], sampleType != "Multuplet"],
+                2^counts.log[maxs[1:max], sampleType == "Singlet"],
                 method="p")
         )
     }
@@ -87,12 +87,22 @@ setMethod("spUnsupervised", "spCounts", function(
     
     set.seed(seed)
     mod1 <- Mclust(my.tsne, G=1:Gmax)
-    mod1$classification <- chartr("123456789", "ABCDEFGHI", mod1$classification)
     
+    #rename classification classes
+    x <- unique(mod1$classification)
+    n <- ceiling(length(x)/26)
+    names <- unlist(lapply(1:n, function(u) paste(LETTERS, u, sep="")))[1:length(x)]
+    mod1$classification <- names[match(mod1$classification, x)]
+    
+    #create object
     new("spUnsupervised",
         counts.log=counts.log,
         dist=as.matrix(my.dist),
         tsne=my.tsne,
+        groupMeans=.averageGroupExpression(
+            mod1$classification,
+            counts.log[, sampleType == "Singlet"]
+        ),
         mclust=unclass(mod1)
     )
 })
@@ -105,7 +115,15 @@ setMethod("spUnsupervised", "spCounts", function(
     }
 }
 
-
+.averageGroupExpression <- function(classes, sng) {
+    c <- unique(classes)
+    means <- lapply(c, function(x) {
+        rowMeans(sng[,classes == x])
+    })
+    means <- as.matrix(as.data.frame(means))
+    colnames(means) <- c
+    return(means)
+}
 
 
 

@@ -31,6 +31,7 @@ setMethod("initialize","spUnsupervised", function(
     counts.log,
     dist,
     tsne,
+    groupMeans,
     mclust
 ){
     callNextMethod(
@@ -39,6 +40,7 @@ setMethod("initialize","spUnsupervised", function(
         counts.log = counts.log,
         dist = dist,
         tsne = tsne,
+        groupMeans = groupMeans,
         mclust = mclust
     )
 })

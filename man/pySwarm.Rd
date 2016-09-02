@@ -8,7 +8,7 @@
 \usage{
 pySwarm(spCounts, ...)
 
-\S4method{pySwarm}{spCounts}(spCounts, spUnsupervised, ...)
+\S4method{pySwarm}{spCounts}(spCounts, spUnsupervised, limit = "none", ...)
 }
 \arguments{
 \item{spCounts}{An spCounts object.}

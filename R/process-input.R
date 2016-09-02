@@ -12,6 +12,8 @@ NULL
 #' @rdname spCounts
 #' @aliases spCounts
 #' @param counts Counts matrix with samples as columns and genes as rows.
+#' @param counts.ercc A matrix containing ercc spike-in reads and their counts.
+#' @param sampleType A character vector indicating the column name that indicates that the column contains a multuplet.
 #' @param ... additional arguments to pass on
 #' @return The spCounts function returns an object of class spCounts.
 #' @author Jason T. Serviss

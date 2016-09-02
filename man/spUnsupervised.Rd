@@ -14,7 +14,7 @@
 \S4method{getData}{spUnsupervised}(x, n = NULL)
 
 \S4method{initialize}{spUnsupervised}(.Object, ..., counts.log, dist, tsne,
-  mclust)
+  groupMeans, mclust)
 
 \S4method{show}{spUnsupervised}(object)
 

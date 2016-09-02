@@ -40,6 +40,7 @@ setMethod("pySwarm", "spCounts",
 function(
     spCounts,
     spUnsupervised,
+    limit = "none",
     ...
 ){
     
@@ -47,6 +48,7 @@ function(
     counts <- getData(spCounts, "counts")
     sampleType <- getData(spCounts, "sampleType")
     sng <- counts[ ,sampleType == "Singlet"]
+    mult <- counts[ ,sampleType == "Multuplet"]
     classification <- getData(spUnsupervised, "mclust")$classification
     
     #calculate average expression
@@ -56,18 +58,20 @@ function(
     fractions <- rep(1.0/(dim(clusterMeans)[2]), (dim(clusterMeans)[2]))
     
     #subset top 2000 genes for use with optimization
-        #use mean expression
-        #maxs <- order(apply(counts.log, 1, max), decreasing=T)
-    
+        #use max expression
+        maxs <- order(apply(counts, 1, max), decreasing=T)
+        cellTypes <- as.data.frame(clusterMeans[maxs[1:2000],]) #log scale
+        slice <- as.data.frame(mult[maxs[1:2000],]) #log scale
+        
         #use variance
         #maxs <- order(apply(counts, 1, var), decreasing=T)
         #cellTypes <- as.data.frame(clusterMeans[maxs[1:2000],]) #log scale
         #slice <- as.data.frame(testData2[maxs[1:2000],]) #log scale
         
         #use PCA
-        genes <- .PCAsubset(counts, sampleType, 100)
-        cellTypes <- as.data.frame(clusterMeans[rownames(clusterMeans) %in% genes, ])
-        slice <- as.data.frame(testData2[rownames(clusterMeans) %in% genes, ])
+        #genes <- .PCAsubset(counts, sampleType, 100)
+        #cellTypes <- as.data.frame(clusterMeans[rownames(clusterMeans) %in% genes, ])
+        #slice <- as.data.frame(testData2[rownames(clusterMeans) %in% genes, ])
     
     #add index for reordering in python
     cellTypes$index <- 1:nrow(cellTypes)
@@ -77,17 +81,15 @@ function(
     .defineImport(cellTypes, slice, fractions)
     .defineCost()
     .con1()
-    .con2()
-    .constraints()
     .definePySwarm()
-    result <- .runPySwarm(cellTypes, slice, fractions)
+    result <- .runPySwarm(cellTypes, slice, fractions, limit)
     
     return(result)
 })
 
 ##define optimization and constraint functions
 #constraint 1
-con1 <- function() {
+.con1 <- function() {
     cmd1 <- 'def con1(fractions, *args):
         if sum(fractions) > 0.1:
             return 0
@@ -113,17 +115,29 @@ con1 <- function() {
 }
 
 ##run optimization
-.runPySwarm <- function(cellTypes, slice, fractions) {
+.runPySwarm <- function(cellTypes, slice, fractions, limit) {
     result <- list()
-    for(pp in 0:(ncol(slice) - 1)) {
+    
+    if( limit == "none") {
+        top <- 0:(ncol(slice) - 1)
+    } else {
+        top <- sample(
+            0:(ncol(slice) - 1),
+            limit,
+            replace=FALSE
+        )
+    }
+    
+    for(pp in 1:length(top)) {
         print(paste("analyzing multuplet number: ", pp, sep=""))
-        python.exec(paste('result = optimize(cellTypes, slice, fractions, col=', pp, ')', sep=""))
-        result[[(pp+1)]] = list(
+        col <- top[pp]
+        python.exec(paste('result = optimize(cellTypes, slice, fractions, col=', col, ')', sep=""))
+        result[[(pp)]] = list(
             currentFopt = python.get(paste('result[\'fopt\']')),
             currentXopt = python.get(paste('result[\'xopt\']'))
         )
     }
-    names(result) <- colnames(slice)
+    names(result) <- colnames(slice)[top]
     return(result)
 }
 
@@ -172,25 +186,20 @@ con1 <- function() {
     python.exec('import math')
     
     cmd1 <- 'def makeSyntheticSlice(cellTypes, fractions):
-    #s = sum(fractions)
-    
-    #for i, f in enumerate(fractions):
-    #fractions[i] = np.float64(fractions[i]) / s
-    
-    func = lambda x: sum(np.asarray(x) * np.asarray(fractions))
-    return cellTypes.apply(func, axis=1)'
+        func = lambda x: sum(np.asarray(x) * np.asarray(fractions))
+        return cellTypes.apply(func, axis=1)'
     
     cmd2 <- 'def distToSlice(fractions, *args):
     cellTypes, slice, col = args
-    a = makeSyntheticSlice(cellTypes, fractions)
+    normFractions = fractions / sum(fractions)
+    a = makeSyntheticSlice(cellTypes, normFractions)
     for i in a:
         if math.isnan(i):
             print "NaN in make synthetic slice!"
-            print a
     
     diff = []
-    for index, row in cellTypes.iterrows():
-        d = a[index] - slice.iloc[index, col]
+    for index in range(cellTypes.shape[0]):
+        d = a.iloc[index] - slice.iloc[index, col]
         diff.append(abs(d))
     cost = sum(diff)
     return cost'

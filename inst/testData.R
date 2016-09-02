@@ -64,6 +64,7 @@ syntheticTestData <- function(save=FALSE) {
     
     syntheticData <- cbind(singlets, multuplets)
     colnames(syntheticData) <- names
+    syntheticData <- as.matrix(syntheticData)
     
     if(save == TRUE) {
         save(syntheticData, file="data/syntheticData.rda", compress="bzip2")
@@ -94,10 +95,11 @@ syntheticTestData <- function(save=FALSE) {
 
 .syntheticMultuplets <- function(save = FALSE) {
     singlets <- .syntheticSinglets()
-    newColNames <- unlist(strsplit(colnames(singlets), "[0-9]"))
-    colnames(singlets) <- newColNames[newColNames != ""]
+    cObj <- spCounts(as.matrix(singlets), counts.ercc=matrix(), sampleType="[A-Z]")
+    uObj <- spUnsupervised(cObj, max=1000, max_iter = 10)
+    colnames(singlets) <- getData(uObj, "mclust")$classification
     
-    mean <- .averageGroupExpression(classes = colnames(singlets), sng = singlets)
+    mean <- getData(uObj, "groupMeans")
     
     #doublets
     combos <- combn(unique(colnames(singlets)), 2)
@@ -131,8 +133,6 @@ syntheticTestData <- function(save=FALSE) {
     
     return(multuplets)
 }
-
-
 
 
 
