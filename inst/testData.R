@@ -17,7 +17,7 @@ assembleTestData <- function() {
     counts <- getData(expData, "counts")
     sampleType <- getData(expData, "sampleType")
     
-    maxs <- order(apply(counts.log, 1, max), decreasing=T)
+    maxs <- order(apply(counts, 1, max), decreasing=T)
     counts <- counts[maxs[1:2000], ]
     sng <- counts[ ,sampleType == "Singlet"]
     
@@ -51,8 +51,9 @@ assembleTestData <- function() {
         names <- c(names, name)
     }
     
-    colnames(dataset) <- names
-    testData <- dataset
+    colnames(dataset) <- paste("m.", names, sep="")
+    colnames(sng) <- paste("s.", classification, sep="")
+    testData <- as.matrix(cbind(sng, dataset))
     save(testData, file="data/testData.rda", compress="bzip2")
 }
 

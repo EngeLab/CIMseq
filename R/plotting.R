@@ -240,5 +240,60 @@ col.from.targets <- function(targets, values) {
     return(colors)
 }
 
+#' @rdname spPlot
+#' @export
+#' @import ggraph
+#' @importFrom ggthemes theme_few scale_colour_economist
+#' @importFrom igraph graph_from_data_frame
+#' @importFrom ggforce theme_no_axes
+
+setMethod("spPlot", "spSwarm", function(
+    x,
+    ...
+){
+    #process
+    graph <- .tissueConnectivityMap(x)
+    
+    #plot
+    ggraph(graph, 'igraph', algorithm = 'kk') +
+    geom_edge_fan() +
+    theme_no_axes()
+    
+})
+
+.tissueConnectivityMap(x) {
+    swarmRes <- getData(x, "spSwarm")
+    encoded <- .multiHotEncoding(swarmres)
+    conDF <- .networkDF(encoded)
+    
+    graphDF <- graph_from_data_frame(connections)
+    
+    return(graphDF)
+}
+
+.multiHotEncoding <- function(x) {
+    for(p in 1:nrow(x)) {
+        x[p,][x[p,] < 0.2] <- 0
+    }
+    return(x)
+}
+
+.networkDF <- function(x) {
+    names <- colnames(x)
+    for(o in 1:nrow(x)) {
+        ind <- which(x[o,] != 0)
+        combs <- as.data.frame(t(combn(names[ind],2)))
+        
+        if( o == 1 ) {
+            connections <- combs
+        } else {
+            connections <- rbind(connections, combs)
+        }
+    }
+    
+    colnames(connections) <- c("from", "to")
+    return(connections)
+}
+
 
 
