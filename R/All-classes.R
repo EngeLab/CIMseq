@@ -43,3 +43,4 @@ setMethod("getData", "spUnsupervised", function(x, n=NULL)
         slot(x,n)
     }
 })
+

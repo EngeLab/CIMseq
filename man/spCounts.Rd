@@ -30,6 +30,10 @@ spCounts(counts, ...)
 \item{...}{additional arguments to pass on}
 
 \item{counts}{Counts matrix with samples as columns and genes as rows.}
+
+\item{counts.ercc}{A matrix containing ercc spike-in reads and their counts.}
+
+\item{sampleType}{A character vector indicating the column name that indicates that the column contains a multuplet.}
 }
 \value{
 The spCounts function returns an object of class spCounts.

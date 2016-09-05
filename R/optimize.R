@@ -47,21 +47,19 @@ function(
     #input and input checks
     counts <- getData(spCounts, "counts")
     sampleType <- getData(spCounts, "sampleType")
-    sng <- counts[ ,sampleType == "Singlet"]
-    mult <- counts[ ,sampleType == "Multuplet"]
     classification <- getData(spUnsupervised, "mclust")$classification
     
     #calculate average expression
-    clusterMeans <- .averageGroupExpression(classification, sng)
+    clusterMeans <- getData(spUnsupervised, "groupMeans")
     
     #calculate fractions
     fractions <- rep(1.0/(dim(clusterMeans)[2]), (dim(clusterMeans)[2]))
     
     #subset top 2000 genes for use with optimization
-        #use max expression
-        maxs <- order(apply(counts, 1, max), decreasing=T)
-        cellTypes <- as.data.frame(clusterMeans[maxs[1:2000],]) #log scale
-        slice <- as.data.frame(mult[maxs[1:2000],]) #log scale
+    #use max expression
+    maxs <- order(apply(counts, 1, max), decreasing=T)
+    cellTypes <- as.data.frame(clusterMeans[maxs[1:2000],])
+    slice <- as.data.frame(counts[ ,sampleType == "Multuplet"][maxs[1:2000], ])
         
         #use variance
         #maxs <- order(apply(counts, 1, var), decreasing=T)
@@ -84,8 +82,16 @@ function(
     .definePySwarm()
     result <- .runPySwarm(cellTypes, slice, fractions, limit)
     
-    return(result)
+    #process and return results
+    finalResult <- .processResults(result)
+    return(finalResult)
 })
+
+#############################################
+#                                           #
+#              Unit Functions               #
+#                                           #
+#############################################
 
 ##define optimization and constraint functions
 #constraint 1
@@ -106,10 +112,11 @@ function(
     cmd1 <- 'def optimize(cellTypes, slice, fractions, col):
         lb = np.asarray([0] * len(fractions))
         ub = np.asarray([1] * len(fractions))
+        name = slice.columns.values[col]
         args = (cellTypes, slice, col)
-        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=con1, maxiter=10, swarmsize=250, minstep=1e-16, minfunc=1e-16)
+        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=con1, maxiter=10, swarmsize=150, minstep=1e-16, minfunc=1e-16)
         dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist()))
-        return { \'xopt\':dictionary, \'fopt\':fopt }'
+        return { \'xopt\':dictionary, \'fopt\':fopt, \'name\':name }'
         
     python.exec(cmd1)
 }
@@ -134,36 +141,20 @@ function(
         python.exec(paste('result = optimize(cellTypes, slice, fractions, col=', col, ')', sep=""))
         result[[(pp)]] = list(
             currentFopt = python.get(paste('result[\'fopt\']')),
-            currentXopt = python.get(paste('result[\'xopt\']'))
+            currentXopt = python.get(paste('result[\'xopt\']')),
+            name = python.get(paste('result[\'name\']'))
         )
     }
     names(result) <- colnames(slice)[top]
     return(result)
 }
 
-
-#############################################
-#                                           #
-#           General Functions               #
-#                                           #
-#############################################
-
-##calculates the average expression for each singlet group
-.averageGroupExpression <- function(classes, sng) {
-    c <- unique(classes)
-    means <- lapply(c, function(x) {
-        rowMeans(sng[,classes == x])
-    })
-    means <- as.matrix(as.data.frame(means))
-    colnames(means) <- c
-    return(means)
-}
-
 ##import data to python session
 .defineImport <- function(cellTypes, slice, fractions) {
     python.exec('import pandas as pd')
     python.exec('import numpy as np')
-    
+    python.exec('import math')
+
     python.assign('cellTypesDictionary', cellTypes)
     python.assign('sliceDictionary', slice)
     python.assign('fractions', fractions)
@@ -181,31 +172,47 @@ function(
 
 ##define cost function(s) in python session
 .defineCost <- function() {
-    python.exec('import pandas as pd')
-    python.exec('import numpy as np')
-    python.exec('import math')
     
     cmd1 <- 'def makeSyntheticSlice(cellTypes, fractions):
         func = lambda x: sum(np.asarray(x) * np.asarray(fractions))
         return cellTypes.apply(func, axis=1)'
     
     cmd2 <- 'def distToSlice(fractions, *args):
-    cellTypes, slice, col = args
-    normFractions = fractions / sum(fractions)
-    a = makeSyntheticSlice(cellTypes, normFractions)
-    for i in a:
-        if math.isnan(i):
-            print "NaN in make synthetic slice!"
+        cellTypes, slice, col = args
+        normFractions = fractions / sum(fractions)
+        a = makeSyntheticSlice(cellTypes, normFractions)
+        for i in a:
+            if math.isnan(i):
+                print "NaN in make synthetic slice!"
     
-    diff = []
-    for index in range(cellTypes.shape[0]):
-        d = a.iloc[index] - slice.iloc[index, col]
-        diff.append(abs(d))
-    cost = sum(diff)
-    return cost'
+        diff = []
+        for index in range(cellTypes.shape[0]):
+            d = a.iloc[index] - slice.iloc[index, col]
+            diff.append(abs(d))
+            cost = sum(diff)
+        return cost'
     
     python.exec(cmd1)
     python.exec(cmd2)
+}
+
+.processResults <- function(result) {
+    #extract xopt
+    xopt <-as.data.frame(t(sapply(1:length(result), function(x) result[[x]]$currentXopt)))
+    
+    #extract cost (fopt)
+    fopt <- data.frame(fopt = sapply(1:length(result), function(x) result[[x]]$currentFopt))
+    
+    #extract names (fopt)
+    names <- data.frame(names = sapply(1:length(result), function(x) result[[x]]$name))
+    
+    #normalize with sum
+    xopt <- xopt/rowSums(xopt)
+    
+    #add sample and fopt data
+    finalRes <- data.frame(sampleName = names, fopt = fopt, xopt)
+    
+    return(finalRes)
 }
 
 .PCAsubset <- function(counts, sampleType, cutoff) {

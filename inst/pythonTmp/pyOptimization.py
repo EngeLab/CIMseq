@@ -55,10 +55,11 @@ def con1(fractions, *args):
 def optimize(fractions, cellTypes, slice, col):
     lb = np.asarray([0] * len(fractions))
     ub = np.asarray([1] * len(fractions))
+    name = slice.columns.values[col]
     args = (cellTypes, slice, col)
     xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=con1, maxiter=10, swarmsize=150)
     dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist()))
-    return { 'xopt':dictionary, 'fopt':fopt }
+    return { 'xopt':dictionary, 'fopt':fopt, 'name':name }
 
 #test
 """

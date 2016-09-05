@@ -96,7 +96,7 @@ syntheticTestData <- function(save=FALSE) {
 .syntheticMultuplets <- function(save = FALSE) {
     singlets <- .syntheticSinglets()
     cObj <- spCounts(as.matrix(singlets), counts.ercc=matrix(), sampleType="[A-Z]")
-    uObj <- spUnsupervised(cObj, max=1000, max_iter = 10)
+    uObj <- spUnsupervised(cObj, max=1000, max_iter = 1000)
     colnames(singlets) <- getData(uObj, "mclust")$classification
     
     mean <- getData(uObj, "groupMeans")
@@ -133,17 +133,6 @@ syntheticTestData <- function(save=FALSE) {
     
     return(multuplets)
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
