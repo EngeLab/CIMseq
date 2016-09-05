@@ -44,3 +44,18 @@ setMethod("getData", "spUnsupervised", function(x, n=NULL)
     }
 })
 
+#' @export
+.Counts <- setClass("spSwarm", representation(
+    spSwarm="data.frame",
+    arguments="list"
+))
+
+
+#' @rdname spSwarm
+#' @export
+setMethod("getData", "spSwarm", function(x, n=NULL)
+{
+    if(class(n)=="character"){
+        slot(x,n)
+    }
+})

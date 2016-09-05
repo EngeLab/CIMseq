@@ -2,21 +2,26 @@
 #'@include All-classes.R
 NULL
 
-#' pySwarm
+#' spSwarm
 #'
 #' Subtitle
 #'
 #' Description
 #'
-#' @name pySwarm
-#' @rdname pySwarm
-#' @aliases pySwarm
+#' @name spSwarm
+#' @rdname spSwarm
+#' @aliases spSwarm
 #' @param spCounts An spCounts object.
 #' @param spUnsupervised An spUnsupervised object.
+#' @param limit Randomly select a limited number of samples to perform swarm optimization on.
+#' @param maxiter pySwarm argument indicating the maximum optimization iterations.
+#' @param swarmsize pySwarm argument indicating the number of particals in the swarm.
+#' @param minstep pySwarm argument indicating the stepsize of swarm’s best position before search termination.
+#' @param minfunc pySwarm argument indicating the minimum change of swarm’s best objective value before search termination.
 #' @param ... additional arguments to pass on
-#' @return PySwarm output.
+#' @return spSwarm output.
 #' @author Jason T. Serviss
-#' @keywords pySwarm
+#' @keywords spSwarm, pySwarm
 #' @examples
 #'
 #' #use demo data
@@ -27,20 +32,24 @@ NULL
 #'
 NULL
 
-#' @rdname pySwarm
+#' @rdname spSwarm
 #' @export
 
-setGeneric("pySwarm", function(spCounts, ...
-){ standardGeneric("pySwarm") })
+setGeneric("spSwarm", function(spCounts, ...
+){ standardGeneric("spSwarm") })
 
 #' @importFrom rPython python.exec python.assign python.get
-#' @rdname pySwarm
+#' @rdname spSwarm
 #' @export
-setMethod("pySwarm", "spCounts",
+setMethod("spSwarm", "spCounts",
 function(
     spCounts,
     spUnsupervised,
     limit = "none",
+    maxiter = 10,
+    swarmsize = 150,
+    minstep = 1e-16,
+    minfunc = 1e-16,
     ...
 ){
     
@@ -80,11 +89,30 @@ function(
     .defineCost()
     .con1()
     .definePySwarm()
-    result <- .runPySwarm(cellTypes, slice, fractions, limit)
+    result <- .runPySwarm(
+        cellTypes,
+        slice,
+        fractions,
+        limit,
+        maxiter,
+        swarmsize,
+        minstep,
+        minfunc
+    )
     
     #process and return results
     finalResult <- .processResults(result)
-    return(finalResult)
+    
+    #create object
+    new("spSwarm",
+        spSwarm=finalResult,
+        arguments = list(
+            maxiter=maxiter,
+            swarmsize=swarmsize,
+            minstep=minstep,
+            minfunc=minfunc
+        )
+    )
 })
 
 #############################################
@@ -109,12 +137,22 @@ function(
 .definePySwarm <- function() {
     python.exec('from pyswarm import pso')
     
-    cmd1 <- 'def optimize(cellTypes, slice, fractions, col):
+    cmd1 <- 'def optimize(cellTypes, slice, fractions, col, maxiter, swarmsize, minstep, minfunc):
         lb = np.asarray([0] * len(fractions))
         ub = np.asarray([1] * len(fractions))
         name = slice.columns.values[col]
         args = (cellTypes, slice, col)
-        xopt, fopt = pso(distToSlice, lb, ub, args=args, f_ieqcons=con1, maxiter=10, swarmsize=150, minstep=1e-16, minfunc=1e-16)
+        xopt, fopt = pso(
+            distToSlice,
+            lb,
+            ub,
+            args=args,
+            f_ieqcons=con1,
+            maxiter=maxiter,
+            swarmsize=swarmsize,
+            minstep=minstep,
+            minfunc=minfunc
+        )
         dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist()))
         return { \'xopt\':dictionary, \'fopt\':fopt, \'name\':name }'
         
@@ -122,7 +160,7 @@ function(
 }
 
 ##run optimization
-.runPySwarm <- function(cellTypes, slice, fractions, limit) {
+.runPySwarm <- function(cellTypes, slice, fractions, limit, maxiter, swarmsize, minstep, minfunc) {
     result <- list()
     
     if( limit == "none") {
@@ -138,7 +176,17 @@ function(
     for(pp in 1:length(top)) {
         print(paste("analyzing multuplet number: ", pp, sep=""))
         col <- top[pp]
-        python.exec(paste('result = optimize(cellTypes, slice, fractions, col=', col, ')', sep=""))
+        python.exec(
+            paste(
+                'result = optimize(cellTypes, slice, fractions',
+                ', col=', col,
+                ', maxiter=', maxiter,
+                ', swarmsize=', swarmsize,
+                ', minstep=', minstep,
+                ', minfunc=', minfunc,
+                ')', sep=""
+            )
+        )
         result[[(pp)]] = list(
             currentFopt = python.get(paste('result[\'fopt\']')),
             currentXopt = python.get(paste('result[\'xopt\']')),
@@ -210,8 +258,7 @@ function(
     xopt <- xopt/rowSums(xopt)
     
     #add sample and fopt data
-    finalRes <- data.frame(sampleName = names, fopt = fopt, xopt)
-    
+    finalRes <- data.frame(sampleName = names, fopt = fopt, xopt)    
     return(finalRes)
 }
 

@@ -2,11 +2,11 @@
 #'@include All-classes.R
 NULL
 
-#' Run Tsne
+#' spUnsupervised
 #'
 #' Subtitle
 #'
-#' Imports count and count.ercc data to a sp.scRNAseq object.
+#' Description.
 #'
 #' @name spUnsupervised
 #' @rdname spUnsupervised

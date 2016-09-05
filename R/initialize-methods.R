@@ -44,3 +44,20 @@ setMethod("initialize","spUnsupervised", function(
         mclust = mclust
     )
 })
+
+#' @rdname spSwarm
+#' @export
+
+setMethod("initialize","spSwarm", function(
+    .Object,
+    ...,
+    spSwarm,
+    arguments
+){
+    callNextMethod(
+    .Object,
+    ...,
+    spSwarm = spSwarm,
+    arguments = arguments
+    )
+})

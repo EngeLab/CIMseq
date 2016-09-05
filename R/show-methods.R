@@ -48,6 +48,31 @@ setMethod("show", "spUnsupervised", function(object){ .showUnsupervised(object) 
     }
 }
 
+#' @rdname spSwarm
+#' @export
+setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
+
+#internal show function
+.showSpSwarm <- function(object
+){
+    names <- slotNames(object)
+    cat("Class:","spSwarm\n")
+    cat("Contains: \n")
+    for(i in 1:length(names)){
+        
+        cat(paste(i,". ", names[i], "\n",sep=""))
+        mat <- slot(object, names[i])
+        
+        if(class(mat) == "data.frame") {
+            .showMatrix(mat)
+        } else if(class(mat) == "list") {
+            .showList(mat)
+        } else {
+            .showBasics(mat)
+        }
+    }
+}
+
 ####################################################################################
 #                                                                                  #
 #                                   Units                                          #
@@ -70,26 +95,11 @@ setMethod("show", "spUnsupervised", function(object){ .showUnsupervised(object) 
     }
 }
 
-#.showList <- function(obj) {
-#    for(oo in 1:length(obj)) {
-#        curr <- obj[[oo]]
-#        name <- names(obj[oo])
-#        cat(paste(name, ": ", sep=""))
-#
-#        if(class(curr) == "matrix" | class(curr) == "mclustBIC") {
-#            .showMatrix(curr)
-#        } else if(class(curr) == "list") {
-#            .showList(curr)
-#        } else {
-#            .showBasics(curr)
-#       }
-#    }
-#}
 
 .showList <- function(obj) {
-    leng <- length(obj)
-    cat(paste("List with ", leng, " elements", sep=""))
+    S4Vectors::show(as(obj, "List"))
 }
+
 
 .showMatrix <- function(obj) {
     
@@ -125,3 +135,4 @@ setMethod("show", "spUnsupervised", function(object){ .showUnsupervised(object) 
         cat("\n-----------\n\n")
     }
 }
+
