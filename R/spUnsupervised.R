@@ -11,7 +11,7 @@ NULL
 #' @name spUnsupervised
 #' @rdname spUnsupervised
 #' @aliases spUnsupervised
-#' @param counts Counts object.
+#' @param spCounts spCounts object.
 #' @param ... Additional arguments to pass on
 #' @return Ercc fraction plot.
 #' @author Jason T. Serviss
@@ -38,7 +38,7 @@ setGeneric("spUnsupervised", function(spCounts, ...
 
 setMethod("spUnsupervised", "spCounts", function(
     spCounts,
-    max = 3000,
+    max = 2000,
     plot.callback = NULL,
     k = 2,
     max_iter = 20000,
@@ -51,6 +51,7 @@ setMethod("spUnsupervised", "spCounts", function(
 ){
     counts.log <- getData(spCounts, "counts.log")
     sampleType <- getData(spCounts, "sampleType")
+    counts <- getData(spCounts, "counts")
     
     if(type == "variance") {
         select <- .ntopF(counts.log[ ,sampleType=="Singlet"], max)
@@ -101,7 +102,7 @@ setMethod("spUnsupervised", "spCounts", function(
         tsne=my.tsne,
         groupMeans=.averageGroupExpression(
             mod1$classification,
-            counts.log[, sampleType == "Singlet"]
+            counts[, sampleType == "Singlet"]
         ),
         mclust=unclass(mod1)
     )

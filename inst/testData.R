@@ -1,14 +1,4 @@
 
-.averageGroupExpression <- function(classes, sng) {
-    c <- unique(classes)
-    means <- lapply(c, function(x) {
-        rowMeans(sng[,classes == x])
-    })
-    means <- as.matrix(as.data.frame(means))
-    colnames(means) <- c
-    return(means)
-}
-
 
 assembleTestData <- function() {
     load('data/expData.rda')
@@ -16,13 +6,10 @@ assembleTestData <- function() {
     
     counts <- getData(expData, "counts")
     sampleType <- getData(expData, "sampleType")
-    
-    maxs <- order(apply(counts, 1, max), decreasing=T)
-    counts <- counts[maxs[1:2000], ]
     sng <- counts[ ,sampleType == "Singlet"]
     
     classification <- getData(unsupervised, "mclust")$classification
-    means <- .averageGroupExpression(classification, sng)
+    means <- getData(unsupervised, "groupMeans")
     
     #doublets
     comb <- combn(unique(classification), 2)
@@ -54,6 +41,7 @@ assembleTestData <- function() {
     colnames(dataset) <- paste("m.", names, sep="")
     colnames(sng) <- paste("s.", classification, sep="")
     testData <- as.matrix(cbind(sng, dataset))
+    
     save(testData, file="data/testData.rda", compress="bzip2")
 }
 

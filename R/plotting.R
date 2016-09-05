@@ -249,10 +249,12 @@ col.from.targets <- function(targets, values) {
 
 setMethod("spPlot", "spSwarm", function(
     x,
+    spCounts,
+    cutoff = 0.2,
     ...
 ){
     #process
-    graph <- .tissueConnectivityMap(x)
+    graph <- .tissueConnectivityMap(spSwarm, spCounts, cutoff)
     
     #plot
     ggraph(graph, 'igraph', algorithm = 'kk') +
@@ -261,9 +263,9 @@ setMethod("spPlot", "spSwarm", function(
     
 })
 
-.tissueConnectivityMap(x) {
+.tissueConnectivityMap <- function(x) {
     swarmRes <- getData(x, "spSwarm")
-    encoded <- .multiHotEncoding(swarmres)
+    encoded <- .multiHotEncoding(swarmRes)
     conDF <- .networkDF(encoded)
     
     graphDF <- graph_from_data_frame(connections)
@@ -271,11 +273,33 @@ setMethod("spPlot", "spSwarm", function(
     return(graphDF)
 }
 
-.multiHotEncoding <- function(x) {
-    for(p in 1:nrow(x)) {
-        x[p,][x[p,] < 0.2] <- 0
+.multiHotEncoding <- function(x, spCounts, cutoff) {
+    
+    hold <- x[ , colnames(x) %in% c("names", "fopt")]
+    x <- x[ , !colnames(x) %in% c("names", "fopt")]
+    
+    if(class(cutoff == "numeric")) {
+        
+        for(p in 1:nrow(x)) {
+            x[p,][x[p,] < cutoff] <- 0
+        }
+        
+    } else {
+        counts <- getData(spCounts, "counts")
+        counts.ercc <- getData(spCounts, "counts.ercc")
+        sampleType <- getData(spCounts, "sampleType")
+        
+        frac.ercc <- 100 * (colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts)))
+        frac.ercc <- frac.ercc[sampleType == "Multuplet"]
+        
+        for(p in 1:nrow(x)) {
+            cutoff <- frac.ercc[p] / ncol(x)
+            x[p,][x[p,] < cutoff] <- 0
+        }
+        
     }
-    return(x)
+    
+    return(cbind(hold, x))
 }
 
 .networkDF <- function(x) {

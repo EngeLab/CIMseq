@@ -4,6 +4,7 @@
 \name{spPlot}
 \alias{spPlot}
 \alias{spPlot,spCounts-method}
+\alias{spPlot,spSwarm-method}
 \alias{spPlot,spUnsupervised-method}
 \title{spPlot}
 \usage{
@@ -12,6 +13,8 @@ spPlot(x, ...)
 \S4method{spPlot}{spCounts}(x, type, markers = NULL, ...)
 
 \S4method{spPlot}{spUnsupervised}(x, type, markers = NULL, ...)
+
+\S4method{spPlot}{spSwarm}(x, spCounts, cutoff = 0.2, ...)
 }
 \arguments{
 \item{...}{additional arguments to pass on}
