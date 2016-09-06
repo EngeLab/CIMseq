@@ -249,12 +249,10 @@ col.from.targets <- function(targets, values) {
 
 setMethod("spPlot", "spSwarm", function(
     x,
-    spCounts,
-    cutoff = 0.2,
     ...
 ){
     #process
-    graph <- .tissueConnectivityMap(spSwarm, spCounts, cutoff)
+    graph <- .tissueConnectivityMap(x)
     
     #plot
     ggraph(graph, 'igraph', algorithm = 'kk') +
@@ -263,12 +261,10 @@ setMethod("spPlot", "spSwarm", function(
     
 })
 
-.tissueConnectivityMap <- function(x, spCounts, cutoff) {
+.tissueConnectivityMap <- function(x) {
     codedSwarm <- getData(x, "codedSwarm")
     conDF <- .networkDF(codedSwarm)
-    
     graphDF <- graph_from_data_frame(conDF)
-    
     return(graphDF)
 }
 
