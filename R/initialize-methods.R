@@ -58,6 +58,7 @@ setMethod("initialize","spSwarm", function(
     .Object,
     ...,
     spSwarm = spSwarm,
+    codedSwarm = codedSwarm,
     arguments = arguments
     )
 })

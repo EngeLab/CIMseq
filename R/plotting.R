@@ -263,43 +263,13 @@ setMethod("spPlot", "spSwarm", function(
     
 })
 
-.tissueConnectivityMap <- function(x) {
-    swarmRes <- getData(x, "spSwarm")
-    encoded <- .multiHotEncoding(swarmRes)
-    conDF <- .networkDF(encoded)
+.tissueConnectivityMap <- function(x, spCounts, cutoff) {
+    codedSwarm <- getData(x, "codedSwarm")
+    conDF <- .networkDF(codedSwarm)
     
-    graphDF <- graph_from_data_frame(connections)
+    graphDF <- graph_from_data_frame(conDF)
     
     return(graphDF)
-}
-
-.multiHotEncoding <- function(x, spCounts, cutoff) {
-    
-    hold <- x[ , colnames(x) %in% c("names", "fopt")]
-    x <- x[ , !colnames(x) %in% c("names", "fopt")]
-    
-    if(class(cutoff == "numeric")) {
-        
-        for(p in 1:nrow(x)) {
-            x[p,][x[p,] < cutoff] <- 0
-        }
-        
-    } else {
-        counts <- getData(spCounts, "counts")
-        counts.ercc <- getData(spCounts, "counts.ercc")
-        sampleType <- getData(spCounts, "sampleType")
-        
-        frac.ercc <- 100 * (colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts)))
-        frac.ercc <- frac.ercc[sampleType == "Multuplet"]
-        
-        for(p in 1:nrow(x)) {
-            cutoff <- frac.ercc[p] / ncol(x)
-            x[p,][x[p,] < cutoff] <- 0
-        }
-        
-    }
-    
-    return(cbind(hold, x))
 }
 
 .networkDF <- function(x) {

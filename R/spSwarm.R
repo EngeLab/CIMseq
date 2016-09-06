@@ -50,6 +50,7 @@ function(
     swarmsize = 150,
     minstep = 1e-16,
     minfunc = 1e-16,
+    cutoff = 0.2,
     ...
 ){
     
@@ -102,10 +103,12 @@ function(
     
     #process and return results
     finalResult <- .processResults(result)
+    encodedResult <- .multiHOTencoding(finalResult, spCounts, cutoff)
     
     #create object
     new("spSwarm",
         spSwarm=finalResult,
+        codedSwarm=encodedResult,
         arguments = list(
             maxiter=maxiter,
             swarmsize=swarmsize,
@@ -176,17 +179,8 @@ function(
     for(pp in 1:length(top)) {
         print(paste("analyzing multuplet number: ", pp, sep=""))
         col <- top[pp]
-        python.exec(
-            paste(
-                'result = optimize(cellTypes, slice, fractions',
-                ', col=', col,
-                ', maxiter=', maxiter,
-                ', swarmsize=', swarmsize,
-                ', minstep=', minstep,
-                ', minfunc=', minfunc,
-                ')', sep=""
-            )
-        )
+        #print(col)
+        python.exec(paste('result = optimize(cellTypes, slice, fractions, col=', col, ', maxiter=', maxiter, ', swarmsize=', swarmsize, ', minstep=', minstep, ', minfunc=', minfunc, ')', sep=""))
         result[[(pp)]] = list(
             currentFopt = python.get(paste('result[\'fopt\']')),
             currentXopt = python.get(paste('result[\'xopt\']')),
@@ -260,6 +254,36 @@ function(
     #add sample and fopt data
     finalRes <- data.frame(sampleName = names, fopt = fopt, xopt)    
     return(finalRes)
+}
+
+.multiHOTencoding <- function(optResult, spCounts, cutoff) {
+    
+    uu <- c("names", "fopt")
+    hold <- optResult[ , colnames(optResult) %in% uu]
+    x <- optResult[ , !colnames(optResult) %in% uu]
+    
+    if(class(cutoff) == "numeric") {
+        
+        for(p in 1:nrow(x)) {
+            x[p,][x[p,] < cutoff] <- 0
+        }
+        
+    } else {
+        counts <- getData(spCounts, "counts")
+        counts.ercc <- getData(spCounts, "counts.ercc")
+        sampleType <- getData(spCounts, "sampleType")
+        
+        frac.ercc <- 100 * (colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts)))
+        frac.ercc <- frac.ercc[sampleType == "Multuplet"]
+        
+        for(p in 1:nrow(x)) {
+            cutoff <- frac.ercc[p] / ncol(x)
+            x[p,][x[p,] < cutoff] <- 0
+        }
+        
+    }
+    
+    return(cbind(hold, x))
 }
 
 .PCAsubset <- function(counts, sampleType, cutoff) {
