@@ -48,6 +48,8 @@ setMethod("getData", "spUnsupervised", function(x, n=NULL)
 .Counts <- setClass("spSwarm", representation(
     spSwarm="data.frame",
     codedSwarm="data.frame",
+    spCounts="spCounts",
+    spUnsupervised="spUnsupervised",
     arguments="list"
 ))
 

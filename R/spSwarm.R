@@ -109,6 +109,8 @@ function(
     new("spSwarm",
         spSwarm=finalResult,
         codedSwarm=encodedResult,
+        spCounts=spCounts,
+        spUnsupervised=spUnsupervised,
         arguments = list(
             maxiter=maxiter,
             swarmsize=swarmsize,

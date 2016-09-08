@@ -253,26 +253,33 @@ setMethod("spPlot", "spSwarm", function(
 ){
     #process
     graph <- .tissueConnectivityMap(x)
+    nodeNames <- unique(c(graph$from, graph$to))
+    graphDF <- graph_from_data_frame(graph)
     
     #plot
-    ggraph(graph, 'igraph', algorithm = 'kk') +
-    geom_edge_fan() +
-    theme_no_axes()
-    
+    plot <- ggraph(graphDF, 'igraph', algorithm = 'kk') +
+        geom_edge_fan()+
+        geom_node_point(size = 10)+
+        theme_no_axes()+
+        geom_node_text(aes(x = x*1.05, y=y*1.05, filter=leaf,
+            angle = nAngle(x, y), label = label),
+            size=3, hjust='outward'
+        )
+    plot
+    return(plot)
 })
 
 .tissueConnectivityMap <- function(x) {
     codedSwarm <- getData(x, "codedSwarm")
     conDF <- .networkDF(codedSwarm)
-    graphDF <- graph_from_data_frame(conDF)
-    return(graphDF)
+    return(conDF)
 }
 
 .networkDF <- function(x) {
-    names <- colnames(x)
+    names <- colnames(x)[c(-1,-2)]
     for(o in 1:nrow(x)) {
-        ind <- which(x[o,] != 0)
-        combs <- as.data.frame(t(combn(names[ind],2)))
+        ind <- which(x[o, c(-1,-2)] != 0)
+        combs <- as.data.frame(t(combn(names[ind],2)), stringsAsFactors=FALSE)
         
         if( o == 1 ) {
             connections <- combs

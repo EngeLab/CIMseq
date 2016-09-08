@@ -53,6 +53,8 @@ setMethod("initialize","spSwarm", function(
     ...,
     spSwarm,
     codedSwarm,
+    spCounts,
+    spUnsupervised,
     arguments
 ){
     callNextMethod(
@@ -60,6 +62,8 @@ setMethod("initialize","spSwarm", function(
     ...,
     spSwarm = spSwarm,
     codedSwarm = codedSwarm,
+    spCounts = spCounts,
+    spUnsupervised = spUnsupervised,
     arguments = arguments
     )
 })

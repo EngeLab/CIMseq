@@ -28,9 +28,9 @@ Collate:
     'All-classes.R'
     'expData.R'
     'initialize-methods.R'
-    'plotting.R'
     'show-methods.R'
     'spCounts.R'
+    'spPlot.R'
     'spSwarm.R'
     'spUnsupervised.R'
 RoxygenNote: 5.0.1
