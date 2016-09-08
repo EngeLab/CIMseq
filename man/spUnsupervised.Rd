@@ -14,7 +14,7 @@
 \S4method{getData}{spUnsupervised}(x, n = NULL)
 
 \S4method{initialize}{spUnsupervised}(.Object, ..., counts.log, dist, tsne,
-  groupMeans, mclust)
+  tsneMeans, groupMeans, mclust)
 
 \S4method{show}{spUnsupervised}(object)
 
@@ -27,7 +27,7 @@ spUnsupervised(spCounts, ...)
 \arguments{
 \item{...}{Additional arguments to pass on}
 
-\item{counts}{Counts object.}
+\item{spCounts}{spCounts object.}
 }
 \value{
 Ercc fraction plot.

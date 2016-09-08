@@ -35,10 +35,10 @@ setMethod("show", "spUnsupervised", function(object){ .showUnsupervised(object) 
     cat("Contains: \n")
     for(i in 1:length(names)){
         
-        cat(paste(i,". ", names[i], "\n",sep=""))
+        cat(paste(i, ". ", names[i], "\n",sep=""))
         mat <- slot(object, names[i])
         
-        if(class(mat) == "matrix") {
+        if(class(mat) == "matrix" | class(mat) == "data.frame") {
             .showMatrix(mat)
         } else if(class(mat) == "list") {
             .showList(mat)
@@ -67,6 +67,8 @@ setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
             .showMatrix(mat)
         } else if(class(mat) == "list") {
             .showList(mat)
+        } else if(class(mat) == "spCounts" | class(mat) == "spUnsupervised") {
+            show(mat)
         } else {
             .showBasics(mat)
         }

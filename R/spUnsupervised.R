@@ -35,6 +35,7 @@ setGeneric("spUnsupervised", function(spCounts, ...
 #' @export
 #' @importFrom tsne tsne
 #' @importFrom mclust Mclust mclustBIC
+#' @importFrom plyr ddply summarize
 
 setMethod("spUnsupervised", "spCounts", function(
     spCounts,
@@ -100,6 +101,7 @@ setMethod("spUnsupervised", "spCounts", function(
         counts.log=counts.log,
         dist=as.matrix(my.dist),
         tsne=my.tsne,
+        tsneMeans=.tsneGroupMeans(my.tsne, mod1$classification),
         groupMeans=.averageGroupExpression(
             mod1$classification,
             counts[, sampleType == "Singlet"]
@@ -126,6 +128,11 @@ setMethod("spUnsupervised", "spCounts", function(
     return(means)
 }
 
+.tsneGroupMeans <- function(x, class) {
+    d <- data.frame(x = x[ ,1], y = x[ ,2], classification=class)
+    means <- ddply(d, "classification", summarize, meanX=mean(x), meanY=mean(y))
+    return(means)
+}
 
 
 

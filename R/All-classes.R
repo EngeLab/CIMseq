@@ -30,6 +30,7 @@ setMethod("getData", "spCounts", function(x, n=NULL)
     counts.log="matrix",
     dist="matrix",
     tsne="matrix",
+    tsneMeans="data.frame",
     groupMeans="matrix",
     mclust="list"
 ))
