@@ -39,6 +39,8 @@ setGeneric("spSwarm", function(spCounts, ...
 ){ standardGeneric("spSwarm") })
 
 #' @importFrom rPython python.exec python.assign python.get
+#' @importFrom doMC registerDoMC
+#' @importFrom foreach foreach %dopar% registerDoSEQ
 #' @rdname spSwarm
 #' @export
 setMethod("spSwarm", "spCounts",
@@ -51,6 +53,7 @@ function(
     minstep = 1e-16,
     minfunc = 1e-16,
     cutoff = 0.2,
+    cores=2,
     ...
 ){
     
@@ -98,7 +101,8 @@ function(
         maxiter,
         swarmsize,
         minstep,
-        minfunc
+        minfunc,
+        cores
     )
     
     #process and return results
@@ -109,8 +113,6 @@ function(
     new("spSwarm",
         spSwarm=finalResult,
         codedSwarm=encodedResult,
-        spCounts=spCounts,
-        spUnsupervised=spUnsupervised,
         arguments = list(
             maxiter=maxiter,
             swarmsize=swarmsize,
@@ -165,10 +167,13 @@ function(
 }
 
 ##run optimization
-.runPySwarm <- function(cellTypes, slice, fractions, limit, maxiter, swarmsize, minstep, minfunc) {
+.runPySwarm <- function(cellTypes, slice, fractions, limit, maxiter, swarmsize, minstep, minfunc, cores) {
     result <- list()
     
-    if( limit == "none") {
+    ##setup parallel processing
+    registerDoMC(cores)
+    
+    if(limit == "none") {
         top <- 0:(ncol(slice) - 1)
     } else {
         top <- sample(
@@ -178,17 +183,29 @@ function(
         )
     }
     
-    for(pp in 1:length(top)) {
-        print(paste("analyzing multuplet number: ", pp, sep=""))
-        col <- top[pp]
-        #print(col)
-        python.exec(paste('result = optimize(cellTypes, slice, fractions, col=', col, ', maxiter=', maxiter, ', swarmsize=', swarmsize, ', minstep=', minstep, ', minfunc=', minfunc, ')', sep=""))
-        result[[(pp)]] = list(
-            currentFopt = python.get(paste('result[\'fopt\']')),
-            currentXopt = python.get(paste('result[\'xopt\']')),
-            name = python.get(paste('result[\'name\']'))
-        )
+    
+    while(TRUE) {
+        
+        print(paste(length(top), " multuplets left to analyze.", sep=""))
+
+        loopOutput <- foreach(i = 1:cores, top=top, .combine = append) %dopar% {
+            print(count)
+            python.exec(paste('result = optimize(cellTypes, slice, fractions, col=', top, ', maxiter=', maxiter, ', swarmsize=', swarmsize, ', minstep=', minstep, ', minfunc=', minfunc, ')', sep=""))
+            result <- list(
+                currentFopt = python.get(paste('result[\'fopt\']')),
+                currentXopt = python.get(paste('result[\'xopt\']')),
+                name = python.get(paste('result[\'name\']'))
+            )
+            
+        }
+        
+        result <- append(result, loopOutput)
+        top <- top[(1:cores)*-1]
+        if(length(top) == 0) {break}
+        
     }
+    
+    registerDoSEQ()
     names(result) <- colnames(slice)[top]
     return(result)
 }
