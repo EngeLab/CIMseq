@@ -268,6 +268,7 @@ setMethod("spPlot", "spSwarm", function(
     #calculate the edge weights (frequency)
     graph <- .calculateWeights(graph)
     graph <- unique(graph)
+    graph$weight <- factor(graph$weight)
     
     #convert to igraph and plot
     graphDF <- graph_from_data_frame(graph)
