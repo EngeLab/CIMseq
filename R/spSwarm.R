@@ -107,12 +107,14 @@ function(
     
     #process and return results
     finalResult <- .processResults(result)
-    encodedResult <- .multiHOTencoding(finalResult, spCounts, cutoff)
+    encodedResult <- multiHOTencoding(finalResult, spCounts, cutoff)
     
     #create object
     new("spSwarm",
         spSwarm=finalResult,
         codedSwarm=encodedResult,
+        spCounts=spCounts,
+        spUnsupervised=spUnsupervised,
         arguments = list(
             maxiter=maxiter,
             swarmsize=swarmsize,
@@ -167,7 +169,17 @@ function(
 }
 
 ##run optimization
-.runPySwarm <- function(cellTypes, slice, fractions, limit, maxiter, swarmsize, minstep, minfunc, cores) {
+.runPySwarm <- function(
+    cellTypes,
+    slice,
+    fractions,
+    limit,
+    maxiter,
+    swarmsize,
+    minstep,
+    minfunc,
+    cores
+){
     result <- list()
     
     ##setup parallel processing
@@ -189,7 +201,6 @@ function(
         print(paste(length(top), " multuplets left to analyze.", sep=""))
 
         loopOutput <- foreach(i = 1:cores, top=top, .combine = append) %dopar% {
-            print(count)
             python.exec(paste('result = optimize(cellTypes, slice, fractions, col=', top, ', maxiter=', maxiter, ', swarmsize=', swarmsize, ', minstep=', minstep, ', minfunc=', minfunc, ')', sep=""))
             result <- list(
                 currentFopt = python.get(paste('result[\'fopt\']')),
@@ -206,7 +217,6 @@ function(
     }
     
     registerDoSEQ()
-    names(result) <- colnames(slice)[top]
     return(result)
 }
 
@@ -258,20 +268,24 @@ function(
 }
 
 .processResults <- function(result) {
+    
     #extract xopt
-    xopt <-as.data.frame(t(sapply(1:length(result), function(x) result[[x]]$currentXopt)))
+    xopt <- data.frame(t(data.frame(result[which(names(result) == "currentXopt")])))
+    xopt <- xopt[, order(colnames(xopt))]
+    rownames(xopt) <- 1:nrow(xopt)
     
-    #extract cost (fopt)
-    fopt <- data.frame(fopt = sapply(1:length(result), function(x) result[[x]]$currentFopt))
-    
-    #extract names (fopt)
-    names <- data.frame(names = sapply(1:length(result), function(x) result[[x]]$name))
-    
-    #normalize with sum
+    #normalize xopt with sum
     xopt <- xopt/rowSums(xopt)
     
+    #extract cost (fopt)
+    xopt$fopt <- unlist(result[which(names(result) == "currentFopt")])
+    
+    #extract names (fopt)
+    xopt$sampleName <- unlist(result[which(names(result) == "name")])
+    
     #add sample and fopt data
-    finalRes <- data.frame(sampleName = names, fopt = fopt, xopt)    
+    names <- c("sampleName", "fopt")
+    finalRes <- cbind(subset(xopt, select=names), xopt[ ,!colnames(xopt) %in% names])
     return(finalRes)
 }
 
@@ -324,6 +338,76 @@ function(
     return(selected)
 }
 
+#' changeCutoff
+#'
+#' Subtitle
+#'
+#' Description
+#'
+#' @name changeCutoff
+#' @rdname changeCutoff
+#' @aliases changeCutoff
+#' @param spCounts An spSwarm object.
+#' @param ... additional arguments to pass on
+#' @return spSwarm output.
+#' @author Jason T. Serviss
+#' @keywords changeCutoff
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+#' #run function
+#'
+#'
+NULL
 
+#' @rdname changeCutoff
+#' @export
+
+setGeneric("changeCutoff", function(spSwarm, ...
+){ standardGeneric("changeCutoff") })
+
+#' @rdname changeCutoff
+#' @export
+
+setMethod("changeCutoff", "spSwarm",
+function(
+    spSwarm,
+    ...
+){
+    spCounts <- getData(spSwarm, "spCounts")
+    swarmResults <- getData(spSwarm, "spSwarm")
+    
+    uu <- c("names", "fopt")
+    
+    hold <- swarmResults[ , colnames(swarmResults) %in% uu]
+    x <- swarmResults[ , !colnames(swarmResults) %in% uu]
+    
+    if(class(cutoff) == "numeric") {
+        
+        for(p in 1:nrow(x)) {
+            x[p,][x[p,] < cutoff] <- 0
+        }
+        
+    } else {
+        counts <- getData(spCounts, "counts")
+        counts.ercc <- getData(spCounts, "counts.ercc")
+        sampleType <- getData(spCounts, "sampleType")
+        
+        frac.ercc <- 100 * (colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts)))
+        frac.ercc <- frac.ercc[sampleType == "Multuplet"]
+        
+        for(p in 1:nrow(x)) {
+            cutoff <- frac.ercc[p] / ncol(x)
+            x[p,][x[p,] < cutoff] <- 0
+        }
+        
+    }
+    
+    codedSwarm <- cbind(hold, x)
+    spSwarm@codedSwarm <- codedSwarm
+    return(spSwarm)
+})
 
 

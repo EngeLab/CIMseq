@@ -47,8 +47,9 @@ assembleTestData <- function() {
 
 
 syntheticTestData <- function(save=FALSE) {
-    singlets <- .syntheticSinglets()
-    multuplets <- .syntheticMultuplets()
+    tmp <- .syntheticMultuplets()
+    singlets <- tmp[[1]]
+    multuplets <- tmp[[2]]
     names <- c(paste("s", colnames(singlets), sep="."), paste("m", colnames(multuplets), sep="."))
     
     syntheticData <- cbind(singlets, multuplets)
@@ -120,7 +121,7 @@ syntheticTestData <- function(save=FALSE) {
     }
     colnames(multuplets) <- newNames
     
-    return(multuplets)
+    return(list(singlets, multuplets))
 }
 
 
