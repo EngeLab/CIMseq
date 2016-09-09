@@ -251,7 +251,7 @@ setMethod("spPlot", "spSwarm", function(
     x,
     ...
 ){
-    spUnsupervised <- getData(spSwarm, "spUnsupervised")
+    spUnsupervised <- getData(x, "spUnsupervised")
     tsneMeans <- getData(syntheticUnsupervised, "tsneMeans")
     colnames(tsneMeans) <- c("classification", "x", "y")
     
@@ -260,16 +260,14 @@ setMethod("spPlot", "spSwarm", function(
     d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
     colnames(d) <- c("x", "y", "classification")
     
-    codedSwarm <- getData(spSwarm, "codedSwarm")
+    codedSwarm <- getData(x, "codedSwarm")
     
     #process
-    graph <- .tissueConnectivityMap(codedSwarm)
+    graph <- .networkDF(codedSwarm)
     
-    #here you need to calculate the edge weights (frequency)
-    graph$weight <- 0
-    
-    #nodeNames <- unique(c(graph$from, graph$to))
-    
+    #calculate the edge weights (frequency)
+    graph <- .calculateWeights(graph)
+    graph <- unique(graph)
     
     #convert to igraph and plot
     graphDF <- graph_from_data_frame(graph)
@@ -282,12 +280,6 @@ setMethod("spPlot", "spSwarm", function(
     plot
     return(plot)
 })
-
-.tissueConnectivityMap <- function(x) {
-    codedSwarm <- getData(x, "codedSwarm")
-    conDF <- .networkDF(codedSwarm)
-    return(conDF)
-}
 
 .networkDF <- function(x) {
     names <- colnames(x)[c(-1,-2)]
@@ -304,6 +296,40 @@ setMethod("spPlot", "spSwarm", function(
     
     colnames(connections) <- c("from", "to")
     return(connections)
+}
+
+.calculateWeights <- function(graph) {
+    tbl <- .squareTable(graph$from, graph$to)
+    t <- abs(tbl+t(tbl))
+    col <- colnames(t)
+    row <- rownames(t)
+    
+    for(u in 1:nrow(graph)) {
+        x <- graph[u, "from"]
+        y <- graph[u, "to"]
+        
+        if(x %in% col & y %in% row) {
+            graph[u, "weight"] <- t[y, x]
+        } else if(y %in% col & x %in% row) {
+            graph[u, "weight"] <- t[x, y]
+        } else {
+            graph[u, "weight"] <- 0
+        }
+    }
+    return(graph)
+}
+
+.squareTable <- function(x,y) {
+    x <- factor(x)
+    y <- factor(y)
+    
+    commonLevels <- sort(unique(c(levels(x), levels(y))))
+    
+    x <- factor(x, levels = commonLevels)
+    y <- factor(y, levels = commonLevels)
+    
+    table(x,y)
+    
 }
 
 
