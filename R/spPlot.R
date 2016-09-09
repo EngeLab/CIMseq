@@ -251,20 +251,34 @@ setMethod("spPlot", "spSwarm", function(
     x,
     ...
 ){
-    #process
-    graph <- .tissueConnectivityMap(x)
-    nodeNames <- unique(c(graph$from, graph$to))
-    graphDF <- graph_from_data_frame(graph)
+    spUnsupervised <- getData(spSwarm, "spUnsupervised")
+    tsneMeans <- getData(syntheticUnsupervised, "tsneMeans")
+    colnames(tsneMeans) <- c("classification", "x", "y")
     
-    #plot
-    plot <- ggraph(graphDF, 'igraph', algorithm = 'kk') +
-        geom_edge_fan()+
-        geom_node_point(size = 10)+
-        theme_no_axes()+
-        geom_node_text(aes(x = x*1.05, y=y*1.05, filter=leaf,
-            angle = nAngle(x, y), label = label),
-            size=3, hjust='outward'
-        )
+    tsne <- getData(syntheticUnsupervised, "tsne")
+    classification <- getData(syntheticUnsupervised, "mclust")$classification
+    d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
+    colnames(d) <- c("x", "y", "classification")
+    
+    codedSwarm <- getData(spSwarm, "codedSwarm")
+    
+    #process
+    graph <- .tissueConnectivityMap(codedSwarm)
+    
+    #here you need to calculate the edge weights (frequency)
+    graph$weight <- 0
+    
+    #nodeNames <- unique(c(graph$from, graph$to))
+    
+    
+    #convert to igraph and plot
+    graphDF <- graph_from_data_frame(graph)
+
+    plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = means)+
+        geom_edge_link(edge_colour="black", aes(edge_alpha=weight))+
+        geom_node_point(data=tsneMeans, aes(colour=classification), size=5)+
+        geom_node_point(data=d, aes(colour=classification), alpha=0.25)
+    
     plot
     return(plot)
 })

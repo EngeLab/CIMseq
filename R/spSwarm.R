@@ -107,7 +107,7 @@ function(
     
     #process and return results
     finalResult <- .processResults(result)
-    encodedResult <- multiHOTencoding(finalResult, spCounts, cutoff)
+    encodedResult <- .multiHOTencoding(finalResult, spCounts, cutoff)
     
     #create object
     new("spSwarm",
