@@ -30,6 +30,8 @@ setMethod("getData", "spCounts", function(x, n=NULL)
     counts.log="matrix",
     dist="matrix",
     tsne="matrix",
+    tsneMeans="data.frame",
+    groupMeans="matrix",
     mclust="list"
 ))
 
@@ -37,6 +39,25 @@ setMethod("getData", "spCounts", function(x, n=NULL)
 #' @rdname spUnsupervised
 #' @export
 setMethod("getData", "spUnsupervised", function(x, n=NULL)
+{
+    if(class(n)=="character"){
+        slot(x,n)
+    }
+})
+
+#' @export
+.Counts <- setClass("spSwarm", representation(
+    spSwarm="data.frame",
+    codedSwarm="data.frame",
+    spCounts="spCounts",
+    spUnsupervised="spUnsupervised",
+    arguments="list"
+))
+
+
+#' @rdname spSwarm
+#' @export
+setMethod("getData", "spSwarm", function(x, n=NULL)
 {
     if(class(n)=="character"){
         slot(x,n)

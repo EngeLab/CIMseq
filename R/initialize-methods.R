@@ -31,6 +31,8 @@ setMethod("initialize","spUnsupervised", function(
     counts.log,
     dist,
     tsne,
+    tsneMeans,
+    groupMeans,
     mclust
 ){
     callNextMethod(
@@ -39,6 +41,31 @@ setMethod("initialize","spUnsupervised", function(
         counts.log = counts.log,
         dist = dist,
         tsne = tsne,
+        tsneMeans = tsneMeans,
+        groupMeans = groupMeans,
         mclust = mclust
+    )
+})
+
+#' @rdname spSwarm
+#' @export
+
+setMethod("initialize","spSwarm", function(
+    .Object,
+    ...,
+    spSwarm,
+    codedSwarm,
+    spCounts,
+    spUnsupervised,
+    arguments
+){
+    callNextMethod(
+    .Object,
+    ...,
+    spSwarm = spSwarm,
+    codedSwarm = codedSwarm,
+    spCounts = spCounts,
+    spUnsupervised = spUnsupervised,
+    arguments = arguments
     )
 })
