@@ -107,23 +107,57 @@ syntheticTestData <- function(save=FALSE) {
         }
     }
     
-    colnames(multuplets) <- names
-    
     #triplets
-    newNames <- colnames(multuplets)
     combos <- combn(unique(colnames(singlets)), 3)
     
     for(u in 1:ncol(combos)) {
         current <- combos[ ,u]
         new <- data.frame(rowMeans(mean[ , colnames(mean) %in% current]))
         multuplets <- cbind(multuplets, new)
-        newNames <- c(newNames,  paste(current, collapse=""))
+        names <- c(names,  paste(current, collapse=""))
     }
-    colnames(multuplets) <- newNames
     
+    #quadruplets
+    combos <- combn(unique(colnames(singlets)), 4)
+    
+    for(u in 1:ncol(combos)) {
+        current <- combos[ ,u]
+        new <- data.frame(rowMeans(mean[ , colnames(mean) %in% current]))
+        multuplets <- cbind(multuplets, new)
+        names <- c(names,  paste(current, collapse=""))
+    }
+    
+    colnames(multuplets) <- names
+
     return(list(singlets, multuplets))
 }
 
+noiseData <- function() {
+    data(syntheticData)
+    multuplets <- syntheticData[ ,grep("m.", colnames(syntheticData))]
+    
+    two <- multuplets[ ,nchar(colnames(multuplets)) == 6][ ,sample(1:ncol(multuplets), 3, replace=FALSE)]
+    three <- multuplets[ ,nchar(colnames(multuplets)) == 8][ ,sample(1:ncol(multuplets), 3, replace=FALSE)]
+    four <- multuplets[ ,nchar(colnames(multuplets)) == 10][ ,sample(1:ncol(multuplets), 3, replace=FALSE)]
+    
+    noise <- array(NA, dim=c(nrow(multuplets), ncol(multuplets), 101, 3))
+    dimnames(noise)[[3]] <- as.character(seq(0.00,1,0.01))
+    dimnames(noise)[[4]] <- c("two", "three", "four")
+    
+    set.seed(11)
+    percent <- seq(0.01,1,0.01)
+    
+    #two
+    for( i in 1:100 ) {
+        nRows <- nrow(syntheticData) * percent[i]
+        picked <- sample(1:nrow(multuplets), nRows, replace = FALSE)
+        
+        pickedReordered <- picked[reorder]
+        noise[picked,,i-1] <- pickedReordered
+        
+        
+    }
+}
 
 
 
