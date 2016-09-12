@@ -121,7 +121,7 @@ setMethod("spUnsupervised", "spCounts", function(
 .averageGroupExpression <- function(classes, sng) {
     c <- unique(classes)
     means <- lapply(c, function(x) {
-        rowMeans(sng[,classes == x])
+        rowMeans(sng[,c == x])
     })
     means <- as.matrix(as.data.frame(means))
     colnames(means) <- c
