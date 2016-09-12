@@ -273,7 +273,7 @@ setMethod("spPlot", "spSwarm", function(
     #convert to igraph and plot
     graphDF <- graph_from_data_frame(graph)
 
-    plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = means)+
+    plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = tsneMeans)+
         geom_edge_link(edge_colour="black", aes(edge_alpha=weight))+
         geom_node_point(data=tsneMeans, aes(colour=classification), size=5)+
         geom_node_point(data=d, aes(colour=classification), alpha=0.25)
