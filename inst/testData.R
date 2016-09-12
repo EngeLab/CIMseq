@@ -136,11 +136,16 @@ noiseData <- function() {
     data(syntheticData)
     multuplets <- syntheticData[ ,grep("m.", colnames(syntheticData))]
     
-    two <- multuplets[ ,nchar(colnames(multuplets)) == 6][ ,sample(1:ncol(multuplets), 3, replace=FALSE)]
-    three <- multuplets[ ,nchar(colnames(multuplets)) == 8][ ,sample(1:ncol(multuplets), 3, replace=FALSE)]
-    four <- multuplets[ ,nchar(colnames(multuplets)) == 10][ ,sample(1:ncol(multuplets), 3, replace=FALSE)]
+    tmp <- multuplets[ ,nchar(colnames(multuplets)) == 6]
+    two <- tmp[ ,sample(1:ncol(tmp), 3, replace=FALSE)]
     
-    noise <- array(NA, dim=c(nrow(multuplets), ncol(multuplets), 101, 3))
+    tmp <- multuplets[ ,nchar(colnames(multuplets)) == 8]
+    three <- tmp[ ,sample(1:ncol(tmp), 3, replace=FALSE)]
+    
+    tmp <- multuplets[ ,nchar(colnames(multuplets)) == 10]
+    four <- tmp[ ,sample(1:ncol(tmp), 3, replace=FALSE)]
+    
+    noise <- array(NA, dim=c(nrow(multuplets), 3, 101, 3))
     dimnames(noise)[[3]] <- as.character(seq(0.00,1,0.01))
     dimnames(noise)[[4]] <- c("two", "three", "four")
     
@@ -149,13 +154,15 @@ noiseData <- function() {
     
     #two
     for( i in 1:100 ) {
+        tmp <- two
         nRows <- nrow(syntheticData) * percent[i]
         picked <- sample(1:nrow(multuplets), nRows, replace = FALSE)
+        sub <- two[picked, ]
+        reordered <- t(sapply(1:nrow(sub), function(x) sub[x,][sample(1:3, 3, replace=FALSE)]))
+        tmp[picked, ] <- reordered
+        noise[,,i+1, 'two'] <- tmp
         
-        pickedReordered <- picked[reorder]
-        noise[picked,,i-1] <- pickedReordered
-        
-        
+        ##add names
     }
 }
 
