@@ -105,6 +105,8 @@ function(
         cores
     )
     
+    save(result, file="data/testing.rda", compress="bzip2")
+    
     #process and return results
     finalResult <- .processResults(result)
     encodedResult <- .multiHOTencoding(finalResult, spCounts, cutoff)
