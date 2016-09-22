@@ -59,7 +59,7 @@ function(
 }
 
 .sampleType <- function(sampleType, counts) {
-    dbl <- rep("Singlet", length=length(colnames(counts)))
+    dbl <- rep("Singlet", length=ncol(counts))
     dbl[grepl(sampleType, colnames(counts))] <- "Multuplet"
     return(dbl)
 }
