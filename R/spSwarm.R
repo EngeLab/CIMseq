@@ -188,10 +188,10 @@ function(
     registerDoMC(cores)
     
     if(limit == "none") {
-        top <- 0:(ncol(slice) - 1)
+        top <- 0:(ncol(slice) - 2)
     } else {
         top <- sample(
-            0:(ncol(slice) - 1),
+            0:(ncol(slice) - 2),
             limit,
             replace=FALSE
         )
