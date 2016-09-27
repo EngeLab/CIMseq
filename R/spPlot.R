@@ -195,28 +195,36 @@ setMethod("spPlot", "spUnsupervised", function(
 }
 
 .spMarkersPlot <- function(x, markers) {
-    markers <- c("EPCAM", "THY1", "FLT1", "INS", "GCG", "NEUROG3", "PROM1", "SST")
-
     tsne <- getData(x, "tsne")
-    counts.log <- getData(expData, "counts.log")
-    sampleType <- getData(expData, "sampleType")
+    counts.log <- getData(x, "counts.log")
+    sng <- counts.log[ ,getData(e)]
+    markExpress <- t(scale(t(counts.log[rownames(counts.log) %in% markers, ]), center=TRUE))
     
-    colors <- .setColors()
-    targets <- colors[1:length(markers)]
-    values <- counts.log[markers, ]
-    
-    cols <- col.from.targets(targets, values)
-    
-    cex=1
-    rim.modifier=0.85
-    plot(tsne, col="black", pch=19, cex=cex)
-    points(tsne, col=cols, pch=19, cex=cex*rim.modifier)
-    legend("bottomright", legend=markers, fill=colors)
-
     
 }
 
-col.from.targets <- function(targets, values) {
+
+#.spMarkersPlot <- function(x, markers) {
+#    markers <- c("EPCAM", "THY1", "FLT1", "INS", "GCG", "NEUROG3", "PROM1", "SST")
+#
+#    tsne <- getData(x, "tsne")
+#    counts.log <- getData(expData, "counts.log")
+#    sampleType <- getData(expData, "sampleType")
+#
+#    colors <- .setColors()
+#    targets <- colors[1:length(markers)]
+#    values <- counts.log[markers, ]
+#
+#    cols <- .col.from.targets(targets, values)
+#
+#    cex=1
+#    rim.modifier=0.85
+#    plot(tsne, col="black", pch=19, cex=cex)
+#    points(tsne, col=cols, pch=19, cex=cex*rim.modifier)
+#    legend("bottomright", legend=markers, fill=colors)
+#}
+
+.col.from.targets <- function(targets, values) {
     
     v <- t(apply(values, 1, function(x) {(x-min(x))/(max(x)-min(x))}))
     fractions <- apply(v, 2, function(x) {x/sum(x)})
