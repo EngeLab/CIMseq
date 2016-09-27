@@ -138,6 +138,7 @@ setMethod("spPlot", "spCounts", function(
 #' @export
 #' @import ggplot2
 #' @importFrom ggthemes theme_few scale_colour_economist
+#' @importFrom reshape2 melt
 
 setMethod("spPlot", "spUnsupervised", function(
     x,
@@ -195,12 +196,46 @@ setMethod("spPlot", "spUnsupervised", function(
 }
 
 .spMarkersPlot <- function(x, markers) {
-    tsne <- getData(x, "tsne")
+    tsne <- as.data.frame(getData(x, "tsne"))
     counts.log <- getData(x, "counts.log")
-    sng <- counts.log[ ,getData(e)]
-    markExpress <- t(scale(t(counts.log[rownames(counts.log) %in% markers, ]), center=TRUE))
+    sng <- counts.log[ , colnames(getData(x ,"dist"))]
     
+    markExpress <- t(sng[rownames(sng) %in% markers, ])
+    markExpress <- apply(markExpress, 2, function(x) {
+        (x-min(x))/(max(x)-min(x))
+    })
     
+    df <- cbind(tsne, markExpress)
+    df$sample <- rownames(df)
+    m <- melt(df, id.vars=c("V1", "V2", "sample"))
+    ggplot(m, aes(x=V1, y=V2, colour=value))+
+        geom_point()+
+        facet_grid(variable~.)+
+        theme_few()+
+        scale_color_viridis()+
+        labs(
+            x="x",
+            y="y",
+            title="Markers",
+            color="Expression"
+        )+
+        theme(
+            legend.position="top",
+            legend.title=element_blank(),
+            legend.text=element_text(size=15),
+            axis.title=element_text(size=17),
+            axis.text=element_text(size=15),
+            plot.title=element_text(
+                hjust=0.5,
+                family="Arial",
+                face="bold",
+                size=24,
+                margin=margin(b=15)
+            ),
+            strip.text.y = element_text(size = 15)
+        )+
+        guides(colour=guide_colourbar(barwidth=20))
+        
 }
 
 
