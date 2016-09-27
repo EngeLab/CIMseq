@@ -104,9 +104,7 @@ function(
         minfunc,
         cores
     )
-    
-    save(result, file="data/testing.rda", compress="bzip2")
-    
+        
     #process and return results
     finalResult <- .processResults(result)
     encodedResult <- .multiHOTencoding(finalResult, spCounts, cutoff)
@@ -349,7 +347,7 @@ function(
 #' @name changeCutoff
 #' @rdname changeCutoff
 #' @aliases changeCutoff
-#' @param spCounts An spSwarm object.
+#' @param spSwarm An spSwarm object.
 #' @param ... additional arguments to pass on
 #' @return spSwarm output.
 #' @author Jason T. Serviss
@@ -376,6 +374,7 @@ setGeneric("changeCutoff", function(spSwarm, ...
 setMethod("changeCutoff", "spSwarm",
 function(
     spSwarm,
+    cutoff,
     ...
 ){
     spCounts <- getData(spSwarm, "spCounts")

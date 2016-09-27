@@ -252,11 +252,11 @@ setMethod("spPlot", "spSwarm", function(
     ...
 ){
     spUnsupervised <- getData(x, "spUnsupervised")
-    tsneMeans <- getData(syntheticUnsupervised, "tsneMeans")
+    tsneMeans <- getData(spUnsupervised, "tsneMeans")
     colnames(tsneMeans) <- c("classification", "x", "y")
     
-    tsne <- getData(syntheticUnsupervised, "tsne")
-    classification <- getData(syntheticUnsupervised, "mclust")$classification
+    tsne <- getData(spUnsupervised, "tsne")
+    classification <- getData(spUnsupervised, "mclust")$classification
     d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
     colnames(d) <- c("x", "y", "classification")
     
@@ -267,14 +267,15 @@ setMethod("spPlot", "spSwarm", function(
     
     #calculate the edge weights (frequency)
     graph <- .calculateWeights(graph)
-    graph <- unique(graph)
     graph$weight <- factor(graph$weight)
     
     #convert to igraph and plot
     graphDF <- graph_from_data_frame(graph)
-
-    plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = tsneMeans)+
+    layout <- tsneMeans[tsneMeans$classification %in% c(graph$from, graph$to),]
+    
+    plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = layout)+
         geom_edge_link(edge_colour="black", aes(edge_alpha=weight))+
+        geom_edge_loop(edge_colour="black", aes(edge_alpha=weight))+
         geom_node_point(data=tsneMeans, aes(colour=classification), size=5)+
         geom_node_point(data=d, aes(colour=classification), alpha=0.25)
     
@@ -286,7 +287,12 @@ setMethod("spPlot", "spSwarm", function(
     names <- colnames(x)[c(-1,-2)]
     for(o in 1:nrow(x)) {
         ind <- which(x[o, c(-1,-2)] != 0)
-        combs <- as.data.frame(t(combn(names[ind],2)), stringsAsFactors=FALSE)
+        
+        if(length(ind) == 1) {
+            combs <-  data.frame(V1=names[ind], V2=names[ind])
+        } else {
+            combs <- as.data.frame(t(combn(names[ind],2)), stringsAsFactors=FALSE)
+        }
         
         if( o == 1 ) {
             connections <- combs
@@ -300,14 +306,13 @@ setMethod("spPlot", "spSwarm", function(
 }
 
 .calculateWeights <- function(graph) {
-    tbl <- .squareTable(graph$from, graph$to)
-    t <- abs(tbl+t(tbl))
+    t <- .squareTable(graph$from, graph$to)
     col <- colnames(t)
     row <- rownames(t)
     
     for(u in 1:nrow(graph)) {
-        x <- graph[u, "from"]
-        y <- graph[u, "to"]
+        x <- as.character(graph[u, "from"])
+        y <- as.character(graph[u, "to"])
         
         if(x %in% col & y %in% row) {
             graph[u, "weight"] <- t[y, x]
@@ -317,7 +322,7 @@ setMethod("spPlot", "spSwarm", function(
             graph[u, "weight"] <- 0
         }
     }
-    return(graph)
+    return(unique(graph))
 }
 
 .squareTable <- function(x,y) {
@@ -329,8 +334,9 @@ setMethod("spPlot", "spSwarm", function(
     x <- factor(x, levels = commonLevels)
     y <- factor(y, levels = commonLevels)
     
-    table(x,y)
-    
+    tbl <- table(x,y)
+    t <- abs(tbl+t(tbl))
+    return(t)
 }
 
 
