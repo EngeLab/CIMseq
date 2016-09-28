@@ -8,7 +8,7 @@
 \usage{
 changeCutoff(spSwarm, ...)
 
-\S4method{changeCutoff}{spSwarm}(spSwarm, ...)
+\S4method{changeCutoff}{spSwarm}(spSwarm, cutoff, ...)
 }
 \arguments{
 \item{spSwarm}{An spSwarm object.}

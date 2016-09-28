@@ -287,21 +287,23 @@ setMethod("spPlot", "spUnsupervised", function(
 #' @export
 #' @import ggraph
 #' @importFrom ggthemes theme_few scale_colour_economist
-#' @importFrom igraph graph_from_data_frame
+#' @importFrom igraph graph_from_data_frame V vertex
 #' @importFrom ggforce theme_no_axes
 
 setMethod("spPlot", "spSwarm", function(
     x,
     ...
 ){
+    #get data
     spUnsupervised <- getData(x, "spUnsupervised")
     tsneMeans <- getData(spUnsupervised, "tsneMeans")
-    colnames(tsneMeans) <- c("classification", "x", "y")
-    
+    colnames(tsneMeans) <- c("name", "x", "y")
+    tsneMeans$name <- as.character(tsneMeans$name)
+
     tsne <- getData(spUnsupervised, "tsne")
     classification <- getData(spUnsupervised, "mclust")$classification
-    d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
-    colnames(d) <- c("x", "y", "classification")
+    d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification, stringsAsFactors=FALSE)
+    colnames(d) <- c("x", "y", "name")
     
     codedSwarm <- getData(x, "codedSwarm")
     
@@ -310,21 +312,52 @@ setMethod("spPlot", "spSwarm", function(
     
     #calculate the edge weights (frequency)
     graph <- .calculateWeights(graph)
-    graph$weight <- factor(graph$weight)
     
-    #convert to igraph and plot
+    
+    #convert to igraph
     graphDF <- graph_from_data_frame(graph)
-    layout <- tsneMeans[tsneMeans$classification %in% c(graph$from, graph$to),]
+    vertexToAdd <- tsneMeans$name[!tsneMeans$name %in% V(graphDF)$name]
     
+    if(length(vertexToAdd) > 0) {
+        for(i in 1:length(vertexToAdd)) {
+            graphDF <- graphDF + vertex(as.character(vertexToAdd[i]))
+        }
+    }
+    
+    #setup colors
+    colors <- .gg_color_hue(length(unique(tsneMeans$name)))
+    names(colors) <- tsneMeans$name
+    
+    #setup layout
+    layout <- createLayout(graphDF, 'manual', node.positions = tsneMeans)
+    layout$x <- tsneMeans$x[sapply(layout$name, function(x) which(tsneMeans$name == x))]
+    layout$y <- tsneMeans$y[sapply(layout$name, function(x) which(tsneMeans$name == x))]
+    
+    #plot
     plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = layout)+
         geom_edge_link(edge_colour="black", aes(edge_alpha=weight))+
-        geom_edge_loop(edge_colour="black", aes(edge_alpha=weight))+
-        geom_node_point(data=tsneMeans, aes(colour=classification), size=5)+
-        geom_node_point(data=d, aes(colour=classification), alpha=0.25)
-    
+        geom_edge_loop(
+            edge_colour="black",
+            aes(
+                angle=90,
+                direction=270,
+                strength=50,
+                edge_alpha=weight
+            )
+        )+
+        scale_colour_manual(values=colors)+
+        geom_node_point(data=d, aes(colour=name), alpha=0.25)+
+        geom_node_point(aes(colour=name), size=5)
+        
     plot
+    
     return(plot)
 })
+
+.gg_color_hue <- function(n) {
+    hues = seq(15, 375, length = n + 1)
+    hcl(h = hues, l = 65, c = 100)[1:n]
+}
 
 .networkDF <- function(x) {
     names <- colnames(x)[c(-1,-2)]
@@ -365,6 +398,9 @@ setMethod("spPlot", "spSwarm", function(
             graph[u, "weight"] <- 0
         }
     }
+    
+    graph$weight[graph$from == graph$to] <- 1
+    graph$weight <- factor(graph$weight)
     return(unique(graph))
 }
 
