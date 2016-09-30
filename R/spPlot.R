@@ -292,6 +292,7 @@ setMethod("spPlot", "spUnsupervised", function(
 
 setMethod("spPlot", "spSwarm", function(
     x,
+    layout="tsne",
     ...
 ){
     #get data
@@ -310,7 +311,7 @@ setMethod("spPlot", "spSwarm", function(
     #process
     graph <- .networkDF(codedSwarm)
     
-    #calculate the edge weights (frequency)
+    #calculate the edge weights (connection number)
     graph <- .calculateWeights(graph)
     
     
@@ -325,7 +326,7 @@ setMethod("spPlot", "spSwarm", function(
     }
     
     #setup colors
-    colors <- .gg_color_hue(length(unique(tsneMeans$name)))
+    colors <- .setColors()[length(unique(tsneMeans$name))]
     names(colors) <- tsneMeans$name
     
     #setup layout
@@ -353,11 +354,6 @@ setMethod("spPlot", "spSwarm", function(
     
     return(plot)
 })
-
-.gg_color_hue <- function(n) {
-    hues = seq(15, 375, length = n + 1)
-    hcl(h = hues, l = 65, c = 100)[1:n]
-}
 
 .networkDF <- function(x) {
     names <- colnames(x)[c(-1,-2)]

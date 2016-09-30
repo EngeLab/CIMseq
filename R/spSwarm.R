@@ -396,11 +396,13 @@ function(
         counts.ercc <- getData(spCounts, "counts.ercc")
         sampleType <- getData(spCounts, "sampleType")
         
-        frac.ercc <- 100 * (colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts)))
-        frac.ercc <- frac.ercc[sampleType == "Multuplet"]
+        frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
+        medianErccSng <- median(frac.ercc[sampleType == "Singlet"])
+        extimatedCells <- medianErccSng/frac.ercc[sampleType == "Multuplet"]
         
         for(p in 1:nrow(x)) {
-            cutoff <- frac.ercc[p] / ncol(x)
+            cutoff <- extimatedCells[p] / ncol(x)
+            print(cutoff)
             x[p,][x[p,] < cutoff] <- 0
         }
         
