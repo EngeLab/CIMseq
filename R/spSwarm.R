@@ -131,6 +131,77 @@ function(
 #############################################
 
 ##define optimization and constraint functions
+##import data to python session
+.defineImport <- function(cellTypes, slice, fractions) {
+    cmd1 <- 'import pandas as pd'
+    cmd2 <- 'import numpy as np'
+    cmd3 <- 'import math'
+    python.exec(cmd1)
+    python.exec(cmd2)
+    python.exec(cmd3)
+    
+    python.assign('cellTypesDictionary', cellTypes)
+    python.assign('sliceDictionary', slice)
+    python.assign('fractions', fractions)
+    
+    cmd4 <- 'cellTypes = pd.DataFrame(cellTypesDictionary)'
+    cmd5 <- 'slice = pd.DataFrame(sliceDictionary)'
+    cmd6 <- 'fractions = np.asarray(fractions)'
+    python.exec(cmd4)
+    python.exec(cmd5)
+    python.exec(cmd6)
+    
+    cmd7 <- 'cellTypes.sort_values(by=\'index\', ascending=\'True\')'
+    cmd8 <- 'slice.sort_values(by=\'index\', ascending=\'True\')'
+    python.exec(cmd7)
+    python.exec(cmd8)
+    
+    cmd9 <- 'cellTypes = cellTypes.drop(\'index\', 1)'
+    cmd10 <- 'slice = slice.drop(\'index\', 1)'
+    python.exec(cmd9)
+    python.exec(cmd10)
+    
+    return(list(
+        cmd1,
+        cmd2,
+        cmd3,
+        cmd4,
+        cmd5,
+        cmd6,
+        cmd7,
+        cmd8,
+        cmd9,
+        cmd10
+    ))
+}
+
+##define cost function(s) in python session
+.defineCost <- function() {
+    
+    cmd1 <- 'def makeSyntheticSlice(cellTypes, fractions):
+        func = lambda x: sum(np.asarray(x) * np.asarray(fractions))
+        return cellTypes.apply(func, axis=1)'
+    
+    cmd2 <- 'def distToSlice(fractions, *args):
+        cellTypes, slice, col = args
+        normFractions = fractions / sum(fractions)
+        a = makeSyntheticSlice(cellTypes, normFractions)
+        for i in a:
+            if math.isnan(i):
+                print "NaN in make synthetic slice!"
+    
+        diff = []
+        for index in range(cellTypes.shape[0]):
+            d = a.iloc[index] - slice.iloc[index, col]
+            diff.append(abs(d))
+        cost = sum(diff)
+        return cost'
+    
+    python.exec(cmd1)
+    python.exec(cmd2)
+    return(list(cmd1, cmd2))
+}
+
 #constraint 1
 .con1 <- function() {
     cmd1 <- 'def con1(fractions, *args):
@@ -140,6 +211,7 @@ function(
             return -1'
     
     python.exec(cmd1)
+    return(cmd1)
 }
 
 #optimization
@@ -166,6 +238,7 @@ function(
         return { \'xopt\':dictionary, \'fopt\':fopt, \'name\':name }'
         
     python.exec(cmd1)
+    return(cmd1)
 }
 
 ##run optimization
@@ -201,7 +274,18 @@ function(
         print(paste(length(top), " multuplets left to analyze.", sep=""))
 
         loopOutput <- foreach(i = 1:cores, top=top, .combine = append) %dopar% {
-            python.exec(paste('result = optimize(cellTypes, slice, fractions, col=', top, ', maxiter=', maxiter, ', swarmsize=', swarmsize, ', minstep=', minstep, ', minfunc=', minfunc, ')', sep=""))
+            python.exec(
+                paste(
+                    'result = optimize(cellTypes, slice, fractions, col=',
+                    top,
+                    ', maxiter=', maxiter,
+                    ', swarmsize=', swarmsize,
+                    ', minstep=', minstep,
+                    ', minfunc=', minfunc,
+                    ')',
+                    sep=""
+                )
+            )
             result <- list(
                 currentFopt = python.get(paste('result[\'fopt\']')),
                 currentXopt = python.get(paste('result[\'xopt\']')),
@@ -220,52 +304,7 @@ function(
     return(result)
 }
 
-##import data to python session
-.defineImport <- function(cellTypes, slice, fractions) {
-    python.exec('import pandas as pd')
-    python.exec('import numpy as np')
-    python.exec('import math')
 
-    python.assign('cellTypesDictionary', cellTypes)
-    python.assign('sliceDictionary', slice)
-    python.assign('fractions', fractions)
-    
-    python.exec('cellTypes = pd.DataFrame(cellTypesDictionary)')
-    python.exec('slice = pd.DataFrame(sliceDictionary)')
-    python.exec('fractions = np.asarray(fractions)')
-    
-    python.exec('cellTypes.sort_values(by=\'index\', ascending=\'True\')')
-    python.exec('slice.sort_values(by=\'index\', ascending=\'True\')')
-
-    python.exec('cellTypes = cellTypes.drop(\'index\', 1)')
-    python.exec('slice = slice.drop(\'index\', 1)')
-}
-
-##define cost function(s) in python session
-.defineCost <- function() {
-    
-    cmd1 <- 'def makeSyntheticSlice(cellTypes, fractions):
-        func = lambda x: sum(np.asarray(x) * np.asarray(fractions))
-        return cellTypes.apply(func, axis=1)'
-    
-    cmd2 <- 'def distToSlice(fractions, *args):
-        cellTypes, slice, col = args
-        normFractions = fractions / sum(fractions)
-        a = makeSyntheticSlice(cellTypes, normFractions)
-        for i in a:
-            if math.isnan(i):
-                print "NaN in make synthetic slice!"
-    
-        diff = []
-        for index in range(cellTypes.shape[0]):
-            d = a.iloc[index] - slice.iloc[index, col]
-            diff.append(abs(d))
-            cost = sum(diff)
-        return cost'
-    
-    python.exec(cmd1)
-    python.exec(cmd2)
-}
 
 .processResults <- function(result) {
     
@@ -292,7 +331,7 @@ function(
 .multiHOTencoding <- function(optResult, spCounts, cutoff) {
     
     uu <- c("names", "fopt")
-    hold <- optResult[ , colnames(optResult) %in% uu]
+    hold <- data.frame(fopt = optResult[ , colnames(optResult) %in% uu])
     x <- optResult[ , !colnames(optResult) %in% uu]
     
     if(class(cutoff) == "numeric") {

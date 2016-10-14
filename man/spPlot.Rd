@@ -14,7 +14,7 @@ spPlot(x, ...)
 
 \S4method{spPlot}{spUnsupervised}(x, type, markers = NULL, ...)
 
-\S4method{spPlot}{spSwarm}(x, ...)
+\S4method{spPlot}{spSwarm}(x, layout = "tsne", ...)
 }
 \arguments{
 \item{...}{additional arguments to pass on}

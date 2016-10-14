@@ -28,6 +28,26 @@ spUnsupervised(spCounts, ...)
 \item{...}{Additional arguments to pass on}
 
 \item{spCounts}{spCounts object.}
+
+\item{max}{The max number of genes to include based either on maximum expression
+or maximum variance which is decided by the "type" paramater.}
+
+\item{plot.callback}{A function allowing intermediate plotting of the tSNE as it runs.}
+
+\item{k}{The dimensions of the resulting tsne. Passed to tsne function.}
+
+\item{max_iter}{The max number of tSNE iterations. Passed to tsne function.}
+
+\item{perplexity}{The perplexity argument to tsne. Passed to tsne function.}
+
+\item{initial_dims}{The initial dimensions argument. Passed to tsne function.}
+
+\item{Gmax}{A numeric vector of 1:Gmax passed as the "G" argument to Mclust.}
+
+\item{seed}{Sets the seed before running tSNE.}
+
+\item{type}{Decides if genes included are picked by their maximum expression
+or maximum variance. Can be either "max" or "var".}
 }
 \value{
 Ercc fraction plot.

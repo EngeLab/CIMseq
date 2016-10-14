@@ -13,7 +13,7 @@ NULL
 #' @aliases spCounts
 #' @param counts Counts matrix with samples as columns and genes as rows.
 #' @param counts.ercc A matrix containing ercc spike-in reads and their counts.
-#' @param sampleType A character vector indicating the column name that indicates that the column contains a multuplet.
+#' @param sampleType A character vector indicating the column naming scheme showing that the column contains a multuplet.
 #' @param ... additional arguments to pass on
 #' @return The spCounts function returns an object of class spCounts.
 #' @author Jason T. Serviss
@@ -21,10 +21,13 @@ NULL
 #' @examples
 #'
 #' #use demo data
-#' data(Doublet_project_data)
+#' data(expData)
+#' counts <- getData(expData, "counts")
+#' counts.ercc <- getData(expData, "counts.ercc")
+#' sampleType <- '1000102901' #indicates that the column contains a multuplet
 #'
 #' #run function
-#'
+#' cObj <- spCounts(counts, counts.ercc, '1000102901')
 #'
 NULL
 
@@ -54,7 +57,7 @@ function(
 
 .norm.log.counts <- function(counts) {
     norm.fact <- colSums(counts)
-    counts.norm <- t( apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
+    counts.norm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
     counts.log <- log2(counts.norm)
 }
 
