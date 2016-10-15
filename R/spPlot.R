@@ -326,7 +326,7 @@ setMethod("spPlot", "spSwarm", function(
     }
     
     #setup colors
-    colors <- .setColors()[length(unique(tsneMeans$name))]
+    colors <- .setColors()[1:length(unique(tsneMeans$name))]
     names(colors) <- tsneMeans$name
     
     #setup layout
@@ -336,7 +336,7 @@ setMethod("spPlot", "spSwarm", function(
     
     #plot
     plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = layout)+
-        geom_edge_link(edge_colour="black", aes(edge_alpha=weight))+
+        geom_edge_link(edge_colour="black", aes(edge_alpha=as.numeric(weight)))+
         geom_edge_loop(
             edge_colour="black",
             aes(

@@ -76,7 +76,7 @@ setMethod("spUnsupervised", "spCounts", function(
     }
     
     #calculate distances
-    my.dist <- distFunc(counts.log, select, sampleType)
+    my.dist <- .distFunc(counts.log, select, sampleType)
     
     #run tSNE
     my.tsne <- .runTsne(my.dist, k, plot.callback, initial_dims, max_iter, perplexity, seed)
