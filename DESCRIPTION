@@ -1,7 +1,8 @@
 Package: sp.scRNAseq
-Title: What the Package Does (one line, title case)
+Title: sp.scRNAseq is a software suite for analysis of scRNAseq data that has been produced using the spatial scRNAseq method
 Version: 0.0.0.9000
 Author: Jason T. Serviss
+Maintainer: Jason T Serviss <jason.serviss@ki.se>
 Description: What the package does (one paragraph).
 Depends:
     R (>= 3.3.0)
@@ -12,7 +13,18 @@ Imports:
     mclust,
     optimx,
     tsne,
-    caret
+    doMC,
+    foreach,
+    ggforce,
+    ggraph,
+    ggthemes,
+    igraph,
+    methods,
+    plyr,
+    rPython,
+    reshape2,
+    S4Vectors,
+    viridis
 Suggests:
     knitr,
     rmarkdown,

@@ -17,13 +17,15 @@ spPlot(x, ...)
 \S4method{spPlot}{spSwarm}(x, layout = "tsne", ...)
 }
 \arguments{
+\item{x}{Counts matrix with samples as columns and genes as rows.}
+
 \item{...}{additional arguments to pass on}
 
 \item{type}{Can be "ercc", "markers", or .......}
 
 \item{markers}{A character vector with 2 markers to plot.}
 
-\item{counts}{Counts matrix with samples as columns and genes as rows.}
+\item{layout}{Specify "tsne" for overlaying connections over the tSNE or "NULL" for graph layout.}
 }
 \value{
 The spPlot function returns an object of class spCounts.
@@ -37,10 +39,9 @@ Imports count and count.ercc data to a sp.scRNAseq object.
 \examples{
 
 #use demo data
-data(Doublet_project_data)
+data(expData)
 
 #run function
-spPlot(x, type="ercc")
 
 }
 \author{

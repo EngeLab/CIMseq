@@ -14,6 +14,8 @@ changeCutoff(spSwarm, ...)
 \item{spSwarm}{An spSwarm object.}
 
 \item{...}{additional arguments to pass on}
+
+\item{cutoff}{The fraction below which a connection should not be considered.}
 }
 \value{
 spSwarm output.

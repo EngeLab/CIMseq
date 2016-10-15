@@ -58,7 +58,7 @@ test_that("check that the .defineImport function outputs the expected result", {
     expect_identical(expected_X1, python.get('cellTypes[\'X1\'].values.tolist()'))
     expect_identical(expected_X2, python.get('cellTypes[\'X2\'].values.tolist()'))
     expect_identical(expected_X3, python.get('cellTypes[\'X3\'].values.tolist()'))
-    expect_identical(expected_onetwo, python.get('slice[\'oneTwo\'].values.tolist()'))
+    expect_identical(expected_oneTwo, python.get('slice[\'oneTwo\'].values.tolist()'))
     expect_equivalent(expected_fractions, python.get('fractions.tolist()'))
 
 })

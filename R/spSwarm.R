@@ -358,24 +358,24 @@ function(
     return(cbind(hold, x))
 }
 
-.PCAsubset <- function(counts, sampleType, cutoff) {
-    
+#.PCAsubset <- function(counts, sampleType, cutoff) {
+
     #subset singlets
-    sng <- counts[ ,sampleType == "Singlet"]
+    #    sng <- counts[ ,sampleType == "Singlet"]
     
     #remove 0's
-    c <- counts[rowMeans(sng) != 0, ]
+    #    c <- counts[rowMeans(sng) != 0, ]
     
     #run PCA
-    pca <- prcomp(t(c), center=TRUE, scale=TRUE)
+    #    pca <- prcomp(t(c), center=TRUE, scale=TRUE)
     
     #order and return genes
-    rotation <- as.data.frame(pca$rotation)
-    genes <- rownames(rotation[order(rotation$PC1), ])
-    cut <- cutoff/2
-    selected <- c(genes[1:cut], genes[(length(genes) - (cut-1)):length(genes)])
-    return(selected)
-}
+    #    rotation <- as.data.frame(pca$rotation)
+    #    genes <- rownames(rotation[order(rotation$PC1), ])
+    #    cut <- cutoff/2
+    #    selected <- c(genes[1:cut], genes[(length(genes) - (cut-1)):length(genes)])
+    #    return(selected)
+    #}
 
 #' changeCutoff
 #'
@@ -387,6 +387,7 @@ function(
 #' @rdname changeCutoff
 #' @aliases changeCutoff
 #' @param spSwarm An spSwarm object.
+#' @param cutoff The fraction below which a connection should not be considered.
 #' @param ... additional arguments to pass on
 #' @return spSwarm output.
 #' @author Jason T. Serviss

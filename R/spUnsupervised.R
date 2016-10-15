@@ -47,6 +47,7 @@ setGeneric("spUnsupervised", function(spCounts, ...
 #' @importFrom tsne tsne
 #' @importFrom mclust Mclust mclustBIC
 #' @importFrom plyr ddply summarize
+#' @importFrom stats as.dist
 
 setMethod("spUnsupervised", "spCounts", function(
     spCounts,
@@ -128,7 +129,8 @@ setMethod("spUnsupervised", "spCounts", function(
 #calculate the mean x and y value for each classification group based
 #on the tSNE results. Subsequently used for plotting.
 .tsneGroupMeans <- function(x, class) {
-    d <- data.frame(x = x[ ,1], y = x[ ,2], classification=class)
+    d <- data.frame(x[ ,1], x[ ,2], class)
+    colnames(d) <- c("x", "y", "classification")
     means <- ddply(d, "classification", summarize, meanX=mean(x), meanY=mean(y))
     return(means)
 }

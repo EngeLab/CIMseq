@@ -86,11 +86,8 @@ function(
 #' @examples
 #'
 #' #use demo data
-#' data(Doublet_project_data)
-#' x <- importCounts(counts=counts, counts.ercc=counts.ercc)
 #'
 #' #run function
-#' good.cells <- filterCells(x)
 #'
 NULL
 
@@ -102,6 +99,7 @@ setGeneric("filterCells", function(x, ...
 
 #' @rdname filterCells
 #' @export
+#' @importFrom stats median qnorm
 setMethod("filterCells", "spCounts",
     function(
         x,

@@ -2,6 +2,7 @@
 NULL
 
 #' @rdname spCounts
+#' @import S4Vectors
 #' @export
 setMethod("show", "spCounts", function(object){ .showCounts(object) })
 
@@ -24,6 +25,7 @@ setMethod("show", "spCounts", function(object){ .showCounts(object) })
 }
 
 #' @rdname spUnsupervised
+#' @import S4Vectors
 #' @export
 setMethod("show", "spUnsupervised", function(object){ .showUnsupervised(object) })
 
@@ -49,6 +51,7 @@ setMethod("show", "spUnsupervised", function(object){ .showUnsupervised(object) 
 }
 
 #' @rdname spSwarm
+#' @import S4Vectors
 #' @export
 setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
 
@@ -137,4 +140,3 @@ setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
         cat("\n-----------\n\n")
     }
 }
-

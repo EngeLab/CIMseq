@@ -32,11 +32,8 @@ A method to filter low quality cells from the analysis.
 \examples{
 
 #use demo data
-data(Doublet_project_data)
-x <- importCounts(counts=counts, counts.ercc=counts.ercc)
 
 #run function
-good.cells <- filterCells(x)
 
 }
 \author{
