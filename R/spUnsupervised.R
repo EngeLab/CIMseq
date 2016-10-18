@@ -12,8 +12,6 @@ NULL
 #' @rdname spUnsupervised
 #' @aliases spUnsupervised
 #' @param spCounts spCounts object.
-#' @param max The max number of genes to include based either on maximum expression
-#'    or maximum variance which is decided by the "type" paramater.
 #' @param plot.callback A function allowing intermediate plotting of the tSNE as it runs.
 #' @param k The dimensions of the resulting tsne. Passed to tsne function.
 #' @param max_iter The max number of tSNE iterations. Passed to tsne function.
@@ -22,7 +20,12 @@ NULL
 #' @param Gmax A numeric vector of 1:Gmax passed as the "G" argument to Mclust.
 #' @param seed Sets the seed before running tSNE.
 #' @param type Decides if genes included are picked by their maximum expression
-#'  or maximum variance. Can be either "max" or "var".
+#'  or maximum variance. Can be either "max", "var", or "manual". If "manual" the
+#'  genes argument must also be specified.
+#' @param max The max number of genes to include based either on maximum expression
+#'    or maximum variance which is decided by the "type" paramater.
+#' @param genes If type = manual, genes to be included are specified here as a character
+#'    vector. These must match the rownames in the counts variable.
 #' @param ... Additional arguments to pass on
 #' @return Ercc fraction plot.
 #' @author Jason T. Serviss
@@ -51,7 +54,6 @@ setGeneric("spUnsupervised", function(spCounts, ...
 
 setMethod("spUnsupervised", "spCounts", function(
     spCounts,
-    max = 2000,
     plot.callback = NULL,
     k = 2,
     max_iter = 20000,
@@ -60,6 +62,8 @@ setMethod("spUnsupervised", "spCounts", function(
     Gmax = 50,
     seed = 11,
     type = "max",
+    max = 2000,
+    genes=NULL,
     ...
 ){
     #get relevant data
@@ -74,6 +78,10 @@ setMethod("spUnsupervised", "spCounts", function(
     
     if(type == "max") {
         select <- .ntopMax(counts.log[ ,sampleType=="Singlet"], max)
+    }
+    
+    if(type == "manual" & is.character(genes) == TRUE) {
+        select <- which(rownames(counts) %in% genes)
     }
     
     #calculate distances
