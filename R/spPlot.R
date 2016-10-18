@@ -46,19 +46,19 @@ setMethod("spPlot", "spCounts", function(
     ...
 ){
     if( type == "ercc" ) {
-        p <- .erccPlot(x)
+        p <- .countsErccPlot(x)
         p
         return(p)
     }
     if( type == "markers" ) {
-        p <- .markersPlot(x, markers)
+        p <- .countsMarkersPlot(x, markers)
         p
         return(p)
     }
 })
 
 #get and process data for ercc plot
-.erccPlotProcess <- function(x) {
+.countsErccPlotProcess <- function(x) {
     counts <- getData(x, "counts")
     counts.ercc <- getData(x, "counts.ercc")
     sampleType <- getData(x, "sampleType")
@@ -68,9 +68,9 @@ setMethod("spPlot", "spCounts", function(
 }
 
 #plot ercc plot
-.erccPlot <- function(x) {
+.countsErccPlot <- function(x) {
     
-    d <- .erccPlotProcess(x)
+    d <- .countsErccPlotProcess(x)
     
     p <- ggplot(d, aes_string(x='sampleType', y='frac.ercc'))+
     geom_jitter()+
@@ -102,7 +102,7 @@ setMethod("spPlot", "spCounts", function(
 }
 
 #get and process data for markers plot
-.markersPlotProcess <- function(x, markers) {
+.countsMarkersPlotProcess <- function(x, markers) {
     counts.log <- getData(x, "counts.log")
     groups <- getData(x, "sampleType")
     d <- data.frame(
@@ -114,9 +114,9 @@ setMethod("spPlot", "spCounts", function(
 }
 
 #plot markers plot
-.markersPlot <- function(x, markers) {
+.countsMarkersPlot <- function(x, markers) {
     
-    d <- .markersPlotProcess(x, markers)
+    d <- .countsMarkersPlotProcess(x, markers)
     
     colors <- .setColors()[1:2]
     
@@ -165,22 +165,21 @@ setMethod("spPlot", "spUnsupervised", function(
     ...
 ){
     if( type == "clusters" ) {
-        p <- .spClustersPlot(x)
+        p <- .unsupClustersPlot(x)
         p
         return(p)
     }
     if( type == "markers" ) {
-        p <- .spMarkersPlot(x, markers)
+        p <- .unsupMarkersPlot(x, markers)
         p
         return(p)
     }
 })
 
 #get and process data for clusters plot
-.spClustersPlotProcess <- function(x) {
+.unsupClusterPlotProcess <- function(x) {
     tsne <- getData(x, "tsne")
-    mclust <- getData(x, "mclust")
-    classification <- mclust$classification
+    classification <- getData(x, "classification")
     
     d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
     
@@ -188,12 +187,12 @@ setMethod("spPlot", "spUnsupervised", function(
 }
 
 #plot clusters plot
-.spClustersPlot <- function(x) {
+.unsupClustersPlot <- function(x) {
     
-    d <- .spClustersPlotProcess(x)
+    d <- .unsupClusterPlotProcess(x)
     colors <- .setColors()
 
-    p <- ggplot(d, aes_string(x='V1', y='V2', colour=factor('classification')))+
+    p <- ggplot(d, aes_string(x='V1', y='V2', colour='classification'))+
     geom_point(size=3, alpha=0.75)+
     labs(
         x="Dim 1",
@@ -224,10 +223,11 @@ setMethod("spPlot", "spUnsupervised", function(
 }
 
 #get and process data for markers plot
-.spMarkersPlotProcess <- function(x, markers) {
+.unsupMarkerPlotProcess <- function(x, markers) {
     tsne <- as.data.frame(getData(x, "tsne"))
     counts.log <- getData(x, "counts.log")
-    sng <- counts.log[ , colnames(getData(x ,"dist"))]
+    sampleType <- getData(x, "sampleType")
+    sng <- counts.log[ , sampleType == "Singlet"]
     
     markExpress <- t(sng[rownames(sng) %in% markers, ])
     markExpress <- apply(markExpress, 2, function(x) {
@@ -242,9 +242,9 @@ setMethod("spPlot", "spUnsupervised", function(
 }
 
 #plot markers plot
-.spMarkersPlot <- function(x, markers) {
+.unsupMarkersPlot <- function(x, markers) {
     
-    m <- .spMarkersPlotProcess(x, markers)
+    m <- .unsupMarkerPlotProcess(x, markers)
     
     p <- ggplot(m, aes_string(x='V1', y='V2', colour='value'))+
         geom_point()+
@@ -296,15 +296,15 @@ setMethod("spPlot", "spSwarm", function(
     ...
 ){
     #get data
-    tsneMeans <- .tSNEmeansProcess(x)
-    d <- .tsneProcess(x)
+    tsneMeans <- .swarmTsneMeansProcess(x)
+    d <- .swarmTsneProcess(x)
     codedSwarm <- getData(x, "codedSwarm")
     
     #process
-    graph <- .networkDF(codedSwarm)
+    graph <- .swarmNetworkDF(codedSwarm)
     
     #calculate the edge weights (connection number)
-    graph <- .calculateWeights(graph)
+    graph <- .swarmCalculateWeights(graph)
     
     
     #convert to igraph
@@ -347,7 +347,7 @@ setMethod("spPlot", "spSwarm", function(
     return(plot)
 })
 
-.tSNEmeansProcess <- function(x) {
+.swarmTsneMeansProcess <- function(x) {
     spUnsupervised <- getData(x, "spUnsupervised")
     tsneMeans <- getData(spUnsupervised, "tsneMeans")
     colnames(tsneMeans) <- c("name", "x", "y")
@@ -355,10 +355,10 @@ setMethod("spPlot", "spSwarm", function(
     return(tsneMeans)
 }
 
-.tsneProcess <- function(x) {
+.swarmTsneProcess <- function(x) {
     spUnsupervised <- getData(x, "spUnsupervised")
     tsne <- getData(spUnsupervised, "tsne")
-    classification <- getData(spUnsupervised, "mclust")$classification
+    classification <- getData(spUnsupervised, "classification")
     
     d <- cbind(as.data.frame(
         tsne[ ,1:2]),
@@ -370,7 +370,7 @@ setMethod("spPlot", "spSwarm", function(
     return(d)
 }
 
-.networkDF <- function(x) {
+.swarmNetworkDF <- function(x) {
     names <- colnames(x)[c(-1,-2)]
     for(o in 1:nrow(x)) {
         ind <- which(x[o, c(-1,-2)] != 0)
@@ -392,8 +392,8 @@ setMethod("spPlot", "spSwarm", function(
     return(connections)
 }
 
-.calculateWeights <- function(graph) {
-    t <- .squareTable(graph$from, graph$to)
+.swarmCalculateWeights <- function(graph) {
+    t <- .swarmSquareTable(graph$from, graph$to)
     col <- colnames(t)
     row <- rownames(t)
     
@@ -415,7 +415,7 @@ setMethod("spPlot", "spSwarm", function(
     return(unique(graph))
 }
 
-.squareTable <- function(x,y) {
+.swarmSquareTable <- function(x,y) {
     x <- factor(x)
     y <- factor(y)
     
