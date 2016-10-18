@@ -1,102 +1,303 @@
 #context("spPlot")
 
-##run test .erccPlotProcess
-test_that("check that the .erccPlotProcess function outputs the expected result", {
+##run test .countsErccPlotProcess
+test_that("check that the .countsErccPlotProcess function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    counts <- matrix(c(0,1,1,0), nrow=2, ncol=2)
-    counts.ercc <- matrix(c(0,1,1,0), nrow=2, ncol=2)
-    names <- c("s.1", "m.1")
-    colnames(counts) <- names
-    colnames(counts.ercc) <- names
-
-    cObj <- spCounts(counts, counts.ercc, "m.")
+    input <- cObj
     
     #setup expected data
     expected <- data.frame(
-        sampleType = c("Singlet", "Multuplet"),
-        frac.ercc = rep(0.5, 2),
-        row.names = names
+        sampleType = c(rep("Singlet", 4), "Multuplet"),
+        frac.ercc = rep(0.5, 5),
+        row.names = c(paste("s", 1:4, sep="."), "m.1")
     )
     
     #run function
-    output <- .erccPlotProcess(cObj)
+    output <- .countsErccPlotProcess(input)
     
     #test
     expect_identical(expected, output)
 
 })
 
-##run test .erccPlot
-test_that("check that the .erccPlot function outputs the expected result", {
+##run test .countsErccPlot
+test_that("check that the .countsErccPlot function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    counts <- matrix(c(0,1,1,0), nrow=2, ncol=2)
-    counts.ercc <- matrix(c(0,1,1,0), nrow=2, ncol=2)
-    names <- c("s.1", "m.1")
-    colnames(counts) <- names
-    colnames(counts.ercc) <- names
-    
-    cObj <- spCounts(counts, counts.ercc, "m.")
-    
+    input <- cObj
+
     #run function
-    output <- .erccPlotProcess(cObj)
+    output <- .countsErccPlot(input)
     
     #test
-    expect_silent(.erccPlotProcess(cObj))
+    expect_silent(.countsErccPlot(input))
     expect_false(is.null(output))
     
 })
 
-##run test .markersPlotProcess
-test_that("check that the .markersPlotProcess function outputs the expected result", {
+##run test .countsMarkersPlotProcess
+test_that("check that the .countsMarkersPlotProcess function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    counts <- matrix(c(0,1,1,0), nrow=2, ncol=2)
-    names <- c("s.1", "m.1")
-    colnames(counts) <- names
-    rownames(counts) <- c("A", "B")
-    cObj <- spCounts(counts, matrix(), "m.")
-    
+    input <- cObj
     markers <- c("A", "B")
     
     #setup expected data
     expected <- data.frame(
-        sampleType = c("Singlet", "Multuplet"),
-        marker1 = c(0, 19.93157),
-        marker2 = c(19.93157, 0),
-        row.names = names
+        sampleType = c(rep("Singlet", 4), "Multuplet"),
+        marker1 = getData(cObj, "counts.log")[1:1,],
+        marker2 = getData(cObj, "counts.log")[2:2,],
+        row.names = c(paste("s", 1:4, sep="."), "m.1")
     )
     
     #run function
-    output <- .markersPlotProcess(cObj, markers)
+    output <- .countsMarkersPlotProcess(input, markers)
     
     #test
     expect_equivalent(expected, output)
     
 })
 
-##run test .markersPlot
-test_that("check that the .markersPlot function outputs the expected result", {
+##run test .countsMarkersPlot
+test_that("check that the .countsMarkersPlot function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    counts <- matrix(c(0,1,1,0), nrow=2, ncol=2)
-    names <- c("s.1", "m.1")
-    rownames(counts) <- c("A", "B")
-    colnames(counts) <- names
-    
-    cObj <- spCounts(counts, matrix(), "m.")
+    input <- cObj
     markers <- c("A", "B")
-
+    
     #run function
-    output <- .markersPlot(cObj, markers)
+    output <- .countsMarkersPlot(input, markers)
     
     #test
-    expect_warning(.markersPlot(cObj, markers), regexp = NA)
+    expect_warning(.countsMarkersPlot(input, markers), regexp = NA)
     expect_false(is.null(output))
     
 })
+
+##run test .unsupClusterPlotProcess
+test_that("check that the .unsupClusterPlotProcess function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    input <- uObj
+    
+    #run function
+    output <- .unsupClusterPlotProcess(input)
+    
+    #test
+    expect_equivalent(nrow(output), 4)
+    expect_equivalent(ncol(output), 3)
+    expect_equivalent(colnames(output), c("V1", "V2", "classification"))
+    expect_type(output$V1, "double")
+    expect_type(output$V2, "double")
+    expect_type(output$classification, "integer")
+
+})
+
+##run test .unsupClustersPlot
+test_that("check that the .unsupClustersPlot function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    input <- uObj
+
+    #run function
+    output <- .unsupClustersPlot(input)
+    
+    #test
+    expect_warning(.unsupClustersPlot(input), regexp = NA)
+    expect_false(is.null(output))
+    
+})
+
+##run test .unsupMarkerPlotProcess
+test_that("check that the .unsupMarkerPlotProcess function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    input <- uObj
+    markers <- c("A", "B")
+    
+    #run function
+    output <- .unsupMarkerPlotProcess(input, markers)
+    
+    #test
+    expect_equivalent(nrow(output), 8)
+    expect_equivalent(ncol(output), 5)
+    expect_equivalent(colnames(output), c("V1", "V2", "sample", "variable", "value"))
+    expect_type(output$V1, "double")
+    expect_type(output$V2, "double")
+    expect_type(output$sample, "character")
+    expect_type(output$variable, "integer")
+    expect_type(output$value, "double")
+
+})
+
+##run test .unsupMarkersPlot
+test_that("check that the .unsupMarkersPlot function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    input <- uObj
+    markers <- c("A", "B")
+
+    #run function
+    output <- .unsupMarkersPlot(input, markers)
+    
+    #test
+    expect_warning(.unsupMarkersPlot(input, markers), regexp = NA)
+    expect_false(is.null(output))
+    
+})
+
+##run test .swarmTsneMeansProcess
+test_that("check that the .swarmTsneMeansProcess function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    input <- nObj
+    
+    #run function
+    output <- .swarmTsneMeansProcess(input)
+    
+    #test
+    expect_equivalent(nrow(output), 2)
+    expect_equivalent(ncol(output), 3)
+    expect_equivalent(colnames(output), c("name", "x", "y"))
+    expect_type(output$name, "character")
+    expect_type(output$x, "double")
+    expect_type(output$y, "double")
+    
+})
+
+##run test .swarmTsneProcess
+test_that("check that the .swarmTsneProcess function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    input <- nObj
+    
+    #run function
+    output <- .swarmTsneProcess(input)
+    
+    #test
+    expect_warning(.swarmTsneProcess(input), regexp = NA)
+    expect_false(is.null(output))
+    
+})
+
+##run test .swarmNetworkDF
+test_that("check that the .swarmNetworkDF function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    codedSwarm <- data.frame(
+        fopt = 0,
+        sampleName = "m.1",
+        A1 = 0,
+        B1 = 0,
+        C1 = 0,
+        D1 = 0.5,
+        E1 = 0.5
+    )
+
+    #setup expected data
+    expected <- data.frame(
+        from = "D1",
+        to = "E1",
+        stringsAsFactors=FALSE
+    )
+    
+    #run function
+    output <- .swarmNetworkDF(codedSwarm)
+    
+    #test
+    expect_equivalent(output, expected)
+    
+    ###TEST2####
+    #prepare normal input data
+    codedSwarm <- data.frame(
+        fopt = 0,
+        sampleName = "m.1",
+        A1 = 1/5,
+        B1 = 1/5,
+        C1 = 1/5,
+        D1 = 1/5,
+        E1 = 1/5
+    )
+    
+    #setup expected data
+    tmp <- combn(paste(LETTERS[1:5], 1, sep=""), 2)
+    expected <- data.frame(
+        from = tmp[1,],
+        to = tmp[2,],
+        stringsAsFactors=FALSE
+    )
+    
+    #run function
+    output <- .swarmNetworkDF(codedSwarm)
+    
+    #test
+    expect_equivalent(output, expected)
+
+})
+
+##run test .swarmCalculateWeights
+test_that("check that the .swarmCalculateWeights function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    input <- data.frame(
+        from = c("A1", "A1", "A1", "A1"),
+        to = c("B1", "B1", "C1", "D1"),
+        stringsAsFactors=FALSE
+    )
+    
+    #setup expected data
+    expected <- data.frame(
+        from = rep("A1", 3),
+        to = c("B1", "C1", "D1"),
+        weight = c(2, 1, 1),
+        stringsAsFactors=FALSE
+    )
+    expected$weight <- as.factor(expected$weight)
+    
+    #run function
+    output <- .swarmCalculateWeights(input)
+    
+    #test
+    expect_equivalent(output, expected)
+    
+})
+
+##run test .swarmSquareTable
+test_that("check that the .swarmSquareTable function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    input <- data.frame(
+        from = c("A1", "A1", "A1", "A1"),
+        to = c("B1", "B1", "C1", "D1"),
+        stringsAsFactors=FALSE
+    )
+    
+    #run function
+    output <- .swarmSquareTable(input$from, input$to)
+    
+    #test
+    expect_equivalent(
+        matrix(output[lower.tri(output)], ncol=3),
+        matrix(output[upper.tri(output)], ncol=3, byrow=TRUE)
+    )
+    
+})
+
+
+
+
+
