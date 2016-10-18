@@ -34,7 +34,8 @@ setMethod("initialize","spUnsupervised", function(
     tsne,
     tsneMeans,
     groupMeans,
-    classification
+    classification,
+    selectInd
 ){
     callNextMethod(
         .Object,
@@ -45,7 +46,8 @@ setMethod("initialize","spUnsupervised", function(
         tsne = tsne,
         tsneMeans = tsneMeans,
         groupMeans = groupMeans,
-        classification = classification
+        classification = classification,
+        selectInd = selectInd
     )
 })
 
@@ -57,7 +59,6 @@ setMethod("initialize","spSwarm", function(
     ...,
     spSwarm,
     codedSwarm,
-    spCounts,
     spUnsupervised,
     arguments
 ){
@@ -66,7 +67,6 @@ setMethod("initialize","spSwarm", function(
     ...,
     spSwarm = spSwarm,
     codedSwarm = codedSwarm,
-    spCounts = spCounts,
     spUnsupervised = spUnsupervised,
     arguments = arguments
     )

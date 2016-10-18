@@ -11,7 +11,6 @@ NULL
 #' @name spSwarm
 #' @rdname spSwarm
 #' @aliases spSwarm
-#' @param spCounts An spCounts object.
 #' @param spUnsupervised An spUnsupervised object.
 #' @param limit Randomly select a limited number of samples to perform swarm optimization on.
 #' @param maxiter pySwarm argument indicating the maximum optimization iterations.
@@ -35,7 +34,7 @@ NULL
 #' @rdname spSwarm
 #' @export
 
-setGeneric("spSwarm", function(spCounts, ...
+setGeneric("spSwarm", function(spUnsupervised, ...
 ){ standardGeneric("spSwarm") })
 
 #' @importFrom rPython python.exec python.assign python.get
@@ -43,9 +42,8 @@ setGeneric("spSwarm", function(spCounts, ...
 #' @importFrom foreach foreach %dopar% registerDoSEQ
 #' @rdname spSwarm
 #' @export
-setMethod("spSwarm", "spCounts",
+setMethod("spSwarm", "spUnsupervised",
 function(
-    spCounts,
     spUnsupervised,
     limit = "none",
     maxiter = 10,
@@ -58,31 +56,19 @@ function(
 ){
     
     #input and input checks
-    counts <- getData(spCounts, "counts")
-    sampleType <- getData(spCounts, "sampleType")
-    classification <- getData(spUnsupervised, "classification")
+    counts <- getData(spUnsupervised, "counts")
+    sampleType <- getData(spUnsupervised, "sampleType")
+    selectInd <- getData(spUnsupervised, "selectInd")
     
     #calculate average expression
-    clusterMeans <- getData(spUnsupervised, "groupMeans")
+    groupMeans <- getData(spUnsupervised, "groupMeans")
     
     #calculate fractions
-    fractions <- rep(1.0/(dim(clusterMeans)[2]), (dim(clusterMeans)[2]))
+    fractions <- rep(1.0/(dim(groupMeans)[2]), (dim(groupMeans)[2]))
     
-    #subset top 2000 genes for use with optimization
-    #use max expression
-    maxs <- order(apply(counts, 1, max), decreasing=T)
-    cellTypes <- as.data.frame(clusterMeans[maxs[1:2000],])
-    slice <- as.data.frame(counts[ ,sampleType == "Multuplet"][maxs[1:2000], ])
-        
-        #use variance
-        #maxs <- order(apply(counts, 1, var), decreasing=T)
-        #cellTypes <- as.data.frame(clusterMeans[maxs[1:2000],]) #log scale
-        #slice <- as.data.frame(testData2[maxs[1:2000],]) #log scale
-        
-        #use PCA
-        #genes <- .PCAsubset(counts, sampleType, 100)
-        #cellTypes <- as.data.frame(clusterMeans[rownames(clusterMeans) %in% genes, ])
-        #slice <- as.data.frame(testData2[rownames(clusterMeans) %in% genes, ])
+    #subset top genes for use with optimization
+    cellTypes <- as.data.frame(groupMeans[selectInd, ])
+    slice <- as.data.frame(counts[selectInd, sampleType == "Multuplet"])
     
     #add index for reordering in python
     cellTypes$index <- 1:nrow(cellTypes)
@@ -113,7 +99,6 @@ function(
     new("spSwarm",
         spSwarm=finalResult,
         codedSwarm=encodedResult,
-        spCounts=spCounts,
         spUnsupervised=spUnsupervised,
         arguments = list(
             maxiter=maxiter,

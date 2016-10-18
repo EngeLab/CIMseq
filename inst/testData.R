@@ -45,4 +45,4 @@ sObj <- spSwarm(cObj, uObj, cores=4, swarmsize=250, maxiter=10)
 ##sanity check
 cObj <- spCounts(syntheticData, matrix(), "m.")
 uObj <- spUnsupervised(cObj, max=2000, max_iter = 1000)
-sObj <- spSwarm(cObj, uObj, limit=2, cores=2, swarmsize=250, maxiter=10)
+sObj <- spSwarm(uObj, limit=2, cores=2, swarmsize=250, maxiter=10)

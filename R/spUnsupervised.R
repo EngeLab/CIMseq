@@ -104,7 +104,8 @@ setMethod("spUnsupervised", "spCounts", function(
             mod1$classification,
             counts[, sampleType == "Singlet"]
         ),
-        classification=mod1$classification
+        classification=mod1$classification,
+        selectInd=select
     )
 })
 

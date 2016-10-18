@@ -13,24 +13,21 @@
 \usage{
 \S4method{getData}{spUnsupervised}(x, n = NULL)
 
-\S4method{initialize}{spUnsupervised}(.Object, ..., counts.log, dist, tsne,
-  tsneMeans, groupMeans, mclust)
+\S4method{initialize}{spUnsupervised}(.Object, ..., counts, counts.log,
+  sampleType, tsne, tsneMeans, groupMeans, classification, selectInd)
 
 \S4method{show}{spUnsupervised}(object)
 
 spUnsupervised(spCounts, ...)
 
-\S4method{spUnsupervised}{spCounts}(spCounts, max = 2000,
-  plot.callback = NULL, k = 2, max_iter = 20000, perplexity = 10,
-  initial_dims = 50, Gmax = 50, seed = 11, type = "max", ...)
+\S4method{spUnsupervised}{spCounts}(spCounts, plot.callback = NULL, k = 2,
+  max_iter = 20000, perplexity = 10, initial_dims = 50, Gmax = 50,
+  seed = 11, type = "max", max = 2000, genes = NULL, ...)
 }
 \arguments{
 \item{...}{Additional arguments to pass on}
 
 \item{spCounts}{spCounts object.}
-
-\item{max}{The max number of genes to include based either on maximum expression
-or maximum variance which is decided by the "type" paramater.}
 
 \item{plot.callback}{A function allowing intermediate plotting of the tSNE as it runs.}
 
@@ -47,7 +44,14 @@ or maximum variance which is decided by the "type" paramater.}
 \item{seed}{Sets the seed before running tSNE.}
 
 \item{type}{Decides if genes included are picked by their maximum expression
-or maximum variance. Can be either "max" or "var".}
+or maximum variance. Can be either "max", "var", or "manual". If "manual" the
+genes argument must also be specified.}
+
+\item{max}{The max number of genes to include based either on maximum expression
+or maximum variance which is decided by the "type" paramater.}
+
+\item{genes}{If type = manual, genes to be included are specified here as a character
+vector. These must match the rownames in the counts variable.}
 }
 \value{
 Ercc fraction plot.

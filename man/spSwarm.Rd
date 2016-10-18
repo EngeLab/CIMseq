@@ -6,26 +6,24 @@
 \alias{initialize,spSwarm-method}
 \alias{show,spSwarm-method}
 \alias{spSwarm}
-\alias{spSwarm,spCounts-method}
+\alias{spSwarm,spUnsupervised-method}
 \title{spSwarm}
 \usage{
 \S4method{getData}{spSwarm}(x, n = NULL)
 
-\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, codedSwarm, spCounts,
+\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, codedSwarm,
   spUnsupervised, arguments)
 
 \S4method{show}{spSwarm}(object)
 
-spSwarm(spCounts, ...)
+spSwarm(spUnsupervised, ...)
 
-\S4method{spSwarm}{spCounts}(spCounts, spUnsupervised, limit = "none",
+\S4method{spSwarm}{spUnsupervised}(spUnsupervised, limit = "none",
   maxiter = 10, swarmsize = 150, minstep = 1e-16, minfunc = 1e-16,
   cutoff = 0.2, cores = 2, ...)
 }
 \arguments{
 \item{...}{additional arguments to pass on}
-
-\item{spCounts}{An spCounts object.}
 
 \item{spUnsupervised}{An spUnsupervised object.}
 

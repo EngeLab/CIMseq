@@ -229,6 +229,7 @@ setMethod("spPlot", "spUnsupervised", function(
     sampleType <- getData(x, "sampleType")
     sng <- counts.log[ , sampleType == "Singlet"]
     
+    #on the next line you will need a check that the markers exist in the data
     markExpress <- t(sng[rownames(sng) %in% markers, ])
     markExpress <- apply(markExpress, 2, function(x) {
         (x-min(x))/(max(x)-min(x))
@@ -328,7 +329,7 @@ setMethod("spPlot", "spSwarm", function(
     
     #plot
     plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = layout)+
-        geom_edge_link(edge_colour="black", aes_string(edge_alpha=as.numeric('weight')))+
+        geom_edge_link(edge_colour="black", aes_string(edge_alpha='weight'))+
         geom_edge_loop(
             edge_colour="black",
             aes_string(
@@ -411,7 +412,6 @@ setMethod("spPlot", "spSwarm", function(
     }
     
     graph$weight[graph$from == graph$to] <- 1
-    graph$weight <- factor(graph$weight)
     return(unique(graph))
 }
 
