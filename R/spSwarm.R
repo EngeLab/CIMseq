@@ -60,7 +60,7 @@ function(
     #input and input checks
     counts <- getData(spCounts, "counts")
     sampleType <- getData(spCounts, "sampleType")
-    classification <- getData(spUnsupervised, "mclust")$classification
+    classification <- getData(spUnsupervised, "classification")
     
     #calculate average expression
     clusterMeans <- getData(spUnsupervised, "groupMeans")

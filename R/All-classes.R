@@ -27,14 +27,14 @@ setMethod("getData", "spCounts", function(x, n=NULL)
 #' @rdname spUnsupervised
 #' @export
 .Counts <- setClass("spUnsupervised", representation(
+    counts="matrix",
     counts.log="matrix",
-    dist="matrix",
+    sampleType="character",
     tsne="matrix",
     tsneMeans="data.frame",
     groupMeans="matrix",
-    mclust="list"
+    classification="character"
 ))
-
 
 #' @rdname spUnsupervised
 #' @export

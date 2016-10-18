@@ -28,22 +28,24 @@ setMethod("initialize","spCounts", function(
 setMethod("initialize","spUnsupervised", function(
     .Object,
     ...,
+    counts,
     counts.log,
-    dist,
+    sampleType,
     tsne,
     tsneMeans,
     groupMeans,
-    mclust
+    classification
 ){
     callNextMethod(
         .Object,
         ...,
+        counts = counts,
         counts.log = counts.log,
-        dist = dist,
+        sampleType = sampleType,
         tsne = tsne,
         tsneMeans = tsneMeans,
         groupMeans = groupMeans,
-        mclust = mclust
+        classification = classification
     )
 })
 

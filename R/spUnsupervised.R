@@ -87,15 +87,16 @@ setMethod("spUnsupervised", "spCounts", function(
     
     #create object
     new("spUnsupervised",
+        counts=counts,
         counts.log=counts.log,
-        dist=as.matrix(my.dist),
+        sampleType=sampleType,
         tsne=my.tsne,
         tsneMeans=.tsneGroupMeans(my.tsne, mod1$classification),
         groupMeans=.averageGroupExpression(
             mod1$classification,
             counts[, sampleType == "Singlet"]
         ),
-        mclust=unclass(mod1)
+        classification=mod1$classification
     )
 })
 
