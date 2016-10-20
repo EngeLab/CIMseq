@@ -112,7 +112,7 @@ setMethod("filterCells", "spCounts",
     counts.ercc <- getData(x, "counts.ercc")
     sampleType <- getData(x, "sampleType")
     
-    good.cells <- counts.log['ACTB',] > .get.cutoff.lognorm(counts.log, quantile.cut, gene.name)
+    good.cells <- counts.log[gene.name,] > .get.cutoff.lognorm(counts.log, quantile.cut, gene.name)
     
     x@counts <- counts[ ,good.cells]
     x@counts.log <- counts.log[ ,good.cells]
