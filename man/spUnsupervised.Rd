@@ -20,7 +20,7 @@
 
 spUnsupervised(spCounts, ...)
 
-\S4method{spUnsupervised}{spCounts}(spCounts, plot.callback = NULL, k = 2,
+\S4method{spUnsupervised}{spCounts}(spCounts, theta = 0, k = 2,
   max_iter = 20000, perplexity = 10, initial_dims = 50, Gmax = 50,
   seed = 11, type = "max", max = 2000, genes = NULL, ...)
 }
@@ -29,7 +29,7 @@ spUnsupervised(spCounts, ...)
 
 \item{spCounts}{spCounts object.}
 
-\item{plot.callback}{A function allowing intermediate plotting of the tSNE as it runs.}
+\item{theta}{Passed to Rtsne.}
 
 \item{k}{The dimensions of the resulting tsne. Passed to tsne function.}
 

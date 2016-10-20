@@ -12,7 +12,7 @@ NULL
 #' @rdname spUnsupervised
 #' @aliases spUnsupervised
 #' @param spCounts spCounts object.
-#' @param plot.callback A function allowing intermediate plotting of the tSNE as it runs.
+#' @param theta Passed to Rtsne.
 #' @param k The dimensions of the resulting tsne. Passed to tsne function.
 #' @param max_iter The max number of tSNE iterations. Passed to tsne function.
 #' @param perplexity The perplexity argument to tsne. Passed to tsne function.
@@ -47,14 +47,14 @@ setGeneric("spUnsupervised", function(spCounts, ...
 
 #' @rdname spUnsupervised
 #' @export
-#' @importFrom tsne tsne
+#' @importFrom Rtsne Rtsne
 #' @importFrom mclust Mclust mclustBIC
 #' @importFrom plyr ddply summarize
 #' @importFrom stats as.dist
 
 setMethod("spUnsupervised", "spCounts", function(
     spCounts,
-    plot.callback = NULL,
+    theta = 0,
     k = 2,
     max_iter = 20000,
     perplexity = 10,
@@ -88,7 +88,7 @@ setMethod("spUnsupervised", "spCounts", function(
     my.dist <- .distFunc(counts.log, select, sampleType)
     
     #run tSNE
-    my.tsne <- .runTsne(my.dist, k, plot.callback, initial_dims, max_iter, perplexity, seed)
+    my.tsne <- .runTsne(my.dist, k, theta, initial_dims, max_iter, perplexity, seed)
     
     #run Mclust
     mod1 <- .runMclust(seed, my.tsne, Gmax)
@@ -156,17 +156,18 @@ setMethod("spUnsupervised", "spCounts", function(
 }
 
 #runs the tSNE function
-.runTsne <- function(my.dist, k, plot.callback, initial_dims, max_iter, perplexity, seed) {
+.runTsne <- function(my.dist, k, theta, initial_dims, max_iter, perplexity, seed) {
     set.seed(seed)
     
-    my.tsne <- tsne(
+    my.tsne <- Rtsne(
         my.dist,
         k = k,
-        epoch_callback = plot.callback,
+        #epoch_callback = plot.callback,
         initial_dims = initial_dims,
         max_iter = max_iter,
-        perplexity = perplexity
-    )
+        perplexity = perplexity,
+        theta = theta
+    )$Y
     
     rownames(my.tsne) <- rownames(my.dist)
     return(my.tsne)
