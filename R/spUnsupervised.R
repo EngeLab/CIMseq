@@ -93,6 +93,9 @@ setMethod("spUnsupervised", "spCounts", function(
     #run Mclust
     mod1 <- .runMclust(seed, my.tsne, Gmax)
     
+    #check for classification problems
+    .classificationChecks(mod1)
+    
     #create object
     new("spUnsupervised",
         counts=counts,
@@ -108,6 +111,19 @@ setMethod("spUnsupervised", "spCounts", function(
         selectInd=select
     )
 })
+
+#checks for results from classification that will throw a downstream error.
+.classificationChecks <- function(mod1) {
+    if(length(unique(mod1$classification)) == 1) {
+        stop("Only one group could be classified.
+        Please adjust the tSNE-related arguments and try again or manually supply group classifications.")
+    }
+    
+    if(any(table(mod1$classification) == 1)) {
+        stop("One/more cells have been classified as an individual cell type. 
+        You probably need to adjust the Gmax argument and run again.")
+    }
+}
 
 #calculate the genes with the max variance and return the index
 #for the top genes according to the value of "n".
