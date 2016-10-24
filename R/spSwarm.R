@@ -68,7 +68,7 @@ function(
     
     #subset top genes for use with optimization
     cellTypes <- as.data.frame(groupMeans[selectInd, ])
-    slice <- as.data.frame(counts[selectInd, sampleType == "Multuplet"])
+    slice <- as.data.frame(counts[selectInd, sampleType == "Multuplet"]) #note there is an error here if there is only one multuplet due to the fact that the subset resluts in a data.frame with a colname that does not match the colnames in the counts variable
     
     #add index for reordering in python
     cellTypes$index <- 1:nrow(cellTypes)

@@ -9,42 +9,34 @@ expData <- spCounts(counts, counts.ercc, '1000102901')
 save(expData, file='data/expData.rda', compress='bzip2')
 
 #unit test and vignettes data
+load('data/syntheticData.rda')
 
-.ntopVar <- function(data, n) {
-    rv = apply(data, 1, var)
+#minimize cells
+s.A1 <- syntheticData[ ,grepl("s.A1", colnames(syntheticData))][ ,1:80]
+s.B1 <- syntheticData[ ,grepl("s.B1", colnames(syntheticData))][ ,1:80]
+s.C1 <- syntheticData[ ,grepl("s.C1", colnames(syntheticData))][ ,1:80]
+s.D1 <- syntheticData[ ,grepl("s.D1", colnames(syntheticData))][ ,1:80]
+s.E1 <- syntheticData[ ,grepl("s.E1", colnames(syntheticData))][ ,1:80]
+s.F1 <- syntheticData[ ,grepl("s.F1", colnames(syntheticData))][ ,1:80]
+s.G1 <- syntheticData[ ,grepl("s.G1", colnames(syntheticData))][ ,1:80]
+s.H1 <- syntheticData[ ,grepl("s.H1", colnames(syntheticData))][ ,1:80]
+s.I1 <- syntheticData[ ,grepl("s.I1", colnames(syntheticData))][ ,1:80]
+s.J1 <- syntheticData[ ,grepl("s.J1", colnames(syntheticData))][ ,1:80]
+
+#add multuplets
+m.A1B1C1D1 <- syntheticData[ ,'m.A1B1C1D1']
+m.G1H1I1J1 <- syntheticData[ ,'m.G1H1I1J1']
+m.A1B1 <- syntheticData[ ,'m.A1B1']
+
+counts <- cbind(s.A1, s.B1, s.C1, s.D1, s.E1, s.F1, s.G1, s.H1, s.I1, s.J1, m.A1B1, m.A1B1C1D1, m.G1H1I1J1)
+
+#minimise genes
+.ntopMax <- function(data, n) {
+    rv = apply(data, 1, max)
     select = order(rv, decreasing=TRUE)[1:n]
     return(select)
 }
 
-
-testData <- syntheticData[,1:1000]
-
-A1 <- testData[ ,grepl("s.A1", colnames(testData))][1:2000,1:25]
-B1 <- testData[ ,grepl("s.B1", colnames(testData))][1:2000,1:25]
-C1 <- testData[ ,grepl("s.C1", colnames(testData))][1:2000,1:25]
-D1 <- testData[ ,grepl("s.D1", colnames(testData))][1:2000,1:25]
-E1 <- testData[ ,grepl("s.E1", colnames(testData))][1:2000,1:25]
-
-mult <- c("m.A1B1", "m.B1C1", "m.C1D1", "m.D1E1")
-testData <- cbind(A1, B1, C1, D1, E1, syntheticData[1:nrow(A1) ,mult])
-
-#F1, G1, H1, I1, J1, syntheticData[1:nrow(A1) ,mult]
-##ercc
-ercc <- matrix(c(rep(rep(9, 15), rep(4.5, 3), 3), 2), nrow=2)
-
-##spCounts
-cObj <- spCounts(testData, ercc, "m.")
-
-##spUnsupervised
-uObj <- spUnsupervised(cObj, max=1000, max_iter=7000, Gmax=5)
-spPlot(uObj, type="clusters")
-table(getData(uObj, "classification"))
-
-#spSwarm
-sObj <- spSwarm(uObj, cores=4, swarmsize=250, maxiter=10)
-getData(sObj, "spSwarm")
-
-##sanity check
-cObj <- spCounts(syntheticData, matrix(), "m.")
-uObj <- spUnsupervised(cObj, max=2000, max_iter = 1000)
-sObj <- spSwarm(uObj, limit=2, cores=2, swarmsize=250, maxiter=10)
+select <- .ntopMax(counts, 250)
+testData <- counts[select, ]
+save(testData, file="data/testData.rda", compress="bzip2")
