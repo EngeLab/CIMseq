@@ -51,7 +51,7 @@ function(
     minstep = 1e-16,
     minfunc = 1e-16,
     cutoff = 0.2,
-    cores=2,
+    cores=1,
     ...
 ){
     
