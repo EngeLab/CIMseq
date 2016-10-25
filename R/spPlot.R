@@ -235,8 +235,10 @@ setMethod("spPlot", "spUnsupervised", function(
         (x-min(x))/(max(x)-min(x))
     })
     
+    markExpress <- as.data.frame(markExpress)
+    markExpress$sample <- rownames(markExpress)
+    rownames(markExpress) <- 1:nrow(markExpress)
     df <- cbind(tsne, markExpress)
-    df$sample <- rownames(df)
     m <- melt(df, id.vars=c("V1", "V2", "sample"))
     
     return(m)

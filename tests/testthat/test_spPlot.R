@@ -1,7 +1,13 @@
 #context("spPlot")
 
+cObj <- spCounts(testData, matrix(), "m.")
+uObj <- spUnsupervised(cObj, max=250, max_iter=1000)
+sObj <- spSwarm(uObj, swarmsize = 150, cores=1, cutoff=0.14)
+
 ##run test .countsErccPlotProcess
 test_that("check that the .countsErccPlotProcess function outputs the expected result", {
+    
+    #note this test is not great at the moment since the example data has no ercc.counts
     
     ###TEST1####
     #prepare normal input data
@@ -9,9 +15,8 @@ test_that("check that the .countsErccPlotProcess function outputs the expected r
     
     #setup expected data
     expected <- data.frame(
-        sampleType = c(rep("Singlet", 4), "Multuplet"),
-        frac.ercc = rep(0.5, 5),
-        row.names = c(paste("s", 1:4, sep="."), "m.1")
+        sampleType = c(rep("Singlet", 850), rep("Multuplet", 2)),
+        frac.ercc = as.numeric(rep(NA, 852))
     )
     
     #run function
@@ -44,14 +49,13 @@ test_that("check that the .countsMarkersPlotProcess function outputs the expecte
     ###TEST1####
     #prepare normal input data
     input <- cObj
-    markers <- c("A", "B")
+    markers <- c("a1", "b1")
     
     #setup expected data
     expected <- data.frame(
-        sampleType = c(rep("Singlet", 4), "Multuplet"),
-        marker1 = getData(cObj, "counts.log")[1:1,],
-        marker2 = getData(cObj, "counts.log")[2:2,],
-        row.names = c(paste("s", 1:4, sep="."), "m.1")
+        sampleType = c(rep("Singlet", 850), rep("Multuplet", 2)),
+        marker1 = getData(cObj, "counts.log")['a1',],
+        marker2 = getData(cObj, "counts.log")['b1',]
     )
     
     #run function
@@ -121,13 +125,13 @@ test_that("check that the .unsupMarkerPlotProcess function outputs the expected 
     ###TEST1####
     #prepare normal input data
     input <- uObj
-    markers <- c("A", "B")
+    markers <- c("a1", "b1")
     
     #run function
     output <- .unsupMarkerPlotProcess(input, markers)
     
     #test
-    expect_equivalent(nrow(output), 8)
+    expect_equivalent(nrow(output), 852*2)
     expect_equivalent(ncol(output), 5)
     expect_equivalent(colnames(output), c("V1", "V2", "sample", "variable", "value"))
     expect_type(output$V1, "double")

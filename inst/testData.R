@@ -38,6 +38,16 @@ counts <- cbind(s.A1, s.B1, s.C1, s.D1, s.E1, s.F1, s.G1, s.H1, s.I1, s.J1, m.A1
 
 select <- .ntopMax(counts, 250)
 testData <- counts[select, ]
+rownames(testData) <- sort(
+    paste(
+        rep(
+            letters,
+            10
+        ),
+        1:11,
+        sep=""
+    )[1:nrow(testData)]
+)
 
 #cObj <- spCounts(testData, matrix(), "m.")
 #uObj <- spUnsupervised(cObj, max=250, max_iter=1000)
