@@ -72,7 +72,7 @@ test_that("check that the .countsMarkersPlot function outputs the expected resul
     ###TEST1####
     #prepare normal input data
     input <- cObj
-    markers <- c("A", "B")
+    markers <- c("a1", "b1")
     
     #run function
     output <- .countsMarkersPlot(input, markers)
@@ -94,7 +94,7 @@ test_that("check that the .unsupClusterPlotProcess function outputs the expected
     output <- .unsupClusterPlotProcess(input)
     
     #test
-    expect_equivalent(nrow(output), 4)
+    expect_equivalent(nrow(output), 850)
     expect_equivalent(ncol(output), 3)
     expect_equivalent(colnames(output), c("V1", "V2", "classification"))
     expect_type(output$V1, "double")
@@ -131,7 +131,7 @@ test_that("check that the .unsupMarkerPlotProcess function outputs the expected 
     output <- .unsupMarkerPlotProcess(input, markers)
     
     #test
-    expect_equivalent(nrow(output), 852*2)
+    expect_equivalent(nrow(output), 850*2)
     expect_equivalent(ncol(output), 5)
     expect_equivalent(colnames(output), c("V1", "V2", "sample", "variable", "value"))
     expect_type(output$V1, "double")
@@ -148,7 +148,7 @@ test_that("check that the .unsupMarkersPlot function outputs the expected result
     ###TEST1####
     #prepare normal input data
     input <- uObj
-    markers <- c("A", "B")
+    markers <- c("a1", "b1")
 
     #run function
     output <- .unsupMarkersPlot(input, markers)
@@ -269,7 +269,6 @@ test_that("check that the .swarmCalculateWeights function outputs the expected r
         weight = c(2, 1, 1),
         stringsAsFactors=FALSE
     )
-    expected$weight <- as.factor(expected$weight)
     
     #run function
     output <- .swarmCalculateWeights(input)

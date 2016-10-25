@@ -183,14 +183,14 @@ test_that("check that the .runTsne function outputs the expected result", {
     plot.callback <- NULL
     initial_dims <- 3
     max_iter <- 5
-    perplexity <- 15
+    perplexity <- 0.1
     seed <- 11
     
     #setup expected data
     #no expected at the moment for this function
     
     #run function
-    output <- .runTsne(my.dist, k, plot.callback, initial_dims, max_iter, perplexity, seed)
+    output <- .runTsne(my.dist, k, initial_dims, max_iter, perplexity, seed, theta=0)
     
     #test
     expect_length(output, 6)
