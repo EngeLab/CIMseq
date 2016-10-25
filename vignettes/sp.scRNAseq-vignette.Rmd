@@ -1,0 +1,153 @@
+---
+title: "ClusterSignificance Vignette"
+author: "Jason T. Serviss and Martin "
+date: '`r Sys.Date()`'
+output:
+    html_document:
+        theme: flatly
+        toc: yes
+vignette: >
+    %\VignetteIndexEntry{ClusterSignificance Vignette} 
+    %\VignetteEngine{knitr::rmarkdown} 
+    %\usepackage[utf8]{inputenc}
+    %\SweaveUTF8
+---
+
+<style>
+    .col2 {
+        columns: 2 200px;         /* number of columns and width in pixels*/
+        -webkit-columns: 2 200px; /* chrome, safari */
+        -moz-columns: 2 200px;    /* firefox */
+    }
+</style>
+
+```{r style, echo = FALSE, results = 'asis'}
+BiocStyle::markdown()
+library(sp.scRNAseq)
+library(printr)
+```
+
+sp.scRNAseq works in 3 stages with each stage being supported by plotting functions. The stages are as follows:
+1. Creating the sp.scRNAseq counts object. 
+    Here the raw count data, ERCC spike-in count data, and the information indicating which samples are singlets and which are multuplets is entered.
+2. Unsupervised clustering of the singlets. 
+    Here we perform unsupervised clustering of the singlets using tSNE and classify the number of clusters, to deduce the possible cell types in the multuplets.
+3. Multuplet deconvolution via swarm optimization.
+    Here we utilize swarm optimization to deconvolute the multuplets and, thus, provide a picture of the tissue "connectome".
+
+## sp.scRNAseq counts object
+
+Make sp.scRNAseq counts object. The spCounts command takes 3 arguments:
+1. matrix; The raw counts data.
+2. matrix; The ERCC spike-in counts data.
+3. character; The character in the colnames that signified that a cell is a multuplet.
+
+We use the testData and testErcc variables to initialize the sp.scRNAseq counts object. The testData variable contains singlets that comprise 10 cell types. Each cell type has 85 singlets and each singlet has 250 gene expression values. The dataset also includes 2 multuplets comprised of 4 different cell types each. The multuplets are comprised in a fashon that, in the final results, there should be one connection between all cell types with the exception of cell type E1 and F1. See below:
+
+```{r}
+testData[1:2, 1:2] #example
+dim(testData) #genes and sample numbers
+table(colnames(testData)) # sample names
+head(rownames(testData)) #example of gene names
+class(testData) #must be a matrix
+```
+
+```{r}
+cObj <- spCounts(testCounts, testErcc, "m.") #multuplets indicated by "m." in the testCounts colnames
+cObj #show counts object
+```
+
+The counts object contains:
+1. The raw counts data input by the user.
+2. The log normalized counts.
+3. The counts.ercc input by the user (if these are not available they can be substituted using matrix())
+4. The sample type information. This vaiable is
+
+### Accessors
+Individual slots within the counts object can be accessed with the "getData" function. Note that all other sp.scRNAseq objects slots can be accessed in the same way. See below:
+```{r}
+table(getData(cObj, "sampleType"))
+```
+
+### Filter cells
+
+The filter cells command is available to exclude "bad" cells from the counts object. (This can potentially be expanded in the future, or the user can do this upstream of making the counts object). The filterCells command takes 3 arguments:
+
+1. The counts object.
+2. The quantile cut-off.
+3. The gene name of the house keeping gene to use. (note: this must be present in the rownames of the counts variable within the counts object)
+
+```{r, eval=FALSE}
+cObj <- filterCells(cObj, quantile.cut = 0.001, gene.name = 'a1')
+```
+
+In the test data no cells are filtered.
+
+### ERCC fraction plot
+The fractions of ERCC spike-ins can be viewed in a plot using the spPlot command and specifying the type of plot desired.
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+spPlot(cObj, type="ercc")
+```
+
+### Markers plot
+Sometimes it may be desireable to view the expression of marker genes in the counts object. At the moment, this can only be accomplished with 2 markers at a time.
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+spPlot(cObj, type="markers", markers=c("c1", "b1"))
+```
+
+## sp.scRNAseq unsupervised clustering object
+The unsupervised clustering stage can be regulated by passing multiple arguments to the spUnsupervised object constructor. The default values and descriptions are shown below:
+
+1. spCounts: The sp.scRNAseq counts object.
+2. theta = 0: Passed to Rtsne; Speed/accuracy trade-off (increase for less accuracy), set to 0.0 for exact TSNE.
+3. k = 2: Passed to Rtsne; Output dimensionality. (This should actually not be changed).
+4. max_iter = 20000: Passed to Rtsne; Number of iterations.
+5. perplexity = 10: Passed to Rtsne; Perplexity parameter.
+6. initial_dims = 50: Passed to Rtsne; The number of dimensions that should be retained in the initial PCA step.
+7. Gmax = 50: Passed to mclust as 1:Gmax; An integer vector specifying the numbers of mixture components (clusters) for which the BIC is to be calculated.
+8. seed = 11: Passed to set.seed.
+9. type = "max": Used for filtering genes to be included in the analysis. Current options are "max", "var", and "manual". (max and var are currently working, "none" should be added)
+10. max = 2000: The number of genes to keep when type = max or var. 
+11. genes=NULL: The genes to include when type = manual.
+
+```{r}
+uObj <- spUnsupervised(cObj, max_iter=1000, max=250)
+```
+
+### Clusters plot
+The results of the unsupervised clustering can be viewed using spPlot function and specifying the type as "clusters".
+
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+spPlot(uObj, type="clusters")
+```
+
+### Markers plot
+The sp.scRNAseq unsupervised object also has an associated markers plot where the markers can be visualized overlayed with the unsupervised clustering results.
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+spPlot(uObj, type="markers", markers=c("c1", "b1"))
+```
+
+## sp.scRNAseq spSwarm object
+Finally, the deconvolution of the multuplets take place in this stage. Again, the associated arguments are listed and explained below:
+
+1. spUnsupervised: The sp.scRNAseq unsupervised object.
+2. limit = "none": This can be used to randomly pick a limited number of multuplets to be analyzed and can be useful for fine-tuning the paramaters.
+3. maxiter = 10: Passed to pySwarm; The maximum number of iterations for the swarm to search.
+4. swarmsize = 150: Passed to pySwarm; The number of particles in the swarm.
+5. minstep = 1e-16: Passed to pySwarm; The minimum stepsize of swarm’s best position before the search terminates.
+6. minfunc = 1e-16: Passed to pySwarm; The minimum change of swarm’s best objective value before the search terminates.
+7. cutoff = 0.2: This is used to specify a fraction under which the contribution of a specific cellType is viewed as background. (should be approximatley 1/max(cells in a multuplet))
+8. cores=1: This step is able to run in parallel by specifying the number of desired cores here.
+
+```{r}
+sObj <- spSwarm(uObj, swarmsize = 150, cores=2, cutoff=0.14)
+```
+
+### spSwarm plot
+The resulting "connectome" can be plotted via:
+
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+spPlot(sObj)
+```
+
+

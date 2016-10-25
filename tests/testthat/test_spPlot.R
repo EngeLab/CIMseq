@@ -1,6 +1,6 @@
 #context("spPlot")
 
-cObj <- spCounts(testData, matrix(), "m.")
+cObj <- spCounts(testCounts, matrix(), "m.")
 uObj <- spUnsupervised(cObj, max=250, max_iter=1000)
 sObj <- spSwarm(uObj, swarmsize = 150, cores=1, cutoff=0.14)
 

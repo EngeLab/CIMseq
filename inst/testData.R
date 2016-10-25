@@ -9,7 +9,6 @@ expData <- spCounts(counts, counts.ercc, '1000102901')
 save(expData, file='data/expData.rda', compress='bzip2')
 
 #unit test and vignettes data
-load('data/syntheticData.rda')
 
 #minimize cells
 s.A1 <- syntheticData[ ,grepl("s.A1", colnames(syntheticData))][ ,1:85]
@@ -37,8 +36,8 @@ counts <- cbind(s.A1, s.B1, s.C1, s.D1, s.E1, s.F1, s.G1, s.H1, s.I1, s.J1, m.A1
 }
 
 select <- .ntopMax(counts, 250)
-testData <- counts[select, ]
-rownames(testData) <- sort(
+testCounts <- counts[select, ]
+rownames(testCounts) <- sort(
     paste(
         rep(
             letters,
@@ -46,11 +45,20 @@ rownames(testData) <- sort(
         ),
         1:11,
         sep=""
-    )[1:nrow(testData)]
+    )[1:nrow(testCounts)]
 )
 
-#cObj <- spCounts(testData, matrix(), "m.")
+testErcc <- matrix(
+    c(
+        colSums(testData)[1:850]/100,
+        colSums(testData)[851:852]/400
+    ),
+    nrow=2
+)
+
+#cObj <- spCounts(testCounts, testErcc, "m.")
 #uObj <- spUnsupervised(cObj, max=250, max_iter=1000)
 #sObj <- spSwarm(uObj, swarmsize = 150, cores=2, cutoff=0.14)
 
-save(testData, file="data/testData.rda", compress="bzip2")
+save(testErcc, file="data/testErcc.rda", compress="bzip2")
+save(testCounts, file="data/testCounts.rda", compress="bzip2")

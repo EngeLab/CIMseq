@@ -20,7 +20,7 @@ spSwarm(spUnsupervised, ...)
 
 \S4method{spSwarm}{spUnsupervised}(spUnsupervised, limit = "none",
   maxiter = 10, swarmsize = 150, minstep = 1e-16, minfunc = 1e-16,
-  cutoff = 0.2, cores = 2, ...)
+  cutoff = 0.2, cores = 1, ...)
 }
 \arguments{
 \item{...}{additional arguments to pass on}

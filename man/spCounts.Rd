@@ -33,7 +33,7 @@ spCounts(counts, ...)
 
 \item{counts.ercc}{A matrix containing ercc spike-in reads and their counts.}
 
-\item{sampleType}{A character vector indicating the column naming scheme showing that the column contains a multuplet.}
+\item{sampleType}{A character indicating the column naming scheme showing that the column contains a multuplet.}
 }
 \value{
 The spCounts function returns an object of class spCounts.
@@ -46,14 +46,8 @@ Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
 }
 \examples{
 
-#use demo data
-data(expData)
-counts <- getData(expData, "counts")
-counts.ercc <- getData(expData, "counts.ercc")
-sampleType <- '1000102901' #indicates that the column contains a multuplet
-
 #run function
-cObj <- spCounts(counts, counts.ercc, '1000102901')
+cObj <- spCounts(testCounts, testErcc, 'm.')
 
 }
 \author{
