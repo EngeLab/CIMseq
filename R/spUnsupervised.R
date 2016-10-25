@@ -26,6 +26,18 @@ NULL
 #'    or maximum variance which is decided by the "type" paramater.
 #' @param genes If type = manual, genes to be included are specified here as a character
 #'    vector. These must match the rownames in the counts variable.
+#' @param counts Passed from spCounts object.
+#' @param counts.log Passed from spCounts object.
+#' @param sampleType Passed from spCounts object.
+#' @param tsne tSNE results.
+#' @param tsneMeans The mean x and y positions of each cell type in the tSNE results.
+#' @param groupMeans The mean gene expression values for each cell type (classificaiton).
+#' @param classification Post-tSNE cell type classification. Typically determined by the mclust package.
+#' @param selectInd The indexes of the genes picked for use in spUnsupervised. Used in spSwarm.
+#' @param n Data to extract from spUnsupervised object.
+#' @param .Object Internal object.
+#' @param object spUnsupervised object.
+#' @param x A spUnsupervised object.
 #' @param ... Additional arguments to pass on
 #' @return Ercc fraction plot.
 #' @author Jason T. Serviss
@@ -157,7 +169,13 @@ setMethod("spUnsupervised", "spCounts", function(
 .tsneGroupMeans <- function(x, class) {
     d <- data.frame(x[ ,1], x[ ,2], class)
     colnames(d) <- c("x", "y", "classification")
-    means <- ddply(d, "classification", summarize, meanX=mean(x), meanY=mean(y))
+    means <- ddply(
+        d,
+        "classification",
+        summarize,
+        meanX=mean(substitute(x)),
+        meanY=mean(substitute(y))
+    )
     return(means)
 }
 

@@ -1,5 +1,6 @@
 Package: sp.scRNAseq
-Title: sp.scRNAseq is a software suite for analysis of scRNAseq data that has been produced using the spatial scRNAseq method
+Title: sp.scRNAseq is a software suite for analysis of scRNAseq data that has
+    been produced using the spatial scRNAseq method
 Version: 0.0.0.9000
 Author: Jason T. Serviss
 Maintainer: Jason T Serviss <jason.serviss@ki.se>
@@ -12,7 +13,7 @@ Imports:
     rgl,
     mclust,
     optimx,
-    tsne,
+    Rtsne,
     doMC,
     foreach,
     ggforce,
@@ -45,4 +46,6 @@ Collate:
     'spPlot.R'
     'spSwarm.R'
     'spUnsupervised.R'
+    'testCounts.R'
+    'testErcc.R'
 RoxygenNote: 5.0.1

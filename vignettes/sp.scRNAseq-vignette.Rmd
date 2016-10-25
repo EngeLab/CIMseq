@@ -42,14 +42,14 @@ Make sp.scRNAseq counts object. The spCounts command takes 3 arguments:
 2. matrix; The ERCC spike-in counts data.
 3. character; The character in the colnames that signified that a cell is a multuplet.
 
-We use the testData and testErcc variables to initialize the sp.scRNAseq counts object. The testData variable contains singlets that comprise 10 cell types. Each cell type has 85 singlets and each singlet has 250 gene expression values. The dataset also includes 2 multuplets comprised of 4 different cell types each. The multuplets are comprised in a fashon that, in the final results, there should be one connection between all cell types with the exception of cell type E1 and F1. See below:
+We use the testCounts and testErcc variables to initialize the sp.scRNAseq counts object. The testCounts variable contains singlets that comprise 10 cell types. Each cell type has 85 singlets and each singlet has 250 gene expression values. The dataset also includes 2 multuplets comprised of 4 different cell types each. The multuplets are comprised in a fashon that, in the final results, there should be one connection between all cell types with the exception of cell type E1 and F1. See below:
 
 ```{r}
-testData[1:2, 1:2] #example
-dim(testData) #genes and sample numbers
-table(colnames(testData)) # sample names
-head(rownames(testData)) #example of gene names
-class(testData) #must be a matrix
+testCounts[1:2, 1:2] #example
+dim(testCounts) #genes and sample numbers
+table(colnames(testCounts)) # sample names
+head(rownames(testCounts)) #example of gene names
+class(testCounts) #must be a matrix
 ```
 
 ```{r}

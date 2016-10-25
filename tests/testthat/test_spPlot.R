@@ -164,13 +164,13 @@ test_that("check that the .swarmTsneMeansProcess function outputs the expected r
     
     ###TEST1####
     #prepare normal input data
-    input <- nObj
+    input <- sObj
     
     #run function
     output <- .swarmTsneMeansProcess(input)
     
     #test
-    expect_equivalent(nrow(output), 2)
+    expect_equivalent(nrow(output), 10)
     expect_equivalent(ncol(output), 3)
     expect_equivalent(colnames(output), c("name", "x", "y"))
     expect_type(output$name, "character")
@@ -184,7 +184,7 @@ test_that("check that the .swarmTsneProcess function outputs the expected result
     
     ###TEST1####
     #prepare normal input data
-    input <- nObj
+    input <- sObj
     
     #run function
     output <- .swarmTsneProcess(input)

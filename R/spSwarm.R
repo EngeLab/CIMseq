@@ -17,6 +17,15 @@ NULL
 #' @param swarmsize pySwarm argument indicating the number of particals in the swarm.
 #' @param minstep pySwarm argument indicating the stepsize of swarm’s best position before search termination.
 #' @param minfunc pySwarm argument indicating the minimum change of swarm’s best objective value before search termination.
+#' @param cutoff The cutoff used to generate codedSwarm.
+#' @param cores The number of cores to be used while running spSwarm.
+#' @param n Data to extract from spSwarm object.
+#' @param .Object Internal object.
+#' @param object spSwarm object.
+#' @param arguments Argumetns passed to the spSwarm function.
+#' @param spSwarm The spSwarm results.
+#' @param codedSwarm The spSwarm results after the cutoff has been applied.
+#' @param x A spSwarm object.
 #' @param ... additional arguments to pass on
 #' @return spSwarm output.
 #' @author Jason T. Serviss

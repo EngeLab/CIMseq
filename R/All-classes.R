@@ -3,7 +3,7 @@ NULL
 
 #' @rdname spCounts
 #' @export
-.Counts <- setClass("spCounts", representation(
+.spCounts <- setClass("spCounts", representation(
     counts="matrix",
     counts.log="matrix",
     counts.ercc="matrix",
@@ -26,7 +26,7 @@ setMethod("getData", "spCounts", function(x, n=NULL)
 
 #' @rdname spUnsupervised
 #' @export
-.Counts <- setClass("spUnsupervised", representation(
+.spUnsupervised <- setClass("spUnsupervised", representation(
     counts="matrix",
     counts.log="matrix",
     sampleType="character",
@@ -46,8 +46,9 @@ setMethod("getData", "spUnsupervised", function(x, n=NULL)
     }
 })
 
+#' @rdname spSwarm
 #' @export
-.Counts <- setClass("spSwarm", representation(
+.spSwarm <- setClass("spSwarm", representation(
     spSwarm="data.frame",
     codedSwarm="data.frame",
     spUnsupervised="spUnsupervised",
