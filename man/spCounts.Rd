@@ -44,7 +44,7 @@ spCounts(counts, ...)
 \item{sampleType}{A character indicating the column naming scheme showing that the column contains a multuplet.}
 }
 \value{
-The spCounts function returns an object of class spCounts.
+spCounts object.
 }
 \description{
 Subtitle

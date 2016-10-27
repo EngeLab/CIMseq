@@ -45,6 +45,7 @@ setMethod("spPlot", "spCounts", function(
     markers = NULL,
     ...
 ){
+    #check that type is valid
     if( type == "ercc" ) {
         p <- .countsErccPlot(x)
         p
@@ -164,12 +165,14 @@ setMethod("spPlot", "spUnsupervised", function(
     markers = NULL,
     ...
 ){
+    #check that type is valid
     if( type == "clusters" ) {
         p <- .unsupClustersPlot(x)
         p
         return(p)
     }
     if( type == "markers" ) {
+        #check that markers are valid
         p <- .unsupMarkersPlot(x, markers)
         p
         return(p)
@@ -379,7 +382,7 @@ setMethod("spPlot", "spSwarm", function(
         ind <- which(x[o, c(-1,-2)] != 0)
         
         if(length(ind) == 1) {
-            combs <-  data.frame(V1=names[ind], V2=names[ind])
+            combs <-  data.frame(V1=names[ind], V2=names[ind], stringsAsFactors=FALSE)
         } else {
             combs <- as.data.frame(t(combn(names[ind],2)), stringsAsFactors=FALSE)
         }

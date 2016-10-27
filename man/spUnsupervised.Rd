@@ -126,7 +126,7 @@ or maximum variance which is decided by the "type" paramater.}
 vector. These must match the rownames in the counts variable.}
 }
 \value{
-Ercc fraction plot.
+spUnsupervised object.
 }
 \description{
 Subtitle
