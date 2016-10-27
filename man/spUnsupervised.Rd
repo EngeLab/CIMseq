@@ -3,15 +3,63 @@
 \docType{class}
 \name{spUnsupervised-class}
 \alias{.spUnsupervised}
+\alias{classification}
+\alias{classification,spUnsupervised-method}
+\alias{classification<-}
+\alias{classification<-,spUnsupervised-method}
+\alias{counts}
+\alias{counts,spUnsupervised-method}
+\alias{counts.log}
+\alias{counts.log,spUnsupervised-method}
+\alias{counts.log<-}
+\alias{counts.log<-,spUnsupervised-method}
+\alias{counts<-}
+\alias{counts<-,spUnsupervised-method}
 \alias{getData,spUnsupervised-method}
 \alias{initialize,spUnsupervised-method}
+\alias{sampleType}
+\alias{sampleType,spUnsupervised-method}
+\alias{sampleType<-}
+\alias{sampleType<-,spUnsupervised-method}
 \alias{show,spUnsupervised-method}
 \alias{spUnsupervised}
 \alias{spUnsupervised,spCounts-method}
 \alias{spUnsupervised-class}
 \title{spUnsupervised}
 \usage{
-\S4method{getData}{spUnsupervised}(x, n = NULL)
+\S4method{getData}{spUnsupervised}(object, n = NULL)
+
+counts(object)
+
+\S4method{counts}{spUnsupervised}(object)
+
+counts.log(object)
+
+\S4method{counts.log}{spUnsupervised}(object)
+
+sampleType(object)
+
+\S4method{sampleType}{spUnsupervised}(object)
+
+classification(object)
+
+\S4method{classification}{spUnsupervised}(object)
+
+counts(object) <- value
+
+\S4method{counts}{spUnsupervised}(object) <- value
+
+counts.log(object) <- value
+
+\S4method{counts.log}{spUnsupervised}(object) <- value
+
+sampleType(object) <- value
+
+\S4method{sampleType}{spUnsupervised}(object) <- value
+
+classification(object) <- value
+
+\S4method{classification}{spUnsupervised}(object) <- value
 
 \S4method{initialize}{spUnsupervised}(.Object, ..., counts, counts.log,
   sampleType, tsne, tsneMeans, groupMeans, classification, selectInd)
@@ -25,9 +73,11 @@ spUnsupervised(spCounts, ...)
   seed = 11, type = "max", max = 2000, genes = NULL, ...)
 }
 \arguments{
-\item{x}{A spUnsupervised object.}
+\item{object}{spUnsupervised object.}
 
 \item{n}{Data to extract from spUnsupervised object.}
+
+\item{value}{Data to replace in spUnsupervised object.}
 
 \item{.Object}{Internal object.}
 
@@ -48,8 +98,6 @@ spUnsupervised(spCounts, ...)
 \item{classification}{Post-tSNE cell type classification. Typically determined by the mclust package.}
 
 \item{selectInd}{The indexes of the genes picked for use in spUnsupervised. Used in spSwarm.}
-
-\item{object}{spUnsupervised object.}
 
 \item{spCounts}{spCounts object.}
 

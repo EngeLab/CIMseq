@@ -1,6 +1,12 @@
 #' @include sp.scRNAseq-package.R
 NULL
 
+#####################
+#                   #
+#     spCounts      #
+#                   #
+#####################
+
 #' @rdname spCounts
 #' @export
 .spCounts <- setClass("spCounts", representation(
@@ -10,19 +16,30 @@ NULL
     sampleType="character"
 ))
 
+#############
+#           #
+# Accessors #
+#           #
+#############
+
 #' @rdname spCounts
-setGeneric("getData", function(x, ...
+setGeneric("getData", function(object, ...
 ){ standardGeneric("getData") })
 
 #' @rdname spCounts
 #' @export
-setMethod("getData", "spCounts", function(x, n=NULL)
+setMethod("getData", "spCounts", function(object, n=NULL)
 {
     if(class(n)=="character"){
-        slot(x,n)
+        slot(object,n)
     }
 })
 
+#####################
+#                   #
+#  spUnsupervised   #
+#                   #
+#####################
 
 #' @rdname spUnsupervised
 #' @export
@@ -37,14 +54,128 @@ setMethod("getData", "spCounts", function(x, n=NULL)
     selectInd="numeric"
 ))
 
+#############
+#           #
+# Accessors #
+#           #
+#############
+
 #' @rdname spUnsupervised
 #' @export
-setMethod("getData", "spUnsupervised", function(x, n=NULL)
+setMethod("getData", "spUnsupervised", function(object, n=NULL)
 {
     if(class(n)=="character"){
-        slot(x,n)
+        slot(object,n)
     }
 })
+
+#' @rdname spUnsupervised
+setGeneric("counts", function(object
+) standardGeneric("counts"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("counts", "spUnsupervised", function(object)
+{
+    object@counts
+})
+
+#' @rdname spUnsupervised
+setGeneric("counts.log", function(object
+) standardGeneric("counts.log"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("counts.log", "spUnsupervised", function(object)
+{
+    object@counts.log
+})
+
+#' @rdname spUnsupervised
+setGeneric("sampleType", function(object
+) standardGeneric("sampleType"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("sampleType", "spUnsupervised", function(object)
+{
+    object@sampleType
+})
+
+#' @rdname spUnsupervised
+setGeneric("classification", function(object
+) standardGeneric("classification"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("classification", "spUnsupervised", function(object)
+{
+    object@classification
+})
+
+##############
+#            #
+# Replacment #
+#            #
+##############
+
+#' @rdname spUnsupervised
+setGeneric("counts<-", function(object, value
+) standardGeneric("counts<-"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("counts<-", "spUnsupervised", function(object, value)
+{
+    object@counts <- value
+    return(object)
+    
+})
+
+#' @rdname spUnsupervised
+setGeneric("counts.log<-", function(object, value
+) standardGeneric("counts.log<-"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("counts.log<-", "spUnsupervised", function(object, value)
+{
+    object@counts.log <- value
+    return(object)
+    
+})
+
+#' @rdname spUnsupervised
+setGeneric("sampleType<-", function(object, value
+) standardGeneric("sampleType<-"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("sampleType<-", "spUnsupervised", function(object, value)
+{
+    object@sampleType <- value
+    return(object)
+    
+})
+
+#' @rdname spUnsupervised
+setGeneric("classification<-", function(object, value
+) standardGeneric("classification<-"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("classification<-", "spUnsupervised", function(object, value)
+{
+    object@classification <- value
+    return(object)
+    
+})
+
+#####################
+#                   #
+#      spSwarm      #
+#                   #
+#####################
 
 #' @rdname spSwarm
 #' @export
@@ -55,12 +186,17 @@ setMethod("getData", "spUnsupervised", function(x, n=NULL)
     arguments="list"
 ))
 
+#############
+#           #
+# Accessors #
+#           #
+#############
 
 #' @rdname spSwarm
 #' @export
-setMethod("getData", "spSwarm", function(x, n=NULL)
+setMethod("getData", "spSwarm", function(object, n=NULL)
 {
     if(class(n)=="character"){
-        slot(x,n)
+        slot(object,n)
     }
 })

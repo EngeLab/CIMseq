@@ -34,12 +34,12 @@ NULL
 #' @param groupMeans The mean gene expression values for each cell type (classificaiton).
 #' @param classification Post-tSNE cell type classification. Typically determined by the mclust package.
 #' @param selectInd The indexes of the genes picked for use in spUnsupervised. Used in spSwarm.
-#' @param n Data to extract from spUnsupervised object.
-#' @param .Object Internal object.
 #' @param object spUnsupervised object.
-#' @param x A spUnsupervised object.
+#' @param n Data to extract from spUnsupervised object.
+#' @param value Data to replace in spUnsupervised object.
+#' @param .Object Internal object.
 #' @param ... Additional arguments to pass on
-#' @return Ercc fraction plot.
+#' @return spUnsupervised object.
 #' @author Jason T. Serviss
 #' @keywords spUnsupervised
 #' @examples

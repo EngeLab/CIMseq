@@ -11,7 +11,7 @@
 \alias{spSwarm-class}
 \title{spSwarm}
 \usage{
-\S4method{getData}{spSwarm}(x, n = NULL)
+\S4method{getData}{spSwarm}(object, n = NULL)
 
 \S4method{initialize}{spSwarm}(.Object, ..., spSwarm, codedSwarm,
   spUnsupervised, arguments)
@@ -25,7 +25,7 @@ spSwarm(spUnsupervised, ...)
   cutoff = 0.2, cores = 1, ...)
 }
 \arguments{
-\item{x}{A spSwarm object.}
+\item{object}{spSwarm object.}
 
 \item{n}{Data to extract from spSwarm object.}
 
@@ -40,8 +40,6 @@ spSwarm(spUnsupervised, ...)
 \item{spUnsupervised}{An spUnsupervised object.}
 
 \item{arguments}{Argumetns passed to the spSwarm function.}
-
-\item{object}{spSwarm object.}
 
 \item{limit}{Randomly select a limited number of samples to perform swarm optimization on.}
 

@@ -12,9 +12,9 @@
 \alias{spCounts-class}
 \title{spCounts}
 \usage{
-getData(x, ...)
+getData(object, ...)
 
-\S4method{getData}{spCounts}(x, n = NULL)
+\S4method{getData}{spCounts}(object, n = NULL)
 
 \S4method{initialize}{spCounts}(.Object, ..., counts, counts.log, counts.ercc,
   sampleType)
@@ -27,7 +27,7 @@ spCounts(counts, ...)
   ...)
 }
 \arguments{
-\item{x}{A spCounts object.}
+\item{object}{spCounts object.}
 
 \item{...}{additional arguments to pass on}
 
@@ -42,8 +42,6 @@ spCounts(counts, ...)
 \item{counts.ercc}{A matrix containing ercc spike-in reads and their counts.}
 
 \item{sampleType}{A character indicating the column naming scheme showing that the column contains a multuplet.}
-
-\item{object}{spCounts object.}
 }
 \value{
 The spCounts function returns an object of class spCounts.

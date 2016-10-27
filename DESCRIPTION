@@ -25,7 +25,8 @@ Imports:
     rPython,
     reshape2,
     S4Vectors,
-    viridis
+    viridis,
+    printr
 Suggests:
     knitr,
     rmarkdown,

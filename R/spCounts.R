@@ -15,12 +15,11 @@ NULL
 #' @param counts.log Log2 normalized counts per million.
 #' @param counts.ercc A matrix containing ercc spike-in reads and their counts.
 #' @param sampleType A character indicating the column naming scheme showing that the column contains a multuplet.
+#' @param object spCounts object.
 #' @param n Data to extract from spCounts object.
 #' @param .Object Internal object.
-#' @param object spCounts object.
-#' @param x A spCounts object.
 #' @param ... additional arguments to pass on
-#' @return The spCounts function returns an object of class spCounts.
+#' @return spCounts object.
 #' @author Jason T. Serviss
 #' @keywords spCounts
 #' @examples
