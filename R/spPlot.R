@@ -334,15 +334,15 @@ setMethod("spPlot", "spSwarm", function(
     }
     
     if(layout == "tsne" & loop == FALSE) {
-        .plotTsne(graphDF, tsneMeans, colors, d)
+        plot <- .plotTsne(graphDF, tsneMeans, colors, d)
     }
     
     if(layout == "igraph" & loop == TRUE) {
-        .plotIgraphLoop(graphDF)
+        plot <- .plotIgraphLoop(graphDF)
     }
     
     if(layout == "igraph" & loop == FALSE) {
-        .plotIgraph(graphDF)
+        plot <- .plotIgraph(graphDF)
     }
     
     plot

@@ -14,7 +14,7 @@ spPlot(x, ...)
 
 \S4method{spPlot}{spUnsupervised}(x, type, markers = NULL, ...)
 
-\S4method{spPlot}{spSwarm}(x, layout = "tsne", ...)
+\S4method{spPlot}{spSwarm}(x, layout = "tsne", loop = TRUE, ...)
 }
 \arguments{
 \item{x}{Counts matrix with samples as columns and genes as rows.}
@@ -25,7 +25,9 @@ spPlot(x, ...)
 
 \item{markers}{A character vector with 2 markers to plot.}
 
-\item{layout}{Specify "tsne" for overlaying connections over the tSNE or "NULL" for graph layout.}
+\item{layout}{Specify "tsne" for overlaying connections over the tSNE or igraph for graph layout.}
+
+\item{loop}{Logical; TRUE if "self" connections should be turned on.}
 }
 \value{
 The spPlot function returns an object of class spCounts.

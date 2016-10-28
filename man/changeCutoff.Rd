@@ -8,12 +8,17 @@
 \usage{
 changeCutoff(spSwarm, ...)
 
-\S4method{changeCutoff}{spSwarm}(spSwarm, cutoff, ...)
+\S4method{changeCutoff}{spSwarm}(spSwarm, spCounts = NULL, error = NULL,
+  cutoff, ...)
 }
 \arguments{
 \item{spSwarm}{An spSwarm object.}
 
 \item{...}{additional arguments to pass on}
+
+\item{spCounts}{An spCounts object. Needed when counts.ercc should be used.}
+
+\item{error}{Numeric; for use with counts.ercc. Lowers the calculated cutoff by error value.}
 
 \item{cutoff}{The fraction below which a connection should not be considered.}
 }
