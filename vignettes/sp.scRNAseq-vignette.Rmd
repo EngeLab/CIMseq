@@ -1,6 +1,6 @@
 ---
-title: "ClusterSignificance Vignette"
-author: "Jason T. Serviss and Martin "
+title: "sp.scRNAseq Vignette"
+author: "Jason T. Serviss and Martin F. Enge"
 date: '`r Sys.Date()`'
 output:
     html_document:
@@ -28,14 +28,11 @@ library(printr)
 ```
 
 sp.scRNAseq works in 3 stages with each stage being supported by plotting functions. The stages are as follows:
-1. Creating the sp.scRNAseq counts object. 
-    Here the raw count data, ERCC spike-in count data, and the information indicating which samples are singlets and which are multuplets is entered.
-2. Unsupervised clustering of the singlets. 
-    Here we perform unsupervised clustering of the singlets using tSNE and classify the number of clusters, to deduce the possible cell types in the multuplets.
-3. Multuplet deconvolution via swarm optimization.
-    Here we utilize swarm optimization to deconvolute the multuplets and, thus, provide a picture of the tissue "connectome".
+1. Creating the sp.scRNAseq counts object. Here the raw count data, ERCC spike-in count data, and the information indicating which samples are singlets and which are multuplets is entered.
+2. Unsupervised clustering of the singlets. Here we perform unsupervised clustering of the singlets using tSNE and classify the number of clusters, to deduce the possible cell types in the multuplets.
+3. Multuplet deconvolution via swarm optimization. Here we utilize swarm optimization to deconvolute the multuplets and, thus, provide a picture of the tissue "connectome".
 
-## sp.scRNAseq counts object
+## spCounts object
 
 Make sp.scRNAseq counts object. The spCounts command takes 3 arguments:
 1. matrix; The raw counts data.
@@ -95,7 +92,7 @@ Sometimes it may be desireable to view the expression of marker genes in the cou
 spPlot(cObj, type="markers", markers=c("c1", "b1"))
 ```
 
-## sp.scRNAseq unsupervised clustering object
+## spUnsupervised object
 The unsupervised clustering stage can be regulated by passing multiple arguments to the spUnsupervised object constructor. The default values and descriptions are shown below:
 
 1. spCounts: The sp.scRNAseq counts object.
@@ -127,7 +124,7 @@ The sp.scRNAseq unsupervised object also has an associated markers plot where th
 spPlot(uObj, type="markers", markers=c("c1", "b1"))
 ```
 
-## sp.scRNAseq spSwarm object
+## spSwarm object
 Finally, the deconvolution of the multuplets take place in this stage. Again, the associated arguments are listed and explained below:
 
 1. spUnsupervised: The sp.scRNAseq unsupervised object.
@@ -150,4 +147,20 @@ The resulting "connectome" can be plotted via:
 spPlot(sObj)
 ```
 
+The netwrok plot can be made in the above way or with a "natural" layout as below:
 
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE, warning=FALSE}
+spPlot(sObj, layout="igraph")
+```
+
+In addition "self connections" can be turned off via specifying the "loop" argument as FALSE.
+
+### Change cutoff
+The spSwarm object contains a slot called "spSwarm" which holds the raw results from the optimization but it also includes a slot called "codedSwarm" which is used for plotting. The codedSwarm variable is the spSwarm variable after the cutoff (via the cutoff argumet in spSwarm) has been applied. In the case that after optimization it is desired to re-calculate the codedSwarm variable with a new cutoff the changeCuttoff function can be applied:
+
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+NEWsObj <- changeCutoff(sObj, cutoff=0.001)
+spPlot(NEWsObj)
+```
+
+We now can see that more connections appear in the plot with the lower cutoff value applied. 
