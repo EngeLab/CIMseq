@@ -351,25 +351,6 @@ function(
     return(cbind(hold, x))
 }
 
-#.PCAsubset <- function(counts, sampleType, cutoff) {
-
-    #subset singlets
-    #    sng <- counts[ ,sampleType == "Singlet"]
-    
-    #remove 0's
-    #    c <- counts[rowMeans(sng) != 0, ]
-    
-    #run PCA
-    #    pca <- prcomp(t(c), center=TRUE, scale=TRUE)
-    
-    #order and return genes
-    #    rotation <- as.data.frame(pca$rotation)
-    #    genes <- rownames(rotation[order(rotation$PC1), ])
-    #    cut <- cutoff/2
-    #    selected <- c(genes[1:cut], genes[(length(genes) - (cut-1)):length(genes)])
-    #    return(selected)
-    #}
-
 #' changeCutoff
 #'
 #' Subtitle
@@ -380,6 +361,8 @@ function(
 #' @rdname changeCutoff
 #' @aliases changeCutoff
 #' @param spSwarm An spSwarm object.
+#' @param spCounts An spCounts object. Needed when counts.ercc should be used.
+#' @param error Numeric; for use with counts.ercc. Lowers the calculated cutoff by error value.
 #' @param cutoff The fraction below which a connection should not be considered.
 #' @param ... additional arguments to pass on
 #' @return spSwarm output.
@@ -407,18 +390,18 @@ setGeneric("changeCutoff", function(spSwarm, ...
 setMethod("changeCutoff", "spSwarm",
 function(
     spSwarm,
+    spCounts=NULL,
+    error=NULL,
     cutoff,
     ...
 ){
-    spCounts <- getData(spSwarm, "spCounts")
     swarmResults <- getData(spSwarm, "spSwarm")
     
-    uu <- c("names", "fopt")
-    
-    hold <- swarmResults[ , colnames(swarmResults) %in% uu]
+    uu <- c("sampleName", "fopt")
+    hold <- swarmResults[ ,colnames(swarmResults) %in% uu]
     x <- swarmResults[ , !colnames(swarmResults) %in% uu]
     
-    if(class(cutoff) == "numeric") {
+    if(is.null(spCounts)) {
         
         for(p in 1:nrow(x)) {
             x[p,][x[p,] < cutoff] <- 0
@@ -431,11 +414,12 @@ function(
         
         frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
         medianErccSng <- median(frac.ercc[sampleType == "Singlet"])
-        extimatedCells <- medianErccSng/frac.ercc[sampleType == "Multuplet"]
+        estimatedCells <- medianErccSng/frac.ercc[sampleType == "Multuplet"]
+        print(estimatedCells)
         
         for(p in 1:nrow(x)) {
-            cutoff <- extimatedCells[p] / ncol(x)
-            print(cutoff)
+            cutoff <- (estimatedCells[p] / ncol(x)) - error
+            #print(cutoff)
             x[p,][x[p,] < cutoff] <- 0
         }
         
