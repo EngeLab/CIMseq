@@ -14,7 +14,8 @@ NULL
 #' @param x Counts matrix with samples as columns and genes as rows.
 #' @param type Can be "ercc", "markers", or .......
 #' @param markers A character vector with 2 markers to plot.
-#' @param layout Specify "tsne" for overlaying connections over the tSNE or "NULL" for graph layout.
+#' @param layout Specify "tsne" for overlaying connections over the tSNE or igraph for graph layout.
+#' @param loop Logical; TRUE if "self" connections should be turned on.
 #' @param ... additional arguments to pass on
 #' @return The spPlot function returns an object of class spCounts.
 #' @author Jason T. Serviss
@@ -299,6 +300,7 @@ setMethod("spPlot", "spUnsupervised", function(
 setMethod("spPlot", "spSwarm", function(
     x,
     layout="tsne",
+    loop=TRUE,
     ...
 ){
     #get data
@@ -327,6 +329,43 @@ setMethod("spPlot", "spSwarm", function(
     colors <- .setColors()[1:length(unique(tsneMeans$name))]
     names(colors) <- tsneMeans$name
     
+    if(layout == "tsne" & loop == TRUE) {
+        plot <- .plotTsneLoop(graphDF, tsneMeans, colors, d)
+    }
+    
+    if(layout == "tsne" & loop == FALSE) {
+        .plotTsne(graphDF, tsneMeans, colors, d)
+    }
+    
+    if(layout == "igraph" & loop == TRUE) {
+        .plotIgraphLoop(graphDF)
+    }
+    
+    if(layout == "igraph" & loop == FALSE) {
+        .plotIgraph(graphDF)
+    }
+    
+    plot
+    return(plot)
+})
+
+.plotTsne <- function(graphDF, tsneMeans, colors, d) {
+    #setup layout
+    layout <- createLayout(graphDF, 'manual', node.positions = tsneMeans)
+    layout$x <- tsneMeans$x[sapply(layout$name, function(x) which(tsneMeans$name == x))]
+    layout$y <- tsneMeans$y[sapply(layout$name, function(x) which(tsneMeans$name == x))]
+    
+    #plot
+    plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = layout)+
+        geom_edge_link(edge_colour="black", aes_string(edge_alpha='weight'))+
+        scale_colour_manual(values=colors)+
+        geom_node_point(data=d, aes_string(colour='name'), alpha=0.25)+
+        geom_node_point(aes_string(colour='name'), size=5)
+    
+    return(plot)
+}
+
+.plotTsneLoop <- function(graphDF, tsneMeans, colors, d) {
     #setup layout
     layout <- createLayout(graphDF, 'manual', node.positions = tsneMeans)
     layout$x <- tsneMeans$x[sapply(layout$name, function(x) which(tsneMeans$name == x))]
@@ -347,11 +386,33 @@ setMethod("spPlot", "spSwarm", function(
         scale_colour_manual(values=colors)+
         geom_node_point(data=d, aes_string(colour='name'), alpha=0.25)+
         geom_node_point(aes_string(colour='name'), size=5)
-        
-    plot
     
     return(plot)
-})
+}
+
+.plotIgraph <- function(graphDF) {
+    plot <- ggraph(graph = graphDF, layout = 'igraph', algorithm = 'kk')+
+        geom_edge_link(edge_colour="black", aes_string(edge_alpha='weight'))+
+        geom_node_point(aes_string(colour='name'), size=4)+
+        scale_colour_manual(values=colors)
+    return(plot)
+}
+
+.plotIgraphLoop <- function(graphDF) {
+    plot <- ggraph(graph = graphDF, layout = 'igraph', algorithm = 'kk')+
+        geom_edge_link(edge_colour="black", aes_string(edge_alpha='weight'))+
+        geom_node_point(aes_string(colour='name'), size=4)+
+        scale_colour_manual(values=colors)+
+        geom_edge_loop(
+            edge_colour="black",
+            aes_string(
+                angle=90,
+                direction=270,
+                strength=50,
+                edge_alpha='weight'
+            )
+        )
+}
 
 .swarmTsneMeansProcess <- function(x) {
     spUnsupervised <- getData(x, "spUnsupervised")
