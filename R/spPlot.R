@@ -338,11 +338,11 @@ setMethod("spPlot", "spSwarm", function(
     }
     
     if(layout == "igraph" & loop == TRUE) {
-        plot <- .plotIgraphLoop(graphDF)
+        plot <- .plotIgraphLoop(graphDF, colors)
     }
     
     if(layout == "igraph" & loop == FALSE) {
-        plot <- .plotIgraph(graphDF)
+        plot <- .plotIgraph(graphDF, colors)
     }
     
     plot
@@ -390,7 +390,7 @@ setMethod("spPlot", "spSwarm", function(
     return(plot)
 }
 
-.plotIgraph <- function(graphDF) {
+.plotIgraph <- function(graphDF, colors) {
     plot <- ggraph(graph = graphDF, layout = 'igraph', algorithm = 'kk')+
         geom_edge_link(edge_colour="black", aes_string(edge_alpha='weight'))+
         geom_node_point(aes_string(colour='name'), size=4)+
@@ -398,7 +398,7 @@ setMethod("spPlot", "spSwarm", function(
     return(plot)
 }
 
-.plotIgraphLoop <- function(graphDF) {
+.plotIgraphLoop <- function(graphDF, colors) {
     plot <- ggraph(graph = graphDF, layout = 'igraph', algorithm = 'kk')+
         geom_edge_link(edge_colour="black", aes_string(edge_alpha='weight'))+
         geom_node_point(aes_string(colour='name'), size=4)+
@@ -408,7 +408,7 @@ setMethod("spPlot", "spSwarm", function(
             aes_string(
                 angle=90,
                 direction=270,
-                strength=50,
+                strength=1,
                 edge_alpha='weight'
             )
         )
