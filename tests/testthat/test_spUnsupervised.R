@@ -65,9 +65,9 @@ test_that("check that the .averageGroupExpression function outputs the expected 
     #prepare normal input data
     sng <- matrix(
         c(
-            1,1,2,2,
-            2,2,3,3,
-            3,3,0,0,
+            1,10,2,20,
+            2,20,3,30,
+            3,30,0,0,
             0,0,0,0
         ),
         nrow=4,
@@ -76,13 +76,14 @@ test_that("check that the .averageGroupExpression function outputs the expected 
     )
     
     classes <- rep(LETTERS[1:2], 2)
-    
+    colnames(sng) <- classes
+
     #setup expected data
     expected <- matrix(
         c(
-            1.5, 1.5,
-            2.5, 2.5,
-            1.5, 1.5,
+            1.5, 15,
+            2.5, 25,
+            1.5, 15,
             0, 0
         ),
         byrow=TRUE,
@@ -98,7 +99,7 @@ test_that("check that the .averageGroupExpression function outputs the expected 
     
     #test
     expect_identical(expected, output)
-    
+    expect_false(any(is.na(output)))
 })
 
 ##run test .tsneGroupMeans
