@@ -21,25 +21,13 @@
 spSwarm(spUnsupervised, ...)
 
 \S4method{spSwarm}{spUnsupervised}(spUnsupervised, limit = "none",
-  maxiter = 10, swarmsize = 150, minstep = 1e-16, minfunc = 1e-16,
-  cutoff = 0.2, cores = 1, ...)
+  maxiter = 10, swarmsize = 250, minstep = 1e-16, minfunc = 1e-16,
+  cutoff = 0.2, cores = 1, maxNonZero = 5, ...)
 }
 \arguments{
-\item{object}{spSwarm object.}
-
-\item{n}{Data to extract from spSwarm object.}
-
-\item{.Object}{Internal object.}
-
 \item{...}{additional arguments to pass on}
 
-\item{spSwarm}{The spSwarm results.}
-
-\item{codedSwarm}{The spSwarm results after the cutoff has been applied.}
-
 \item{spUnsupervised}{An spUnsupervised object.}
-
-\item{arguments}{Argumetns passed to the spSwarm function.}
 
 \item{limit}{Randomly select a limited number of samples to perform swarm optimization on.}
 
@@ -51,9 +39,7 @@ spSwarm(spUnsupervised, ...)
 
 \item{minfunc}{pySwarm argument indicating the minimum change of swarm’s best objective value before search termination.}
 
-\item{cutoff}{The cutoff used to generate codedSwarm.}
-
-\item{cores}{The number of cores to be used while running spSwarm.}
+\item{spCounts}{An spCounts object.}
 }
 \value{
 spSwarm output.
