@@ -147,7 +147,7 @@ The resulting "connectome" can be plotted via:
 spPlot(sObj)
 ```
 
-The netwrok plot can be made in the above way or with a "natural" layout as below:
+The network plot can be made in the above way or with a "natural" layout as below:
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE, warning=FALSE}
 spPlot(sObj, layout="igraph")
