@@ -49,10 +49,14 @@ rownames(testCounts) <- sort(
 )
 
 testErcc <- matrix(
-    c(
-        colSums(testData)[1:850]/100,
-        colSums(testData)[851:852]/400
+    c(c(
+        colSums(testCounts)[1:850]/100,
+        colSums(testCounts)[851:852]/400
     ),
+    c(
+        colSums(testCounts)[1:850]/10,
+        colSums(testCounts)[851:852]/40
+    )),
     nrow=2
 )
 
