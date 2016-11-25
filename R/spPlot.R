@@ -460,40 +460,33 @@ setMethod("spPlot", "spSwarm", function(
 }
 
 .swarmCalculateWeights <- function(graph) {
-    t <- .swarmSquareTable(graph$from, graph$to)
-    col <- colnames(t)
-    row <- rownames(t)
+    t <- as.data.frame(table(graph))
+    i <- sapply(t, is.factor)
+    t[i] <- lapply(t[i], as.character)
     
-    for(u in 1:nrow(graph)) {
-        x <- as.character(graph[u, "from"])
-        y <- as.character(graph[u, "to"])
-        
-        if(x %in% col & y %in% row) {
-            graph[u, "weight"] <- t[y, x]
-        } else if(y %in% col & x %in% row) {
-            graph[u, "weight"] <- t[x, y]
+    combs <- combn(unique(as.character(t$from)), 2)
+    self <- unique(c(t[t$from == t$to, "from"], t[t$from == t$to, "to"]))
+    self <- matrix(rep(self, 2), nrow=2, byrow=TRUE)
+    combs <- cbind(combs, self)
+    
+    weight <- c()
+    for(i in 1:ncol(combs)) {
+        currCombo <- combs[,i]
+        if(currCombo[1] == currCombo[2]) {
+            w <- as.numeric(subset(t, from %in% currCombo & to %in% currCombo, select="Freq"))
         } else {
-            graph[u, "weight"] <- 0
+            tmp <- t[t$from != t$to, ]
+            conns <- subset(tmp, from %in% currCombo & to %in% currCombo)
+            w <- sum(conns$Freq)
         }
+        weight <- c(weight, w)
     }
     
-    graph$weight[graph$from == graph$to] <- 1
-    return(unique(graph))
+    c <- as.data.frame(t(combs))
+    colnames(c) <- c("from", "to")
+    c$weight <- weight
+    graph <- subset(c, weight != 0)
+    return(graph)
 }
-
-.swarmSquareTable <- function(x,y) {
-    x <- factor(x)
-    y <- factor(y)
-    
-    commonLevels <- sort(unique(c(levels(x), levels(y))))
-    
-    x <- factor(x, levels = commonLevels)
-    y <- factor(y, levels = commonLevels)
-    
-    tbl <- table(x,y)
-    t <- abs(tbl+t(tbl))
-    return(t)
-}
-
 
 
