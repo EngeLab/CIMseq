@@ -3,6 +3,7 @@
 \docType{methods}
 \name{filterCells}
 \alias{filterCells}
+\alias{filterCells}
 \alias{filterCells,spCounts-method}
 \title{Filter Cells}
 \usage{

@@ -3,6 +3,7 @@
 \docType{methods}
 \name{changeCutoff}
 \alias{changeCutoff}
+\alias{changeCutoff}
 \alias{changeCutoff,spSwarm-method}
 \title{changeCutoff}
 \usage{
