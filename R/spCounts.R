@@ -16,6 +16,9 @@ NULL
 #' @param counts.ercc A matrix containing ercc spike-in reads and their counts.
 #' @param sampleType A character indicating the column naming scheme showing that the column contains a multuplet.
 #' @param object spCounts object.
+#' @param x Default plot param, an spCounts object containing singlets.
+#' @param y Default plot param, an spCounts object containing multuplets.
+#' @param markers Markers/genes to plot. Limited to two.
 #' @param n Data to extract from spCounts object.
 #' @param .Object Internal object.
 #' @param ... additional arguments to pass on
@@ -45,7 +48,7 @@ function(
 ){
     new("spCounts",
         counts=counts,
-        counts.cpm=.norm.counts(counts)
+        counts.cpm=.norm.counts(counts),
         counts.log=.norm.log.counts(counts),
         counts.ercc=counts.ercc,
     )

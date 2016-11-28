@@ -2,59 +2,27 @@
 #'@include All-classes.R
 NULL
 
-#' spPlot
-#'
-#' Subtitle
-#'
-#' Imports count and count.ercc data to a sp.scRNAseq object.
-#'
-#' @name spPlot
-#' @rdname spPlot
-#' @aliases spPlot
-#' @param x Counts matrix with samples as columns and genes as rows.
-#' @param type Can be "ercc", "markers", or .......
-#' @param markers A character vector with 2 markers to plot.
-#' @param layout Specify "tsne" for overlaying connections over the tSNE or igraph for graph layout.
-#' @param loop Logical; TRUE if "self" connections should be turned on.
-#' @param ... additional arguments to pass on
-#' @return The spPlot function returns an object of class spCounts.
-#' @author Jason T. Serviss
-#' @keywords spPlot
-#' @examples
-#'
-#' #use demo data
-#' data(expData)
-#'
-#' #run function
-#'
-NULL
 
-#' @rdname spPlot
-#' @export
-
-setGeneric("spPlot", function(x, ...
-){ standardGeneric("spPlot") })
-
-#' @rdname spPlot
+#' @rdname spCounts
 #' @export
 #' @import ggplot2
 #' @importFrom ggthemes theme_few scale_colour_economist
 
-setMethod("spPlot", "spCounts", function(
-    singlets,
-    multuplets,
+setMethod("plot", c("spCounts", "spCounts"), function(
+    x,
+    y,
     type,
     markers = NULL,
     ...
 ){
     #check that type is valid
     if( type == "ercc" ) {
-        p <- .countsErccPlot(singlets, multuplets)
+        p <- .countsErccPlot(x, y)
         p
         return(p)
     }
     if( type == "markers" ) {
-        p <- .countsMarkersPlot(singlets, multuplets, markers)
+        p <- .countsMarkersPlot(x, y, markers)
         p
         return(p)
     }
@@ -77,9 +45,9 @@ setMethod("spPlot", "spCounts", function(
 }
 
 #plot ercc plot
-.countsErccPlot <- function(x) {
+.countsErccPlot <- function(sng, mul) {
     
-    d <- .countsErccPlotProcess(x)
+    d <- .countsErccPlotProcess(sng, mul)
     
     p <- ggplot(d, aes_string(x='sampleType', y='frac.ercc'))+
     geom_jitter()+
@@ -111,7 +79,7 @@ setMethod("spPlot", "spCounts", function(
 }
 
 #get and process data for markers plot
-.countsMarkersPlotProcess <- function(x, markers) {
+.countsMarkersPlotProcess <- function(sng, mul, markers) {
     
     counts.logSng <- getData(sng, "counts.log")
     counts.logMul <- getData(mul, "counts.log")
@@ -165,15 +133,16 @@ setMethod("spPlot", "spCounts", function(
 }
 
 
-#' @rdname spPlot
+#' @rdname spUnsupervised
 #' @export
 #' @import ggplot2
 #' @importFrom ggthemes theme_few scale_colour_economist
 #' @importFrom reshape2 melt
 #' @importFrom viridis scale_color_viridis
 
-setMethod("spPlot", "spUnsupervised", function(
+setMethod("plot", c("spUnsupervised", "missing"), function(
     x,
+    y,
     type,
     markers = NULL,
     ...
@@ -301,7 +270,7 @@ setMethod("spPlot", "spUnsupervised", function(
     return(colors)
 }
 
-#' @rdname spPlot
+#' @rdname spSwarm
 #' @export
 #' @import ggraph
 #' @importFrom ggthemes theme_few scale_colour_economist
@@ -309,8 +278,9 @@ setMethod("spPlot", "spUnsupervised", function(
 #' @importFrom ggforce theme_no_axes
 #' @importFrom utils combn
 
-setMethod("spPlot", "spSwarm", function(
+setMethod("plot", c("spSwarm", "missing"), function(
     x,
+    y,
     layout="tsne",
     loop=TRUE,
     ...
