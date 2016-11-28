@@ -41,29 +41,36 @@ setGeneric("spPlot", function(x, ...
 #' @importFrom ggthemes theme_few scale_colour_economist
 
 setMethod("spPlot", "spCounts", function(
-    x,
+    singlets,
+    multuplets,
     type,
     markers = NULL,
     ...
 ){
     #check that type is valid
     if( type == "ercc" ) {
-        p <- .countsErccPlot(x)
+        p <- .countsErccPlot(singlets, multuplets)
         p
         return(p)
     }
     if( type == "markers" ) {
-        p <- .countsMarkersPlot(x, markers)
+        p <- .countsMarkersPlot(singlets, multuplets, markers)
         p
         return(p)
     }
 })
 
 #get and process data for ercc plot
-.countsErccPlotProcess <- function(x) {
-    counts <- getData(x, "counts")
-    counts.ercc <- getData(x, "counts.ercc")
-    sampleType <- getData(x, "sampleType")
+.countsErccPlotProcess <- function(sng, mul) {
+    countsSng <- getData(sng, "counts")
+    countsMul <- getData(mul, "counts")
+    counts <- cbind(countsSng, countsMul)
+    
+    counts.erccSng <- getData(sng, "counts.ercc")
+    counts.erccMul <- getData(mul, "counts.ercc")
+    counts.ercc <- cbind(counts.erccSng, counts.erccMul)
+
+    sampleType <- c(rep("Singlet", ncol(countsSng)), rep("Multuplet", ncol(countsMul)))
     frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
     d <- data.frame(sampleType = sampleType, frac.ercc=frac.ercc)
     return(d)
@@ -105,8 +112,13 @@ setMethod("spPlot", "spCounts", function(
 
 #get and process data for markers plot
 .countsMarkersPlotProcess <- function(x, markers) {
-    counts.log <- getData(x, "counts.log")
-    groups <- getData(x, "sampleType")
+    
+    counts.logSng <- getData(sng, "counts.log")
+    counts.logMul <- getData(mul, "counts.log")
+    counts.log <- cbind(counts.logSng, counts.logMul)
+    
+    groups <- c(rep("Singlet", ncol(counts.logSng)), rep("Multuplet", ncol(counts.logMul)))
+
     d <- data.frame(
         sampleType = groups,
         marker1 = counts.log[markers[1], ],
@@ -116,9 +128,9 @@ setMethod("spPlot", "spCounts", function(
 }
 
 #plot markers plot
-.countsMarkersPlot <- function(x, markers) {
+.countsMarkersPlot <- function(sng, mul, markers) {
     
-    d <- .countsMarkersPlotProcess(x, markers)
+    d <- .countsMarkersPlotProcess(sng, mul, markers)
     
     colors <- .setColors()[1:2]
     
