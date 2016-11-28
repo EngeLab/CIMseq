@@ -11,9 +11,9 @@ NULL
 #' @export
 .spCounts <- setClass("spCounts", representation(
     counts="matrix",
+    counts.cpm="matrix",
     counts.log="matrix",
-    counts.ercc="matrix",
-    sampleType="character"
+    counts.ercc="matrix"
 ))
 
 #############

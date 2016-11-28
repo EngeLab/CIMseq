@@ -8,17 +8,17 @@ setMethod("initialize","spCounts", function(
     .Object,
     ...,
     counts,
+    counts.cpm,
     counts.log,
-    counts.ercc,
-    sampleType
+    counts.ercc
 ){
     callNextMethod(
         .Object,
         ...,
         counts = counts,
+        counts.cpm = counts.cpm,
         counts.log = counts.log,
         counts.ercc = counts.ercc,
-        sampleType = sampleType
     )
 })
 
