@@ -66,36 +66,25 @@ setMethod("getData", "spUnsupervised", function(object, n=NULL)
 })
 
 #' @rdname spUnsupervised
-setGeneric("counts", function(object
-) standardGeneric("counts"))
+setGeneric("unsupervisedC", function(object
+) standardGeneric("unsupervisedC"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("counts", "spUnsupervised", function(object)
+setMethod("unsupervisedC", "spUnsupervised", function(object)
 {
-    object@counts
+    object@unsupervisedC
 })
 
 #' @rdname spUnsupervised
-setGeneric("counts.log", function(object
-) standardGeneric("counts.log"))
+setGeneric("groupMeans", function(object
+) standardGeneric("groupMeans"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("counts.log", "spUnsupervised", function(object)
+setMethod("groupMeans", "spUnsupervised", function(object)
 {
-    object@counts.log
-})
-
-#' @rdname spUnsupervised
-setGeneric("sampleType", function(object
-) standardGeneric("sampleType"))
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("sampleType", "spUnsupervised", function(object)
-{
-    object@sampleType
+    object@groupMeans
 })
 
 #' @rdname spUnsupervised
@@ -109,6 +98,17 @@ setMethod("classification", "spUnsupervised", function(object)
     object@classification
 })
 
+#' @rdname spUnsupervised
+setGeneric("selectIdx", function(object
+) standardGeneric("selectIdx"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("selectIdx", "spUnsupervised", function(object)
+{
+    object@selectIdx
+})
+
 ##############
 #            #
 # Replacment #
@@ -116,40 +116,27 @@ setMethod("classification", "spUnsupervised", function(object)
 ##############
 
 #' @rdname spUnsupervised
-setGeneric("counts<-", function(object, value
-) standardGeneric("counts<-"))
+setGeneric("unsupervisedC<-", function(object, value
+) standardGeneric("unsupervisedC<-"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("counts<-", "spUnsupervised", function(object, value)
+setMethod("unsupervisedC<-", "spUnsupervised", function(object, value)
 {
-    object@counts <- value
+    object@unsupervisedC <- value
     return(object)
     
 })
 
 #' @rdname spUnsupervised
-setGeneric("counts.log<-", function(object, value
-) standardGeneric("counts.log<-"))
+setGeneric("groupMeans<-", function(object, value
+) standardGeneric("groupMeans<-"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("counts.log<-", "spUnsupervised", function(object, value)
+setMethod("groupMeans<-", "spUnsupervised", function(object, value)
 {
-    object@counts.log <- value
-    return(object)
-    
-})
-
-#' @rdname spUnsupervised
-setGeneric("sampleType<-", function(object, value
-) standardGeneric("sampleType<-"))
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("sampleType<-", "spUnsupervised", function(object, value)
-{
-    object@sampleType <- value
+    object@groupMeans <- value
     return(object)
     
 })
@@ -163,6 +150,19 @@ setGeneric("classification<-", function(object, value
 setMethod("classification<-", "spUnsupervised", function(object, value)
 {
     object@classification <- value
+    return(object)
+    
+})
+
+#' @rdname spUnsupervised
+setGeneric("selectIdx<-", function(object, value
+) standardGeneric("selectIdx<-"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("selectIdx<-", "spUnsupervised", function(object, value)
+{
+    object@selectIdx <- value
     return(object)
     
 })

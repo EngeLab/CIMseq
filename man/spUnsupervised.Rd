@@ -6,25 +6,25 @@
 \alias{spUnsupervised-class}
 \alias{.spUnsupervised}
 \alias{getData,spUnsupervised-method}
-\alias{counts}
-\alias{counts,spUnsupervised-method}
-\alias{counts.log}
-\alias{counts.log,spUnsupervised-method}
-\alias{sampleType}
-\alias{sampleType,spUnsupervised-method}
+\alias{unsupervisedC}
+\alias{unsupervisedC,spUnsupervised-method}
+\alias{groupMeans}
+\alias{groupMeans,spUnsupervised-method}
 \alias{classification}
 \alias{classification,spUnsupervised-method}
-\alias{counts<-}
-\alias{counts<-,spUnsupervised-method}
-\alias{counts.log<-}
-\alias{counts.log<-,spUnsupervised-method}
-\alias{sampleType<-}
-\alias{sampleType<-,spUnsupervised-method}
+\alias{selectIdx}
+\alias{selectIdx,spUnsupervised-method}
+\alias{unsupervisedC<-}
+\alias{unsupervisedC<-,spUnsupervised-method}
+\alias{groupMeans<-}
+\alias{groupMeans<-,spUnsupervised-method}
 \alias{classification<-}
 \alias{classification<-,spUnsupervised-method}
+\alias{selectIdx<-}
+\alias{selectIdx<-,spUnsupervised-method}
 \alias{initialize,spUnsupervised-method}
 \alias{show,spUnsupervised-method}
-\alias{plot,spUnsupervised,missing-method}
+\alias{plot,spCounts,spUnsupervised-method}
 \alias{spUnsupervised}
 \alias{spUnsupervised}
 \alias{spUnsupervised,missing-method}
@@ -33,44 +33,44 @@
 \usage{
 \S4method{getData}{spUnsupervised}(object, n = NULL)
 
-counts(object)
+unsupervisedC(object)
 
-\S4method{counts}{spUnsupervised}(object)
+\S4method{unsupervisedC}{spUnsupervised}(object)
 
-counts.log(object)
+groupMeans(object)
 
-\S4method{counts.log}{spUnsupervised}(object)
-
-sampleType(object)
-
-\S4method{sampleType}{spUnsupervised}(object)
+\S4method{groupMeans}{spUnsupervised}(object)
 
 classification(object)
 
 \S4method{classification}{spUnsupervised}(object)
 
-counts(object) <- value
+selectIdx(object)
 
-\S4method{counts}{spUnsupervised}(object) <- value
+\S4method{selectIdx}{spUnsupervised}(object)
 
-counts.log(object) <- value
+unsupervisedC(object) <- value
 
-\S4method{counts.log}{spUnsupervised}(object) <- value
+\S4method{unsupervisedC}{spUnsupervised}(object) <- value
 
-sampleType(object) <- value
+groupMeans(object) <- value
 
-\S4method{sampleType}{spUnsupervised}(object) <- value
+\S4method{groupMeans}{spUnsupervised}(object) <- value
 
 classification(object) <- value
 
 \S4method{classification}{spUnsupervised}(object) <- value
+
+selectIdx(object) <- value
+
+\S4method{selectIdx}{spUnsupervised}(object) <- value
 
 \S4method{initialize}{spUnsupervised}(.Object, ..., unsupervisedC, groupMeans,
   classification, selectIdx)
 
 \S4method{show}{spUnsupervised}(object)
 
-\S4method{plot}{spUnsupervised,missing}(x, y, type, markers = NULL, ...)
+\S4method{plot}{spCounts,spUnsupervised}(x, y, type, markers = NULL, ...)
 
 spUnsupervised(spCounts, ...)
 
