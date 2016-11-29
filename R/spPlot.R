@@ -140,31 +140,34 @@ setMethod("plot", c("spCounts", "spCounts"), function(
 #' @importFrom reshape2 melt
 #' @importFrom viridis scale_color_viridis
 
-setMethod("plot", c("spUnsupervised", "missing"), function(
+setMethod("plot", c("spCounts", "spUnsupervised"), function(
     x,
     y,
     type,
     markers = NULL,
     ...
 ){
+    spCounts <- x
+    spUnsupervised <- y
+    
     #check that type is valid
     if( type == "clusters" ) {
-        p <- .unsupClustersPlot(x)
+        p <- .unsupClustersPlot(spUnsupervised)
         p
         return(p)
     }
     if( type == "markers" ) {
         #check that markers are valid
-        p <- .unsupMarkersPlot(x, markers)
+        p <- .unsupMarkersPlot(spCounts, spUnsupervised, markers)
         p
         return(p)
     }
 })
 
 #get and process data for clusters plot
-.unsupClusterPlotProcess <- function(x) {
-    tsne <- getData(x, "tsne")
-    classification <- getData(x, "classification")
+.unsupClusterPlotProcess <- function(spUnsupervised) {
+    tsne <- getData(spUnsupervised, "unsupervisedC")
+    classification <- getData(spUnsupervised, "classification")
     
     d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
     
@@ -172,9 +175,9 @@ setMethod("plot", c("spUnsupervised", "missing"), function(
 }
 
 #plot clusters plot
-.unsupClustersPlot <- function(x) {
+.unsupClustersPlot <- function(spUnsupervised) {
     
-    d <- .unsupClusterPlotProcess(x)
+    d <- .unsupClusterPlotProcess(spUnsupervised)
     colors <- .setColors()
 
     p <- ggplot(d, aes_string(x='V1', y='V2', colour='classification'))+
@@ -208,11 +211,9 @@ setMethod("plot", c("spUnsupervised", "missing"), function(
 }
 
 #get and process data for markers plot
-.unsupMarkerPlotProcess <- function(x, markers) {
-    tsne <- as.data.frame(getData(x, "tsne"))
-    counts.log <- getData(x, "counts.log")
-    sampleType <- getData(x, "sampleType")
-    sng <- counts.log[ , sampleType == "Singlet"]
+.unsupMarkerPlotProcess <- function(spCounts, spUnsupervised, markers) {
+    sng <- getData(spCounts, "counts.log")
+    tsne <- as.data.frame(getData(spUnsupervised, "unsupervisedC"))
     
     #on the next line you will need a check that the markers exist in the data
     markExpress <- t(sng[rownames(sng) %in% markers, ])
@@ -230,9 +231,9 @@ setMethod("plot", c("spUnsupervised", "missing"), function(
 }
 
 #plot markers plot
-.unsupMarkersPlot <- function(x, markers) {
+.unsupMarkersPlot <- function(spCounts, spUnsupervised, markers) {
     
-    m <- .unsupMarkerPlotProcess(x, markers)
+    m <- .unsupMarkerPlotProcess(spCounts, spUnsupervised, markers)
     
     p <- ggplot(m, aes_string(x='V1', y='V2', colour='value'))+
         geom_point()+

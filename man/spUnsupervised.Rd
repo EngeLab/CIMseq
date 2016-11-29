@@ -27,6 +27,7 @@
 \alias{plot,spUnsupervised,missing-method}
 \alias{spUnsupervised}
 \alias{spUnsupervised}
+\alias{spUnsupervised,missing-method}
 \alias{spUnsupervised,spCounts-method}
 \title{spUnsupervised}
 \usage{
@@ -64,8 +65,8 @@ classification(object) <- value
 
 \S4method{classification}{spUnsupervised}(object) <- value
 
-\S4method{initialize}{spUnsupervised}(.Object, ..., counts, counts.log,
-  sampleType, tsne, tsneMeans, groupMeans, classification, selectInd)
+\S4method{initialize}{spUnsupervised}(.Object, ..., unsupervisedC, groupMeans,
+  classification, selectIdx)
 
 \S4method{show}{spUnsupervised}(object)
 
@@ -73,9 +74,11 @@ classification(object) <- value
 
 spUnsupervised(spCounts, ...)
 
-\S4method{spUnsupervised}{spCounts}(spCounts, theta = 0, k = 2,
+\S4method{spUnsupervised}{missing}(spCounts, ...)
+
+\S4method{spUnsupervised}{spCounts}(spCounts, theta = 0, dims = 2,
   max_iter = 20000, perplexity = 10, initial_dims = 50, Gmax = 50,
-  seed = 11, type = "max", max = 2000, genes = NULL, ...)
+  seed = 11, geneSelectType = "max", max = 2000, genes = NULL, ...)
 }
 \arguments{
 \item{object}{spUnsupervised object.}
@@ -88,31 +91,27 @@ spUnsupervised(spCounts, ...)
 
 \item{...}{Additional arguments to pass on}
 
-\item{counts}{Passed from spCounts object.}
-
-\item{counts.log}{Passed from spCounts object.}
-
-\item{sampleType}{Passed from spCounts object.}
-
-\item{tsne}{tSNE results.}
-
-\item{tsneMeans}{The mean x and y positions of each cell type in the tSNE results.}
+\item{unsupervisedC}{tSNE results.}
 
 \item{groupMeans}{The mean gene expression values for each cell type (classificaiton).}
 
 \item{classification}{Post-tSNE cell type classification. Typically determined by the mclust package.}
 
-\item{selectInd}{The indexes of the genes picked for use in spUnsupervised. Used in spSwarm.}
+\item{selectIdx}{The indexes of the genes picked for use in spUnsupervised. Used in spSwarm.}
 
-\item{type}{Decides if genes included are picked by their maximum expression
-or maximum variance. Can be either "max", "var", or "manual". If "manual" the
-genes argument must also be specified.}
+\item{x}{Default plot param, an spCounts object containing singlets.}
+
+\item{y}{Default plot param, an spCounts object containing multuplets.}
+
+\item{type}{Character; The type of plot desired. Currently \emph{markers} or \emph{ercc}.}
+
+\item{markers}{Markers/genes to plot.}
 
 \item{spCounts}{spCounts object.}
 
 \item{theta}{Passed to Rtsne.}
 
-\item{k}{The dimensions of the resulting tsne. Passed to tsne function.}
+\item{dims}{The dimensions of the resulting tsne. Passed to tsne function.}
 
 \item{max_iter}{The max number of tSNE iterations. Passed to tsne function.}
 
@@ -123,6 +122,10 @@ genes argument must also be specified.}
 \item{Gmax}{A numeric vector of 1:Gmax passed as the "G" argument to Mclust.}
 
 \item{seed}{Sets the seed before running tSNE.}
+
+\item{geneSelectType}{Decides if genes included are picked by their maximum expression
+or maximum variance. Can be either "max", "var", or "manual". If "manual" the
+genes argument must also be specified.}
 
 \item{max}{The max number of genes to include based either on maximum expression
 or maximum variance which is decided by the "type" paramater.}

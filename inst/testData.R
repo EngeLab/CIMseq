@@ -5,7 +5,7 @@ library(sp.scRNAseqTesting)
 load('inst/counts.rda')
 load('inst/counts.ercc.rda')
 
-expData <- spCounts(counts, counts.ercc, '1000102901')
+expData <- spCounts(counts, counts.ercc)
 save(expData, file='data/expData.rda', compress='bzip2')
 
 #unit test and vignettes data

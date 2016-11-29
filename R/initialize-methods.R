@@ -18,7 +18,7 @@ setMethod("initialize","spCounts", function(
         counts = counts,
         counts.cpm = counts.cpm,
         counts.log = counts.log,
-        counts.ercc = counts.ercc,
+        counts.ercc = counts.ercc
     )
 })
 
@@ -28,26 +28,18 @@ setMethod("initialize","spCounts", function(
 setMethod("initialize","spUnsupervised", function(
     .Object,
     ...,
-    counts,
-    counts.log,
-    sampleType,
-    tsne,
-    tsneMeans,
+    unsupervisedC,
     groupMeans,
     classification,
-    selectInd
+    selectIdx
 ){
     callNextMethod(
         .Object,
         ...,
-        counts = counts,
-        counts.log = counts.log,
-        sampleType = sampleType,
-        tsne = tsne,
-        tsneMeans = tsneMeans,
+        unsupervisedC = unsupervisedC,
         groupMeans = groupMeans,
         classification = classification,
-        selectInd = selectInd
+        selectIdx = selectIdx
     )
 })
 
@@ -63,11 +55,11 @@ setMethod("initialize","spSwarm", function(
     arguments
 ){
     callNextMethod(
-    .Object,
-    ...,
-    spSwarm = spSwarm,
-    codedSwarm = codedSwarm,
-    spUnsupervised = spUnsupervised,
-    arguments = arguments
+        .Object,
+        ...,
+        spSwarm = spSwarm,
+        codedSwarm = codedSwarm,
+        spUnsupervised = spUnsupervised,
+        arguments = arguments
     )
 })

@@ -1,7 +1,7 @@
 #context("spUnsupervised")
 
-##run test .ntopVar
-test_that("check that the .ntopVar function outputs the expected result", {
+##run test spNtopVar
+test_that("check that the spNtopVar function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -21,7 +21,7 @@ test_that("check that the .ntopVar function outputs the expected result", {
     expected <- as.integer(c(3, 1))
     
     #run function
-    output <- .ntopVar(data, 2)
+    output <- spNtopVar(data, 2)
     
     #test
     expect_identical(expected, output)
@@ -29,8 +29,8 @@ test_that("check that the .ntopVar function outputs the expected result", {
 })
 
 
-##run test .ntopMax
-test_that("check that the .ntopMax function outputs the expected result", {
+##run test spNtopMax
+test_that("check that the spNtopMax function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -50,7 +50,7 @@ test_that("check that the .ntopMax function outputs the expected result", {
     expected <- as.integer(c(3, 1))
     
     #run function
-    output <- .ntopMax(data, 2)
+    output <- spNtopMax(data, 2)
     
     #test
     expect_identical(expected, output)
@@ -58,8 +58,8 @@ test_that("check that the .ntopMax function outputs the expected result", {
 })
 
 
-##run test .averageGroupExpression
-test_that("check that the .averageGroupExpression function outputs the expected result", {
+##run test spAverageGroupExpression
+test_that("check that the spAverageGroupExpression function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -95,7 +95,7 @@ test_that("check that the .averageGroupExpression function outputs the expected 
     )
     
     #run function
-    output <- .averageGroupExpression(classes, sng)
+    output <- spAverageGroupExpression(sng, classes)
     
     #test
     expect_identical(expected, output)
@@ -133,42 +133,47 @@ test_that("check that the .tsneGroupMeans function outputs the expected result",
     
 })
 
-##run test .distFunc
-test_that("check that the .distFunc function outputs the expected result", {
+##run test spPearsonDist
+test_that("check that the spPearsonDist function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
     x <- matrix(
-        c(
-            1,2,3,2,
-            2,3,4,3,
-            3,4,5,0,
-            0,0,0,0
-        ),
-        nrow=4,
-        ncol=4,
+        log2(c(
+            1,2,4,
+            2,3,3,
+            3,4,2,
+            4,5,1,
+            9,9,9
+        )),
+        nrow=5,
+        ncol=3,
         byrow=TRUE
     )
     
     select <- c(1,2,3)
-    sampleType <- c(rep("Singlet", 3), "Multuplet")
     
     #setup expected data
     expected <- as.dist(matrix(
-        rep(0,9),
-        nrow=3
+        c(
+            0.0,0.0,2.0,
+            0.0,0.0,2.0,
+            2.0,2.0,0.0
+        ),
+        nrow=3,
+        byrow=TRUE
     ))
     
     #run function
-    output <- .distFunc(x, select, sampleType)
+    output <- spPearsonDist(x, select)
     
     #test
     expect_equivalent(expected, output)
     
 })
 
-##run test .runTsne
-test_that("check that the .runTsne function outputs the expected result", {
+##run test spTsne
+test_that("check that the spTsne function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -191,15 +196,15 @@ test_that("check that the .runTsne function outputs the expected result", {
     #no expected at the moment for this function
     
     #run function
-    output <- .runTsne(my.dist, k, initial_dims, max_iter, perplexity, seed, theta=0)
+    output <- spTsne(my.dist, k, initial_dims, max_iter, perplexity, seed, theta=0)
     
     #test
     expect_length(output, 6)
     
 })
 
-##run test .runMclust
-test_that("check that the .runMclust function outputs the expected result", {
+##run test spMclust
+test_that("check that the spMclust function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -226,7 +231,7 @@ test_that("check that the .runMclust function outputs the expected result", {
     )
     
     #run function
-    output <- .runMclust(seed, my.tsne, G=Gmax)
+    output <- spMclust(my.tsne, seed, Gmax)
     
     #test
     expect_identical(output$classification, exp_classification)

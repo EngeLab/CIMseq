@@ -41,6 +41,8 @@ spCounts(counts, ...)
 
 \item{counts}{Counts matrix with samples as columns and genes as rows.}
 
+\item{counts.cpm}{Counts per million.}
+
 \item{counts.log}{Log2 normalized counts per million.}
 
 \item{counts.ercc}{A matrix containing ercc spike-in reads and their counts.}
@@ -49,9 +51,9 @@ spCounts(counts, ...)
 
 \item{y}{Default plot param, an spCounts object containing multuplets.}
 
-\item{markers}{Markers/genes to plot. Limited to two.}
+\item{type}{Character; The type of plot desired. Currently \emph{markers} or \emph{ercc}.}
 
-\item{sampleType}{A character indicating the column naming scheme showing that the column contains a multuplet.}
+\item{markers}{Markers/genes to plot. Limited to two.}
 }
 \value{
 spCounts object.
@@ -65,7 +67,7 @@ Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
 \examples{
 
 #run function
-cObj <- spCounts(testCounts, testErcc, 'm.')
+cObj <- spCounts(testCounts, testErcc)
 
 }
 \author{

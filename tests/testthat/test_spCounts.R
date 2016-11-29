@@ -27,6 +27,32 @@ test_that("check that the .norm.log.counts function outputs the expected result"
 
 })
 
+test_that("check that the .norm.counts function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    input <- matrix(c(0,1,1,0), nrow=2, ncol=2)
+    
+    #setup expected data
+    expected <- matrix(
+        c(
+            1,
+            1000001,
+            1000001,
+            1
+        ),
+        nrow=2,
+        ncol=2
+    )
+    
+    #run function
+    output <- .norm.counts(input)
+    
+    #test
+    expect_true(all.equal(expected, output))
+    
+})
+
 test_that("check that the .sampleType function outputs the expected result", {
     
     ###TEST1####

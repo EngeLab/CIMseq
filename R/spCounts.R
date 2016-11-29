@@ -12,12 +12,13 @@ NULL
 #' @rdname spCounts
 #' @aliases spCounts
 #' @param counts Counts matrix with samples as columns and genes as rows.
+#' @param counts.cpm Counts per million.
 #' @param counts.log Log2 normalized counts per million.
 #' @param counts.ercc A matrix containing ercc spike-in reads and their counts.
-#' @param sampleType A character indicating the column naming scheme showing that the column contains a multuplet.
 #' @param object spCounts object.
 #' @param x Default plot param, an spCounts object containing singlets.
 #' @param y Default plot param, an spCounts object containing multuplets.
+#' @param type Character; The type of plot desired. Currently \emph{markers} or \emph{ercc}.
 #' @param markers Markers/genes to plot. Limited to two.
 #' @param n Data to extract from spCounts object.
 #' @param .Object Internal object.
@@ -28,7 +29,7 @@ NULL
 #' @examples
 #'
 #' #run function
-#' cObj <- spCounts(testCounts, testErcc, 'm.')
+#' cObj <- spCounts(testCounts, testErcc)
 #'
 NULL
 
@@ -46,24 +47,29 @@ function(
     counts.ercc,
     ...
 ){
+    if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
+        stop("ncol(counts) != ncol(counts.ercc).")
+    }
+    
     new("spCounts",
-        counts=counts,
-        counts.cpm=.norm.counts(counts),
-        counts.log=.norm.log.counts(counts),
-        counts.ercc=counts.ercc,
+        counts = counts,
+        counts.cpm = .norm.counts(counts),
+        counts.log = .norm.log.counts(counts),
+        counts.ercc = counts.ercc
     )
 })
 
+.norm.counts <- function(counts) {
+    norm.fact <- colSums(counts)
+    counts.cpm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
+    return(counts.cpm)
+}
 
 .norm.log.counts <- function(counts) {
     norm.fact <- colSums(counts)
     counts.norm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
     counts.log <- log2(counts.norm)
-}
-
-.norm.counts <- function(counts) {
-    norm.fact <- colSums(counts)
-    counts.cpm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
+    return(counts.log)
 }
 
 .sampleType <- function(sampleType, counts) {
