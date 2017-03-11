@@ -44,9 +44,14 @@ function(
     sampleType = '1000102901',
     ...
 ){
+    if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
+        cat("ncol(counts) != ncol(counts.ercc).")
+    }
+
     new("spCounts",
         counts=counts,
         counts.log=.norm.log.counts(counts),
+        counts.cpm=.norm.counts(counts),
         counts.ercc=counts.ercc,
         sampleType=.sampleType(sampleType, counts)
     )
@@ -57,6 +62,11 @@ function(
     norm.fact <- colSums(counts)
     counts.norm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
     counts.log <- log2(counts.norm)
+}
+
+.norm.counts <- function(counts) {
+    norm.fact <- colSums(counts)
+    counts.cpm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
 }
 
 .sampleType <- function(sampleType, counts) {

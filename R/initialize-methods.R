@@ -9,6 +9,7 @@ setMethod("initialize","spCounts", function(
     ...,
     counts,
     counts.log,
+    counts.cpm,
     counts.ercc,
     sampleType
 ){
@@ -17,6 +18,7 @@ setMethod("initialize","spCounts", function(
         ...,
         counts = counts,
         counts.log = counts.log,
+        counts.cpm = counts.cpm,
         counts.ercc = counts.ercc,
         sampleType = sampleType
     )
@@ -28,9 +30,6 @@ setMethod("initialize","spCounts", function(
 setMethod("initialize","spUnsupervised", function(
     .Object,
     ...,
-    counts,
-    counts.log,
-    sampleType,
     tsne,
     tsneMeans,
     groupMeans,
@@ -40,9 +39,6 @@ setMethod("initialize","spUnsupervised", function(
     callNextMethod(
         .Object,
         ...,
-        counts = counts,
-        counts.log = counts.log,
-        sampleType = sampleType,
         tsne = tsne,
         tsneMeans = tsneMeans,
         groupMeans = groupMeans,

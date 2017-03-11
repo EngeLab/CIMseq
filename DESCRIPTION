@@ -49,4 +49,4 @@ Collate:
     'spUnsupervised.R'
     'testCounts.R'
     'testErcc.R'
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

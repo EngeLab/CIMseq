@@ -11,7 +11,7 @@ NULL
 #' @name spUnsupervised
 #' @rdname spUnsupervised
 #' @aliases spUnsupervised
-#' @param spCounts spCounts object.
+#' @param spCounts spCounts object with singlets only.
 #' @param theta Passed to Rtsne.
 #' @param k The dimensions of the resulting tsne. Passed to tsne function.
 #' @param max_iter The max number of tSNE iterations. Passed to tsne function.
@@ -68,7 +68,7 @@ setMethod("spUnsupervised", "spCounts", function(
     spCounts,
     theta = 0,
     k = 2,
-    max_iter = 20000,
+    max_iter = 2000,
     perplexity = 10,
     initial_dims = 50,
     Gmax = 50,
@@ -78,96 +78,353 @@ setMethod("spUnsupervised", "spCounts", function(
     genes=NULL,
     ...
 ){
-    #get relevant data
-    counts.log <- getData(spCounts, "counts.log")
-    sampleType <- getData(spCounts, "sampleType")
-    counts <- getData(spCounts, "counts")
     
     #filter genes to be included in analysis
     if(type == "var") {
-        select <- .ntopVar(counts.log[ ,sampleType=="Singlet"], max)
+        select <- spTopVar(spCounts, max)
     }
     
     if(type == "max") {
-        select <- .ntopMax(counts.log[ ,sampleType=="Singlet"], max)
+        select <- spTopMax(spCounts, max)
     }
     
-    if(type == "manual" & is.character(genes) == TRUE) {
-        select <- which(rownames(counts) %in% genes)
-    }
+    #if(type == "manual" & is.character(genes) == TRUE) {
+    #    select <- which(rownames(counts) %in% genes)
+    #}
     
     #calculate distances
-    my.dist <- .distFunc(counts.log, select, sampleType)
+    my.dist <- pearsonsDist(spCounts, select)
     
     #run tSNE
-    my.tsne <- .runTsne(my.dist, k, theta, initial_dims, max_iter, perplexity, seed)
+    tsne <- runTsne(my.dist, k, theta, initial_dims, max_iter, perplexity, seed)
     
     #run Mclust
-    mod1 <- .runMclust(seed, my.tsne, Gmax)
+    class <- runMclust(tsne, Gmax, seed)
     
     #check for classification problems
-    .classificationChecks(mod1)
+    .classificationChecks(class)
     
     #create object
     new("spUnsupervised",
-        counts=counts,
-        counts.log=counts.log,
-        sampleType=sampleType,
         tsne=my.tsne,
-        tsneMeans=.tsneGroupMeans(my.tsne, mod1$classification),
-        groupMeans=.averageGroupExpression(
-            mod1$classification,
-            counts[, sampleType == "Singlet"]
-        ),
-        classification=mod1$classification,
+        tsneMeans=tsneGroupMeans(tsne, class),
+        groupMeans=averageGroupExpression(spCounts,class),
+        classification=class,
         selectInd=select
     )
 })
 
 #checks for results from classification that will throw a downstream error.
-.classificationChecks <- function(mod1) {
-    if(length(unique(mod1$classification)) == 1) {
+.classificationChecks <- function(class) {
+    if(length(unique(class)) == 1) {
         stop("Only one group could be classified.
         Please adjust the tSNE-related arguments and try again or manually supply group classifications.")
     }
     
-    if(any(table(mod1$classification) == 1)) {
+    if(any(table(class) == 1)) {
         stop("One/more cells have been classified as an individual cell type. 
         You probably need to adjust the Gmax argument and run again.")
     }
 }
 
-#calculate the genes with the max variance and return the index
-#for the top genes according to the value of "n".
-.ntopVar <- function(data, n) {
-    rv = apply(data, 1, var)
+
+
+#' spTopVar
+#'
+#' Facilitates gene selection prior to unsupervised clustering.
+#'
+#' Returns the index for the n genes (rows) with the maximum
+#' variance in the spCounts object. The expression matrix in
+#' the counts.cpm slot is used for the calculation.
+#'
+#' @name spTopVar
+#' @rdname spTopVar
+#' @aliases spTopVar
+#' @param spCounts An spCounts object.
+#' @param n Number of genes to select.
+#' @return A numeric vector containing the indices of selected genes.
+#' @author Jason T. Serviss
+#' @keywords spTopVar
+#' @examples
+#'
+#' cObj <- spCounts(testCounts, testErcc)
+#' selected <- spTopVar(cObj, 10)
+#'
+NULL
+
+#' @rdname spTopVar
+#' @export
+
+
+spTopVar <- function(spCounts, n) {
+    rv = apply(getData(spCounts, "counts.cpm"), 1, var)
     select = order(rv, decreasing=TRUE)[1:n]
     return(select)
 }
 
-#calculate the genes with the max expression and return the index
-#for the top genes according to the value of "n".
-.ntopMax <- function(data, n) {
+#' spTopMax
+#'
+#' Facilitates gene selection prior to unsupervised clustering.
+#'
+#' Returns the index for the n genes (rows) with the maximum
+#' expression in the spCounts object. The expression matrix in
+#' the counts.cpm slot is used for the calculation.
+#'
+#' @name spTopMax
+#' @rdname spTopMax
+#' @aliases spTopMax
+#' @param spCounts An spCounts object.
+#' @param n Number of genes to select. If n > dim(data)[1] all data is returned.
+#' @return A numeric vector containing the indices of selected genes.
+#' @author Jason T. Serviss
+#' @keywords spTopMax
+#' @examples
+#'
+#' cObj <- spCounts(testCounts, testErcc)
+#' selected <- spTopMax(cObj, 10)
+#'
+NULL
+
+#' @rdname spTopMax
+#' @export
+
+spTopMax <- function(spCounts, n) {
+    data <- getData(spCounts, "counts.cpm")
+    n <- min(n, dim(data)[1])
     rv = apply(data, 1, max)
     select = order(rv, decreasing=TRUE)[1:n]
     return(select)
 }
 
-#calculate the average expression of each gene within each classification group.
-.averageGroupExpression <- function(classes, sng) {
+#' pearsonsDist
+#'
+#'
+#' Calculates the x and y coordinates of the mean of each classified group.
+#'
+#'
+#' This method is typically only used in conjunction with plotting. It
+#' calculates the 2 dimensional location of the mean of each classified group
+#' in the supplied unsupervised dimensionality reduction (t-SNE) data
+#' representation.
+#'
+#' @name pearsonsDist
+#' @rdname pearsonsDist
+#' @aliases pearsonsDist
+#' @param data An spCounts object.
+#' @param classes A character vector indicating the class of each singlet.
+#' @return A matrix containing the mean value for each gene for each classification group.
+#' @author Jason T. Serviss
+#' @keywords pearsonsDist
+#' @examples
+#'
+#' singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
+#' select <- spTopMax(singlets, 10)
+#' my.dist <- pearsonsDist(singlets, select)
+#'
+NULL
+
+#' @rdname pearsonsDist
+#' @export
+
+pearsonsDist <- function(data, select) {
+    as.dist(
+        1-cor(
+            2^getData(data, "counts.log")[select, ],
+            method="p"
+        )
+    )
+}
+
+#' runTsne
+#'
+#'
+#' Calculates the x and y coordinates of the mean of each classified group.
+#'
+#'
+#' This method is typically only used in conjunction with plotting. It
+#' calculates the 2 dimensional location of the mean of each classified group
+#' in the supplied unsupervised dimensionality reduction (t-SNE) data
+#' representation.
+#'
+#' @name runTsne
+#' @rdname runTsne
+#' @aliases runTsne
+#' @param data Singlet expression matrix.
+#' @param classes A character vector indicating the class of each singlet.
+#' @return A matrix containing the mean value for each gene for each classification group.
+#' @author Jason T. Serviss
+#' @keywords runTsne
+#' @examples
+#'
+#'\dontrun{
+#' singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
+#' select <- spTopMax(singlets, 10)
+#' my.dist <- pearsonsDist(singlets, select)
+#' tsne <- runTsne(my.dist, max_iter=10)
+#'}
+#'
+NULL
+
+#' @rdname runTsne
+#' @importFrom Rtsne Rtsne
+#' @export
+
+runTsne <- function(
+    my.dist,
+    k = 2,
+    theta = 0,
+    initial_dims = 50,
+    max_iter = 2000,
+    perplexity = 10,
+    seed = 11
+){
+    set.seed(seed)
+    
+    my.tsne <- Rtsne(
+        my.dist,
+        k = k,
+        initial_dims = initial_dims,
+        max_iter = max_iter,
+        perplexity = perplexity,
+        theta = theta
+    )$Y
+    
+    rownames(my.tsne) <- rownames(my.dist)
+    return(my.tsne)
+}
+
+#' runMclust
+#'
+#'
+#' Calculates the x and y coordinates of the mean of each classified group.
+#'
+#'
+#' This method is typically only used in conjunction with plotting. It
+#' calculates the 2 dimensional location of the mean of each classified group
+#' in the supplied unsupervised dimensionality reduction (t-SNE) data
+#' representation.
+#'
+#' @name runMclust
+#' @rdname runMclust
+#' @aliases runMclust
+#' @param data Singlet expression matrix.
+#' @param classes A character vector indicating the class of each singlet.
+#' @return A matrix containing the mean value for each gene for each classification group.
+#' @author Jason T. Serviss
+#' @keywords runMclust
+#' @examples
+#'
+#'\dontrun{
+#' singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
+#' select <- spTopMax(singlets, 10)
+#' my.dist <- pearsonsDist(singlets, select)
+#' tsne <- runTsne(my.dist, max_iter=10)
+#' class <- runMclust(tsne, 50, 11)
+#'}
+#'
+NULL
+
+#' @rdname runTsne
+#' @importFrom mclust Mclust mclustBIC
+#' @export
+
+runMclust <- function(
+    my.tsne,
+    Gmax = 50,
+    seed = 11
+){
+    set.seed(seed)
+    mod1 <- Mclust(my.tsne, G=1:Gmax)
+    
+    #rename classification classes
+    x <- unique(mod1$classification)
+    n <- ceiling(length(x)/26)
+    names <- unlist(lapply(1:n, function(u) paste(LETTERS, u, sep="")))[1:length(x)]
+    mod1$classification <- names[match(mod1$classification, x)]
+    
+    return(mod1$classification)
+}
+
+#' averageGroupExpression
+#'
+#' This output from this function is utilized to represent each group classified
+#' group during swarm optimization.
+#'
+#' Calculate the average expression of each gene within each classification group.
+#' Note that typically only singlets are input to this method.
+#'
+#' @name averageGroupExpression
+#' @rdname averageGroupExpression
+#' @aliases averageGroupExpression
+#' @param data Singlet expression matrix.
+#' @param classes A character vector indicating the class of each singlet.
+#' @return A matrix containing the mean value for each gene for each classification group.
+#' @author Jason T. Serviss
+#' @keywords averageGroupExpression
+#' @examples
+#'
+#'\dontrun{
+#' singletIdx <- grepl("^s.*", colnames(testCounts))
+#' sngMatrix <- testCounts[ , singletIdx]
+#' sngErcc <- testErcc[ , singletIdx]
+#' cObj <- spCounts(sngMatrix, sngErcc)
+#' select <- spTopMax(cObj, 10)
+#' my.dist <- pearsonsDist(cObj, select)
+#' tsne <- runTsne(my.dist, max_iter=2000)
+#' class <- runMclust(tsne, 50, 11)
+#' averageExp <- averageGroupExpression(cObj, class)
+#'}
+#'
+NULL
+
+#' @rdname averageGroupExpression
+#' @export
+
+averageGroupExpression <- function(data, classes) {
     c <- unique(classes)
+    exp <- getData(data, "counts.cpm")
     means <- lapply(c, function(x) {
-        rowMeans(sng[,classes == x])
+        rowMeans(exp[ ,classes == x])
     })
     means <- as.matrix(as.data.frame(means))
     colnames(means) <- c
     return(means)
 }
 
-#calculate the mean x and y value for each classification group based
-#on the tSNE results. Subsequently used for plotting.
-.tsneGroupMeans <- function(x, class) {
-    d <- data.frame(x[ ,1], x[ ,2], class)
+#' tsneGroupMeans
+#'
+#'
+#' Calculates the x and y coordinates of the mean of each classified group.
+#'
+#'
+#' This method is typically only used in conjunction with plotting. It
+#' calculates the 2 dimensional location of the mean of each classified group
+#' in the supplied unsupervised dimensionality reduction (t-SNE) data
+#' representation.
+#'
+#' @name tsneGroupMeans
+#' @rdname tsneGroupMeans
+#' @aliases tsneGroupMeans
+#' @param data Singlet expression matrix.
+#' @param classes A character vector indicating the class of each singlet.
+#' @return A matrix containing the mean value for each gene for each classification group.
+#' @author Jason T. Serviss
+#' @keywords tsneGroupMeans
+#' @examples
+#'
+#' singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
+#' tsne <- runTsne(singlets, max_iter=10)
+#' classes <- runMclust(tsne, 50, 11)
+#' meanGroupPos <- tsneGroupMeans(singlets, classes)
+#'
+NULL
+
+#' @rdname tsneGroupMeans
+#' @importFrom plyr ddply
+#' @export
+
+tsneGroupMeans <- function(data, classes) {
+    d <- data.frame(data[ ,1], data[ ,2], classes)
     colnames(d) <- c("x", "y", "classification")
     means <- ddply(
         d,
@@ -179,47 +436,7 @@ setMethod("spUnsupervised", "spCounts", function(
     return(means)
 }
 
-#calculates the distance of 1-correlation
-.distFunc <- function(x, select, sampleType) {
-    as.dist(
-        1-cor(
-            2^x[select, sampleType == "Singlet"],
-            method="p"
-        )
-    )
-}
 
-#runs the tSNE function
-.runTsne <- function(my.dist, k, theta, initial_dims, max_iter, perplexity, seed) {
-    set.seed(seed)
-    
-    my.tsne <- Rtsne(
-        my.dist,
-        k = k,
-        #epoch_callback = plot.callback,
-        initial_dims = initial_dims,
-        max_iter = max_iter,
-        perplexity = perplexity,
-        theta = theta
-    )$Y
-    
-    rownames(my.tsne) <- rownames(my.dist)
-    return(my.tsne)
-}
-
-#runs the Mclust function
-.runMclust <- function(seed, my.tsne, Gmax) {
-    set.seed(seed)
-    mod1 <- Mclust(my.tsne, G=1:Gmax)
-    
-    #rename classification classes
-    x <- unique(mod1$classification)
-    n <- ceiling(length(x)/26)
-    names <- unlist(lapply(1:n, function(u) paste(LETTERS, u, sep="")))[1:length(x)]
-    mod1$classification <- names[match(mod1$classification, x)]
-    
-    return(mod1)
-}
 
 
 

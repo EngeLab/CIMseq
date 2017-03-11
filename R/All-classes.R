@@ -12,6 +12,7 @@ NULL
 .spCounts <- setClass("spCounts", representation(
     counts="matrix",
     counts.log="matrix",
+    counts.cpm="matrix",
     counts.ercc="matrix",
     sampleType="character"
 ))
@@ -44,9 +45,6 @@ setMethod("getData", "spCounts", function(object, n=NULL)
 #' @rdname spUnsupervised
 #' @export
 .spUnsupervised <- setClass("spUnsupervised", representation(
-    counts="matrix",
-    counts.log="matrix",
-    sampleType="character",
     tsne="matrix",
     tsneMeans="data.frame",
     groupMeans="matrix",

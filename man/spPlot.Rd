@@ -3,9 +3,10 @@
 \docType{methods}
 \name{spPlot}
 \alias{spPlot}
+\alias{spPlot}
 \alias{spPlot,spCounts-method}
-\alias{spPlot,spSwarm-method}
 \alias{spPlot,spUnsupervised-method}
+\alias{spPlot,spSwarm-method}
 \title{spPlot}
 \usage{
 spPlot(x, ...)
@@ -50,4 +51,3 @@ data(expData)
 Jason T. Serviss
 }
 \keyword{spPlot}
-

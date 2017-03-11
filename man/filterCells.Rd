@@ -3,6 +3,7 @@
 \docType{methods}
 \name{filterCells}
 \alias{filterCells}
+\alias{filterCells}
 \alias{filterCells,spCounts-method}
 \title{Filter Cells}
 \usage{
@@ -40,4 +41,3 @@ A method to filter low quality cells from the analysis.
 Jason T. Serviss
 }
 \keyword{filterCells}
-
