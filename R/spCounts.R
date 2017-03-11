@@ -41,7 +41,6 @@ setMethod("spCounts", "matrix",
 function(
     counts,
     counts.ercc,
-    sampleType = '1000102901',
     ...
 ){
     if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
@@ -52,8 +51,7 @@ function(
         counts=counts,
         counts.log=.norm.log.counts(counts),
         counts.cpm=.norm.counts(counts),
-        counts.ercc=counts.ercc,
-        sampleType=.sampleType(sampleType, counts)
+        counts.ercc=counts.ercc
     )
 })
 

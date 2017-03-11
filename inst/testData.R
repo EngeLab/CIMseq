@@ -5,10 +5,28 @@ library(sp.scRNAseqTesting)
 load('inst/counts.rda')
 load('inst/counts.ercc.rda')
 
-expData <- spCounts(counts, counts.ercc, '1000102901')
-save(expData, file='data/expData.rda', compress='bzip2')
+#expData <- spCounts(counts, counts.ercc, '1000102901')
+#save(expData, file='data/expData.rda', compress='bzip2')
 
-#unit test and vignettes data
+expCounts <- counts
+expErcc <- counts.ercc
+
+suffix <- c()
+for(i in 1:ncol(counts)) {
+    if(grepl('1000102901', colnames(counts)[i])) {
+        suffix <- c(suffix, 'm')
+    } else {
+        suffix <- c(suffix, 's')
+    }
+}
+
+colnames(expCounts) <- paste(suffix, colnames(counts), sep='.')
+colnames(expErcc) <- paste(suffix, colnames(counts.ercc), sep='.')
+
+save(expCounts, file='data/expCounts.rda', compress='bzip2')
+save(expErcc, file='data/expErcc.rda', compress='bzip2')
+
+########unit test and vignettes data
 
 #minimize cells
 s.A1 <- syntheticData[ ,grepl("s.A1", colnames(syntheticData))][ ,1:85]

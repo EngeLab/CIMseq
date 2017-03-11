@@ -19,14 +19,13 @@ getData(object, ...)
 \S4method{getData}{spCounts}(object, n = NULL)
 
 \S4method{initialize}{spCounts}(.Object, ..., counts, counts.log, counts.cpm,
-  counts.ercc, sampleType)
+  counts.ercc)
 
 \S4method{show}{spCounts}(object)
 
 spCounts(counts, ...)
 
-\S4method{spCounts}{matrix}(counts, counts.ercc, sampleType = "1000102901",
-  ...)
+\S4method{spCounts}{matrix}(counts, counts.ercc, ...)
 }
 \arguments{
 \item{object}{spCounts object.}

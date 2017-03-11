@@ -106,7 +106,7 @@ setMethod("spUnsupervised", "spCounts", function(
     
     #create object
     new("spUnsupervised",
-        tsne=my.tsne,
+        tsne=tsne,
         tsneMeans=tsneGroupMeans(tsne, class),
         groupMeans=averageGroupExpression(spCounts,class),
         classification=class,

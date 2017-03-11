@@ -13,8 +13,7 @@ NULL
     counts="matrix",
     counts.log="matrix",
     counts.cpm="matrix",
-    counts.ercc="matrix",
-    sampleType="character"
+    counts.ercc="matrix"
 ))
 
 #############
@@ -179,8 +178,6 @@ setMethod("classification<-", "spUnsupervised", function(object, value)
 #' @export
 .spSwarm <- setClass("spSwarm", representation(
     spSwarm="data.frame",
-    codedSwarm="data.frame",
-    spUnsupervised="spUnsupervised",
     arguments="list"
 ))
 

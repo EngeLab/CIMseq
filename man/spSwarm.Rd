@@ -10,41 +10,44 @@
 \alias{show,spSwarm-method}
 \alias{spSwarm}
 \alias{spSwarm}
-\alias{spSwarm,spUnsupervised-method}
+\alias{spSwarm,spCounts,spUnsupervised-method}
 \title{spSwarm}
 \usage{
 \S4method{getData}{spSwarm}(object, n = NULL)
 
-\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, codedSwarm,
-  spUnsupervised, arguments)
+\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, arguments)
 
 \S4method{show}{spSwarm}(object)
 
-spSwarm(spUnsupervised, ...)
+spSwarm(spCounts, spUnsupervised, ...)
 
-\S4method{spSwarm}{spUnsupervised}(spUnsupervised, limit = "none",
-  maxiter = 10, swarmsize = 250, minstep = 1e-16, minfunc = 1e-16,
-  cutoff = 0.2, cores = 1, maxNonZero = 5, ...)
+\S4method{spSwarm}{spCounts,spUnsupervised}(spCounts, spUnsupervised,
+  distFun = distToSlice, selectInd = TRUE, maxiter = 10,
+  swarmsize = 150, cores = 1, ...)
 }
 \arguments{
+\item{object}{spRSwarm object.}
+
+\item{n}{Data to extract from spRSwarm object.}
+
+\item{.Object}{Internal object.}
+
 \item{...}{additional arguments to pass on}
 
-\item{spUnsupervised}{An spUnsupervised object.}
+\item{arguments}{Argumetns passed to the spRSwarm function.}
 
-\item{limit}{Randomly select a limited number of samples to perform swarm optimization on.}
+\item{spCounts}{an spCount object.}
 
 \item{maxiter}{pySwarm argument indicating the maximum optimization iterations.}
 
 \item{swarmsize}{pySwarm argument indicating the number of particals in the swarm.}
 
-\item{minstep}{pySwarm argument indicating the stepsize of swarm’s best position before search termination.}
+\item{cores}{The number of cores to be used while running spRSwarm.}
 
-\item{minfunc}{pySwarm argument indicating the minimum change of swarm’s best objective value before search termination.}
-
-\item{spCounts}{An spCounts object.}
+\item{spRSwarm}{The spRSwarm results.}
 }
 \value{
-spSwarm output.
+spRSwarm output.
 }
 \description{
 Subtitle
@@ -64,5 +67,4 @@ Description
 \author{
 Jason T. Serviss
 }
-\keyword{pySwarm}
-\keyword{spSwarm,}
+\keyword{spSwarm}
