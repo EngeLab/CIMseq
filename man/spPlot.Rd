@@ -11,20 +11,26 @@
 \usage{
 spPlot(x, ...)
 
-\S4method{spPlot}{spCounts}(x, type, markers = NULL, ...)
+\S4method{spPlot}{spCounts}(x, y, type, markers = NULL, ...)
 
-\S4method{spPlot}{spUnsupervised}(x, type, markers = NULL, ...)
+\S4method{spPlot}{spUnsupervised}(x, y = NULL, type, markers = NULL, ...)
 
-\S4method{spPlot}{spSwarm}(x, layout = "tsne", loop = TRUE, ...)
+\S4method{spPlot}{spSwarm}(x, y, z = NULL, layout = "tsne", loop = FALSE,
+  markers = NULL, edge.cutoff = 0, min.pval = 0.05, min.num.edges = 1,
+  ...)
 }
 \arguments{
-\item{x}{Counts matrix with samples as columns and genes as rows.}
+\item{x}{An spCounts, spUnsupervised, or spSwarm object.}
 
 \item{...}{additional arguments to pass on}
+
+\item{y}{An spCounts, spUnsupervised, or spSwarm object.}
 
 \item{type}{Can be "ercc", "markers", or .......}
 
 \item{markers}{A character vector with 2 markers to plot.}
+
+\item{z}{An spCounts object.}
 
 \item{layout}{Specify "tsne" for overlaying connections over the tSNE or igraph for graph layout.}
 

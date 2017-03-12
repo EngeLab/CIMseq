@@ -107,7 +107,6 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     optim.fn <- function(i) {
         oneslice <- slice[,i]
-        cat("running", i, "\n")
         psoptim(
             par=fractions,
             fn=distFun,
@@ -127,6 +126,77 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 
 .makeSyntheticSlice <- function(celltypes, fractions) {
     return(colSums(t(celltypes) * fractions))
+}
+
+#' spSwarmPoisson
+#'
+#' Subtitle
+#'
+#' Description
+#'
+#' @name spSwarmPoisson
+#' @rdname spSwarmPoisson
+#' @aliases spSwarmPoisson
+#' @param spSwarm An spSwarm object.
+#' @param edge.cutoff The minimum fraction to consider (?).
+#' @param min.pval Minimum p-value to report.
+#' @param min.num.edges Minimum number of observed edges to report a connection.
+#' @param object spRSwarm object.
+#' @param .Object Internal object.
+#' @param ... additional arguments to pass on
+#' @return spSwarm connection strengths and p-values.
+#' @author Jason T. Serviss
+#' @keywords spSwarmPoisson
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+#' #run function
+#'
+#'
+NULL
+
+#' @rdname spSwarmPoisson
+#' @export
+
+spSwarmPoisson <- function(
+    spSwarm,
+    edge.cutoff,
+    min.pval=0,
+    min.num.edges=0,
+    ...
+){
+    swarmT <- as.data.frame(t(getData(spSwarm, "spSwarm"))) # FIXME: transpose because of cross-commit, should just fix indices below istead.
+    sobj.bool <- swarmT > edge.cutoff
+    nodes <- rownames(swarmT)
+    nclusts <- length(nodes)
+    edges <- data.frame(
+        from=rep(nodes, each=nclusts),
+        to=rep(nodes, nclusts),
+        weight=rep(0, nclusts^2)
+    )
+    
+    #calculate edge weight, i.e. number of observed edges
+    for(i in 1:(dim(sobj.bool)[2])) {
+        o <- which(sobj.bool[,i])
+        if(length(o) > 1) {
+            for(j in 1:(length(o)-1)) {
+                for(k in (j+1):length(o)) {
+                    ind1 <- (o[j]-1)*nclusts+o[k]
+                    edges[ind1,3] <- edges[ind1,3]+1
+                    ind2 <- (o[k]-1)*nclusts+o[j]
+                    edges[ind2,3] <- edges[ind2,3]+1
+                }
+            }
+        }
+    }
+    
+    #calculate p-value
+    mean.edges <- mean(edges$weight)
+    edges$pval <- ppois(edges$weight, mean.edges)
+    out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
+    return(out)
 }
 
 # Various dist functions. Probably better to use match.arg and not export (so as to avoid cluttering the namespace), but leaving it like this for now.
@@ -159,34 +229,4 @@ distToSlicePearson <- function(fractions, cellTypes, slice) {
     normFractions <- fractions / sum(fractions)
     a = .makeSyntheticSlice(cellTypes, normFractions)
     sum(1-(cor(a,slice))) # Pearson 'dist'
-}
-
-#' @export
-exportByPoisson <- function(swarm, edge.cutoff, min.pval=0, min.num.edges=0) {
-    swarmT <- as.data.frame(t(swarm@spRSwarm)) # FIXME: transpose because of cross-commit, should just fix indices below istead.
-    sobj.bool <- swarmT > edge.cutoff
-    nodes <- rownames(swarmT)
-    nclusts <- length(nodes)
-    edges <- data.frame(node1=rep(nodes, each=nclusts), node2=rep(nodes, nclusts), strength=rep(0, nclusts^2))
-    for(i in 1:(dim(sobj.bool)[2])) {
-        o <- which(sobj.bool[,i])
-        if(length(o) > 1) {
-            cat("o:", o, "\n")
-            for(j in 1:(length(o)-1)) {
-                for(k in (j+1):length(o)) {
-                    cat(o[j], "\t", o[k], "\t")
-                    ind1 <- (o[j]-1)*nclusts+o[k]
-                    cat(ind1, "\t")
-                    edges[ind1,3] <- edges[ind1,3]+1
-                    ind2 <- (o[k]-1)*nclusts+o[j]
-                    cat(ind2, "\n")
-                    edges[ind2,3] <- edges[ind2,3]+1
-                }
-            }
-        }
-    }
-    mean.edges <- mean(edges$strength)
-    edges$pval <- ppois(edges$strength, mean.edges)
-    edges <- edges[edges[[4]] >= min.pval & edges[[3]] >= min.num.edges,]
-    edges
 }

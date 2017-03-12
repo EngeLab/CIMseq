@@ -64,6 +64,8 @@ setGeneric("spUnsupervised", function(spCounts, ...
 #' @importFrom plyr ddply summarize
 #' @importFrom stats as.dist
 
+#note: genes <- c("GCG", "LOXL4", "PLCE1", "IRX2", "GC", "KLHL41", "CRYBA2", "TTR", "TM4SF4", "RGS4", "FEV", "ARX", "PTGER3", "HMGB3", "RFX6", "MAFB", "SMARCA1", "PGR", "LDB2", "INS", "IAPP", "MAFA", "NPTX2", "DLK1", "ADCYAP1", "PFKFB2", "PDX1", "TGFBR3", "SYT13", "SMAD9", "CDKN1C", "TFCP2L1", "SIX3", "SIX2", "MNX1", "BMP5", "PIR", "SST", "PRG4", "LEPR", "RBP4", "BCHE", "HHEX", "FRZB", "PCSK1", "RGS2", "GABRG2", "ERBB4", "POU3F1", "ISL1", "PSIP1", "BHLHE41", "PDLIM4", "EHF", "LCORL", "ETV1", "PPY", "SERTM1", "CARTPT", "SLITRK6", "THSD7A", "AQP3", "ENTPD2", "PTGFR", "CHN2", "MEIS2", "ID2", "EGR3", "LMO3", "MEIS1", "ID4", "ARX", "PAX6", "ZNF503", "NEUROG1", "ACTG1")
+#names(genes) <- c(rep("alpha", 19), rep("beta", 18), rep("delta", 19), rep("PP", 18), rep("none", 2))
 setMethod("spUnsupervised", "spCounts", function(
     spCounts,
     theta = 0,
@@ -88,9 +90,13 @@ setMethod("spUnsupervised", "spCounts", function(
         select <- spTopMax(spCounts, max)
     }
     
-    #if(type == "manual" & is.character(genes) == TRUE) {
-    #    select <- which(rownames(counts) %in% genes)
-    #}
+    if(type == "manual" & is.character(genes) == TRUE) {
+        select <- which(rownames(getData(spCounts, "counts.log")) %in% genes)
+    }
+    
+    if(type == "all") {
+        select <- which(duplicated(getData(spCounts, "counts.log")) | duplicated(getData(spCounts, "counts.log"), fromLast=TRUE) == FALSE)
+    }
     
     #calculate distances
     my.dist <- pearsonsDist(spCounts, select)
@@ -430,8 +436,8 @@ tsneGroupMeans <- function(data, classes) {
         d,
         "classification",
         summarize,
-        meanX=mean(substitute(x)),
-        meanY=mean(substitute(y))
+        x=mean(substitute(x)),
+        y=mean(substitute(y))
     )
     return(means)
 }
