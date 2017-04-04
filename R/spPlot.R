@@ -342,7 +342,7 @@ setMethod("spPlot", "spUnsupervised", function(
 #' @export
 #' @import ggraph
 #' @importFrom ggthemes theme_few scale_colour_economist
-#' @importFrom igraph graph_from_data_frame V vertex
+#' @importFrom igraph graph_from_data_frame V vertex delete_edges get.data.frame
 #' @importFrom ggforce theme_no_axes
 #' @importFrom utils combn
 
@@ -377,6 +377,7 @@ setMethod("spPlot", "spSwarm", function(
         min.pval=1,
         min.num.edges=0
     )
+    graph$factor <- as.factor(graph$weight)
     
     #convert to igraph
     graphDF <- graph_from_data_frame(graph)
@@ -504,17 +505,10 @@ setMethod("spPlot", "spSwarm", function(
     
     #plot
     plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = layout)+
-        geom_edge_link(edge_colour="black", aes_string(edge_width ='weight'), edge_alpha=0.3)+
-        geom_node_point(data=d, aes_string(fill='color'), alpha=0.55, shape=21)+
-        scale_fill_manual(values=d$color)+
-        geom_node_point(data=tsneMeans, aes_string(colour='classification'), size=5, shape=21)+
-        scale_colour_manual(values=colors)+
-        scale_edge_width(
-            name = "weight",
-            labels=sort(unique(get.data.frame(graphDF)$weight)),
-            breaks=log2(sort(unique(get.data.frame(graphDF)$weight)))
-        )+
-        guides(fill="none")
+        geom_edge_link(edge_colour="black", aes_string(edge_width ='factor(weight)'), edge_alpha=0.3)+
+        geom_node_point(data=d, aes_string(colour='classification'), alpha=0.3)+
+        geom_node_point(data=tsneMeans, aes_string(colour='classification'), size=5)+
+        scale_colour_manual(name="classification", values=colors)
         
     return(plot)
 }
@@ -546,7 +540,7 @@ setMethod("spPlot", "spSwarm", function(
 
 .plotIgraph <- function(graphDF, colors) {
     plot <- ggraph(graph = graphDF, layout = 'igraph', algorithm = 'kk')+
-        geom_edge_link(edge_colour="black", aes_string(edge_alpha='weight'))+
+        geom_edge_link(edge_colour="black", aes_string(edge_width='factor(weight)'), edge_alpha=0.3)+
         geom_node_point(aes_string(colour='name'), size=4)+
         scale_colour_manual(values=colors)
     return(plot)

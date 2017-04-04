@@ -178,6 +178,7 @@ setMethod("classification<-", "spUnsupervised", function(object, value)
 #' @export
 .spSwarm <- setClass("spSwarm", representation(
     spSwarm="data.frame",
+    costSum="numeric",
     arguments="list"
 ))
 

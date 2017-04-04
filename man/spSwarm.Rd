@@ -15,15 +15,14 @@
 \usage{
 \S4method{getData}{spSwarm}(object, n = NULL)
 
-\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, arguments)
+\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costSum, arguments)
 
 \S4method{show}{spSwarm}(object)
 
 spSwarm(spCounts, spUnsupervised, ...)
 
 \S4method{spSwarm}{spCounts,spUnsupervised}(spCounts, spUnsupervised,
-  distFun = distToSlice, selectInd = TRUE, maxiter = 10,
-  swarmsize = 150, cores = 1, ...)
+  distFun = distToSlice, maxiter = 10, swarmsize = 150, cores = 1, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}

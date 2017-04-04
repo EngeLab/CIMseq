@@ -277,18 +277,20 @@ NULL
 
 runTsne <- function(
     my.dist,
-    k = 2,
+    dims = 2,
     theta = 0,
     initial_dims = 50,
     max_iter = 2000,
     perplexity = 10,
-    seed = 11
+    seed = 11,
+    is_distance=TRUE,
+    ...
 ){
     set.seed(seed)
     
     my.tsne <- Rtsne(
         my.dist,
-        k = k,
+        dims = dims,
         initial_dims = initial_dims,
         max_iter = max_iter,
         perplexity = perplexity,

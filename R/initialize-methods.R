@@ -52,12 +52,14 @@ setMethod("initialize","spSwarm", function(
     .Object,
     ...,
     spSwarm,
+    costSum,
     arguments
 ){
     callNextMethod(
     .Object,
     ...,
     spSwarm = spSwarm,
+    costSum = costSum,
     arguments = arguments
     )
 })

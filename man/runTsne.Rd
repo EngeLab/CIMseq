@@ -6,8 +6,8 @@
 \alias{runMclust}
 \title{runTsne}
 \usage{
-runTsne(my.dist, k = 2, theta = 0, initial_dims = 50, max_iter = 2000,
-  perplexity = 10, seed = 11)
+runTsne(my.dist, dims = 2, theta = 0, initial_dims = 50,
+  max_iter = 2000, perplexity = 10, seed = 11, is_distance = TRUE, ...)
 
 runMclust(my.tsne, Gmax = 50, seed = 11)
 }

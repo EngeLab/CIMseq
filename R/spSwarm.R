@@ -51,7 +51,6 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     spCounts,
     spUnsupervised,
     distFun = distToSlice,
-    selectInd = TRUE,
     maxiter = 10,
     swarmsize = 150,
     cores=1,
@@ -71,7 +70,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     slice <- counts[selectInd, ]
     
     ##run pySwarm
-    result <- .runPyRSwarm(
+    tmp <- .runPyRSwarm(
         cellTypes=cellTypes,
         slice=slice,
         fractions=fractions,
@@ -80,10 +79,12 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         swarmsize=swarmsize,
         cores=cores
     )
-    
+    result <- tmp[[1]]
+    cost <- tmp[[2]]
     #create object
     new("spSwarm",
         spSwarm=result,
+        costSum=sum(cost),
         arguments = list(
             maxiter=maxiter,
             swarmsize=swarmsize
@@ -105,7 +106,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     control=list(maxit=maxiter, s=swarmsize)
     
-    optim.fn <- function(i) {
+    optim.fn <- function(i, fractions, distFun, cellTypes, control) {
         oneslice <- slice[,i]
         psoptim(
             par=fractions,
@@ -114,14 +115,51 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
             slice=oneslice,
             lower=0,
             upper=1,
-            control=control)$par
+            control=control)
     }
     
-    result <- as.data.frame(mclapply(1:(dim(slice)[2]), optim.fn, mc.cores=cores))
-    output <- as.data.frame(t(result))
+    
+    tmp <- mclapply(
+        1:(dim(slice)[2]),
+        function(i)
+            optim.fn(
+                i,
+                fractions,
+                distFun,
+                cellTypes,
+                control
+            ),
+        mc.cores=cores
+    )
+    
+    #compile results
+    output <- data.frame()
+    cost <- c()
+    counts <- tmp[[1]][[3]]
+    convergence <-ifelse(
+        tmp[[1]][[4]] == 1,
+        "Maximal number of function evaluations reached.",
+        ifelse(
+            tmp[[1]][[4]] == 2,
+            "Maximal number of iterations reached.",
+            ifelse(
+                tmp[[1]][[4]] == 3,
+                "Maximal number of restarts reached.",
+                "Maximal number of iterations without improvement reached."
+            )
+        )
+    )
+    
+    for(i in 1:length(tmp)) {
+        curr <- tmp[[i]]
+        output <- rbind(output, as.data.frame(t(curr[[1]])))
+        cost <- c(cost, curr[[2]])
+    }
+    
+    #output <- as.data.frame(t(result))
     colnames(output) <- colnames(cellTypes)
     rownames(output) <- colnames(slice)
-    return(output)
+    return(list(output, cost))
 }
 
 .makeSyntheticSlice <- function(celltypes, fractions) {
@@ -194,7 +232,7 @@ spSwarmPoisson <- function(
     
     #calculate p-value
     mean.edges <- mean(edges$weight)
-    edges$pval <- ppois(edges$weight, mean.edges)
+    edges$pval <- ppois(edges$weight, mean.edges, lower.tail=FALSE)
     out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
     return(out)
 }
