@@ -20,20 +20,28 @@ NULL
 #' @param Gmax A numeric vector of 1:Gmax passed as the "G" argument to Mclust.
 #' @param seed Sets the seed before running tSNE.
 #' @param type Decides if genes included are picked by their maximum expression
-#'  or maximum variance. Can be either "max", "var", or "manual". If "manual" the
-#'  genes argument must also be specified.
-#' @param max The max number of genes to include based either on maximum expression
-#'    or maximum variance which is decided by the "type" paramater.
-#' @param genes If type = manual, genes to be included are specified here as a character
-#'    vector. These must match the rownames in the counts variable.
+#'  or maximum variance. Can be either "max", "var", or "manual". If "manual"
+#' the genes argument must also be specified.
+#' @param max The max number of genes to include based either on maximum
+#'    expression or maximum variance which is decided by the "type" paramater.
+#' @param genes If type = manual, genes to be included are specified here as a
+#'    character vector. These must match the rownames in the counts variable.
 #' @param counts Passed from spCounts object.
 #' @param counts.log Passed from spCounts object.
 #' @param sampleType Passed from spCounts object.
 #' @param tsne tSNE results.
-#' @param tsneMeans The mean x and y positions of each cell type in the tSNE results.
-#' @param groupMeans The mean gene expression values for each cell type (classificaiton).
-#' @param classification Post-tSNE cell type classification. Typically determined by the mclust package.
-#' @param selectInd The indexes of the genes picked for use in spUnsupervised. Used in spSwarm.
+#' @param tsneMeans The mean x and y positions of each cell type in the tSNE
+#'    results.
+#' @param groupMeans The mean gene expression values for each cell type
+#'    (classificaiton).
+#' @param classification Post-tSNE cell type classification. Typically
+#'    determined by the mclust package.
+#' @param selectInd The indexes of the genes picked for use in spUnsupervised.
+#' @param weighted boolean indicating if the group means should be weighted with
+#'    uncertainty.
+#' @param uncertainty Contains the uncertainty in converting a conditional
+#'    probablility from EM to a classification in model-based clustering.
+#'    Reported from mclust.
 #' @param object spUnsupervised object.
 #' @param n Data to extract from spUnsupervised object.
 #' @param value Data to replace in spUnsupervised object.
@@ -64,8 +72,6 @@ setGeneric("spUnsupervised", function(spCounts, ...
 #' @importFrom plyr ddply summarize
 #' @importFrom stats as.dist
 
-#note: genes <- c("GCG", "LOXL4", "PLCE1", "IRX2", "GC", "KLHL41", "CRYBA2", "TTR", "TM4SF4", "RGS4", "FEV", "ARX", "PTGER3", "HMGB3", "RFX6", "MAFB", "SMARCA1", "PGR", "LDB2", "INS", "IAPP", "MAFA", "NPTX2", "DLK1", "ADCYAP1", "PFKFB2", "PDX1", "TGFBR3", "SYT13", "SMAD9", "CDKN1C", "TFCP2L1", "SIX3", "SIX2", "MNX1", "BMP5", "PIR", "SST", "PRG4", "LEPR", "RBP4", "BCHE", "HHEX", "FRZB", "PCSK1", "RGS2", "GABRG2", "ERBB4", "POU3F1", "ISL1", "PSIP1", "BHLHE41", "PDLIM4", "EHF", "LCORL", "ETV1", "PPY", "SERTM1", "CARTPT", "SLITRK6", "THSD7A", "AQP3", "ENTPD2", "PTGFR", "CHN2", "MEIS2", "ID2", "EGR3", "LMO3", "MEIS1", "ID4", "ARX", "PAX6", "ZNF503", "NEUROG1", "ACTG1")
-#names(genes) <- c(rep("alpha", 19), rep("beta", 18), rep("delta", 19), rep("PP", 18), rep("none", 2))
 setMethod("spUnsupervised", "spCounts", function(
     spCounts,
     theta = 0,
@@ -78,6 +84,7 @@ setMethod("spUnsupervised", "spCounts", function(
     type = "max",
     max = 2000,
     genes=NULL,
+    weighted=TRUE,
     ...
 ){
     
@@ -105,7 +112,9 @@ setMethod("spUnsupervised", "spCounts", function(
     tsne <- runTsne(my.dist, k, theta, initial_dims, max_iter, perplexity, seed)
     
     #run Mclust
-    class <- runMclust(tsne, Gmax, seed)
+    tmp <- runMclust(tsne, Gmax, seed)
+    class <- tmp[[1]]
+    uncertainty <- tmp[[2]]
     
     #check for classification problems
     .classificationChecks(class)
@@ -114,8 +123,14 @@ setMethod("spUnsupervised", "spCounts", function(
     new("spUnsupervised",
         tsne=tsne,
         tsneMeans=tsneGroupMeans(tsne, class),
-        groupMeans=averageGroupExpression(spCounts,class),
+        groupMeans=averageGroupExpression(
+            spCounts,
+            class,
+            weighted,
+            uncertainty
+        ),
         classification=class,
+        uncertainty=uncertainty,
         selectInd=select
     )
 })
@@ -350,7 +365,9 @@ runMclust <- function(
     names <- unlist(lapply(1:n, function(u) paste(LETTERS, u, sep="")))[1:length(x)]
     mod1$classification <- names[match(mod1$classification, x)]
     
-    return(mod1$classification)
+    classification <- mod1$classification
+    uncertainty <- mod1$uncertainty
+    return(list(classification, uncertainty))
 }
 
 #' averageGroupExpression
@@ -366,6 +383,9 @@ runMclust <- function(
 #' @aliases averageGroupExpression
 #' @param data Singlet expression matrix.
 #' @param classes A character vector indicating the class of each singlet.
+#' @param weighted If the group means shoule be weighted with the uncertainty.
+#' @param uncertainty A numeric vector indicating the uncertainty if weighted is
+#'    TRUE.
 #' @return A matrix containing the mean value for each gene for each classification group.
 #' @author Jason T. Serviss
 #' @keywords averageGroupExpression
@@ -388,12 +408,22 @@ NULL
 #' @rdname averageGroupExpression
 #' @export
 
-averageGroupExpression <- function(data, classes) {
+averageGroupExpression <- function(data, classes, weighted, uncertainty) {
     c <- unique(classes)
     exp <- getData(data, "counts.cpm")
-    means <- lapply(c, function(x) {
-        rowMeans(exp[ ,classes == x])
-    })
+    
+    if(weighted) {
+        u <- 1-uncertainty
+        w <- t(t(exp)*u)
+        means <- lapply(c, function(x) {
+            rowSums(w[ ,classes == x]) / sum(u[classes == x])
+        })
+    } else {
+        means <- lapply(c, function(x) {
+            rowMeans(exp[ ,classes == x])
+        })
+    }
+    
     means <- as.matrix(as.data.frame(means))
     colnames(means) <- c
     return(means)
@@ -413,7 +443,7 @@ averageGroupExpression <- function(data, classes) {
 #' @name tsneGroupMeans
 #' @rdname tsneGroupMeans
 #' @aliases tsneGroupMeans
-#' @param data Singlet expression matrix.
+#' @param data Singlet 2D tsne.
 #' @param classes A character vector indicating the class of each singlet.
 #' @return A matrix containing the mean value for each gene for each classification group.
 #' @author Jason T. Serviss

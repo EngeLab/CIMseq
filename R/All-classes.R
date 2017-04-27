@@ -48,6 +48,7 @@ setMethod("getData", "spCounts", function(object, n=NULL)
     tsneMeans="data.frame",
     groupMeans="matrix",
     classification="character",
+    uncertainty="numeric",
     selectInd="numeric"
 ))
 

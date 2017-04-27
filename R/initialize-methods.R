@@ -32,6 +32,7 @@ setMethod("initialize","spUnsupervised", function(
     tsneMeans,
     groupMeans,
     classification,
+    uncertainty,
     selectInd
 ){
     callNextMethod(
@@ -41,6 +42,7 @@ setMethod("initialize","spUnsupervised", function(
         tsneMeans = tsneMeans,
         groupMeans = groupMeans,
         classification = classification,
+        uncertainty=uncertainty,
         selectInd = selectInd
     )
 })

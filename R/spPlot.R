@@ -228,45 +228,54 @@ setMethod("spPlot", "spUnsupervised", function(
     y = NULL,
     type,
     markers = NULL,
+    plotUncertainty=TRUE,
     ...
 ){
     #x should be a spUnsupervised object.
     #y should be null or an spCounts object containig singlets.
+    
     #check that type is valid
+    if( type == "" ) {stop("The type argument was not specified.")}
     if( type == "clusters" ) {
-        #ADD UNCERTAINTY
-
-        p <- .unsupClustersPlot(x)
+        p <- .unsupClustersPlot(x, plotUncertainty)
         p
         return(p)
     }
     if( type == "markers" ) {
         #check that markers are valid
-        if(is.null(y)) {stop("The markers plot requires a spCounts object as the second argument.")}
-        p <- .unsupMarkersPlot(x, y, markers)
+        if(is.null(y)) {
+            stop("This plot requires a spCounts object as the second argument.")
+        }
+        p <- .unsupMarkersPlot(x, y, markers, plotUncertainty)
         p
         return(p)
     }
 })
 
 #get and process data for clusters plot
-.unsupClusterPlotProcess <- function(x) {
+.unsupClusterPlotProcess <- function(x, plotUncertainty) {
     tsne <- getData(x, "tsne")
     classification <- getData(x, "classification")
     
     d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
     
+    if(plotUncertainty) {
+        d$uncertainty <- getData(uObj, "uncertainty")
+    } else {
+        d$uncertainty <- 3
+    }
+    
     return(d)
 }
 
 #plot clusters plot
-.unsupClustersPlot <- function(x) {
+.unsupClustersPlot <- function(x, plotUncertainty) {
     
-    d <- .unsupClusterPlotProcess(x)
+    d <- .unsupClusterPlotProcess(x, plotUncertainty)
     colors <- .setColors()
-
+    
     p <- ggplot(d, aes_string(x='V1', y='V2', colour='classification'))+
-    geom_point(size=3, alpha=0.75)+
+    #geom_point(size=3, alpha=0.75)+
     labs(
         x="Dim 1",
         y="Dim 2",
@@ -292,11 +301,17 @@ setMethod("spPlot", "spUnsupervised", function(
         colour=guide_legend(override.aes=list(size=5))
     )
     
+    if(plotUncertainty) {
+        p <- p+geom_point(aes_string(size='uncertainty'), alpha=0.75)
+    } else {
+        p <- p+geom_point(size=3, alpha=0.75)
+    }
+    
     return(p)
 }
 
 #get and process data for markers plot
-.unsupMarkerPlotProcess <- function(x, y, markers) {
+.unsupMarkerPlotProcess <- function(x, y, markers, plotUncertainty) {
     tsne <- as.data.frame(getData(x, "tsne"))
     counts.log <- getData(y, "counts.log")
     
@@ -306,22 +321,27 @@ setMethod("spPlot", "spUnsupervised", function(
         (x-min(x))/(max(x)-min(x))
     })
     
-    markExpress <- as.data.frame(markExpress)
-    markExpress$sample <- rownames(markExpress)
-    rownames(markExpress) <- 1:nrow(markExpress)
+    names <- rownames(markExpress)
+    markExpress <- as.data.frame(markExpress, row.names=1:nrow(markExpress))
+    markExpress$sample <- names
+    
+    if(plotUncertainty) {
+        markExpress$uncertainty <- getData(x, "uncertainty")
+    } else {
+        markExpress$uncertainty <- 0.0001
+    }
     df <- cbind(tsne, markExpress)
-    m <- melt(df, id.vars=c("V1", "V2", "sample"))
+    m <- melt(df, id.vars=c("V1", "V2", "sample", "uncertainty"))
     
     return(m)
 }
 
 #plot markers plot
-.unsupMarkersPlot <- function(x, y, markers) {
+.unsupMarkersPlot <- function(x, y, markers, plotUncertainty) {
     
-    m <- .unsupMarkerPlotProcess(x, y, markers)
+    m <- .unsupMarkerPlotProcess(x, y, markers, plotUncertainty)
     
     p <- ggplot(m, aes_string(x='V1', y='V2', colour='value'))+
-        geom_point()+
         facet_grid(variable~.)+
         theme_few()+
         scale_color_viridis()+
@@ -346,8 +366,15 @@ setMethod("spPlot", "spUnsupervised", function(
             ),
             strip.text.y = element_text(size = 15)
         )+
-        guides(colour=guide_colourbar(barwidth=20))
-        
+        guides(
+            colour=guide_colourbar(barwidth=20)
+        )
+    
+    if(plotUncertainty) {
+        p <- p+geom_point(aes_string(size='uncertainty'))
+    } else {
+       p <- p+geom_point()
+    }
         return(p)
 }
 
