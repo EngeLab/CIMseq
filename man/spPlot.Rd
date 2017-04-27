@@ -13,11 +13,11 @@ spPlot(x, ...)
 
 \S4method{spPlot}{spCounts}(x, y, type, markers = NULL, ...)
 
-\S4method{spPlot}{spUnsupervised}(x, y = NULL, type, markers = NULL, ...)
+\S4method{spPlot}{spUnsupervised}(x, y = NULL, type, markers = NULL,
+  plotUncertainty = TRUE, ...)
 
 \S4method{spPlot}{spSwarm}(x, y, z = NULL, layout = "tsne", loop = FALSE,
-  markers = NULL, edge.cutoff = 0, min.pval = 0.05, min.num.edges = 1,
-  ...)
+  markers = NULL, edge.cutoff = 0, min.pval = 1, min.num.edges = 0, ...)
 }
 \arguments{
 \item{x}{An spCounts, spUnsupervised, or spSwarm object.}

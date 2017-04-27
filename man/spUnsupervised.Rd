@@ -64,7 +64,7 @@ classification(object) <- value
 \S4method{classification}{spUnsupervised}(object) <- value
 
 \S4method{initialize}{spUnsupervised}(.Object, ..., tsne, tsneMeans, groupMeans,
-  classification, selectInd)
+  classification, uncertainty, selectInd)
 
 \S4method{show}{spUnsupervised}(object)
 
@@ -72,7 +72,8 @@ spUnsupervised(spCounts, ...)
 
 \S4method{spUnsupervised}{spCounts}(spCounts, theta = 0, k = 2,
   max_iter = 2000, perplexity = 10, initial_dims = 50, Gmax = 50,
-  seed = 11, type = "max", max = 2000, genes = NULL, ...)
+  seed = 11, type = "max", max = 2000, genes = NULL, weighted = TRUE,
+  ...)
 }
 \arguments{
 \item{object}{spUnsupervised object.}
@@ -87,13 +88,20 @@ spUnsupervised(spCounts, ...)
 
 \item{tsne}{tSNE results.}
 
-\item{tsneMeans}{The mean x and y positions of each cell type in the tSNE results.}
+\item{tsneMeans}{The mean x and y positions of each cell type in the tSNE
+results.}
 
-\item{groupMeans}{The mean gene expression values for each cell type (classificaiton).}
+\item{groupMeans}{The mean gene expression values for each cell type
+(classificaiton).}
 
-\item{classification}{Post-tSNE cell type classification. Typically determined by the mclust package.}
+\item{classification}{Post-tSNE cell type classification. Typically
+determined by the mclust package.}
 
-\item{selectInd}{The indexes of the genes picked for use in spUnsupervised. Used in spSwarm.}
+\item{uncertainty}{Contains the uncertainty in converting a conditional
+probablility from EM to a classification in model-based clustering.
+Reported from mclust.}
+
+\item{selectInd}{The indexes of the genes picked for use in spUnsupervised.}
 
 \item{spCounts}{spCounts object with singlets only.}
 
@@ -112,14 +120,17 @@ spUnsupervised(spCounts, ...)
 \item{seed}{Sets the seed before running tSNE.}
 
 \item{type}{Decides if genes included are picked by their maximum expression
-or maximum variance. Can be either "max", "var", or "manual". If "manual" the
-genes argument must also be specified.}
+ or maximum variance. Can be either "max", "var", or "manual". If "manual"
+the genes argument must also be specified.}
 
-\item{max}{The max number of genes to include based either on maximum expression
-or maximum variance which is decided by the "type" paramater.}
+\item{max}{The max number of genes to include based either on maximum
+expression or maximum variance which is decided by the "type" paramater.}
 
-\item{genes}{If type = manual, genes to be included are specified here as a character
-vector. These must match the rownames in the counts variable.}
+\item{genes}{If type = manual, genes to be included are specified here as a
+character vector. These must match the rownames in the counts variable.}
+
+\item{weighted}{boolean indicating if the group means should be weighted with
+uncertainty.}
 
 \item{counts}{Passed from spCounts object.}
 

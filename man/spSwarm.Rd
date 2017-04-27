@@ -37,9 +37,9 @@ spSwarm(spCounts, spUnsupervised, ...)
 
 \item{spCounts}{an spCount object.}
 
-\item{maxiter}{pySwarm argument indicating the maximum optimization iterations.}
+\item{maxiter}{pySwarm argument indicating maximum optimization iterations.}
 
-\item{swarmsize}{pySwarm argument indicating the number of particals in the swarm.}
+\item{swarmsize}{pySwarm argument indicating the number of swarm particals.}
 
 \item{cores}{The number of cores to be used while running spRSwarm.}
 

@@ -5,12 +5,17 @@
 \alias{averageGroupExpression}
 \title{averageGroupExpression}
 \usage{
-averageGroupExpression(data, classes)
+averageGroupExpression(data, classes, weighted, uncertainty)
 }
 \arguments{
 \item{data}{Singlet expression matrix.}
 
 \item{classes}{A character vector indicating the class of each singlet.}
+
+\item{weighted}{If the group means shoule be weighted with the uncertainty.}
+
+\item{uncertainty}{A numeric vector indicating the uncertainty if weighted is
+TRUE.}
 }
 \value{
 A matrix containing the mean value for each gene for each classification group.
