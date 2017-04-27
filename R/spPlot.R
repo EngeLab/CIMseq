@@ -95,10 +95,14 @@ setMethod("spPlot", "spCounts", function(
     )
     
     frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
+    
     d <- data.frame(
         sampleType = factor(sampleType, levels=c("Singlet", "Multuplet")),
         frac.ercc=frac.ercc
     )
+    
+    #calculate cell number
+    d$cellNumber <- median(d[d[,1] == "Singlet", "frac.ercc"]) / d$frac.ercc
     return(d)
 }
 
@@ -107,11 +111,16 @@ setMethod("spPlot", "spCounts", function(
     
     d <- .countsErccPlotProcess(x, y)
     
-    p <- ggplot(d, aes_string(x='sampleType', y='frac.ercc'))+
+    convertTocellNumber <- function(x, d) {
+        #100*(1-(median(d[d[,1] == "Singlet", "frac.ercc"])/x))
+        100*(median(d[d[,1] == "Singlet", "frac.ercc"])/x)
+    }
+    
+    p <- ggplot(d, aes_string(x='sampleType', y='cellNumber'))+
     geom_jitter()+
     labs(
         x="Sample type",
-        y="Fraction of ERCC",
+        y="Cell number",
         title="Fraction ERCC in singlets/doublets"
     )+
     theme_few()+
@@ -120,7 +129,7 @@ setMethod("spPlot", "spCounts", function(
         legend.title=element_blank(),
         legend.text=element_text(size=15),
         axis.title=element_text(size=17),
-        axis.text=element_text(size=15),
+        axis.text=element_text(size=13),
         plot.title=element_text(
             hjust=0.5,
             family="Arial",
@@ -131,6 +140,13 @@ setMethod("spPlot", "spCounts", function(
     )+
     guides(
         colour=guide_legend(override.aes=list(size=5))
+    )+
+    scale_y_continuous(
+        sec.axis = sec_axis(
+            trans=~convertTocellNumber(., d),
+            name="% ERCC",
+            breaks=c(0, seq(60,100,10))
+        )
     )
     
     return(p)
@@ -218,6 +234,8 @@ setMethod("spPlot", "spUnsupervised", function(
     #y should be null or an spCounts object containig singlets.
     #check that type is valid
     if( type == "clusters" ) {
+        #ADD UNCERTAINTY
+
         p <- .unsupClustersPlot(x)
         p
         return(p)
@@ -342,9 +360,10 @@ setMethod("spPlot", "spUnsupervised", function(
 #' @export
 #' @import ggraph
 #' @importFrom ggthemes theme_few scale_colour_economist
-#' @importFrom igraph graph_from_data_frame V vertex delete_edges get.data.frame
+#' @importFrom igraph graph_from_data_frame delete_edges set_edge_attr get.edgelist
 #' @importFrom ggforce theme_no_axes
 #' @importFrom utils combn
+#' @importFrom ggthemes theme_few
 
 setMethod("spPlot", "spSwarm", function(
     x,
@@ -354,8 +373,8 @@ setMethod("spPlot", "spSwarm", function(
     loop=FALSE,
     markers=NULL,
     edge.cutoff=0,
-    min.pval=0.05,
-    min.num.edges=1,
+    min.pval=1,
+    min.num.edges=0,
     ...
 ){
     #x should be an spSwarm object
@@ -364,9 +383,9 @@ setMethod("spPlot", "spSwarm", function(
     
     #get data
     tsneMeans <- getData(y, "tsneMeans")
-    #tsneMeans <- .swarmTsneMeansProcess(y)
     d <- .swarmTsneProcess(y)
-    
+    d <- d[order(d$classification), ]
+
     if(!is.null(markers)) {
         d$color <- .col.from.targets(markers, getData(z, "counts.log"))
     }
@@ -374,24 +393,24 @@ setMethod("spPlot", "spSwarm", function(
     graph <- spSwarmPoisson(
         x,
         edge.cutoff=edge.cutoff,
-        min.pval=1,
+        min.pval=min.pval,
         min.num.edges=0
     )
-    graph$factor <- as.factor(graph$weight)
     
     #convert to igraph
     graphDF <- graph_from_data_frame(graph)
-    #vertexToAdd <- tsneMeans$name[!tsneMeans$name %in% V(graphDF)$name]
     
-    #if(length(vertexToAdd) > 0) {
-    #    for(i in 1:length(vertexToAdd)) {
-    #        graphDF <- graphDF + vertex(as.character(vertexToAdd[i]))
-    #    }
-    #}
-    
-    #delete unwanted edges
-    graphDF <- delete_edges(graphDF, which(graph$pval > min.pval | graph$weight < min.num.edges))
-    
+    #remove edges with weight < min.num.edges and name edges
+    graphDF <- delete_edges(graphDF, which(graph$weight < min.num.edges))
+    graphDF <- set_edge_attr(
+        graphDF,
+        name="name",
+        value=paste(
+            get.edgelist(graphDF)[,1],
+            get.edgelist(graphDF)[,2],
+            sep="->"
+        )
+    )
     
     #setup colors
     colors <- .setColors()[1:length(unique(tsneMeans$classification))]
@@ -417,13 +436,6 @@ setMethod("spPlot", "spSwarm", function(
     return(plot)
 })
 
-.swarmTsneMeansProcess <- function(x) {
-    tsneMeans <- getData(x, "tsneMeans")
-    colnames(tsneMeans) <- c("name", "x", "y")
-    tsneMeans$name <- as.character(tsneMeans$name)
-    return(tsneMeans)
-}
-
 .swarmTsneProcess <- function(x) {
     tsne <- getData(x, "tsne")
     classification <- getData(x, "classification")
@@ -438,77 +450,42 @@ setMethod("spPlot", "spSwarm", function(
     return(d)
 }
 
-.swarmNetworkDF <- function(x) {
-    names <- colnames(x)[c(-1,-2)]
-    for(o in 1:nrow(x)) {
-        ind <- which(x[o, c(-1,-2)] != 0)
-        
-        if(length(ind) == 1) {
-            combs <-  data.frame(V1=names[ind], V2=names[ind], stringsAsFactors=FALSE)
-        } else {
-            combs <- as.data.frame(t(combn(names[ind],2)), stringsAsFactors=FALSE)
-        }
-        
-        if( o == 1 ) {
-            connections <- combs
-        } else {
-            connections <- rbind(connections, combs)
-        }
-    }
-    
-    colnames(connections) <- c("from", "to")
-    return(connections)
-}
-
-.swarmCalculateWeights <- function(graph) {
-    t <- .swarmSquareTable(graph$from, graph$to)
-    col <- colnames(t)
-    row <- rownames(t)
-    
-    for(u in 1:nrow(graph)) {
-        x <- as.character(graph[u, "from"])
-        y <- as.character(graph[u, "to"])
-        
-        if(x %in% col & y %in% row) {
-            graph[u, "weight"] <- t[y, x]
-        } else if(y %in% col & x %in% row) {
-            graph[u, "weight"] <- t[x, y]
-        } else {
-            graph[u, "weight"] <- 0
-        }
-    }
-    
-    graph$weight[graph$from == graph$to] <- 1
-    return(unique(graph))
-}
-
-.swarmSquareTable <- function(x,y) {
-    x <- factor(x)
-    y <- factor(y)
-    
-    commonLevels <- sort(unique(c(levels(x), levels(y))))
-    
-    x <- factor(x, levels = commonLevels)
-    y <- factor(y, levels = commonLevels)
-    
-    tbl <- table(x,y)
-    t <- abs(tbl+t(tbl))
-    return(t)
-}
-
-
 .plotTsne <- function(graphDF, tsneMeans, colors, d) {
+    
     #setup layout
     layout <- create_layout(graphDF, 'manual', node.positions = tsneMeans)
-    #layout$x <- tsneMeans$x[sapply(layout$name, function(x) which(tsneMeans$name == x))]
-    #layout$y <- tsneMeans$y[sapply(layout$name, function(x) which(tsneMeans$name == x))]
     
     #plot
-    plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = layout)+
-        geom_edge_link(edge_colour="black", aes_string(edge_width ='factor(weight)'), edge_alpha=0.3)+
-        geom_node_point(data=d, aes_string(colour='classification'), alpha=0.3)+
-        geom_node_point(data=tsneMeans, aes_string(colour='classification'), size=5)+
-        scale_colour_manual(name="classification", values=colors)
+    plot <- ggraph(
+        graph = graphDF,
+        layout = 'manual',
+        node.positions = layout
+    )+
+    geom_edge_link(
+        edge_colour="black",
+        aes_string(edge_width ='factor(weight)'),
+        edge_alpha=0.3,
+        lineend = "round"
+    )+
+    geom_node_point(
+        data=d,
+        aes_string(colour='classification'),
+        alpha=0.3
+    )+
+    geom_node_point(
+        data=tsneMeans,
+        aes_string(colour='classification'),
+        size=5
+    )+
+    scale_colour_manual(
+        name="classification",
+        values=colors
+    )+
+    guides(
+        colour = guide_legend(title="Classification"),
+        edge_width = guide_legend(title="Weight")
+    )+
+    theme_few()
         
     return(plot)
 }
@@ -516,50 +493,114 @@ setMethod("spPlot", "spSwarm", function(
 .plotTsneLoop <- function(graphDF, tsneMeans, colors, d) {
     #setup layout
     layout <- create_layout(graphDF, 'manual', node.positions = tsneMeans)
-    #layout$x <- tsneMeans$x[sapply(layout$name, function(x) which(tsneMeans$name == x))]
-    #layout$y <- tsneMeans$y[sapply(layout$name, function(x) which(tsneMeans$name == x))]
     
     #plot
-    plot <- ggraph(graph = graphDF, layout = 'manual', node.positions = layout)+
-        geom_edge_link(edge_colour="black", aes_string(edge_alpha='weight'))+
-        geom_edge_loop(
-            edge_colour="black",
-            aes_string(
-                angle=90,
-                direction=270,
-                strength=50,
-                edge_alpha='weight'
-            )
-        )+
-        scale_colour_manual(values=colors)+
-        geom_node_point(data=d, aes_string(colour='classification'), alpha=0.25)+
-        geom_node_point(data=tsneMeans, aes_string(colour='classification'), size=5)
+    plot <- ggraph(
+        graph = graphDF,
+        layout = 'manual',
+        node.positions = layout
+    )+
+    geom_edge_link(
+        edge_colour="black",
+        aes_string(edge_width ='factor(weight)'),
+        edge_alpha=0.3,
+        lineend = "round"
+    )+
+    geom_edge_loop(
+        edge_colour="black",
+        edge_alpha=0.3,
+        aes_string(
+            angle=90,
+            direction=270,
+            strength=50,
+            edge_width='factor(weight)'
+        ),
+        lineend = "round"
+    )+
+    geom_node_point(
+        data=d,
+        aes_string(colour='classification'),
+        alpha=0.3
+    )+
+    geom_node_point(
+        data=tsneMeans,
+        aes_string(colour='classification'),
+        size=5
+    )+
+    scale_colour_manual(
+        name="classification",
+        values=colors
+    )+
+    guides(
+        colour = guide_legend(title="Classification"),
+        edge_width = guide_legend(title="Weight")
+    )+
+    theme_few()
     
     return(plot)
 }
 
 .plotIgraph <- function(graphDF, colors) {
-    plot <- ggraph(graph = graphDF, layout = 'igraph', algorithm = 'kk')+
-        geom_edge_link(edge_colour="black", aes_string(edge_width='factor(weight)'), edge_alpha=0.3)+
-        geom_node_point(aes_string(colour='name'), size=4)+
-        scale_colour_manual(values=colors)
+    plot <- ggraph(
+        graph = graphDF,
+        layout = 'igraph',
+        algorithm = 'kk'
+    )+
+    geom_edge_link(
+        edge_colour="black",
+        aes_string(
+            edge_width='factor(weight)'
+        ),
+        edge_alpha=0.3
+    )+
+    geom_node_point(
+        aes_string(colour='name'),
+        size=4
+    )+
+    scale_colour_manual(values=colors)+
+    theme_few()+
+    guides(
+        colour = guide_legend(title="Classification"),
+        edge_width = guide_legend(title="Weight")
+    )
+    
     return(plot)
 }
 
 .plotIgraphLoop <- function(graphDF, colors) {
-    plot <- ggraph(graph = graphDF, layout = 'igraph', algorithm = 'kk')+
-        geom_edge_link(edge_colour="black", aes_string(edge_alpha='weight'))+
-        geom_node_point(aes_string(colour='name'), size=4)+
-        scale_colour_manual(values=colors)+
-        geom_edge_loop(
-            edge_colour="black",
-            aes_string(
-                angle=90,
-                direction=270,
-                strength=1,
-                edge_alpha='weight'
-            )
+    plot <- ggraph(
+        graph = graphDF,
+        layout = 'igraph',
+        algorithm = 'kk'
+    )+
+    geom_edge_link(
+        edge_colour="black",
+        edge_alpha=0.3,
+        aes_string(edge_width='factor(weight)')
+    )+
+    geom_edge_loop(
+        edge_colour="black",
+        edge_alpha=0.3,
+        aes_string(
+            angle=90,
+            direction=270,
+            strength=1,
+            edge_width='factor(weight)'
         )
+    )+
+    geom_node_point(
+        aes_string(colour='name'),
+        size=4
+    )+
+    scale_colour_manual(values=colors)+
+    theme_few()+
+    guides(
+        colour = guide_legend(title="Classification"),
+        edge_width = guide_legend(title="Weight")
+    )+
+    labs(
+        x=
+    )
 }
 
 .col.from.targets <- function(targets, values) {
