@@ -29,8 +29,12 @@ library(printr)
 
 sp.scRNAseq works in 3 stages with each stage being supported by plotting functions. The stages are as follows:
 1. Creating the sp.scRNAseq counts object. Here the raw count data, ERCC spike-in count data, and the information indicating which samples are singlets and which are multuplets is entered.
-2. Unsupervised clustering of the singlets. Here we perform unsupervised clustering of the singlets using tSNE and classify the number of clusters, to deduce the possible cell types in the multuplets.
-3. Multuplet deconvolution via swarm optimization. Here we utilize swarm optimization to deconvolute the multuplets and, thus, provide a picture of the tissue "connectome".
+2. Dimensionality reduction with the singlets. Here we perform dimensionality reduction with the single cells using tSNE and classify the number of clusters, to deduce the possible cell types present in the tissue.
+    + Feature eslection.
+    + Distance calculation.
+    + t-SNE
+    + Classification.
+3. Multuplet deconvolution via swarm optimization. Here we utilize swarm optimization to deconvolute the multuplets and, thus, provide an overview of the tissue "connectome".
 
 ## spCounts object
 
@@ -39,7 +43,7 @@ Make sp.scRNAseq counts object. The spCounts command takes 3 arguments:
 2. matrix; The ERCC spike-in counts data.
 3. character; The character in the colnames that signified that a cell is a multuplet.
 
-We use the testCounts and testErcc variables to initialize the sp.scRNAseq counts object. The testCounts variable contains singlets that comprise 10 cell types. Each cell type has 85 singlets and each singlet has 250 gene expression values. The dataset also includes 2 multuplets comprised of 4 different cell types each. The multuplets are comprised in a fashon that, in the final results, there should be one connection between all cell types with the exception of cell type E1 and F1. See below:
+We use the testCounts and testErcc variables to initialize the sp.scRNAseq counts object. The testCounts variable contains singlets that comprise 10 cell types. Each cell type has 85 singlets and each singlet has 250 gene expression values. The dataset also includes 2 multuplets comprised of 4 different cell types each. The multuplets are comprised in such a way that, in the final results, there should be one connection between cell types A1, B1, C1, and D1 as well as one connection between G1, H1, I1, and J1.
 
 ```{r}
 testCounts[1:2, 1:2] #example
@@ -49,47 +53,38 @@ head(rownames(testCounts)) #example of gene names
 class(testCounts) #must be a matrix
 ```
 
+We first divide the counts data into singlets and multiplets and make an spCounts object for each. In the test data, the colnames of all singlet samples are prefixed with an "s" and all multiplets are prefixed with an "m".
 ```{r}
-cObj <- spCounts(testCounts, testErcc, "m.") #multuplets indicated by "m." in the testCounts colnames
-cObj #show counts object
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[,s], testErcc[,s])
+cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
+#show counts objects
+cObjSng
+cObjMul
 ```
 
 The counts object contains:
 1. The raw counts data input by the user.
-2. The log normalized counts.
-3. The counts.ercc input by the user (if these are not available they can be substituted using matrix())
-4. The sample type information. This vaiable is
+2. The log normalized counts per million.
+3. The counts per million.
+4. The counts.ercc input by the user (if these are not available they can be substituted using matrix())
 
 ### Accessors
 Individual slots within the counts object can be accessed with the "getData" function. Note that all other sp.scRNAseq objects slots can be accessed in the same way. See below:
 ```{r}
-table(getData(cObj, "sampleType"))
+table(colnames(getData(cObjSng, "counts")))
 ```
-
-### Filter cells
-
-The filter cells command is available to exclude "bad" cells from the counts object. (This can potentially be expanded in the future, or the user can do this upstream of making the counts object). The filterCells command takes 3 arguments:
-
-1. The counts object.
-2. The quantile cut-off.
-3. The gene name of the house keeping gene to use. (note: this must be present in the rownames of the counts variable within the counts object)
-
-```{r, eval=FALSE}
-cObj <- filterCells(cObj, quantile.cut = 0.001, gene.name = 'a1')
-```
-
-In the test data no cells are filtered.
 
 ### ERCC fraction plot
-The fractions of ERCC spike-ins can be viewed in a plot using the spPlot command and specifying the type of plot desired.
+The fractions of ERCC spike-ins and the number of approximated cells can be viewed in a plot using the spPlot command and specifying the type of plot desired.
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-spPlot(cObj, type="ercc")
+spPlot(cObjSng, cObjMul, type="ercc")
 ```
 
 ### Markers plot
 Sometimes it may be desireable to view the expression of marker genes in the counts object. At the moment, this can only be accomplished with 2 markers at a time.
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-spPlot(cObj, type="markers", markers=c("c1", "b1"))
+spPlot(cObjSng, cObjMul, type="markers", markers=c("c1", "b1"))
 ```
 
 ## spUnsupervised object
@@ -108,7 +103,7 @@ The unsupervised clustering stage can be regulated by passing multiple arguments
 11. genes=NULL: The genes to include when type = manual.
 
 ```{r}
-uObj <- spUnsupervised(cObj, max_iter=1000, max=250)
+uObj <- spUnsupervised(cObjSng, max_iter=1000, max=250)
 ```
 
 ### Clusters plot
@@ -121,7 +116,7 @@ spPlot(uObj, type="clusters")
 ### Markers plot
 The sp.scRNAseq unsupervised object also has an associated markers plot where the markers can be visualized overlayed with the unsupervised clustering results.
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-spPlot(uObj, type="markers", markers=c("c1", "b1"))
+spPlot(uObj, cObjSng, type="markers", markers=c("c1", "b1"))
 ```
 
 ## spSwarm object
@@ -137,30 +132,30 @@ Finally, the deconvolution of the multuplets take place in this stage. Again, th
 8. cores=1: This step is able to run in parallel by specifying the number of desired cores here.
 
 ```{r}
-sObj <- spSwarm(uObj, swarmsize = 150, cores=2, cutoff=0.14)
+sObj <- spSwarm(cObjMul, uObj, swarmsize = 150, cores=2)
 ```
 
+### spSwarm results
+
+We can exmaine the resulting sonnections with the `spSwarmPoisson` command:
+
+```{r}
+head(spSwarmPoisson(sObj, edge.cutoff=1/10.5, min.num.edges=0, min.pval=1))
+```
+
+This reports all of the detected edges. The edge.cutoff argument specifies the fraction above which and edge is considered to be valid. Since the optimization vector is essentially a fraction, for an edge to be considered we can set the edge.cutoff to 1/(number of cell types + error margin). We can specify the number of edges a connection must have to be reported with the *min.num.edges* argument and also filter results for a specific significance level with the *min.pval* argument.
+
 ### spSwarm plot
-The resulting "connectome" can be plotted via:
+The resulting "connectome" can be plotted via the commands below. Here we need to provide the plot function with the 
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-spPlot(sObj)
+spPlot(sObj, uObj, cObjSng, edge.cutoff=1/10.5, min.num.edges=1)
 ```
 
 The netwrok plot can be made in the above way or with a "natural" layout as below:
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE, warning=FALSE}
-spPlot(sObj, layout="igraph")
+spPlot(sObj, uObj, cObjSng, layout="igraph", edge.cutoff=1/10.5, min.num.edges=1)
 ```
 
-In addition "self connections" can be turned off via specifying the "loop" argument as FALSE.
-
-### Change cutoff
-The spSwarm object contains a slot called "spSwarm" which holds the raw results from the optimization but it also includes a slot called "codedSwarm" which is used for plotting. The codedSwarm variable is the spSwarm variable after the cutoff (via the cutoff argumet in spSwarm) has been applied. In the case that after optimization it is desired to re-calculate the codedSwarm variable with a new cutoff the changeCuttoff function can be applied:
-
-```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-NEWsObj <- changeCutoff(sObj, cutoff=0.001)
-spPlot(NEWsObj)
-```
-
-We now can see that more connections appear in the plot with the lower cutoff value applied. 
+In addition "self connections" can be turned on via specifying the "loop" argument as TRUE.
