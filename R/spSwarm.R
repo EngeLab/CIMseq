@@ -158,7 +158,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     #normalize swarm output
     rs <- rowSums(output)
-    output <-  t(apply(output, 1, function(x) x/rs[x]))
+    output <-  data.frame(t(apply(output, 1, function(x) x/rs)))
 
     colnames(output) <- colnames(cellTypes)
     rownames(output) <- colnames(slice)
