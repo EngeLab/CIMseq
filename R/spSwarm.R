@@ -13,8 +13,8 @@ NULL
 #' @rdname spSwarm
 #' @aliases spSwarm
 #' @param spCounts an spCount object.
-#' @param maxiter pySwarm argument indicating the maximum optimization iterations.
-#' @param swarmsize pySwarm argument indicating the number of particals in the swarm.
+#' @param maxiter pySwarm argument indicating maximum optimization iterations.
+#' @param swarmsize pySwarm argument indicating the number of swarm particals.
 #' @param cores The number of cores to be used while running spRSwarm.
 #' @param arguments Argumetns passed to the spRSwarm function.
 #' @param spRSwarm The spRSwarm results.
@@ -156,7 +156,10 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         cost <- c(cost, curr[[2]])
     }
     
-    #output <- as.data.frame(t(result))
+    #normalize swarm output
+    rs <- rowSums(output)
+    output <-  t(apply(output, 1, function(x) x/rs[x]))
+
     colnames(output) <- colnames(cellTypes)
     rownames(output) <- colnames(slice)
     return(list(output, cost))
@@ -164,6 +167,50 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 
 .makeSyntheticSlice <- function(celltypes, fractions) {
     return(colSums(t(celltypes) * fractions))
+}
+
+# Various dist functions. Probably better to use match.arg and not export (so as to avoid cluttering the namespace), but leaving it like this for now.
+
+#' @export
+distToSlice <- function(fractions, cellTypes, slice) {
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a = .makeSyntheticSlice(cellTypes, normFractions)
+    sum(abs(a - slice)) # Abs dist
+}
+
+#' @export
+distToSliceTopFour <- function(fractions, cellTypes, slice) {
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    fraction[fraction < sort(fraction, decresing=T)[4]] <- 0 # 4 is an arbitrary number...
+    cat(fraction)
+    normFractions <- fractions / sum(fractions)
+    a = .makeSyntheticSlice(cellTypes, normFractions)
+    sum(abs(a - slice)) # Abs dist
+}
+
+#' @export
+distToSliceEuclid <- function(fractions, cellTypes, slice) {
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a = .makeSyntheticSlice(cellTypes, normFractions)
+    sum((a - slice)^2) # Euclidean dist
+}
+
+#' @export
+distToSlicePearson <- function(fractions, cellTypes, slice) {
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a = .makeSyntheticSlice(cellTypes, normFractions)
+    sum(1-(cor(a,slice))) # Pearson 'dist'
 }
 
 #' spSwarmPoisson
@@ -201,70 +248,90 @@ NULL
 spSwarmPoisson <- function(
     spSwarm,
     edge.cutoff,
-    min.pval=0,
+    min.pval=1,
     min.num.edges=0,
     ...
 ){
-    swarmT <- as.data.frame(t(getData(spSwarm, "spSwarm"))) # FIXME: transpose because of cross-commit, should just fix indices below istead.
-    sobj.bool <- swarmT > edge.cutoff
-    nodes <- rownames(swarmT)
-    nclusts <- length(nodes)
-    edges <- data.frame(
-        from=rep(nodes, each=nclusts),
-        to=rep(nodes, nclusts),
-        weight=rep(0, nclusts^2)
+    mat <- getData(spSwarm, "spSwarm")
+    logic <- mat > edge.cutoff
+    
+    totcomb <- c(
+        paste(colnames(mat), colnames(mat), sep=""),
+        apply(
+            t(combn(colnames(mat),2)),
+            1,
+            paste,
+            collapse=""
+        )
     )
     
-    #calculate edge weight, i.e. number of observed edges
-    for(i in 1:(dim(sobj.bool)[2])) {
-        o <- which(sobj.bool[,i])
-        if(length(o) > 1) {
-            for(j in 1:(length(o)-1)) {
-                for(k in (j+1):length(o)) {
-                    ind1 <- (o[j]-1)*nclusts+o[k]
-                    edges[ind1,3] <- edges[ind1,3]+1
-                    ind2 <- (o[k]-1)*nclusts+o[j]
-                    edges[ind2,3] <- edges[ind2,3]+1
-                }
-            }
-        }
-    }
+    com <- apply(logic, 1, .funx, totcomb)
+    rownames(com) <- totcomb
+    res <- apply(com, 1, sum)
+    xy <- rbind(
+        matrix(c(colnames(mat), colnames(mat)), ncol=2),
+        t(combn(colnames(mat), 2))
+    )
+    edges <- data.frame(from=xy[,1], to=xy[,2], weight=res)
     
-    #calculate p-value
     mean.edges <- mean(edges$weight)
     edges$pval <- ppois(edges$weight, mean.edges, lower.tail=FALSE)
     out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
     return(out)
 }
 
-# Various dist functions. Probably better to use match.arg and not export (so as to avoid cluttering the namespace), but leaving it like this for now.
-
-#' @export
-distToSlice <- function(fractions, cellTypes, slice) {
-    if(sum(fractions) == 0) {
-        return(999999999)
+.funx <- function(row, totcomb){
+    pick <- names(row)[which(row)]
+    if(length(pick) == 1) {
+        out <- totcomb %in% paste(pick, pick, sep="")
+    } else {
+        out <- totcomb %in% apply(
+            t(combn(pick, 2)),
+            1,
+            paste,collapse=""
+        )
     }
-    normFractions <- fractions / sum(fractions)
-    a = .makeSyntheticSlice(cellTypes, normFractions)
-    sum(abs(a - slice)) # Abs dist
+    return(out)
 }
 
-#' @export
-distToSliceEuclid <- function(fractions, cellTypes, slice) {
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    a = .makeSyntheticSlice(cellTypes, normFractions)
-    sum((a - slice)^2) # Euclidean dist
-}
-
-#' @export
-distToSlicePearson <- function(fractions, cellTypes, slice) {
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    a = .makeSyntheticSlice(cellTypes, normFractions)
-    sum(1-(cor(a,slice))) # Pearson 'dist'
-}
+#spSwarmPoisson <- function(
+#    spSwarm,
+#    edge.cutoff,
+#    min.pval=1,
+#    min.num.edges=0,
+#    ...
+#){
+# FIXME: transpose because of cross-commit, should just fix indices below istead
+#    swarmT <- as.data.frame(t(getData(spSwarm, "spSwarm")))
+#    sobj.bool <- swarmT > edge.cutoff
+#    nodes <- rownames(swarmT)
+#    nclusts <- length(nodes)
+#    edges <- data.frame(
+#        from=rep(nodes, each=nclusts),
+#        to=rep(nodes, nclusts),
+#        weight=rep(0, nclusts^2)
+#    )
+    
+    #calculate edge weight, i.e. number of observed edges
+#    for(i in 1:(dim(sobj.bool)[2])) {
+#        o <- which(sobj.bool[,i])
+#        if(length(o) > 1) {
+#            for(j in 1:(length(o)-1)) {
+#                for(k in (j+1):length(o)) {
+#                    ind1 <- (o[j]-1)*nclusts+o[k]
+#                    edges[ind1,3] <- edges[ind1,3]+1
+#                    ind2 <- (o[k]-1)*nclusts+o[j]
+#                    edges[ind2,3] <- edges[ind2,3]+1
+#                }
+#            }
+#        } else { #add self-connections
+#            edges[o,3] <- edges[ind1,3]
+#        }
+#    }
+    
+    #calculate p-value
+#    mean.edges <- mean(edges$weight)
+#    edges$pval <- ppois(edges$weight, mean.edges, lower.tail=FALSE)
+#    out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
+#    return(out)
+#}
