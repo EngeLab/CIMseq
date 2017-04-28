@@ -118,40 +118,40 @@ setMethod("classification", "spUnsupervised", function(object)
 ##############
 
 #' @rdname spUnsupervised
-setGeneric("counts<-", function(object, value
-) standardGeneric("counts<-"))
+setGeneric("tsne<-", function(object, value
+) standardGeneric("tsne<-"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("counts<-", "spUnsupervised", function(object, value)
+setMethod("tsne<-", "spUnsupervised", function(object, value)
 {
-    object@counts <- value
+    object@tsne <- value
     return(object)
     
 })
 
 #' @rdname spUnsupervised
-setGeneric("counts.log<-", function(object, value
-) standardGeneric("counts.log<-"))
+setGeneric("tsneMeans<-", function(object, value
+) standardGeneric("tsneMeans<-"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("counts.log<-", "spUnsupervised", function(object, value)
+setMethod("tsneMeans<-", "spUnsupervised", function(object, value)
 {
-    object@counts.log <- value
+    object@tsneMeans <- value
     return(object)
     
 })
 
 #' @rdname spUnsupervised
-setGeneric("sampleType<-", function(object, value
-) standardGeneric("sampleType<-"))
+setGeneric("groupMeans<-", function(object, value
+) standardGeneric("groupMeans<-"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("sampleType<-", "spUnsupervised", function(object, value)
+setMethod("groupMeans<-", "spUnsupervised", function(object, value)
 {
-    object@sampleType <- value
+    object@groupMeans <- value
     return(object)
     
 })
@@ -165,6 +165,32 @@ setGeneric("classification<-", function(object, value
 setMethod("classification<-", "spUnsupervised", function(object, value)
 {
     object@classification <- value
+    return(object)
+    
+})
+
+#' @rdname spUnsupervised
+setGeneric("uncertainty<-", function(object, value
+) standardGeneric("uncertainty<-"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("uncertainty<-", "spUnsupervised", function(object, value)
+{
+    object@uncertainty <- value
+    return(object)
+    
+})
+
+#' @rdname spUnsupervised
+setGeneric("selectInd<-", function(object, value
+) standardGeneric("selectInd<-"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("selectInd<-", "spUnsupervised", function(object, value)
+{
+    object@selectInd <- value
     return(object)
     
 })

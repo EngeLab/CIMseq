@@ -14,14 +14,18 @@
 \alias{sampleType,spUnsupervised-method}
 \alias{classification}
 \alias{classification,spUnsupervised-method}
-\alias{counts<-}
-\alias{counts<-,spUnsupervised-method}
-\alias{counts.log<-}
-\alias{counts.log<-,spUnsupervised-method}
-\alias{sampleType<-}
-\alias{sampleType<-,spUnsupervised-method}
+\alias{tsne<-}
+\alias{tsne<-,spUnsupervised-method}
+\alias{tsneMeans<-}
+\alias{tsneMeans<-,spUnsupervised-method}
+\alias{groupMeans<-}
+\alias{groupMeans<-,spUnsupervised-method}
 \alias{classification<-}
 \alias{classification<-,spUnsupervised-method}
+\alias{uncertainty<-}
+\alias{uncertainty<-,spUnsupervised-method}
+\alias{selectInd<-}
+\alias{selectInd<-,spUnsupervised-method}
 \alias{initialize,spUnsupervised-method}
 \alias{show,spUnsupervised-method}
 \alias{spUnsupervised}
@@ -47,21 +51,29 @@ classification(object)
 
 \S4method{classification}{spUnsupervised}(object)
 
-counts(object) <- value
+tsne(object) <- value
 
-\S4method{counts}{spUnsupervised}(object) <- value
+\S4method{tsne}{spUnsupervised}(object) <- value
 
-counts.log(object) <- value
+tsneMeans(object) <- value
 
-\S4method{counts.log}{spUnsupervised}(object) <- value
+\S4method{tsneMeans}{spUnsupervised}(object) <- value
 
-sampleType(object) <- value
+groupMeans(object) <- value
 
-\S4method{sampleType}{spUnsupervised}(object) <- value
+\S4method{groupMeans}{spUnsupervised}(object) <- value
 
 classification(object) <- value
 
 \S4method{classification}{spUnsupervised}(object) <- value
+
+uncertainty(object) <- value
+
+\S4method{uncertainty}{spUnsupervised}(object) <- value
+
+selectInd(object) <- value
+
+\S4method{selectInd}{spUnsupervised}(object) <- value
 
 \S4method{initialize}{spUnsupervised}(.Object, ..., tsne, tsneMeans, groupMeans,
   classification, uncertainty, selectInd)

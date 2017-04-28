@@ -8,7 +8,7 @@
 tsneGroupMeans(data, classes)
 }
 \arguments{
-\item{data}{Singlet expression matrix.}
+\item{data}{Singlet 2D tsne.}
 
 \item{classes}{A character vector indicating the class of each singlet.}
 }
