@@ -102,7 +102,15 @@ setMethod("spUnsupervised", "spCounts", function(
     }
     
     if(type == "all") {
-        select <- which(duplicated(getData(spCounts, "counts.log")) | duplicated(getData(spCounts, "counts.log"), fromLast=TRUE) == FALSE)
+        select <- which(
+            duplicated(
+                getData(spCounts, "counts.log")
+            ) |
+            duplicated(
+                getData(spCounts, "counts.log"),
+                fromLast=TRUE
+            ) == FALSE
+        )
     }
     
     #calculate distances
@@ -139,7 +147,8 @@ setMethod("spUnsupervised", "spCounts", function(
 .classificationChecks <- function(class) {
     if(length(unique(class)) == 1) {
         stop("Only one group could be classified.
-        Please adjust the tSNE-related arguments and try again or manually supply group classifications.")
+        Please adjust the tSNE-related arguments and
+        try again or manually supply group classifications.")
     }
     
     if(any(table(class) == 1)) {
@@ -233,7 +242,8 @@ spTopMax <- function(spCounts, n) {
 #' @aliases pearsonsDist
 #' @param data An spCounts object.
 #' @param classes A character vector indicating the class of each singlet.
-#' @return A matrix containing the mean value for each gene for each classification group.
+#' @return A matrix containing the mean value for each gene for each
+#'    classification group.
 #' @author Jason T. Serviss
 #' @keywords pearsonsDist
 #' @examples
@@ -272,7 +282,8 @@ pearsonsDist <- function(data, select) {
 #' @aliases runTsne
 #' @param data Singlet expression matrix.
 #' @param classes A character vector indicating the class of each singlet.
-#' @return A matrix containing the mean value for each gene for each classification group.
+#' @return A matrix containing the mean value for each gene for each
+#'    classification group.
 #' @author Jason T. Serviss
 #' @keywords runTsne
 #' @examples
@@ -332,7 +343,8 @@ runTsne <- function(
 #' @aliases runMclust
 #' @param data Singlet expression matrix.
 #' @param classes A character vector indicating the class of each singlet.
-#' @return A matrix containing the mean value for each gene for each classification group.
+#' @return A matrix containing the mean value for each gene for each
+#'    classification group.
 #' @author Jason T. Serviss
 #' @keywords runMclust
 #' @examples
@@ -362,7 +374,9 @@ runMclust <- function(
     #rename classification classes
     x <- unique(mod1$classification)
     n <- ceiling(length(x)/26)
-    names <- unlist(lapply(1:n, function(u) paste(LETTERS, u, sep="")))[1:length(x)]
+    names <- unlist(lapply(1:n, function(u)
+        paste(LETTERS, u, sep=""))
+    )[1:length(x)]
     mod1$classification <- names[match(mod1$classification, x)]
     
     classification <- mod1$classification
@@ -375,8 +389,8 @@ runMclust <- function(
 #' This output from this function is utilized to represent each group classified
 #' group during swarm optimization.
 #'
-#' Calculate the average expression of each gene within each classification group.
-#' Note that typically only singlets are input to this method.
+#' Calculate the average expression of each gene within each classification
+#' group. Note that typically only singlets are input to this method.
 #'
 #' @name averageGroupExpression
 #' @rdname averageGroupExpression
@@ -386,7 +400,8 @@ runMclust <- function(
 #' @param weighted If the group means shoule be weighted with the uncertainty.
 #' @param uncertainty A numeric vector indicating the uncertainty if weighted is
 #'    TRUE.
-#' @return A matrix containing the mean value for each gene for each classification group.
+#' @return A matrix containing the mean value for each gene for each
+#' classification group.
 #' @author Jason T. Serviss
 #' @keywords averageGroupExpression
 #' @examples
@@ -445,7 +460,8 @@ averageGroupExpression <- function(data, classes, weighted, uncertainty) {
 #' @aliases tsneGroupMeans
 #' @param data Singlet 2D tsne.
 #' @param classes A character vector indicating the class of each singlet.
-#' @return A matrix containing the mean value for each gene for each classification group.
+#' @return A matrix containing the mean value for each gene for each
+#'    classification group.
 #' @author Jason T. Serviss
 #' @keywords tsneGroupMeans
 #' @examples

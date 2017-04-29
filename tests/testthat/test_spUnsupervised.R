@@ -1,27 +1,31 @@
 #context("spUnsupervised")
 
-##run test .ntopVar
-test_that("check that the .ntopVar function outputs the expected result", {
+##run test tsneGroupMeans
+test_that("check that the tsneGroupMeans function outputs the expected result",{
     
     ###TEST1####
     #prepare normal input data
     data <- matrix(
         c(
-            1,1,2,2,
-            2,2,3,3,
-            3,3,0,0,
-            0,0,0,0
+            1,2,1,2,
+            2,3,2,3,
         ),
         nrow=4,
-        ncol=4,
+        ncol=2,
         byrow=TRUE
     )
-
+    
+    classes <- sort(rep(LETTERS[1:2], 2))
+    
     #setup expected data
-    expected <- as.integer(c(3, 1))
+    expected <- data.frame(
+        classification=c("A", "B"),
+        x=c(1,2),
+        y=c(2,3)
+    )
     
     #run function
-    output <- .ntopVar(data, 2)
+    output <- tsneGroupMeans(data, classes)
     
     #test
     expect_identical(expected, output)
@@ -58,8 +62,9 @@ test_that("check that the .ntopMax function outputs the expected result", {
 })
 
 
-##run test .averageGroupExpression
-test_that("check that the .averageGroupExpression function outputs the expected result", {
+##run test averageGroupExpression
+test_that("check that the averageGroupExpression function outputs the expected 
+result", {
     
     ###TEST1####
     #prepare normal input data
@@ -95,7 +100,7 @@ test_that("check that the .averageGroupExpression function outputs the expected 
     )
     
     #run function
-    output <- .averageGroupExpression(classes, sng)
+    output <- averageGroupExpression(cObjSng, classes, weighted=FALSE)
     
     #test
     expect_identical(expected, output)

@@ -90,5 +90,23 @@ multipletsE <- multipletsE[,
 
 testErcc <- matrix(c(singletsE, multipletsE), ncol=ncol(testCounts))
 
+#make test spUnsupervised
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[,s], testErcc[,s])
+cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
+testUns <- spUnsupervised(cObjSng, max=250, max_iter=1000)
+
+#make test spSwarm
+testSwa <- spSwarm(
+    cObjMul,
+    testUns,
+    distFun=distToSlice,
+    maxiter=100,
+    swarmsize=150,
+    cores=1
+)
+
 save(testErcc, file="data/testErcc.rda", compress="bzip2")
 save(testCounts, file="data/testCounts.rda", compress="bzip2")
+save(testUns, file="data/testUns.rda", compress="bzip2")
+save(testSwa, file="data/testSwa.rda", compress="bzip2")
