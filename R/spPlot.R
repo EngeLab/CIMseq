@@ -260,7 +260,7 @@ setMethod("spPlot", "spUnsupervised", function(
     d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
     
     if(plotUncertainty) {
-        d$uncertainty <- getData(uObj, "uncertainty")
+        d$uncertainty <- getData(x, "uncertainty")
     } else {
         d$uncertainty <- 3
     }

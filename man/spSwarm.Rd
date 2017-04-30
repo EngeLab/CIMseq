@@ -15,7 +15,8 @@
 \usage{
 \S4method{getData}{spSwarm}(object, n = NULL)
 
-\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costSum, arguments)
+\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costs, convergence,
+  arguments)
 
 \S4method{show}{spSwarm}(object)
 
@@ -33,20 +34,28 @@ spSwarm(spCounts, spUnsupervised, ...)
 
 \item{...}{additional arguments to pass on}
 
-\item{arguments}{Argumetns passed to the spRSwarm function.}
+\item{spSwarm}{The spSwarm results.}
 
-\item{spCounts}{an spCount object.}
+\item{costs}{The costs after optimization.}
+
+\item{convergence}{The convergence output from psoptim. One value per multiplet.}
+
+\item{arguments}{Arguments passed to the spRSwarm function.}
+
+\item{spCounts}{an spCount object with multiplets.}
+
+\item{spUnsupervised}{an spCount object.}
+
+\item{distFun}{The distance function used to calculate the cost.}
 
 \item{maxiter}{pySwarm argument indicating maximum optimization iterations.}
 
 \item{swarmsize}{pySwarm argument indicating the number of swarm particals.}
 
 \item{cores}{The number of cores to be used while running spRSwarm.}
-
-\item{spRSwarm}{The spRSwarm results.}
 }
 \value{
-spRSwarm output.
+spSwarm output.
 }
 \description{
 Subtitle

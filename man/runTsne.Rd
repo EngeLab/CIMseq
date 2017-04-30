@@ -17,7 +17,8 @@ runMclust(my.tsne, Gmax = 50, seed = 11)
 \item{classes}{A character vector indicating the class of each singlet.}
 }
 \value{
-A matrix containing the mean value for each gene for each classification group.
+A matrix containing the mean value for each gene for each
+   classification group.
 }
 \description{
 Calculates the x and y coordinates of the mean of each classified group.

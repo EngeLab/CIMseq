@@ -18,15 +18,16 @@ averageGroupExpression(data, classes, weighted, uncertainty)
 TRUE.}
 }
 \value{
-A matrix containing the mean value for each gene for each classification group.
+A matrix containing the mean value for each gene for each
+classification group.
 }
 \description{
 This output from this function is utilized to represent each group classified
 group during swarm optimization.
 }
 \details{
-Calculate the average expression of each gene within each classification group.
-Note that typically only singlets are input to this method.
+Calculate the average expression of each gene within each classification
+group. Note that typically only singlets are input to this method.
 }
 \examples{
 

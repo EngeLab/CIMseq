@@ -43,10 +43,7 @@ function(
     counts.ercc,
     ...
 ){
-    if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
-        cat("ncol(counts) != ncol(counts.ercc).")
-    }
-
+    .inputCheckCounts(counts, counts.ercc)
     new("spCounts",
         counts=counts,
         counts.log=.norm.log.counts(counts),
@@ -55,6 +52,14 @@ function(
     )
 })
 
+.inputCheckCounts <- function(counts, counts.ercc) {
+    if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
+        message("ncol(counts) != ncol(counts.ercc).")
+    }
+    if(any(is.na(c(counts, counts.ercc)))) {
+        message("is.na(c(counts, counts.ercc) returned TRUE")
+    }
+}
 
 .norm.log.counts <- function(counts) {
     norm.fact <- colSums(counts)
@@ -65,12 +70,6 @@ function(
 .norm.counts <- function(counts) {
     norm.fact <- colSums(counts)
     counts.cpm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
-}
-
-.sampleType <- function(sampleType, counts) {
-    dbl <- rep("Singlet", length=ncol(counts))
-    dbl[grepl(sampleType, colnames(counts))] <- "Multuplet"
-    return(dbl)
 }
 
 

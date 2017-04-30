@@ -227,7 +227,8 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value)
 #' @export
 .spSwarm <- setClass("spSwarm", representation(
     spSwarm="data.frame",
-    costSum="numeric",
+    costs="numeric",
+    convergence="character",
     arguments="list"
 ))
 
