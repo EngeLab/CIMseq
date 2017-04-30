@@ -12,17 +12,21 @@ NULL
 #' @name spSwarm
 #' @rdname spSwarm
 #' @aliases spSwarm
-#' @param spCounts an spCount object.
+#' @param spCounts an spCount object with multiplets.
+#' @param spUnsupervised an spCount object.
+#' @param distFun The distance function used to calculate the cost.
 #' @param maxiter pySwarm argument indicating maximum optimization iterations.
 #' @param swarmsize pySwarm argument indicating the number of swarm particals.
 #' @param cores The number of cores to be used while running spRSwarm.
-#' @param arguments Argumetns passed to the spRSwarm function.
-#' @param spRSwarm The spRSwarm results.
+#' @param spSwarm The spSwarm results.
+#' @param costs The costs after optimization.
+#' @param convergence The convergence output from psoptim. One value per multiplet.
+#' @param arguments Arguments passed to the spRSwarm function.
 #' @param object spRSwarm object.
 #' @param n Data to extract from spRSwarm object.
 #' @param .Object Internal object.
 #' @param ... additional arguments to pass on
-#' @return spRSwarm output.
+#' @return spSwarm output.
 #' @author Jason T. Serviss
 #' @keywords spSwarm
 #' @examples
@@ -81,10 +85,13 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     )
     result <- tmp[[1]]
     cost <- tmp[[2]]
+    convergence <- tmp[[3]]
+    
     #create object
     new("spSwarm",
         spSwarm=result,
-        costSum=sum(cost),
+        costs=cost,
+        convergence=convergence,
         arguments = list(
             maxiter=maxiter,
             swarmsize=swarmsize
@@ -133,36 +140,25 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     )
     
     #compile results
-    output <- data.frame()
-    cost <- c()
-    counts <- tmp[[1]][[3]]
-    convergence <-ifelse(
-        tmp[[1]][[4]] == 1,
-        "Maximal number of function evaluations reached.",
-        ifelse(
-            tmp[[1]][[4]] == 2,
-            "Maximal number of iterations reached.",
-            ifelse(
-                tmp[[1]][[4]] == 3,
-                "Maximal number of restarts reached.",
-                "Maximal number of iterations without improvement reached."
-            )
-        )
+    output <- t(sapply(tmp, function(j) j[[1]]))
+    cost <- sapply(tmp, function(j) j[[2]])
+    counts <- t(sapply(tmp, function(j) j[[3]]))
+    convergence <- sapply(tmp, function(j) j[[4]])
+    convergenceKey <- c(
+        "Maximal number of function evaluations reached." = 1,
+        "Maximal number of iterations reached." = 2,
+        "Maximal number of restarts reached." = 3,
+        "Maximal number of iterations without improvement reached." = 4
     )
+    convergence <- names(convergenceKey)[match(convergence, convergenceKey)]
     
-    for(i in 1:length(tmp)) {
-        curr <- tmp[[i]]
-        output <- rbind(output, as.data.frame(t(curr[[1]])))
-        cost <- c(cost, curr[[2]])
-    }
     
     #normalize swarm output
-    rs <- rowSums(output)
-    output <-  data.frame(t(apply(output, 1, function(x) x/rs)))
+    output <- output * 1/rowSums(output)
 
     colnames(output) <- colnames(cellTypes)
     rownames(output) <- colnames(slice)
-    return(list(output, cost))
+    return(list(output, cost, convergence))
 }
 
 .makeSyntheticSlice <- function(celltypes, fractions) {
@@ -335,3 +331,113 @@ spSwarmPoisson <- function(
 #    out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
 #    return(out)
 #}
+
+
+#' calcResiduals
+#'
+#' Subtitle
+#'
+#' Calculates the residuals for each gene and multiplet after deconvolution
+#' based on the spSwarm results.
+#'
+#' @name calcResiduals
+#' @rdname calcResiduals
+#' @aliases calcResiduals
+#' @param spCounts An spCounts object with multiplets.
+#' @param spUnsupervised An spUnsupervised object.
+#' @param spSwarm An spSwarm object.
+#' @param clusters A character vector of length 2 indicating 2 classes to
+#'    specifically extract residuals from.
+#' @param edge.cutoff The minimum fraction to consider (?).
+#' @param object spRSwarm object.
+#' @param .Object Internal object.
+#' @param ... additional arguments to pass on
+#' @return spSwarm connection strengths and p-values.
+#' @author Jason T. Serviss
+#' @keywords calcResiduals
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+#' #run function
+#'
+#'
+NULL
+
+#' @rdname calcResiduals
+#' @export
+
+calcResiduals <- function(
+    spCounts,
+    spUnsupervised,
+    spSwarm,
+    clusters=NULL,
+    edge.cutoff=NULL
+){
+    #spCounts should only include multiplets
+    
+    frac <- getData(spSwarm, "spSwarm")
+    groupMeans <- getData(spUnsupervised, "groupMeans")
+    selectInd <- getData(spUnsupervised, "selectInd")
+    counts <- getData(spCounts, "counts.cpm")
+    
+    cellTypes <- groupMeans[selectInd, ]
+    slice <- counts[selectInd, ]
+    
+    xfrac <- sapply(1:nrow(frac), function(j) .makeSyntheticSlice(cellTypes, j))
+    diff <- xfrac - slice
+    colnames(diff) <- colnames(counts)
+    
+    if(!is.null(clusters) & !is.null(edge.cutoff)) {
+        diff <- diff[ , selectClustersOnEdge(
+        spSwarm,
+        edge.cutoff,
+        clusters[1],
+        clusters[2]
+        )]
+    }
+    return(diff)
+}
+
+#' selectClustersOnEdge
+#'
+#' Subtitle
+#'
+#' Description
+#'
+#' @name selectClustersOnEdge
+#' @rdname selectClustersOnEdge
+#' @aliases selectClustersOnEdge
+#' @param spSwarm An spSwarm object.
+#' @param edge.cutoff The minimum fraction to consider (?).
+#' @param clust1 A character vector of length 1 indicating one node which forms
+#'    an edge with clust2 for which multiplets contributing to that edge will be
+#'    reported.
+#' @param clust2 A character vector of length 1 indicating one node which forms
+#'    an edge with clust1 for which multiplets contributing to that edge will be
+#'    reported.
+#' @param object spRSwarm object.
+#' @param .Object Internal object.
+#' @param ... additional arguments to pass on
+#' @return spSwarm connection strengths and p-values.
+#' @author Jason T. Serviss
+#' @keywords selectClustersOnEdge
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+#' #run function
+#'
+#'
+NULL
+
+#' @rdname selectClustersOnEdge
+#' @export
+
+selectClustersOnEdge <- function(spSwarm, edge.cutoff, clust1, clust2) {
+    frac <- getData(spSwarm, "spSwarm")[,c(clust1, clust2)]
+    o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
+    return(rownames(frac)[o])
+}
