@@ -68,36 +68,36 @@ setMethod("getData", "spUnsupervised", function(object, n=NULL)
 })
 
 #' @rdname spUnsupervised
-setGeneric("counts", function(object
-) standardGeneric("counts"))
+setGeneric("tsne", function(object
+) standardGeneric("tsne"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("counts", "spUnsupervised", function(object)
+setMethod("tsne", "spUnsupervised", function(object)
 {
-    object@counts
+    object@tsne
 })
 
 #' @rdname spUnsupervised
-setGeneric("counts.log", function(object
-) standardGeneric("counts.log"))
+setGeneric("tsneMeans", function(object
+) standardGeneric("tsneMeans"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("counts.log", "spUnsupervised", function(object)
+setMethod("tsneMeans", "spUnsupervised", function(object)
 {
-    object@counts.log
+    object@tsneMeans
 })
 
 #' @rdname spUnsupervised
-setGeneric("sampleType", function(object
-) standardGeneric("sampleType"))
+setGeneric("groupMeans", function(object
+) standardGeneric("groupMeans"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("sampleType", "spUnsupervised", function(object)
+setMethod("groupMeans", "spUnsupervised", function(object)
 {
-    object@sampleType
+    object@groupMeans
 })
 
 #' @rdname spUnsupervised
@@ -111,11 +111,33 @@ setMethod("classification", "spUnsupervised", function(object)
     object@classification
 })
 
+#' @rdname spUnsupervised
+setGeneric("uncertainty", function(object
+) standardGeneric("uncertainty"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("uncertainty", "spUnsupervised", function(object)
+{
+    object@uncertainty
+})
+
+#' @rdname spUnsupervised
+setGeneric("selectInd", function(object
+) standardGeneric("selectInd"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("selectInd", "spUnsupervised", function(object)
+{
+    object@selectInd
+})
 ##############
 #            #
 # Replacment #
 #            #
 ##############
+#https://www.bioconductor.org/help/course-materials/2013/CSAMA2013/friday/afternoon/S4-tutorial.pdf
 
 #' @rdname spUnsupervised
 setGeneric("tsne<-", function(object, value
@@ -126,7 +148,7 @@ setGeneric("tsne<-", function(object, value
 setMethod("tsne<-", "spUnsupervised", function(object, value)
 {
     object@tsne <- value
-    return(object)
+    if (validObject(object)) return(object)
     
 })
 
@@ -139,7 +161,7 @@ setGeneric("tsneMeans<-", function(object, value
 setMethod("tsneMeans<-", "spUnsupervised", function(object, value)
 {
     object@tsneMeans <- value
-    return(object)
+    if (validObject(object)) return(object)
     
 })
 
@@ -152,7 +174,7 @@ setGeneric("groupMeans<-", function(object, value
 setMethod("groupMeans<-", "spUnsupervised", function(object, value)
 {
     object@groupMeans <- value
-    return(object)
+    if (validObject(object)) return(object)
     
 })
 
@@ -165,7 +187,7 @@ setGeneric("classification<-", function(object, value
 setMethod("classification<-", "spUnsupervised", function(object, value)
 {
     object@classification <- value
-    return(object)
+    if (validObject(object)) return(object)
     
 })
 
@@ -178,7 +200,7 @@ setGeneric("uncertainty<-", function(object, value
 setMethod("uncertainty<-", "spUnsupervised", function(object, value)
 {
     object@uncertainty <- value
-    return(object)
+    if (validObject(object)) return(object)
     
 })
 
@@ -191,7 +213,7 @@ setGeneric("selectInd<-", function(object, value
 setMethod("selectInd<-", "spUnsupervised", function(object, value)
 {
     object@selectInd <- value
-    return(object)
+    if (validObject(object)) return(object)
     
 })
 
