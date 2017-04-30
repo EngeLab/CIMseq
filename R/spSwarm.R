@@ -140,7 +140,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     )
     
     #compile results
-    output <- t(sapply(tmp, function(j) j[[1]]))
+    output <- data.frame(t(sapply(tmp, function(j) j[[1]])))
     cost <- sapply(tmp, function(j) j[[2]])
     counts <- t(sapply(tmp, function(j) j[[3]]))
     convergence <- sapply(tmp, function(j) j[[4]])
