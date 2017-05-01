@@ -387,7 +387,8 @@ setMethod("spPlot", "spUnsupervised", function(
 #' @export
 #' @import ggraph
 #' @importFrom ggthemes theme_few scale_colour_economist
-#' @importFrom igraph graph_from_data_frame delete_edges set_edge_attr get.edgelist
+#' @importFrom igraph graph_from_data_frame delete_edges set_edge_attr
+#'    get.edgelist V
 #' @importFrom ggforce theme_no_axes
 #' @importFrom utils combn
 #' @importFrom ggthemes theme_few
@@ -420,15 +421,27 @@ setMethod("spPlot", "spSwarm", function(
     graph <- spSwarmPoisson(
         x,
         edge.cutoff=edge.cutoff,
-        min.pval=min.pval,
+        min.pval=1,
         min.num.edges=0
     )
     
     #convert to igraph
     graphDF <- graph_from_data_frame(graph)
     
-    #remove edges with weight < min.num.edges and name edges
-    graphDF <- delete_edges(graphDF, which(graph$weight < min.num.edges))
+    #remove edges according to min.num.edges and min.pval
+    remove <- which(graph$weight < min.num.edges | graph$pval > min.pval)
+    graphDF <- delete_edges(graphDF, remove)
+    
+    #add nodes not in graph (due to min.pval argument)
+    vertexToAdd <- tsneMeans$classification[!tsneMeans[,1] %in% V(graphDF)$name]
+    
+    if(length(vertexToAdd) > 0) {
+        for(i in 1:length(vertexToAdd)) {
+            graphDF <- graphDF + vertex(as.character(vertexToAdd[i]))
+        }
+    }
+    
+    #name edges
     graphDF <- set_edge_attr(
         graphDF,
         name="name",
