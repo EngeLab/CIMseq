@@ -72,12 +72,12 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     #subset top genes for use with optimization
     selectInd <- getData(spUnsupervised, "selectInd")
     cellTypes <- groupMeans[selectInd, ]
-    slice <- counts[selectInd, ]
+    multiplets <- counts[selectInd, ]
     
     ##run pySwarm
     tmp <- .runPyRSwarm(
         cellTypes=cellTypes,
-        slice=slice,
+        multiplets=multiplets,
         fractions=fractions,
         distFun=distFun,
         maxiter=maxiter,
@@ -105,7 +105,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 ##run optimization
 .runPyRSwarm <- function(
     cellTypes,
-    slice,
+    multiplets,
     fractions,
     distFun,
     maxiter,
@@ -116,28 +116,17 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     control=list(maxit=maxiter, s=swarmsize)
     
-    optim.fn <- function(i, fractions, distFun, cellTypes, control) {
-        oneslice <- slice[,i]
-        psoptim(
-            par=fractions,
-            fn=distFun,
-            cellTypes=cellTypes,
-            slice=oneslice,
-            lower=0,
-            upper=1,
-            control=control)
-    }
-    
     set.seed(seed)
     tmp <- mclapply(
-        1:(dim(slice)[2]),
+        1:(dim(multiplets)[2]),
         function(i)
-            optim.fn(
+            .optim.fn(
                 i,
                 fractions,
                 distFun,
                 cellTypes,
-                control
+                control,
+                multiplets
             ),
         mc.cores=cores
     )
@@ -160,28 +149,62 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     output <- output * 1/rowSums(output)
 
     colnames(output) <- colnames(cellTypes)
-    rownames(output) <- colnames(slice)
+    rownames(output) <- colnames(multiplets)
     return(list(output, cost, convergence))
 }
 
-.makeSyntheticSlice <- function(celltypes, fractions) {
-    return(colSums(t(celltypes) * fractions))
+.optim.fn <- function(
+    i,
+    fractions,
+    distFun,
+    cellTypes,
+    control,
+    multiplets
+){
+    oneMultiplet <- multiplets[,i]
+    psoptim(
+        par=fractions,
+        fn=distFun,
+        cellTypes=cellTypes,
+        oneMultiplet=oneMultiplet,
+        lower=0,
+        upper=1,
+        control=control
+    )
 }
 
-# Various dist functions. Probably better to use match.arg and not export (so as to avoid cluttering the namespace), but leaving it like this for now.
+#calculates the sum for each gene after each cell type has been multiplied by
+#fractions
+.makeSyntheticSlice <- function(
+    cellTypes,
+    fractions
+){
+    return(colSums(t(cellTypes) * fractions))
+}
+
+# Various dist functions. Probably better to use match.arg and not export
+#(so as to avoid cluttering the namespace), but leaving it like this for now.
 
 #' @export
-distToSlice <- function(fractions, cellTypes, slice) {
+distToSlice <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet
+){
     if(sum(fractions) == 0) {
         return(999999999)
     }
     normFractions <- fractions / sum(fractions)
     a = .makeSyntheticSlice(cellTypes, normFractions)
-    sum(abs(a - slice)) # Abs dist
+    sum(abs(a - oneMultiplet))
 }
 
 #' @export
-distToSliceTopFour <- function(fractions, cellTypes, slice) {
+distToSliceTopFour <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet
+){
     if(sum(fractions) == 0) {
         return(999999999)
     }
@@ -189,27 +212,35 @@ distToSliceTopFour <- function(fractions, cellTypes, slice) {
     cat(fraction)
     normFractions <- fractions / sum(fractions)
     a = .makeSyntheticSlice(cellTypes, normFractions)
-    sum(abs(a - slice)) # Abs dist
+    sum(abs(a - oneMultiplet))
 }
 
 #' @export
-distToSliceEuclid <- function(fractions, cellTypes, slice) {
+distToSliceEuclid <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet
+){
     if(sum(fractions) == 0) {
         return(999999999)
     }
     normFractions <- fractions / sum(fractions)
     a = .makeSyntheticSlice(cellTypes, normFractions)
-    sum((a - slice)^2) # Euclidean dist
+    sum((a - oneMultiplet)^2)
 }
 
 #' @export
-distToSlicePearson <- function(fractions, cellTypes, slice) {
+distToSlicePearson <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet
+){
     if(sum(fractions) == 0) {
         return(999999999)
     }
     normFractions <- fractions / sum(fractions)
     a = .makeSyntheticSlice(cellTypes, normFractions)
-    sum(1-(cor(a,slice))) # Pearson 'dist'
+    1-(cor(a, oneMultiplet))
 }
 
 #' spSwarmPoisson
@@ -279,7 +310,10 @@ spSwarmPoisson <- function(
     return(out)
 }
 
-.funx <- function(row, totcomb){
+.funx <- function(
+    row,
+    totcomb
+){
     pick <- names(row)[which(row)]
     if(length(pick) == 1) {
         out <- totcomb %in% paste(pick, pick, sep="")
@@ -376,7 +410,9 @@ calcResiduals <- function(
     spUnsupervised,
     spSwarm,
     clusters=NULL,
-    edge.cutoff=NULL
+    edge.cutoff=NULL,
+    distFun = function(frac, multiplets) {sum(abs(frac - multiplets))},
+    ...
 ){
     #spCounts should only include multiplets
     
@@ -386,10 +422,12 @@ calcResiduals <- function(
     counts <- getData(spCounts, "counts.cpm")
     
     cellTypes <- groupMeans[selectInd, ]
-    slice <- counts[selectInd, ]
+    multiplets <- counts[selectInd, ]
     
-    xfrac <- sapply(1:nrow(frac), function(j) .makeSyntheticSlice(cellTypes, j))
-    diff <- xfrac - slice
+    a <- sapply(1:nrow(frac), function(j) .makeSyntheticSlice(cellTypes, j))
+    diff <- distFun(a, multiplets)
+    #diff <- diff * 1/rowSums(diff)
+
     colnames(diff) <- colnames(counts)
     
     if(!is.null(clusters) & !is.null(edge.cutoff)) {
@@ -402,6 +440,14 @@ calcResiduals <- function(
     }
     return(diff)
 }
+
+#.makeSyntheticSlice <- function(
+#    celltypes,
+#    fractions
+#){
+#    return(colSums(t(cellTypes) * fractions))
+#}
+
 
 #' selectClustersOnEdge
 #'
@@ -439,7 +485,12 @@ NULL
 #' @rdname selectClustersOnEdge
 #' @export
 
-selectClustersOnEdge <- function(spSwarm, edge.cutoff, clust1, clust2) {
+selectClustersOnEdge <- function(
+    spSwarm,
+    edge.cutoff,
+    clust1,
+    clust2
+){
     frac <- getData(spSwarm, "spSwarm")[,c(clust1, clust2)]
     o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
     return(rownames(frac)[o])
