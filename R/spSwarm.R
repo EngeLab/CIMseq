@@ -58,6 +58,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     maxiter = 10,
     swarmsize = 150,
     cores=1,
+    seed=11,
     ...
 ){
     
@@ -81,7 +82,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         distFun=distFun,
         maxiter=maxiter,
         swarmsize=swarmsize,
-        cores=cores
+        cores=cores,
+        seed=seed
     )
     result <- tmp[[1]]
     cost <- tmp[[2]]
@@ -108,7 +110,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     distFun,
     maxiter,
     swarmsize,
-    cores
+    cores,
+    seed
 ){
     
     control=list(maxit=maxiter, s=swarmsize)
@@ -125,7 +128,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
             control=control)
     }
     
-    
+    set.seed(seed)
     tmp <- mclapply(
         1:(dim(slice)[2]),
         function(i)
@@ -391,10 +394,10 @@ calcResiduals <- function(
     
     if(!is.null(clusters) & !is.null(edge.cutoff)) {
         diff <- diff[ , selectClustersOnEdge(
-        spSwarm,
-        edge.cutoff,
-        clusters[1],
-        clusters[2]
+            spSwarm,
+            edge.cutoff,
+            clusters[1],
+            clusters[2]
         )]
     }
     return(diff)
