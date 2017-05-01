@@ -6,7 +6,8 @@
 \title{calcResiduals}
 \usage{
 calcResiduals(spCounts, spUnsupervised, spSwarm, clusters = NULL,
-  edge.cutoff = NULL)
+  edge.cutoff = NULL, distFun = function(frac, multiplets) {    
+  sum(abs(frac - multiplets)) }, ...)
 }
 \arguments{
 \item{spCounts}{An spCounts object with multiplets.}
@@ -20,11 +21,11 @@ specifically extract residuals from.}
 
 \item{edge.cutoff}{The minimum fraction to consider (?).}
 
+\item{...}{additional arguments to pass on}
+
 \item{object}{spRSwarm object.}
 
 \item{.Object}{Internal object.}
-
-\item{...}{additional arguments to pass on}
 }
 \value{
 spSwarm connection strengths and p-values.
