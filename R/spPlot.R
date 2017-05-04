@@ -34,8 +34,12 @@ NULL
 #' @rdname spPlot
 #' @export
 
-setGeneric("spPlot", function(x, ...
-){ standardGeneric("spPlot") })
+setGeneric("spPlot", function(
+    x,
+    ...
+){
+    standardGeneric("spPlot")
+})
 
 #' @rdname spPlot
 #' @export
@@ -109,14 +113,13 @@ setMethod("spPlot", "spCounts", function(
 #plot ercc plot
 .countsErccPlot <- function(x, y) {
     
-    d <- .countsErccPlotProcess(x, y)
+    d <- estimateCells(x, y)
     
-    convertTocellNumber <- function(x, d) {
-        #100*(1-(median(d[d[,1] == "Singlet", "frac.ercc"])/x))
+    convertToERCC <- function(x, d) {
         100*(median(d[d[,1] == "Singlet", "frac.ercc"])/x)
     }
     
-    p <- ggplot(d, aes_string(x='sampleType', y='cellNumber'))+
+    p <- ggplot(d, aes_string(x='sampleType', y='cellNumberMedian'))+
     geom_jitter()+
     labs(
         x="Sample type",
@@ -143,9 +146,9 @@ setMethod("spPlot", "spCounts", function(
     )+
     scale_y_continuous(
         sec.axis = sec_axis(
-            trans=~convertTocellNumber(., d),
+            trans=~convertToERCC(., d),
             name="% ERCC",
-            breaks=c(0, seq(60,100,10))
+            breaks=c(100, 50, 10, 5, 2.5, 1)
         )
     )
     
