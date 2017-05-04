@@ -2,26 +2,23 @@
 #'@include All-classes.R
 NULL
 
-#' spPlot
+#' plotCounts
 #'
 #' Subtitle
 #'
 #' Imports count and count.ercc data to a sp.scRNAseq object.
 #'
-#' @name spPlot
-#' @rdname spPlot
-#' @aliases spPlot
-#' @param x An spCounts, spUnsupervised, or spSwarm object.
-#' @param y An spCounts, spUnsupervised, or spSwarm object.
-#' @param z An spCounts object.
+#' @name plotCounts
+#' @rdname plotCounts
+#' @aliases plotCounts
+#' @param x An spCounts object containing singlets.
+#' @param y An spCounts object containing multiplets.
 #' @param type Can be "ercc", "markers", or .......
 #' @param markers A character vector with 2 markers to plot.
-#' @param layout Specify "tsne" for overlaying connections over the tSNE or igraph for graph layout.
-#' @param loop Logical; TRUE if "self" connections should be turned on.
-#' @param ... additional arguments to pass on
+#' @param ... additional arguments to pass on.
 #' @return The spPlot function returns an object of class spCounts.
 #' @author Jason T. Serviss
-#' @keywords spPlot
+#' @keywords plotCounts
 #' @examples
 #'
 #' #use demo data
@@ -31,22 +28,22 @@ NULL
 #'
 NULL
 
-#' @rdname spPlot
+#' @rdname plotCounts
 #' @export
 
-setGeneric("spPlot", function(
+setGeneric("plotCounts", function(
     x,
     ...
 ){
-    standardGeneric("spPlot")
+    standardGeneric("plotCounts")
 })
 
-#' @rdname spPlot
+#' @rdname plotCounts
 #' @export
 #' @import ggplot2
 #' @importFrom ggthemes theme_few scale_colour_economist
 
-setMethod("spPlot", "spCounts", function(
+setMethod("plotCounts", "spCounts", function(
     x,
     y,
     type,
@@ -218,15 +215,49 @@ setMethod("spPlot", "spCounts", function(
     return(p)
 }
 
+#' plotUnsupervised
+#'
+#' Subtitle
+#'
+#' Imports count and count.ercc data to a sp.scRNAseq object.
+#'
+#' @name plotUnsupervised
+#' @rdname plotUnsupervised
+#' @aliases plotUnsupervised
+#' @param x An spUnsupervised object.
+#' @param y An spCounts object containing singlets.
+#' @param type Can be "clusters", "markers", or .......
+#' @param markers A character vector with markers to plot.
+#' @param ... additional arguments to pass on.
+#' @return The plotUnsupervised function returns an object of class spCounts.
+#' @author Jason T. Serviss
+#' @keywords plotUnsupervised
+#' @examples
+#'
+#' #use demo data
+#'
+#' #run function
+#'
+NULL
 
-#' @rdname spPlot
+#' @rdname plotUnsupervised
+#' @export
+
+setGeneric("plotUnsupervised", function(
+    x,
+    ...
+){
+    standardGeneric("plotUnsupervised")
+})
+
+#' @rdname plotUnsupervised
 #' @export
 #' @import ggplot2
 #' @importFrom ggthemes theme_few scale_colour_economist
 #' @importFrom reshape2 melt
 #' @importFrom viridis scale_color_viridis
 
-setMethod("spPlot", "spUnsupervised", function(
+setMethod("plotUnsupervised", "spUnsupervised", function(
     x,
     y = NULL,
     type,
@@ -382,11 +413,63 @@ setMethod("spPlot", "spUnsupervised", function(
 }
 
 .setColors <- function() {
-    colors <- c('#0075DC', '#005C31', '#4C005C', '#2BCE48', '#FFCC99', '#808080', '#94FFB5', '#8F7C00', '#9DCC00', '#C20088', '#003380', '#FFA405', '#FFA8BB', '#426600', '#FF0010', '#5EF1F2', '#00998F', '#E0FF66', '#740AFF', '#990000', '#FFFF80', '#FFFF00', '#FF5005', '#993D59', '#00FFEF', '#FF6440', '#CC1D14', '#40FF6C', '#893D99', '#4800FF', '#FFDD40', '#CC9914', '#993D3D', '#CCCA14', '#3D996E', '#993D3D', '#191919', 'cadetblue3', 'antiquewhite4', 'aquamarine3', 'brown4', 'darkgoldenrod3')
+    colors <- c('#0075DC', '#005C31', '#4C005C', '#2BCE48', '#FFCC99',
+        '#808080', '#94FFB5', '#8F7C00', '#9DCC00', '#C20088', '#003380',
+        '#FFA405', '#FFA8BB', '#426600', '#FF0010', '#5EF1F2', '#00998F',
+        '#E0FF66', '#740AFF', '#990000', '#FFFF80', '#FFFF00', '#FF5005',
+        '#993D59', '#00FFEF', '#FF6440', '#CC1D14', '#40FF6C', '#893D99',
+        '#4800FF', '#FFDD40', '#CC9914', '#993D3D', '#CCCA14', '#3D996E',
+        '#993D3D', '#191919', 'cadetblue3', 'antiquewhite4', 'aquamarine3',
+        'brown4', 'darkgoldenrod3'
+    )
     return(colors)
 }
 
-#' @rdname spPlot
+#' plotSwarm
+#'
+#' Subtitle
+#'
+#' Description.
+#'
+#' @name plotSwarm
+#' @rdname plotSwarm
+#' @aliases plotSwarm
+#' @param x An spSwarm object.
+#' @param y An spUnsupervised object.
+#' @param z An spCounts object with singlets.
+#' @param layout Specify "tsne" for overlaying connections over the tSNE or
+#'    igraph for graph layout.
+#' @param loop Logical; TRUE if "self" connections should be plotted.
+#' @param type Specifies the plot type. Possible values are "tsne" or "igraph"
+#'    for network plots and "multiplets" or "edges" for residuals plots.
+#' @param markers Not currently implemented.
+#' @param edge.cutoff The minimum fraction to consider (?).
+#' @param min.pval Minimum p-value to report.
+#' @param min.num.edges Minimum number of observed edges to report a connection.
+#' @param label.cutoff The number of labels to show in the residuals plot.
+#' @param ... additional arguments to pass on.
+#' @return The spPlot function returns an object of class spCounts.
+#' @author Jason T. Serviss
+#' @keywords plotSwarm
+#' @examples
+#'
+#' #use demo data
+#'
+#' #run function
+#'
+NULL
+
+#' @rdname plotSwarm
+#' @export
+
+setGeneric("plotSwarm", function(
+    x,
+    ...
+){
+    standardGeneric("plotSwarm")
+})
+
+#' @rdname plotSwarm
 #' @export
 #' @import ggraph
 #' @importFrom ggthemes theme_few scale_colour_economist
@@ -394,23 +477,43 @@ setMethod("spPlot", "spUnsupervised", function(
 #'    get.edgelist V
 #' @importFrom ggforce theme_no_axes
 #' @importFrom utils combn
-#' @importFrom ggthemes theme_few
+#' @import ggplot2
+#' @importFrom reshape2 melt
+#' @importFrom ggrepel geom_label_repel
 
-setMethod("spPlot", "spSwarm", function(
+setMethod("plotSwarm", "spSwarm", function(
     x,
     y,
     z=NULL,
+    type=NULL,
     layout="tsne",
     loop=FALSE,
     markers=NULL,
     edge.cutoff=0,
     min.pval=1,
     min.num.edges=0,
+    label.cutoff=1,
     ...
 ){
     #x should be an spSwarm object
     #y should be an spUnsupervised object
     #z should be an spCounts object with singlets
+    if(!type %in% c("tsne", "igraph", "multiplets", "edges")) {
+        stop("Correct type not specified for plot.")
+    }
+    
+    if(type %in% c("multiplets", "edges")) {
+        .residualsPlot(
+            x,
+            y,
+            z,
+            type,
+            edge.cutoff,
+            min.pval,
+            min.num.edges,
+            label.cutoff
+        )
+    }
     
     #get data
     tsneMeans <- getData(y, "tsneMeans")
@@ -717,5 +820,151 @@ setMethod("spPlot", "spSwarm", function(
     }
 }
 
+.residualsPlot <- function(
+    x,
+    y,
+    z,
+    type,
+    edge.cutoff,
+    min.pval,
+    min.num.edges,
+    label.cutoff
+){
+    
+    #x should be a spCounts object with multiplets
+    #y should be a spUnsupervised object
+    #z should be a spSwarm object
+    
+    if(!type %in% c("multiplets", "edges")) {stop("Plot type not supported")}
+    
+    resid <- calcResiduals(x, y, z, edge.cutoff=edge.cutoff)
+    
+    switch(
+        type,
+        multiplets = {
+            d <- .resPlotMultiplets(x, y, z, resid)
+        },
+        edges = {
+            d <- .resPlotEdge(x, y, z, edge.cutoff, min.num.edges, min.pval, resid)
+        }
+    )
+    
+    #setup labels
+    mults <- unique(d$multiplet)
+    idx <- lapply(1:length(mults), function(j)
+        which(d$multiplet == mults[j])[1:label.cutoff]
+    )
+    label <- d[unlist(idx),]
+    
+    p <- ggplot(
+        d,
+        aes_string(x='multiplet', y='residuals')
+    )+
+    geom_violin(color="grey")+
+    geom_segment(
+        aes_string(
+            x='match(multiplet, levels(multiplet))-0.1',
+            xend='match(multiplet, levels(multiplet))+0.1',
+            y='residuals',
+            yend='residuals'
+        ),
+        color="black"
+    )+
+    geom_label_repel(
+        data=label,
+        aes_string(
+            x='multiplet',
+            y='residuals',
+            label='genes'
+        ),
+        min.segment.length = unit(0.1, "lines")
+    )+
+    theme_few()+
+    theme(
+        axis.text.x=element_text(angle=90)
+    )+
+    labs(
+        x=ifelse(type == "multiplets", "Multiplet", "Edge"),
+        y="Residuals"
+    )
+    
+    p
+    return(p)
+}
+
+.resPlotMultiplets <- function(
+    spCounts,
+    spUnsupervised,
+    spSwarm,
+    resid
+){
+    
+    m <- melt(resid)
+    d <- data.frame(
+        residuals=m$value,
+        multiplet=m$Var2,
+        genes=m$Var1
+    )
+    d <- d[order(d$multiplet, d$residuals, decreasing=TRUE), ]
+    return(d)
+}
+
+.resPlotEdge <- function(
+    spCounts,
+    spUnsupervised,
+    spSwarm,
+    edge.cutoff,
+    min.num.edges,
+    min.pval,
+    resid
+){
+    
+    edges <- spSwarmPoisson(
+        spSwarm,
+        edge.cutoff = edge.cutoff,
+        min.num.edges = min.num.edges,
+        min.pval = min.pval
+    )
+    
+    edges$edge <- paste(edges$from, edges$to, sep="-")
+    
+    multiplets <- getMultipletsForEdge(
+        spSwarm,
+        edge.cutoff=edge.cutoff,
+        edges=edges[,1:2]
+    )
+    multiplets <- lapply(multiplets, function(o) {
+        if(!is.null(o)) {o}
+    })
+    
+    resSums <- sapply(multiplets, function(j)
+        if(length(j) != 1) {
+            rowSums(resid[,j])
+        } else {
+            resid[,j]
+        }
+    )
+    
+    
+    resSums2 <- melt(resSums)
+    
+    m <- merge(
+        resSums2,
+        edges,
+        by.x="Var2",
+        by.y="edge",
+        all.x=TRUE
+    )
+    
+    d <- data.frame(
+        residuals=m$value,
+        multiplet=m$Var2,
+        genes=m$Var1
+    )
+    
+    d <- d[order(d$multiplet, d$residuals, decreasing=TRUE), ]
+    
+    return(d)
+}
 
 
