@@ -502,27 +502,18 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
     edges,
     ...
 ){
-    #frac <- getData(spSwarm, "spSwarm")[,c(clust1, clust2)]
-    #o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
-    #return(rownames(frac)[o])
+    mulForEdges <- sapply(1:nrow(edges), function(j) {
+        frac <- getData(spSwarm, "spSwarm")[,c(edges[j,1], edges[j,2])]
+        o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
+        rownames(frac)[o]
+    })
     
-    frac <- getData(spSwarm, "spSwarm")[,unlist(edges)]
-    find <- lapply(1:nrow(edges), function(j)
-        rownames(frac)[
-            apply(
-                frac[,c(edges[j,1], edges[j,2])],
-                1,
-                function(o)
-                    all(o > edge.cutoff)
-            )
-        ]
-    )
-    names(find) <- paste(edges$from, edges$to, sep="-")
+    names(mulForEdges) <- paste(edges[,1], edges[,2], sep="-")
     
-    if(length(find) == 1) {
-        return(unlist(find))
+    if(length(mulForEdges) == 1) {
+        return(unlist(mulForEdges))
     } else {
-        return(find)
+        return(mulForEdges)
     }
 })
 
