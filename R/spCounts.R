@@ -12,9 +12,8 @@ NULL
 #' @rdname spCounts
 #' @aliases spCounts
 #' @param counts Counts matrix with samples as columns and genes as rows.
-#' @param counts.log Log2 normalized counts per million.
 #' @param counts.ercc A matrix containing ercc spike-in reads and their counts.
-#' @param sampleType A character indicating the column naming scheme showing that the column contains a multuplet.
+#' @param counts.log Log2 normalized counts per million.
 #' @param object spCounts object.
 #' @param n Data to extract from spCounts object.
 #' @param .Object Internal object.
@@ -37,8 +36,7 @@ setGeneric("spCounts", function(counts, ...
 
 #' @rdname spCounts
 #' @export
-setMethod("spCounts", "matrix",
-function(
+setMethod("spCounts", "matrix", function(
     counts,
     counts.ercc,
     ...
@@ -73,3 +71,81 @@ function(
 }
 
 
+
+#' estimateCells
+#'
+#' Subtitle
+#'
+#' Uses ERCC data to calculate the fraction of ERCC reads in the samples. In
+#' addition, this function utilizes ERCC data to estimate the cell number
+#' in each sample.
+#'
+#' @name estimateCells
+#' @rdname estimateCells
+#' @aliases estimateCells
+#' @param spCountsSng A spCounts object with singlets.
+#' @param spCountsMul A spCounts object with multiplets.
+#' @param ... additional arguments to pass on
+#' @return A data frame including the fraction of ercc reads and cell counts for
+#'    each sample.
+#' @author Jason T. Serviss
+#' @keywords spCounts
+#' @examples
+#'
+#' #run function
+#'
+#'
+NULL
+
+#' @export
+
+setGeneric("estimateCells", function(
+    spCountsSng,
+    spCountsMul,
+    ...
+){
+    standardGeneric("estimateCells")
+})
+
+#' @rdname estimateCells
+#' @export
+setMethod("estimateCells", "spCounts", function(
+    spCountsSng,
+    spCountsMul,
+    ...
+){
+    sampleType <- c(
+        rep(
+            "Singlet",
+            ncol(getData(spCountsSng, "counts"))
+        ),
+        rep(
+            "Multiplet",
+            ncol(getData(spCountsMul, "counts"))
+        )
+    )
+    
+    counts <- cbind(
+        getData(spCountsSng, "counts"),
+        getData(spCountsMul, "counts")
+    )
+    counts.ercc <- cbind(
+        getData(spCountsSng, "counts.ercc"),
+        getData(spCountsMul, "counts.ercc")
+    )
+    
+    frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
+    cellNumberMedian <- median(frac.ercc[sampleType == "Singlet"]) / frac.ercc
+    cellNumberMin <- quantile(frac.ercc[sampleType == "Singlet"])[2] / frac.ercc
+    cellNumberMax <- quantile(frac.ercc[sampleType == "Singlet"])[4] / frac.ercc
+
+    d <- data.frame(
+        sampleType = factor(sampleType, levels=c("Singlet", "Multiplet")),
+        frac.ercc = frac.ercc,
+        cellNumberMin = cellNumberMin,
+        cellNumberMedian = cellNumberMedian,
+        cellNumberMax = cellNumberMax
+    )
+    return(d)
+    
+})
