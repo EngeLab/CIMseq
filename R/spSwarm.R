@@ -302,7 +302,13 @@ spSwarmPoisson <- function(
         matrix(c(colnames(mat), colnames(mat)), ncol=2),
         t(combn(colnames(mat), 2))
     )
-    edges <- data.frame(from=xy[,1], to=xy[,2], weight=res)
+    
+    edges <- data.frame(
+        from=xy[,1],
+        to=xy[,2],
+        weight=res,
+        stringsAsFactors=FALSE
+    ) #change factors to characters, I hate factors
     
     mean.edges <- mean(edges$weight)
     edges$pval <- ppois(edges$weight, mean.edges, lower.tail=FALSE)
@@ -411,7 +417,7 @@ calcResiduals <- function(
     spSwarm,
     clusters=NULL,
     edge.cutoff=NULL,
-    distFun = function(frac, multiplets) {sum(abs(frac - multiplets))},
+    distFun = function(frac, multiplets) {abs(frac - multiplets)},
     ...
 ){
     #spCounts should only include multiplets
@@ -424,14 +430,18 @@ calcResiduals <- function(
     cellTypes <- groupMeans[selectInd, ]
     multiplets <- counts[selectInd, ]
     
-    a <- sapply(1:nrow(frac), function(j) .makeSyntheticSlice(cellTypes, j))
-    diff <- distFun(a, multiplets)
-    #diff <- diff * 1/rowSums(diff)
+    a <- sapply(1:nrow(frac), function(j)
+        .makeSyntheticSlice(cellTypes, as.numeric(frac[j,]))
+    )
+    colnames(a) <- rownames(frac)
+    diff <- sapply(1:ncol(a), function(x)
+        distFun(a[,x],multiplets[,x])
+    )
 
-    colnames(diff) <- colnames(counts)
+    colnames(diff) <- rownames(frac)
     
     if(!is.null(clusters) & !is.null(edge.cutoff)) {
-        diff <- diff[ , selectClustersOnEdge(
+        diff <- diff[ , getMultipletsForEdge(
             spSwarm,
             edge.cutoff,
             clusters[1],
@@ -441,23 +451,15 @@ calcResiduals <- function(
     return(diff)
 }
 
-#.makeSyntheticSlice <- function(
-#    celltypes,
-#    fractions
-#){
-#    return(colSums(t(cellTypes) * fractions))
-#}
-
-
-#' selectClustersOnEdge
+#' getMultipletsForEdge
 #'
-#' Subtitle
+#' Returns the names of the multiplets that are associated with an edge.
 #'
 #' Description
 #'
-#' @name selectClustersOnEdge
-#' @rdname selectClustersOnEdge
-#' @aliases selectClustersOnEdge
+#' @name getMultipletsForEdge
+#' @rdname getMultipletsForEdge
+#' @aliases getMultipletsForEdge
 #' @param spSwarm An spSwarm object.
 #' @param edge.cutoff The minimum fraction to consider (?).
 #' @param clust1 A character vector of length 1 indicating one node which forms
@@ -469,9 +471,9 @@ calcResiduals <- function(
 #' @param object spRSwarm object.
 #' @param .Object Internal object.
 #' @param ... additional arguments to pass on
-#' @return spSwarm connection strengths and p-values.
+#' @return Multiplet names.
 #' @author Jason T. Serviss
-#' @keywords selectClustersOnEdge
+#' @keywords getMultipletsForEdge
 #' @examples
 #'
 #' #use demo data
@@ -482,16 +484,89 @@ calcResiduals <- function(
 #'
 NULL
 
-#' @rdname selectClustersOnEdge
+#' @rdname getMultipletsForEdge
 #' @export
 
-selectClustersOnEdge <- function(
+setGeneric("getMultipletsForEdge", function(
+    spSwarm,
+    ...
+){
+    standardGeneric("getMultipletsForEdge")
+})
+
+#' @rdname getMultipletsForEdge
+#' @export
+
+setMethod("getMultipletsForEdge", "spSwarm", function(
     spSwarm,
     edge.cutoff,
     clust1,
-    clust2
+    clust2,
+    ...
 ){
     frac <- getData(spSwarm, "spSwarm")[,c(clust1, clust2)]
     o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
     return(rownames(frac)[o])
-}
+})
+
+#' getEdgesForMultiplet
+#'
+#' Returns the names of the edges are associated with a multiplet.
+#'
+#' Description
+#'
+#' @name getEdgesForMultiplet
+#' @rdname getEdgesForMultiplet
+#' @aliases getEdgesForMultiplet
+#' @param spSwarm An spSwarm object.
+#' @param edge.cutoff The minimum fraction to consider (?).
+#' @param multiplet The name of the multiplet of interest.
+#' @param object spRSwarm object.
+#' @param .Object Internal object.
+#' @param ... additional arguments to pass on
+#' @return Edge names.
+#' @author Jason T. Serviss
+#' @keywords getEdgesForMultiplet
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+#' #run function
+#'
+#'
+NULL
+
+#' @rdname getEdgesForMultiplet
+#' @export
+
+setGeneric("getEdgesForMultiplet", function(
+    spSwarm,
+    ...
+){
+    standardGeneric("getEdgesForMultiplet")
+})
+
+#' @rdname getEdgesForMultiplet
+#' @export
+
+setMethod("getEdgesForMultiplet", "spSwarm", function(
+    spSwarm,
+    edge.cutoff,
+    multiplet,
+    ...
+){
+    frac <- getData(spSwarm, "spSwarm")[multiplet,]
+    combs <- combn(names(frac)[frac > edge.cutoff], 2)
+    s <- spSwarmPoisson(spSwarm, edge.cutoff=edge.cutoff)
+    out <- as.data.frame(t(sapply(
+        1:ncol(combs),
+        function(j)
+            s[s$from == combs[1,j] & s$to == combs[2,j], ]
+    )))
+    if(nrow(out) == ncol(combs)) {
+        return(out)
+    } else {
+        stop("somethings went wrong, check the code")
+    }
+})

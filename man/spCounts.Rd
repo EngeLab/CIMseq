@@ -41,8 +41,6 @@ spCounts(counts, ...)
 \item{counts.log}{Log2 normalized counts per million.}
 
 \item{counts.ercc}{A matrix containing ercc spike-in reads and their counts.}
-
-\item{sampleType}{A character indicating the column naming scheme showing that the column contains a multuplet.}
 }
 \value{
 spCounts object.

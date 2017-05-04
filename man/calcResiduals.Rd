@@ -6,8 +6,8 @@
 \title{calcResiduals}
 \usage{
 calcResiduals(spCounts, spUnsupervised, spSwarm, clusters = NULL,
-  edge.cutoff = NULL, distFun = function(frac, multiplets) {    
-  sum(abs(frac - multiplets)) }, ...)
+  edge.cutoff = NULL, distFun = function(frac, multiplets) {     abs(frac -
+  multiplets) }, ...)
 }
 \arguments{
 \item{spCounts}{An spCounts object with multiplets.}
