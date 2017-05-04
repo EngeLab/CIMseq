@@ -9,8 +9,7 @@
 \usage{
 getMultipletsForEdge(spSwarm, ...)
 
-\S4method{getMultipletsForEdge}{spSwarm}(spSwarm, edge.cutoff, clust1, clust2,
-  ...)
+\S4method{getMultipletsForEdge}{spSwarm}(spSwarm, edge.cutoff, edges, ...)
 }
 \arguments{
 \item{spSwarm}{An spSwarm object.}
@@ -19,20 +18,18 @@ getMultipletsForEdge(spSwarm, ...)
 
 \item{edge.cutoff}{The minimum fraction to consider (?).}
 
-\item{clust1}{A character vector of length 1 indicating one node which forms
-an edge with clust2 for which multiplets contributing to that edge will be
-reported.}
-
-\item{clust2}{A character vector of length 1 indicating one node which forms
-an edge with clust1 for which multiplets contributing to that edge will be
-reported.}
+\item{edges}{A data frame indicating the edges of interest. Edges are
+indicated by the nodes they connect with one node in column one and the
+other node in column 2.}
 
 \item{object}{spRSwarm object.}
 
 \item{.Object}{Internal object.}
 }
 \value{
-Multiplet names.
+If the edges argument only includes on row, a vector of multiplet
+   names is returned. If several edges are interogated a list is returned
+   with one element per edge containing the names of the multiplets.
 }
 \description{
 Returns the names of the multiplets that are associated with an edge.

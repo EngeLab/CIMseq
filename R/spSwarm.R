@@ -462,16 +462,15 @@ calcResiduals <- function(
 #' @aliases getMultipletsForEdge
 #' @param spSwarm An spSwarm object.
 #' @param edge.cutoff The minimum fraction to consider (?).
-#' @param clust1 A character vector of length 1 indicating one node which forms
-#'    an edge with clust2 for which multiplets contributing to that edge will be
-#'    reported.
-#' @param clust2 A character vector of length 1 indicating one node which forms
-#'    an edge with clust1 for which multiplets contributing to that edge will be
-#'    reported.
+#' @param edges A data frame indicating the edges of interest. Edges are
+#'    indicated by the nodes they connect with one node in column one and the
+#'    other node in column 2.
 #' @param object spRSwarm object.
 #' @param .Object Internal object.
 #' @param ... additional arguments to pass on
-#' @return Multiplet names.
+#' @return If the edges argument only includes on row, a vector of multiplet
+#'    names is returned. If several edges are interogated a list is returned
+#'    with one element per edge containing the names of the multiplets.
 #' @author Jason T. Serviss
 #' @keywords getMultipletsForEdge
 #' @examples
@@ -500,13 +499,31 @@ setGeneric("getMultipletsForEdge", function(
 setMethod("getMultipletsForEdge", "spSwarm", function(
     spSwarm,
     edge.cutoff,
-    clust1,
-    clust2,
+    edges,
     ...
 ){
-    frac <- getData(spSwarm, "spSwarm")[,c(clust1, clust2)]
-    o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
-    return(rownames(frac)[o])
+    #frac <- getData(spSwarm, "spSwarm")[,c(clust1, clust2)]
+    #o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
+    #return(rownames(frac)[o])
+    
+    frac <- getData(spSwarm, "spSwarm")[,unlist(edges)]
+    find <- lapply(1:nrow(edges), function(j)
+        rownames(frac)[
+            apply(
+                frac[,c(edges[j,1], edges[j,2])],
+                1,
+                function(o)
+                    all(o > edge.cutoff)
+            )
+        ]
+    )
+    names(find) <- paste(edges$from, edges$to, sep="-")
+    
+    if(length(find) == 1) {
+        return(unlist(find))
+    } else {
+        return(find)
+    }
 })
 
 #' getEdgesForMultiplet
