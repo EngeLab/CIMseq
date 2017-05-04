@@ -117,7 +117,15 @@ setMethod("spUnsupervised", "spCounts", function(
     my.dist <- pearsonsDist(spCounts, select)
     
     #run tSNE
-    tsne <- runTsne(my.dist, k, theta, initial_dims, max_iter, perplexity, seed)
+    tsne <- runTsne(
+        my.dist,
+        k,
+        theta,
+        initial_dims,
+        max_iter,
+        perplexity,
+        seed
+    )
     
     #run Mclust
     tmp <- runMclust(tsne, Gmax, seed)
@@ -184,7 +192,6 @@ NULL
 
 #' @rdname spTopVar
 #' @export
-
 
 spTopVar <- function(spCounts, n) {
     rv = apply(getData(spCounts, "counts.cpm"), 1, var)
