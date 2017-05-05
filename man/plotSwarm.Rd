@@ -10,8 +10,8 @@
 plotSwarm(x, ...)
 
 \S4method{plotSwarm}{spSwarm}(x, y, z = NULL, w = NULL, type = NULL,
-  loop = FALSE, markers = NULL, edge.cutoff = 0, min.pval = 1,
-  min.num.edges = 0, label.cutoff = 1, ...)
+  loop = FALSE, markers = NULL, edge.cutoff = NULL, min.pval = NULL,
+  min.num.edges = NULL, label.cutoff = NULL, ...)
 }
 \arguments{
 \item{x}{An spSwarm object.}

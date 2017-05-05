@@ -200,6 +200,22 @@ distToSlice <- function(
 }
 
 #' @export
+distToSliceNorm <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    cellTypes <- cellTypes/mean(cellTypes)
+    a = .makeSyntheticSlice(cellTypes, normFractions)
+    a <- a/mean(a)
+    sum(abs((oneMultiplet - a) / (a+1)))
+}
+
+#' @export
 distToSliceTopFour <- function(
     fractions,
     cellTypes,
@@ -417,7 +433,7 @@ calcResiduals <- function(
     spSwarm,
     clusters=NULL,
     edge.cutoff=NULL,
-    distFun = function(frac, multiplets) {abs(frac - multiplets)},
+    distFun = function(frac, multiplets){(abs(multiplets - frac) / (frac + 1))},
     ...
 ){
     #spCounts should only include multiplets
@@ -429,11 +445,14 @@ calcResiduals <- function(
     
     cellTypes <- groupMeans[selectInd, ]
     multiplets <- counts[selectInd, ]
+    multiplets <- multiplets/mean(multiplets)
     
     a <- sapply(1:nrow(frac), function(j)
         .makeSyntheticSlice(cellTypes, as.numeric(frac[j,]))
     )
     colnames(a) <- rownames(frac)
+    a <- a/mean(a)
+    
     diff <- sapply(1:ncol(a), function(x)
         distFun(a[,x],multiplets[,x])
     )

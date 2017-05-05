@@ -512,7 +512,7 @@ setGeneric("plotSwarm", function(
 #' @import ggraph
 #' @importFrom ggthemes theme_few scale_colour_economist
 #' @importFrom igraph graph_from_data_frame delete_edges set_edge_attr
-#'    get.edgelist V
+#'    get.edgelist V E subgraph.edges vertex
 #' @importFrom ggforce theme_no_axes
 #' @importFrom utils combn
 #' @import ggplot2
@@ -528,10 +528,10 @@ setMethod("plotSwarm", "spSwarm", function(
     type=NULL,
     loop=FALSE,
     markers=NULL,
-    edge.cutoff=0,
-    min.pval=1,
-    min.num.edges=0,
-    label.cutoff=1,
+    edge.cutoff=NULL,
+    min.pval=NULL,
+    min.num.edges=NULL,
+    label.cutoff=NULL,
     ...
 ){
     
@@ -545,6 +545,11 @@ setMethod("plotSwarm", "spSwarm", function(
     #z should be an spCounts object with singlets
     #w should be an spCounts object with multiplets
     
+    if(is.null(edge.cutoff)) {edge.cutoff <- 1/ncol(getData(x, "spSwarm"))}
+    if(is.null(min.num.edges)) {min.num.edges <- 0}
+    if(is.null(min.pval)) {min.pval <- 1}
+    if(is.null(label.cutoff)) {label.cutoff <- 1}
+
     types <- c(
         "tsne",
         "igraph",
@@ -578,9 +583,9 @@ setMethod("plotSwarm", "spSwarm", function(
             type,
             loop=FALSE,
             markers=NULL,
-            edge.cutoff=0,
-            min.pval=1,
-            min.num.edges=0
+            edge.cutoff,
+            min.pval,
+            min.num.edges
         )
     } else if(type %in% c("edgeBar", "pValueBar")) {
         plot <- .barPlot(
@@ -592,7 +597,7 @@ setMethod("plotSwarm", "spSwarm", function(
         )
     } else {
         plot <- .heatmap(
-            sObj,
+            x,
             edge.cutoff,
             min.pval,
             min.num.edges
@@ -617,9 +622,9 @@ setMethod("plotSwarm", "spSwarm", function(
     type,
     loop=FALSE,
     markers=NULL,
-    edge.cutoff=0,
-    min.pval=1,
-    min.num.edges=0,
+    edge.cutoff,
+    min.pval,
+    min.num.edges,
     ...
 ){
     #get data
@@ -642,9 +647,18 @@ setMethod("plotSwarm", "spSwarm", function(
     graphDF <- graph_from_data_frame(graph)
     
     #remove edges according to min.num.edges and min.pval
-    remove <- which(graph$weight < min.num.edges | graph$pval > min.pval)
-    graphDF <- delete_edges(graphDF, remove)
+    graphDF <- subgraph.edges(
+        graph=graphDF,
+        eids=which(E(graphDF)$weight >= min.num.edges),
+        delete.vertices = TRUE
+    )
     
+    graphDF <- subgraph.edges(
+        graph=graphDF,
+        eids=which(E(graphDF)$pval < min.pval),
+        delete.vertices = TRUE
+    )
+
     #add nodes not in graph (due to min.pval argument)
     vertexToAdd <- tsneMeans$classification[!tsneMeans[,1] %in% V(graphDF)$name]
     
