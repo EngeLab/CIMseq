@@ -73,7 +73,11 @@ setMethod("plotCounts", "spCounts", function(
 })
 
 #get and process data for ercc plot
-.countsErccPlotProcess <- function(x, y) {
+.countsErccPlotProcess <- function(
+    x,
+    y,
+    ...
+){
     
     sampleType <- c(
         rep(
@@ -108,7 +112,11 @@ setMethod("plotCounts", "spCounts", function(
 }
 
 #plot ercc plot
-.countsErccPlot <- function(x, y) {
+.countsErccPlot <- function(
+    x,
+    y,
+    ...
+){
     
     d <- estimateCells(x, y)
     
@@ -153,7 +161,12 @@ setMethod("plotCounts", "spCounts", function(
 }
 
 #get and process data for markers plot
-.countsMarkersPlotProcess <- function(x, y, markers) {
+.countsMarkersPlotProcess <- function(
+    x,
+    y,
+    markers,
+    ...
+){
     counts.log <- cbind(
         getData(x, "counts.log"),
         getData(y, "counts.log")
@@ -179,7 +192,12 @@ setMethod("plotCounts", "spCounts", function(
 }
 
 #plot markers plot
-.countsMarkersPlot <- function(x, y, markers) {
+.countsMarkersPlot <- function(
+    x,
+    y,
+    markers,
+    ...
+){
     
     d <- .countsMarkersPlotProcess(x, y, markers)
     
@@ -287,7 +305,11 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 })
 
 #get and process data for clusters plot
-.unsupClusterPlotProcess <- function(x, plotUncertainty) {
+.unsupClusterPlotProcess <- function(
+    x,
+    plotUncertainty,
+    ...
+){
     tsne <- getData(x, "tsne")
     classification <- getData(x, "classification")
     
@@ -303,7 +325,11 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 }
 
 #plot clusters plot
-.unsupClustersPlot <- function(x, plotUncertainty) {
+.unsupClustersPlot <- function(
+    x,
+    plotUncertainty,
+    ...
+){
     
     d <- .unsupClusterPlotProcess(x, plotUncertainty)
     colors <- .setColors()
@@ -345,7 +371,13 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 }
 
 #get and process data for markers plot
-.unsupMarkerPlotProcess <- function(x, y, markers, plotUncertainty) {
+.unsupMarkerPlotProcess <- function(
+    x,
+    y,
+    markers,
+    plotUncertainty,
+    ...
+){
     tsne <- as.data.frame(getData(x, "tsne"))
     counts.log <- getData(y, "counts.log")
     
@@ -371,7 +403,13 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 }
 
 #plot markers plot
-.unsupMarkersPlot <- function(x, y, markers, plotUncertainty) {
+.unsupMarkersPlot <- function(
+    x,
+    y,
+    markers,
+    plotUncertainty,
+    ...
+){
     
     m <- .unsupMarkerPlotProcess(x, y, markers, plotUncertainty)
     
@@ -427,9 +465,9 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 
 #' plotSwarm
 #'
-#' Subtitle
-#'
 #' Description.
+#'
+#' Details.
 #'
 #' @name plotSwarm
 #' @rdname plotSwarm
@@ -437,11 +475,11 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 #' @param x An spSwarm object.
 #' @param y An spUnsupervised object.
 #' @param z An spCounts object with singlets.
-#' @param layout Specify "tsne" for overlaying connections over the tSNE or
-#'    igraph for graph layout.
-#' @param loop Logical; TRUE if "self" connections should be plotted.
+#' @param w An spCounts object with multiplets.
 #' @param type Specifies the plot type. Possible values are "tsne" or "igraph"
-#'    for network plots and "multiplets" or "edges" for residuals plots.
+#'    for network plots, "multiplets" or "edges" for residuals plots, "edgeBar"
+#'    or "pValueBar" for bar plots and "heat" for a heatmap.
+#' @param loop Logical; TRUE if "self" connections should be plotted.
 #' @param markers Not currently implemented.
 #' @param edge.cutoff The minimum fraction to consider (?).
 #' @param min.pval Minimum p-value to report.
@@ -480,13 +518,14 @@ setGeneric("plotSwarm", function(
 #' @import ggplot2
 #' @importFrom reshape2 melt
 #' @importFrom ggrepel geom_label_repel
+#' @importFrom viridis scale_fill_viridis
 
 setMethod("plotSwarm", "spSwarm", function(
     x,
     y,
     z=NULL,
+    w=NULL,
     type=NULL,
-    layout="tsne",
     loop=FALSE,
     markers=NULL,
     edge.cutoff=0,
@@ -495,31 +534,99 @@ setMethod("plotSwarm", "spSwarm", function(
     label.cutoff=1,
     ...
 ){
+    
+    #cimSng,
+    #cimMul,
+    #cimClass,
+    #cimSwarm,
+    
     #x should be an spSwarm object
     #y should be an spUnsupervised object
     #z should be an spCounts object with singlets
-    if(!type %in% c("tsne", "igraph", "multiplets", "edges")) {
+    #w should be an spCounts object with multiplets
+    
+    types <- c(
+        "tsne",
+        "igraph",
+        "multiplets",
+        "edges",
+        "edgeBar",
+        "pValueBar",
+        "heat"
+    )
+    
+    if(!type %in% types) {
         stop("Correct type not specified for plot.")
     }
     
     if(type %in% c("multiplets", "edges")) {
-        .residualsPlot(
-            x,
+        plot <- .residualsPlot(
+            w,
             y,
-            z,
+            x,
             type,
             edge.cutoff,
             min.pval,
             min.num.edges,
             label.cutoff
         )
+    } else if(type %in% c("tsne", "igraph")) {
+        plot <- .swarmPlot(
+            x,
+            y,
+            z,
+            type,
+            loop=FALSE,
+            markers=NULL,
+            edge.cutoff=0,
+            min.pval=1,
+            min.num.edges=0
+        )
+    } else if(type %in% c("edgeBar", "pValueBar")) {
+        plot <- .barPlot(
+            x,
+            edge.cutoff,
+            min.pval,
+            min.num.edges,
+            type
+        )
+    } else {
+        plot <- .heatmap(
+            sObj,
+            edge.cutoff,
+            min.pval,
+            min.num.edges
+        )
     }
     
+    plot
+    return(plot)
+    
+})
+
+################################################################################
+#                                                                              #
+# Swarm Plots                                                                  #
+#                                                                              #
+################################################################################
+
+.swarmPlot <- function(
+    x,
+    y,
+    z,
+    type,
+    loop=FALSE,
+    markers=NULL,
+    edge.cutoff=0,
+    min.pval=1,
+    min.num.edges=0,
+    ...
+){
     #get data
     tsneMeans <- getData(y, "tsneMeans")
     d <- .swarmTsneProcess(y)
     d <- d[order(d$classification), ]
-
+    
     if(!is.null(markers)) {
         d$color <- .col.from.targets(markers, getData(z, "counts.log"))
     }
@@ -562,27 +669,29 @@ setMethod("plotSwarm", "spSwarm", function(
     colors <- .setColors()[1:length(unique(tsneMeans$classification))]
     names(colors) <- tsneMeans$classification
     
-    if(layout == "tsne" & loop == TRUE) {
+    if(type == "tsne" & loop == TRUE) {
         plot <- .plotTsneLoop(graphDF, tsneMeans, colors, d)
     }
     
-    if(layout == "tsne" & loop == FALSE) {
+    if(type == "tsne" & loop == FALSE) {
         plot <- .plotTsne(graphDF, tsneMeans, colors, d)
     }
     
-    if(layout == "igraph" & loop == TRUE) {
+    if(type == "igraph" & loop == TRUE) {
         plot <- .plotIgraphLoop(graphDF, colors)
     }
     
-    if(layout == "igraph" & loop == FALSE) {
+    if(type == "igraph" & loop == FALSE) {
         plot <- .plotIgraph(graphDF, colors)
     }
     
-    plot
     return(plot)
-})
+}
 
-.swarmTsneProcess <- function(x) {
+.swarmTsneProcess <- function(
+    x,
+    ...
+){
     tsne <- getData(x, "tsne")
     classification <- getData(x, "classification")
     
@@ -596,7 +705,13 @@ setMethod("plotSwarm", "spSwarm", function(
     return(d)
 }
 
-.plotTsne <- function(graphDF, tsneMeans, colors, d) {
+.plotTsne <- function(
+    graphDF,
+    tsneMeans,
+    colors,
+    d,
+    ...
+){
     
     #setup layout
     layout <- create_layout(graphDF, 'manual', node.positions = tsneMeans)
@@ -636,7 +751,13 @@ setMethod("plotSwarm", "spSwarm", function(
     return(plot)
 }
 
-.plotTsneLoop <- function(graphDF, tsneMeans, colors, d) {
+.plotTsneLoop <- function(
+    graphDF,
+    tsneMeans,
+    colors,
+    d,
+    ...
+){
     #setup layout
     layout <- create_layout(graphDF, 'manual', node.positions = tsneMeans)
     
@@ -686,7 +807,11 @@ setMethod("plotSwarm", "spSwarm", function(
     return(plot)
 }
 
-.plotIgraph <- function(graphDF, colors) {
+.plotIgraph <- function(
+    graphDF,
+    colors,
+    ...
+){
     plot <- ggraph(
         graph = graphDF,
         layout = 'igraph',
@@ -713,7 +838,11 @@ setMethod("plotSwarm", "spSwarm", function(
     return(plot)
 }
 
-.plotIgraphLoop <- function(graphDF, colors) {
+.plotIgraphLoop <- function(
+    graphDF,
+    colors,
+    ...
+){
     plot <- ggraph(
         graph = graphDF,
         layout = 'igraph',
@@ -749,7 +878,11 @@ setMethod("plotSwarm", "spSwarm", function(
     )
 }
 
-.col.from.targets <- function(targets, values) {
+.col.from.targets <- function(
+    targets,
+    values,
+    ...
+){
     
     values <- values[rownames(values) %in% targets, ]
     pal <- .setColors()
@@ -760,10 +893,13 @@ setMethod("plotSwarm", "spSwarm", function(
         #normalize each genes values so that all genes aer on the same scale
         v <- t(apply(values, 1, function(x) {(x-min(x))/(max(x)-min(x))}))
         
-        #calculates the fraction that each gene is expressed in a sample relative to all input genes expression
+        #calculates the fraction that each gene is expressed in a sample
+        #relative to all input genes expression
         fractions <- apply(v, 2, function(x) {x/sum(x)})
         
-        #this fixes the Nan problem, due to division with 0, but results in positive expression values for genes samples that had no expression... Do these end up being white in the end?
+        #this fixes the Nan problem, due to division with 0, but results in
+        #positive expression values for genes samples that had no expression...
+        #Do these end up being white in the end?
         fractions[is.nan(fractions)] <- 1.0/(dim(fractions)[1])
         
         #changes the color values from hex to rgb
@@ -773,7 +909,10 @@ setMethod("plotSwarm", "spSwarm", function(
         res <- vector("character", length=length(targets))
         for(i in 1:ncol(values)) {
             
-            #for each gene in the current sample, multiply the red, green, and blue values (corresponding to the current gene) with the normalized expression value for that gene. Subtract this from 255 to keep the color within the 0-255 range.
+            #for each gene in the current sample, multiply the red, green, and
+            #blue values (corresponding to the current gene) with the normalized
+            #expression value for that gene. Subtract this from 255 to keep the
+            #color within the 0-255 range.
             mytarget.rgb <- 255-t(
                 apply(
                     targets.rgb,
@@ -784,7 +923,8 @@ setMethod("plotSwarm", "spSwarm", function(
                 )
             )
             
-            #multiply the rgb color values for this gene by the fraction by which this gene is expressed compared to other target genes
+            #multiply the rgb color values for this gene by the fraction by
+            #which this gene is expressed compared to other target genes
             mytarget.rgb <- rowSums(
                 t(
                     apply(
@@ -812,13 +952,23 @@ setMethod("plotSwarm", "spSwarm", function(
         targets.rgb <- col2rgb(targets)
         res <- vector("character", length=length(targets))
         for(i in 1:length(values)) {
-            mytarget.rgb <- 255-t(apply(targets.rgb, 1, function(values) {(255-values) * v[i]}))
-            #            mytarget.rgb <- rowSums(t(apply(mytarget.rgb, 1, function(values) {values * fractions[,i]})))
-            res[i] <- rgb(red=mytarget.rgb[1]/256, green=mytarget.rgb[2]/256, blue=mytarget.rgb[3]/256)
+            mytarget.rgb <- 255-t(apply(targets.rgb, 1, function(values)
+            {(255-values) * v[i]}))
+            res[i] <- rgb(
+                red=mytarget.rgb[1]/256,
+                green=mytarget.rgb[2]/256,
+                blue=mytarget.rgb[3]/256
+            )
         }
         return(res)
     }
 }
+
+################################################################################
+#                                                                              #
+# Residual Plots                                                               #
+#                                                                              #
+################################################################################
 
 .residualsPlot <- function(
     x,
@@ -828,7 +978,8 @@ setMethod("plotSwarm", "spSwarm", function(
     edge.cutoff,
     min.pval,
     min.num.edges,
-    label.cutoff
+    label.cutoff,
+    ...
 ){
     
     #x should be a spCounts object with multiplets
@@ -860,7 +1011,9 @@ setMethod("plotSwarm", "spSwarm", function(
         d,
         aes_string(x='multiplet', y='residuals')
     )+
-    geom_violin(color="grey")+
+    geom_violin(
+        color="grey"
+    )+
     geom_segment(
         aes_string(
             x='match(multiplet, levels(multiplet))-0.1',
@@ -896,7 +1049,8 @@ setMethod("plotSwarm", "spSwarm", function(
     spCounts,
     spUnsupervised,
     spSwarm,
-    resid
+    resid,
+    ...
 ){
     
     m <- melt(resid)
@@ -967,4 +1121,266 @@ setMethod("plotSwarm", "spSwarm", function(
     return(d)
 }
 
+################################################################################
+#                                                                              #
+# Bar Plots                                                                    #
+#                                                                              #
+################################################################################
 
+.barPlot <- function(
+    sObj,
+    edge.cutoff,
+    min.pval,
+    min.num.edges,
+    type
+){
+    input <- .processFullConnections(
+        sObj,
+        edge.cutoff,
+        min.pval,
+        min.num.edges
+    )
+    
+    if(type == "pValueBar") {
+        plot <- .pvalueBar(input)
+    } else {
+        plot <- .edgesBar(input)
+    }
+    
+    return(plot)
+}
+
+.processFullConnections <- function(
+    sObj,
+    edge.cutoff,
+    min.pval,
+    min.num.edges,
+    ...
+){
+    types <- colnames(getData(sObj, "spSwarm"))
+    
+    d <- data.frame(
+        from = sort(rep(types, length(types))),
+        to = rep(types, length(types))
+    )
+    
+    results <- spSwarmPoisson(
+        sObj,
+        edge.cutoff=edge.cutoff,
+        min.pval=min.pval,
+        min.num.edges=min.num.edges
+    )
+    
+    tmp1 <- merge(d, results, by.x=c("from", "to"), by.y=c("from", "to"))
+    tmp2 <- merge(d, results, by.x=c("from", "to"), by.y=c("to", "from"))
+    input <- unique(rbind(tmp1, tmp2))
+    
+    return(input)
+
+}
+
+.pvalueBar <- function(
+    input,
+    ...
+){
+    
+    colors <- .setColors()[1:length(unique(input[,1]))]
+    
+    p <- ggplot(
+        input,
+        aes_string(
+            x='to',
+            y='-log10(pval)'
+        )
+    )+
+    geom_bar(
+        aes_string(fill='to'),
+        stat="identity",
+        position=position_dodge(width=1)
+    )+
+    facet_grid(
+        from~to,
+        scales="free_x"
+    )+
+    geom_hline(
+        yintercept=-log10(0.05),
+        lty=2,
+        colour="darkgrey"
+    )+
+    theme_few()+
+    labs(
+        x="Node 1",
+        y="-log10(p-value)"
+    )+
+    scale_fill_manual(values=colors)+
+    guides(fill=FALSE)+
+    theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.x=element_blank()
+    )
+    
+    return(p)
+}
+
+.edgesBar <- function(
+    input,
+    ...
+){
+    colors <- .setColors()[1:length(unique(input[,1]))]
+    
+    input$pStars <- ifelse(
+        input$pval < 0.05 & input$pval > 0.0049,
+        "\u2605",
+        ifelse(
+            input$pval < 0.005 & input$pval > 0.00049,
+            "\u2605\u2605",
+            ifelse(
+                input$pval < 0.0005,
+                "\u2605\u2605\u2605",
+                ""
+            )
+        )
+    )
+    
+    caption <- paste(
+        "\u2605 = p < 0.05",
+        "\u2605\u2605 = p < 0.005",
+        "\u2605\u2605\u2605 = p < 0.0005.",
+        sep="; "
+    )
+    
+    p <- ggplot(
+        input,
+        aes_string(
+            x='to',
+            y='weight'
+        )
+    )+
+    geom_bar(
+        aes_string(
+            fill='to'
+        ),
+        stat="identity",
+        position=position_dodge(width=1)
+    )+
+    facet_grid(
+        from~to,
+        scales="free_x"
+    )+
+    geom_label(
+        aes_string(
+            x='to',
+            y='weight+6',
+            label='pStars'
+        ),
+        fill="white",
+        label.size=0,
+        label.padding=unit(0.01, "lines"),
+        position=position_dodge(width=0.9),
+        show.legend = FALSE,
+        family="Arial Unicode MS",
+        size=3
+    )+
+    theme_few()+
+    labs(
+        y="Number of Edges",
+        caption=caption
+    )+
+    scale_fill_manual(
+        values=colors
+    )+
+    guides(
+        fill=FALSE
+    )+
+    theme(
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.x=element_blank(),
+        plot.caption=element_text(
+            family="Arial Unicode MS",
+            hjust=0
+        )
+    )+
+    ylim(0, max(input$weight+10))
+    
+    return(p)
+}
+
+################################################################################
+#                                                                              #
+# Heatmap                                                                      #
+#                                                                              #
+################################################################################
+
+.heatmap <- function(
+    sObj,
+    edge.cutoff,
+    min.pval,
+    min.num.edges,
+    ...
+){
+    input <- .processFullConnections(
+        sObj,
+        edge.cutoff,
+        min.pval,
+        min.num.edges
+    )
+    
+    input$pStars <- ifelse(
+        input$pval < 0.05 & input$pval > 0.0049,
+        "\u2605",
+        ifelse(
+            input$pval < 0.005 & input$pval > 0.00049,
+            "\u2605\u2605",
+            ifelse(
+                input$pval < 0.0005,
+                "\u2605\u2605\u2605",
+                ""
+            )
+        )
+    )
+    
+    caption <- paste(
+        "\u2605 = p < 0.05",
+        "\u2605\u2605 = p < 0.005",
+        "\u2605\u2605\u2605 = p < 0.0005.",
+        sep="; "
+    )
+    
+    plot <- ggplot(
+        input,
+        aes_string(
+            x='from',
+            y='to'
+        )
+    )+
+    geom_tile(
+        aes_string(
+            fill='weight'
+        )
+    )+
+    theme_few()+
+    labs(
+        x="From",
+        y="To",
+        caption=caption
+    )+
+    guides(fill=guide_legend(title="Weight"))+
+    scale_fill_viridis()+
+    geom_text(
+        aes_string(
+            label='pStars'
+        ),
+        family="Arial Unicode MS"
+    )+
+    theme(
+        plot.caption=element_text(
+            family="Arial Unicode MS",
+            hjust=0
+        )
+    )
+    
+    return(plot)
+    
+}

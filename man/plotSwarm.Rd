@@ -9,9 +9,9 @@
 \usage{
 plotSwarm(x, ...)
 
-\S4method{plotSwarm}{spSwarm}(x, y, z = NULL, type = NULL,
-  layout = "tsne", loop = FALSE, markers = NULL, edge.cutoff = 0,
-  min.pval = 1, min.num.edges = 0, label.cutoff = 1, ...)
+\S4method{plotSwarm}{spSwarm}(x, y, z = NULL, w = NULL, type = NULL,
+  loop = FALSE, markers = NULL, edge.cutoff = 0, min.pval = 1,
+  min.num.edges = 0, label.cutoff = 1, ...)
 }
 \arguments{
 \item{x}{An spSwarm object.}
@@ -22,10 +22,11 @@ plotSwarm(x, ...)
 
 \item{z}{An spCounts object with singlets.}
 
-\item{type}{Can be "ercc", "markers", or .......}
+\item{w}{An spCounts object with multiplets.}
 
-\item{layout}{Specify "tsne" for overlaying connections over the tSNE or
-igraph for graph layout.}
+\item{type}{Specifies the plot type. Possible values are "tsne" or "igraph"
+for network plots, "multiplets" or "edges" for residuals plots, "edgeBar"
+or "pValueBar" for bar plots and "heat" for a heatmap.}
 
 \item{loop}{Logical; TRUE if "self" connections should be plotted.}
 
@@ -43,10 +44,10 @@ igraph for graph layout.}
 The spPlot function returns an object of class spCounts.
 }
 \description{
-Subtitle
+Description.
 }
 \details{
-Description.
+Details.
 }
 \examples{
 
