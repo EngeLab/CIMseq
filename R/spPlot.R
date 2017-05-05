@@ -512,7 +512,7 @@ setGeneric("plotSwarm", function(
 #' @import ggraph
 #' @importFrom ggthemes theme_few scale_colour_economist
 #' @importFrom igraph graph_from_data_frame delete_edges set_edge_attr
-#'    get.edgelist V E subgraph.edges vertex
+#'    get.edgelist E subgraph.edges
 #' @importFrom ggforce theme_no_axes
 #' @importFrom utils combn
 #' @import ggplot2
@@ -650,23 +650,26 @@ setMethod("plotSwarm", "spSwarm", function(
     graphDF <- subgraph.edges(
         graph=graphDF,
         eids=which(E(graphDF)$weight >= min.num.edges),
-        delete.vertices = TRUE
+        delete.vertices = FALSE
     )
     
     graphDF <- subgraph.edges(
         graph=graphDF,
         eids=which(E(graphDF)$pval < min.pval),
-        delete.vertices = TRUE
+        delete.vertices = FALSE
     )
 
     #add nodes not in graph (due to min.pval argument)
-    vertexToAdd <- tsneMeans$classification[!tsneMeans[,1] %in% V(graphDF)$name]
+    #vertexToAdd <- tsneMeans$classification[!tsneMeans[,1] %in% V(graphDF)$name]
     
-    if(length(vertexToAdd) > 0) {
-        for(i in 1:length(vertexToAdd)) {
-            graphDF <- graphDF + vertex(as.character(vertexToAdd[i]))
-        }
-    }
+    #if(length(vertexToAdd) > 0) {
+    #    for(i in 1:length(vertexToAdd)) {
+    #        graphDF <- graphDF + vertex(as.character(vertexToAdd[i]))
+    #    }
+    #}
+    
+    #o <- match(V(graphDF)$name, tsneMeans$classification)
+    #tsneMeans <- tsneMeans[o, ]
     
     #name edges
     graphDF <- set_edge_attr(

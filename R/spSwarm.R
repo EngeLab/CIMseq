@@ -224,7 +224,7 @@ distToSliceTopFour <- function(
     if(sum(fractions) == 0) {
         return(999999999)
     }
-    fraction[fraction < sort(fraction, decresing=T)[4]] <- 0 # 4 is an arbitrary number...
+    fractions[fractions < sort(fractions, decresing=T)[4]] <- 0 # 4 is an arbitrary number...
     cat(fraction)
     normFractions <- fractions / sum(fractions)
     a = .makeSyntheticSlice(cellTypes, normFractions)
@@ -301,6 +301,49 @@ spSwarmPoisson <- function(
     mat <- getData(spSwarm, "spSwarm")
     logic <- mat > edge.cutoff
     
+    #calcluate weight
+    edges <- .calculateWeight(
+        mat,
+        logic
+    )
+    
+    #calculate p-value
+    out <- .calculateP(
+        edges,
+        min.pval,
+        min.num.edges
+    )
+    
+    return(out)
+}
+
+.calculateP <- function(
+    edges,
+    min.pval,
+    min.num.edges,
+    ...
+){
+    means <- sapply(1:nrow(edges), function(o) {
+        mean(subset(
+            edges,
+            from %in% c(edges[o, 1], edges[o, 2]) |
+            to %in% c(edges[o, 1], edges[o, 2])
+        )$weight)
+    })
+    
+    edges$pval <- ppois(edges$weight, means, lower.tail=FALSE)
+    out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
+    return(out)
+}
+
+.calculateWeight <- function(
+    mat,
+    logic,
+    edge.cutoff,
+    min.pval=1,
+    min.num.edges=0,
+    ...
+){
     totcomb <- c(
         paste(colnames(mat), colnames(mat), sep=""),
         apply(
@@ -324,12 +367,9 @@ spSwarmPoisson <- function(
         to=xy[,2],
         weight=res,
         stringsAsFactors=FALSE
-    ) #change factors to characters, I hate factors
+    )
     
-    mean.edges <- mean(edges$weight)
-    edges$pval <- ppois(edges$weight, mean.edges, lower.tail=FALSE)
-    out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
-    return(out)
+    return(edges)
 }
 
 .funx <- function(
