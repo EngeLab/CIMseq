@@ -72,45 +72,6 @@ setMethod("plotCounts", "spCounts", function(
     }
 })
 
-#get and process data for ercc plot
-.countsErccPlotProcess <- function(
-    x,
-    y,
-    ...
-){
-    
-    sampleType <- c(
-        rep(
-            "Singlet",
-            ncol(getData(x, "counts"))
-        ),
-        rep(
-            "Multuplet",
-            ncol(getData(y, "counts"))
-        )
-    )
-    
-    counts <- cbind(
-        getData(x, "counts"),
-        getData(y, "counts")
-    )
-    counts.ercc <- cbind(
-        getData(x, "counts.ercc"),
-        getData(y, "counts.ercc")
-    )
-    
-    frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
-    
-    d <- data.frame(
-        sampleType = factor(sampleType, levels=c("Singlet", "Multuplet")),
-        frac.ercc=frac.ercc
-    )
-    
-    #calculate cell number
-    d$cellNumber <- median(d[d[,1] == "Singlet", "frac.ercc"]) / d$frac.ercc
-    return(d)
-}
-
 #plot ercc plot
 .countsErccPlot <- function(
     x,
@@ -118,8 +79,10 @@ setMethod("plotCounts", "spCounts", function(
     ...
 ){
     
+    #get and process data for ercc plot
     d <- estimateCells(x, y)
     
+    #add function for ERCC fraction conversion
     convertToERCC <- function(x, d) {
         100*(median(d[d[,1] == "Singlet", "frac.ercc"])/x)
     }
@@ -451,7 +414,8 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 }
 
 .setColors <- function() {
-    colors <- c('#0075DC', '#005C31', '#4C005C', '#2BCE48', '#FFCC99',
+    colors <- c(
+        '#0075DC', '#005C31', '#4C005C', '#2BCE48', '#FFCC99',
         '#808080', '#94FFB5', '#8F7C00', '#9DCC00', '#C20088', '#003380',
         '#FFA405', '#FFA8BB', '#426600', '#FF0010', '#5EF1F2', '#00998F',
         '#E0FF66', '#740AFF', '#990000', '#FFFF80', '#FFFF00', '#FF5005',

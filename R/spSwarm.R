@@ -561,17 +561,19 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
     edges,
     ...
 ){
+    edges[,1] <- as.character(edges[,1])
+    edges[,2] <- as.character(edges[,2])
+    
     mulForEdges <- sapply(1:nrow(edges), function(j) {
         frac <- getData(spSwarm, "spSwarm")[,c(edges[j,1], edges[j,2])]
         o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
         rownames(frac)[o]
     })
     
-    names(mulForEdges) <- paste(edges[,1], edges[,2], sep="-")
-    
     if(length(mulForEdges) == 1) {
         return(unlist(mulForEdges))
     } else {
+        names(mulForEdges) <- paste(edges[,1], edges[,2], sep="-")
         return(mulForEdges)
     }
 })
