@@ -19,4 +19,3 @@ Reference to published application note (work in progress)
 Author: Jason T. Serviss
 }
 \keyword{package}
-

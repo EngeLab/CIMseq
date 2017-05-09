@@ -1,8 +1,10 @@
 #context("spSwarm")
 
-#cObj <- spCounts(testData, matrix(), "m.")
-#uObj <- spUnsupervised(cObj, max=250, max_iter=1000)
-#sObj <- spSwarm(uObj, swarmsize = 150, cores=1, cutoff=0.14)
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[,s], testErcc[,s])
+cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
+uObj <- spUnsupervised(cObjSng, max=250, max_iter=1000)
+sObj <- spSwarm(cObjMul, uObj)
 
 ##run test .defineImport
 test_that("check that the .defineImport function outputs the expected result", {
@@ -280,3 +282,18 @@ test_that("check that the .multiHOTencoding function outputs the expected result
     
 })
 
+#run test spSwarmPoisson
+test_that("check that the spSwarmPoisson function outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    
+    #setup expected data
+    
+    #run function
+    out <- spSwarmPoisson(sObj, edge.cutoff=1/10.5, min.num.edges=1)
+    
+    #test
+    expect_identical(nrow(out), 12)
+    
+})

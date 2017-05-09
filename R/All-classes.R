@@ -44,10 +44,12 @@ setMethod("getData", "spCounts", function(object, n=NULL)
 #' @rdname spUnsupervised
 #' @export
 .spUnsupervised <- setClass("spUnsupervised", representation(
-    unsupervisedC="matrix",
+    tsne="matrix",
+    tsneMeans="data.frame",
     groupMeans="matrix",
     classification="character",
-    selectIdx="numeric"
+    uncertainty="numeric",
+    selectInd="numeric"
 ))
 
 #############
@@ -66,14 +68,25 @@ setMethod("getData", "spUnsupervised", function(object, n=NULL)
 })
 
 #' @rdname spUnsupervised
-setGeneric("unsupervisedC", function(object
-) standardGeneric("unsupervisedC"))
+setGeneric("tsne", function(object
+) standardGeneric("tsne"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("unsupervisedC", "spUnsupervised", function(object)
+setMethod("tsne", "spUnsupervised", function(object)
 {
-    object@unsupervisedC
+    object@tsne
+})
+
+#' @rdname spUnsupervised
+setGeneric("tsneMeans", function(object
+) standardGeneric("tsneMeans"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("tsneMeans", "spUnsupervised", function(object)
+{
+    object@tsneMeans
 })
 
 #' @rdname spUnsupervised
@@ -88,17 +101,6 @@ setMethod("groupMeans", "spUnsupervised", function(object)
 })
 
 #' @rdname spUnsupervised
-setGeneric("classification", function(object
-) standardGeneric("classification"))
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("classification", "spUnsupervised", function(object)
-{
-    object@classification
-})
-
-#' @rdname spUnsupervised
 setGeneric("selectIdx", function(object
 ) standardGeneric("selectIdx"))
 
@@ -109,22 +111,57 @@ setMethod("selectIdx", "spUnsupervised", function(object)
     object@selectIdx
 })
 
+#' @rdname spUnsupervised
+setGeneric("uncertainty", function(object
+) standardGeneric("uncertainty"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("uncertainty", "spUnsupervised", function(object)
+{
+    object@uncertainty
+})
+
+#' @rdname spUnsupervised
+setGeneric("selectInd", function(object
+) standardGeneric("selectInd"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("selectInd", "spUnsupervised", function(object)
+{
+    object@selectInd
+})
 ##############
 #            #
 # Replacment #
 #            #
 ##############
+#https://www.bioconductor.org/help/course-materials/2013/CSAMA2013/friday/afternoon/S4-tutorial.pdf
 
 #' @rdname spUnsupervised
-setGeneric("unsupervisedC<-", function(object, value
-) standardGeneric("unsupervisedC<-"))
+setGeneric("tsne<-", function(object, value
+) standardGeneric("tsne<-"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("unsupervisedC<-", "spUnsupervised", function(object, value)
+setMethod("tsne<-", "spUnsupervised", function(object, value)
 {
-    object@unsupervisedC <- value
-    return(object)
+    object@tsne <- value
+    if (validObject(object)) return(object)
+    
+})
+
+#' @rdname spUnsupervised
+setGeneric("tsneMeans<-", function(object, value
+) standardGeneric("tsneMeans<-"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("tsneMeans<-", "spUnsupervised", function(object, value)
+{
+    object@tsneMeans <- value
+    if (validObject(object)) return(object)
     
 })
 
@@ -137,21 +174,7 @@ setGeneric("groupMeans<-", function(object, value
 setMethod("groupMeans<-", "spUnsupervised", function(object, value)
 {
     object@groupMeans <- value
-    return(object)
-    
-})
-
-#' @rdname spUnsupervised
-setGeneric("classification<-", function(object, value
-) standardGeneric("classification<-"))
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("classification<-", "spUnsupervised", function(object, value)
-{
-    object@classification <- value
-    return(object)
-    
+    if (validObject(object)) return(object)
 })
 
 #' @rdname spUnsupervised
@@ -162,8 +185,34 @@ setGeneric("selectIdx<-", function(object, value
 #' @export
 setMethod("selectIdx<-", "spUnsupervised", function(object, value)
 {
-    object@selectIdx <- value
-    return(object)
+    object@classification <- value
+    if (validObject(object)) return(object)
+    
+})
+
+#' @rdname spUnsupervised
+setGeneric("uncertainty<-", function(object, value
+) standardGeneric("uncertainty<-"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("uncertainty<-", "spUnsupervised", function(object, value)
+{
+    object@uncertainty <- value
+    if (validObject(object)) return(object)
+    
+})
+
+#' @rdname spUnsupervised
+setGeneric("selectInd<-", function(object, value
+) standardGeneric("selectInd<-"))
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("selectInd<-", "spUnsupervised", function(object, value)
+{
+    object@selectInd <- value
+    if (validObject(object)) return(object)
     
 })
 
@@ -177,8 +226,8 @@ setMethod("selectIdx<-", "spUnsupervised", function(object, value)
 #' @export
 .spSwarm <- setClass("spSwarm", representation(
     spSwarm="data.frame",
-    codedSwarm="data.frame",
-    spUnsupervised="spUnsupervised",
+    costs="numeric",
+    convergence="character",
     arguments="list"
 ))
 

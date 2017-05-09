@@ -1,6 +1,7 @@
-
 #'@include All-classes.R
 NULL
+
+# Helper functions to classify count data into clusters
 
 #' spSwarm
 #'
@@ -11,24 +12,23 @@ NULL
 #' @name spSwarm
 #' @rdname spSwarm
 #' @aliases spSwarm
-#' @param spUnsupervised An spUnsupervised object.
-#' @param limit Randomly select a limited number of samples to perform swarm optimization on.
-#' @param maxiter pySwarm argument indicating the maximum optimization iterations.
-#' @param swarmsize pySwarm argument indicating the number of particals in the swarm.
-#' @param minstep pySwarm argument indicating the stepsize of swarm’s best position before search termination.
-#' @param minfunc pySwarm argument indicating the minimum change of swarm’s best objective value before search termination.
-#' @param cutoff The cutoff used to generate codedSwarm.
-#' @param cores The number of cores to be used while running spSwarm.
-#' @param arguments Argumetns passed to the spSwarm function.
+#' @param spCounts an spCount object with multiplets.
+#' @param spUnsupervised an spCount object.
+#' @param distFun The distance function used to calculate the cost.
+#' @param maxiter pySwarm argument indicating maximum optimization iterations.
+#' @param swarmsize pySwarm argument indicating the number of swarm particals.
+#' @param cores The number of cores to be used while running spRSwarm.
 #' @param spSwarm The spSwarm results.
-#' @param codedSwarm The spSwarm results after the cutoff has been applied.
-#' @param object spSwarm object.
-#' @param n Data to extract from spSwarm object.
+#' @param costs The costs after optimization.
+#' @param convergence The convergence output from psoptim. One value per multiplet.
+#' @param arguments Arguments passed to the spRSwarm function.
+#' @param object spRSwarm object.
+#' @param n Data to extract from spRSwarm object.
 #' @param .Object Internal object.
 #' @param ... additional arguments to pass on
 #' @return spSwarm output.
 #' @author Jason T. Serviss
-#' @keywords spSwarm, pySwarm
+#' @keywords spSwarm
 #' @examples
 #'
 #' #use demo data
@@ -42,332 +42,244 @@ NULL
 #' @rdname spSwarm
 #' @export
 
-setGeneric("spSwarm", function(spUnsupervised, ...
+setGeneric("spSwarm", function(spCounts, spUnsupervised, ...
 ){ standardGeneric("spSwarm") })
 
-#' @importFrom rPython python.exec python.assign python.get
-#' @importFrom doMC registerDoMC
-#' @importFrom foreach foreach %dopar% registerDoSEQ
+
+#' @importFrom parallel mclapply
+#' @importFrom pso psoptim
 #' @rdname spSwarm
 #' @export
-setMethod("spSwarm", "spUnsupervised",
-function(
+
+setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
+    spCounts,
     spUnsupervised,
-    limit = "none",
+    distFun = distToSlice,
     maxiter = 10,
     swarmsize = 150,
-    minstep = 1e-16,
-    minfunc = 1e-16,
-    cutoff = 0.2,
     cores=1,
+    seed=11,
     ...
 ){
     
     #input and input checks
-    counts <- getData(spUnsupervised, "counts")
-    sampleType <- getData(spUnsupervised, "sampleType")
-    selectInd <- getData(spUnsupervised, "selectInd")
-    
-    #calculate average expression
-    groupMeans <- getData(spUnsupervised, "groupMeans")
+    counts <- getData(spCounts, "counts.cpm")
     
     #calculate fractions
+    groupMeans <- getData(spUnsupervised, "groupMeans")
     fractions <- rep(1.0/(dim(groupMeans)[2]), (dim(groupMeans)[2]))
     
     #subset top genes for use with optimization
-    cellTypes <- as.data.frame(groupMeans[selectInd, ])
-    slice <- as.data.frame(counts[selectInd, sampleType == "Multuplet"]) #note there is an error here if there is only one multuplet due to the fact that the subset resluts in a data.frame with a colname that does not match the colnames in the counts variable
-    
-    #add index for reordering in python
-    cellTypes$index <- 1:nrow(cellTypes)
-    slice$index <- 1:nrow(slice)
+    selectInd <- getData(spUnsupervised, "selectInd")
+    cellTypes <- groupMeans[selectInd, ]
+    multiplets <- matrix(counts[selectInd, ])
     
     ##run pySwarm
-    .defineImport(cellTypes, slice, fractions)
-    .defineCost()
-    .con1()
-    .definePySwarm()
-    result <- .runPySwarm(
-        cellTypes,
-        slice,
-        fractions,
-        limit,
-        maxiter,
-        swarmsize,
-        minstep,
-        minfunc,
-        cores
+    tmp <- .runPyRSwarm(
+        cellTypes=cellTypes,
+        multiplets=multiplets,
+        fractions=fractions,
+        distFun=distFun,
+        maxiter=maxiter,
+        swarmsize=swarmsize,
+        cores=cores,
+        seed=seed
     )
-        
-    #process and return results
-    finalResult <- .processResults(result)
-    encodedResult <- .multiHOTencoding(finalResult, spCounts, cutoff)
+    result <- tmp[[1]]
+    cost <- tmp[[2]]
+    convergence <- tmp[[3]]
     
     #create object
     new("spSwarm",
-        spSwarm=finalResult,
-        codedSwarm=encodedResult,
-        spUnsupervised=spUnsupervised,
+        spSwarm=result,
+        costs=cost,
+        convergence=convergence,
         arguments = list(
             maxiter=maxiter,
-            swarmsize=swarmsize,
-            minstep=minstep,
-            minfunc=minfunc
+            swarmsize=swarmsize
         )
     )
 })
 
-#############################################
-#                                           #
-#              Unit Functions               #
-#                                           #
-#############################################
-
-##define optimization and constraint functions
-##import data to python session
-.defineImport <- function(cellTypes, slice, fractions) {
-    cmd1 <- 'import pandas as pd'
-    cmd2 <- 'import numpy as np'
-    cmd3 <- 'import math'
-    python.exec(cmd1)
-    python.exec(cmd2)
-    python.exec(cmd3)
-    
-    python.assign('cellTypesDictionary', cellTypes)
-    python.assign('sliceDictionary', slice)
-    python.assign('fractions', fractions)
-    
-    cmd4 <- 'cellTypes = pd.DataFrame(cellTypesDictionary)'
-    cmd5 <- 'slice = pd.DataFrame(sliceDictionary)'
-    cmd6 <- 'fractions = np.asarray(fractions)'
-    python.exec(cmd4)
-    python.exec(cmd5)
-    python.exec(cmd6)
-    
-    cmd7 <- 'cellTypes.sort_values(by=\'index\', ascending=\'True\')'
-    cmd8 <- 'slice.sort_values(by=\'index\', ascending=\'True\')'
-    python.exec(cmd7)
-    python.exec(cmd8)
-    
-    cmd9 <- 'cellTypes = cellTypes.drop(\'index\', 1)'
-    cmd10 <- 'slice = slice.drop(\'index\', 1)'
-    python.exec(cmd9)
-    python.exec(cmd10)
-    
-    return(list(
-        cmd1,
-        cmd2,
-        cmd3,
-        cmd4,
-        cmd5,
-        cmd6,
-        cmd7,
-        cmd8,
-        cmd9,
-        cmd10
-    ))
-}
-
-##define cost function(s) in python session
-.defineCost <- function() {
-    
-    cmd1 <- 'def makeSyntheticSlice(cellTypes, fractions):
-        func = lambda x: sum(np.asarray(x) * np.asarray(fractions))
-        return cellTypes.apply(func, axis=1)'
-    
-    cmd2 <- 'def distToSlice(fractions, *args):
-        cellTypes, slice, col = args
-        normFractions = fractions / sum(fractions)
-        a = makeSyntheticSlice(cellTypes, normFractions)
-        for i in a:
-            if math.isnan(i):
-                print "NaN in make synthetic slice!"
-    
-        diff = []
-        for index in range(cellTypes.shape[0]):
-            d = a.iloc[index] - slice.iloc[index, col]
-            diff.append(abs(d))
-        cost = sum(diff)
-        return cost'
-    
-    python.exec(cmd1)
-    python.exec(cmd2)
-    return(list(cmd1, cmd2))
-}
-
-#constraint 1
-.con1 <- function() {
-    cmd1 <- 'def con1(fractions, *args):
-        if sum(fractions) > 0.1:
-            return 0
-        else:
-            return -1'
-    
-    python.exec(cmd1)
-    return(cmd1)
-}
-
-#optimization
-.definePySwarm <- function() {
-    python.exec('from pyswarm import pso')
-    
-    cmd1 <- 'def optimize(cellTypes, slice, fractions, col, maxiter, swarmsize, minstep, minfunc):
-        lb = np.asarray([0] * len(fractions))
-        ub = np.asarray([1] * len(fractions))
-        name = slice.columns.values[col]
-        args = (cellTypes, slice, col)
-        xopt, fopt = pso(
-            distToSlice,
-            lb,
-            ub,
-            args=args,
-            f_ieqcons=con1,
-            maxiter=maxiter,
-            swarmsize=swarmsize,
-            minstep=minstep,
-            minfunc=minfunc
-        )
-        dictionary = dict(zip(list(cellTypes.columns.values), xopt.tolist()))
-        return { \'xopt\':dictionary, \'fopt\':fopt, \'name\':name }'
-        
-    python.exec(cmd1)
-    return(cmd1)
-}
 
 ##run optimization
-.runPySwarm <- function(
+.runPyRSwarm <- function(
     cellTypes,
-    slice,
+    multiplets,
     fractions,
-    limit,
+    distFun,
     maxiter,
     swarmsize,
-    minstep,
-    minfunc,
-    cores
+    cores,
+    seed
 ){
-    result <- list()
     
-    ##setup parallel processing
-    registerDoMC(cores)
+    control=list(maxit=maxiter, s=swarmsize)
     
-    if(limit == "none") {
-        top <- 0:(ncol(slice) - 2)
-    } else {
-        top <- sample(
-            0:(ncol(slice) - 2),
-            limit,
-            replace=FALSE
-        )
-    }
+    set.seed(seed)
+    to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
+    
+    tmp <- mclapply(
+        1:to,
+        function(i)
+            .optim.fn(
+                i,
+                fractions,
+                distFun,
+                cellTypes,
+                control,
+                multiplets
+            ),
+        mc.cores=cores
+    )
+    
+    #compile results
+    output <- data.frame(t(sapply(tmp, function(j) j[[1]])))
+    cost <- sapply(tmp, function(j) j[[2]])
+    counts <- t(sapply(tmp, function(j) j[[3]]))
+    convergence <- sapply(tmp, function(j) j[[4]])
+    convergenceKey <- c(
+        "Maximal number of function evaluations reached." = 1,
+        "Maximal number of iterations reached." = 2,
+        "Maximal number of restarts reached." = 3,
+        "Maximal number of iterations without improvement reached." = 4
+    )
+    convergence <- names(convergenceKey)[match(convergence, convergenceKey)]
     
     
-    while(TRUE) {
-        
-        print(paste(length(top), " multuplets left to analyze.", sep=""))
+    #normalize swarm output
+    output <- output * 1/rowSums(output)
 
-        loopOutput <- foreach(i = 1:cores, top=top, .combine = append) %dopar% {
-            python.exec(
-                paste(
-                    'result = optimize(cellTypes, slice, fractions, col=',
-                    top,
-                    ', maxiter=', maxiter,
-                    ', swarmsize=', swarmsize,
-                    ', minstep=', minstep,
-                    ', minfunc=', minfunc,
-                    ')',
-                    sep=""
-                )
-            )
-            result <- list(
-                currentFopt = python.get(paste('result[\'fopt\']')),
-                currentXopt = python.get(paste('result[\'xopt\']')),
-                name = python.get(paste('result[\'name\']'))
-            )
-            
-        }
-        
-        result <- append(result, loopOutput)
-        top <- top[(1:cores)*-1]
-        if(length(top) == 0) {break}
-        
-    }
-    
-    registerDoSEQ()
-    return(result)
+    colnames(output) <- colnames(cellTypes)
+    rownames(output) <- colnames(multiplets)
+    return(list(output, cost, convergence))
 }
 
-
-
-.processResults <- function(result) {
-    
-    #extract xopt
-    xopt <- data.frame(t(data.frame(result[which(names(result) == "currentXopt")])))
-    xopt <- xopt[, order(colnames(xopt))]
-    rownames(xopt) <- 1:nrow(xopt)
-    
-    #normalize xopt with sum
-    xopt <- xopt/rowSums(xopt)
-    
-    #extract cost (fopt)
-    xopt$fopt <- unlist(result[which(names(result) == "currentFopt")])
-    
-    #extract names (fopt)
-    xopt$sampleName <- unlist(result[which(names(result) == "name")])
-    
-    #add sample and fopt data
-    names <- c("sampleName", "fopt")
-    finalRes <- cbind(subset(xopt, select=names), xopt[ ,!colnames(xopt) %in% names])
-    return(finalRes)
+.optim.fn <- function(
+    i,
+    fractions,
+    distFun,
+    cellTypes,
+    control,
+    multiplets
+){
+    oneMultiplet <- multiplets[,i]
+    psoptim(
+        par=fractions,
+        fn=distFun,
+        cellTypes=cellTypes,
+        oneMultiplet=oneMultiplet,
+        lower=0,
+        upper=1,
+        control=control
+    )
 }
 
-.multiHOTencoding <- function(optResult, spCounts, cutoff) {
-    
-    uu <- c("names", "fopt")
-    hold <- data.frame(fopt = optResult[ , colnames(optResult) %in% uu])
-    x <- optResult[ , !colnames(optResult) %in% uu]
-    
-    if(class(cutoff) == "numeric") {
-        
-        for(p in 1:nrow(x)) {
-            x[p,][x[p,] < cutoff] <- 0
-        }
-        
-    } else {
-        counts <- getData(spCounts, "counts")
-        counts.ercc <- getData(spCounts, "counts.ercc")
-        sampleType <- getData(spCounts, "sampleType")
-        
-        frac.ercc <- 100 * (colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts)))
-        frac.ercc <- frac.ercc[sampleType == "Multuplet"]
-        
-        for(p in 1:nrow(x)) {
-            cutoff <- frac.ercc[p] / ncol(x)
-            x[p,][x[p,] < cutoff] <- 0
-        }
-        
+#calculates the sum for each gene after each cell type has been multiplied by
+#fractions
+.makeSyntheticSlice <- function(
+    cellTypes,
+    fractions
+){
+    return(colSums(t(cellTypes) * fractions))
+}
+
+# Various dist functions. Probably better to use match.arg and not export
+#(so as to avoid cluttering the namespace), but leaving it like this for now.
+
+#' @export
+distToSlice <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
     }
-    
-    return(cbind(hold, x))
+    normFractions <- fractions / sum(fractions)
+    a = .makeSyntheticSlice(cellTypes, normFractions)
+    sum(abs(a - oneMultiplet))
 }
 
-#' changeCutoff
+#' @export
+distToSliceNorm <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    cellTypes <- cellTypes/mean(cellTypes)
+    a = .makeSyntheticSlice(cellTypes, normFractions)
+    a <- a/mean(a)
+    sum(abs((oneMultiplet - a) / (a+1)))
+}
+
+#' @export
+distToSliceTopFour <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    fractions[fractions < sort(fractions, decresing=T)[4]] <- 0 # 4 is an arbitrary number...
+    cat(fraction)
+    normFractions <- fractions / sum(fractions)
+    a = .makeSyntheticSlice(cellTypes, normFractions)
+    sum(abs(a - oneMultiplet))
+}
+
+#' @export
+distToSliceEuclid <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a = .makeSyntheticSlice(cellTypes, normFractions)
+    sum((a - oneMultiplet)^2)
+}
+
+#' @export
+distToSlicePearson <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a = .makeSyntheticSlice(cellTypes, normFractions)
+    1-(cor(a, oneMultiplet))
+}
+
+#' spSwarmPoisson
 #'
 #' Subtitle
 #'
 #' Description
 #'
-#' @name changeCutoff
-#' @rdname changeCutoff
-#' @aliases changeCutoff
+#' @name spSwarmPoisson
+#' @rdname spSwarmPoisson
+#' @aliases spSwarmPoisson
 #' @param spSwarm An spSwarm object.
-#' @param spCounts An spCounts object. Needed when counts.ercc should be used.
-#' @param error Numeric; for use with counts.ercc. Lowers the calculated cutoff by error value.
-#' @param cutoff The fraction below which a connection should not be considered.
+#' @param edge.cutoff The minimum fraction to consider (?).
+#' @param min.pval Minimum p-value to report.
+#' @param min.num.edges Minimum number of observed edges to report a connection.
+#' @param object spRSwarm object.
+#' @param .Object Internal object.
 #' @param ... additional arguments to pass on
-#' @return spSwarm output.
+#' @return spSwarm connection strengths and p-values.
 #' @author Jason T. Serviss
-#' @keywords changeCutoff
+#' @keywords spSwarmPoisson
 #' @examples
 #'
 #' #use demo data
@@ -378,56 +290,354 @@ function(
 #'
 NULL
 
-#' @rdname changeCutoff
+#' @rdname spSwarmPoisson
 #' @export
 
-setGeneric("changeCutoff", function(spSwarm, ...
-){ standardGeneric("changeCutoff") })
-
-#' @rdname changeCutoff
-#' @export
-
-setMethod("changeCutoff", "spSwarm",
-function(
+spSwarmPoisson <- function(
     spSwarm,
-    spCounts=NULL,
-    error=NULL,
-    cutoff,
+    edge.cutoff,
+    min.pval=1,
+    min.num.edges=0,
     ...
 ){
-    swarmResults <- getData(spSwarm, "spSwarm")
+    mat <- getData(spSwarm, "spSwarm")
+    logic <- mat > edge.cutoff
     
-    uu <- c("sampleName", "fopt")
-    hold <- swarmResults[ ,colnames(swarmResults) %in% uu]
-    x <- swarmResults[ , !colnames(swarmResults) %in% uu]
+    #calcluate weight
+    edges <- .calculateWeight(
+        mat,
+        logic
+    )
     
-    if(is.null(spCounts)) {
-        
-        for(p in 1:nrow(x)) {
-            x[p,][x[p,] < cutoff] <- 0
-        }
-        
+    #calculate p-value
+    out <- .calculateP(
+        edges,
+        min.pval,
+        min.num.edges
+    )
+    
+    return(out)
+}
+
+.calculateP <- function(
+    edges,
+    min.pval,
+    min.num.edges,
+    ...
+){
+    means <- sapply(1:nrow(edges), function(o) {
+        mean(subset(
+            edges,
+            from %in% c(edges[o, 1], edges[o, 2]) |
+            to %in% c(edges[o, 1], edges[o, 2])
+        )$weight)
+    })
+    
+    edges$pval <- ppois(edges$weight, means, lower.tail=FALSE)
+    out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
+    return(out)
+}
+
+.calculateWeight <- function(
+    mat,
+    logic,
+    edge.cutoff,
+    min.pval=1,
+    min.num.edges=0,
+    ...
+){
+    totcomb <- c(
+        paste(colnames(mat), colnames(mat), sep=""),
+        apply(
+            t(combn(colnames(mat),2)),
+            1,
+            paste,
+            collapse=""
+        )
+    )
+    
+    com <- apply(logic, 1, .funx, totcomb)
+    rownames(com) <- totcomb
+    res <- apply(com, 1, sum)
+    xy <- rbind(
+        matrix(c(colnames(mat), colnames(mat)), ncol=2),
+        t(combn(colnames(mat), 2))
+    )
+    
+    edges <- data.frame(
+        from=xy[,1],
+        to=xy[,2],
+        weight=res,
+        stringsAsFactors=FALSE
+    )
+    
+    return(edges)
+}
+
+.funx <- function(
+    row,
+    totcomb
+){
+    pick <- names(row)[which(row)]
+    if(length(pick) == 1) {
+        out <- totcomb %in% paste(pick, pick, sep="")
     } else {
-        counts <- getData(spCounts, "counts")
-        counts.ercc <- getData(spCounts, "counts.ercc")
-        sampleType <- getData(spCounts, "sampleType")
-        
-        frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
-        medianErccSng <- median(frac.ercc[sampleType == "Singlet"])
-        estimatedCells <- medianErccSng/frac.ercc[sampleType == "Multuplet"]
-        print(estimatedCells)
-        
-        for(p in 1:nrow(x)) {
-            cutoff <- (estimatedCells[p] / ncol(x)) - error
-            #print(cutoff)
-            x[p,][x[p,] < cutoff] <- 0
-        }
-        
+        out <- totcomb %in% apply(
+            t(combn(pick, 2)),
+            1,
+            paste,collapse=""
+        )
     }
+    return(out)
+}
+
+#spSwarmPoisson <- function(
+#    spSwarm,
+#    edge.cutoff,
+#    min.pval=1,
+#    min.num.edges=0,
+#    ...
+#){
+# FIXME: transpose because of cross-commit, should just fix indices below istead
+#    swarmT <- as.data.frame(t(getData(spSwarm, "spSwarm")))
+#    sobj.bool <- swarmT > edge.cutoff
+#    nodes <- rownames(swarmT)
+#    nclusts <- length(nodes)
+#    edges <- data.frame(
+#        from=rep(nodes, each=nclusts),
+#        to=rep(nodes, nclusts),
+#        weight=rep(0, nclusts^2)
+#    )
     
-    codedSwarm <- cbind(hold, x)
-    spSwarm@codedSwarm <- codedSwarm
-    return(spSwarm)
+    #calculate edge weight, i.e. number of observed edges
+#    for(i in 1:(dim(sobj.bool)[2])) {
+#        o <- which(sobj.bool[,i])
+#        if(length(o) > 1) {
+#            for(j in 1:(length(o)-1)) {
+#                for(k in (j+1):length(o)) {
+#                    ind1 <- (o[j]-1)*nclusts+o[k]
+#                    edges[ind1,3] <- edges[ind1,3]+1
+#                    ind2 <- (o[k]-1)*nclusts+o[j]
+#                    edges[ind2,3] <- edges[ind2,3]+1
+#                }
+#            }
+#        } else { #add self-connections
+#            edges[o,3] <- edges[ind1,3]
+#        }
+#    }
+    
+    #calculate p-value
+#    mean.edges <- mean(edges$weight)
+#    edges$pval <- ppois(edges$weight, mean.edges, lower.tail=FALSE)
+#    out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
+#    return(out)
+#}
+
+
+#' calcResiduals
+#'
+#' Subtitle
+#'
+#' Calculates the residuals for each gene and multiplet after deconvolution
+#' based on the spSwarm results.
+#'
+#' @name calcResiduals
+#' @rdname calcResiduals
+#' @aliases calcResiduals
+#' @param spCounts An spCounts object with multiplets.
+#' @param spUnsupervised An spUnsupervised object.
+#' @param spSwarm An spSwarm object.
+#' @param clusters A character vector of length 2 indicating 2 classes to
+#'    specifically extract residuals from.
+#' @param edge.cutoff The minimum fraction to consider (?).
+#' @param object spRSwarm object.
+#' @param .Object Internal object.
+#' @param ... additional arguments to pass on
+#' @return spSwarm connection strengths and p-values.
+#' @author Jason T. Serviss
+#' @keywords calcResiduals
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+#' #run function
+#'
+#'
+NULL
+
+#' @rdname calcResiduals
+#' @export
+
+calcResiduals <- function(
+    spCounts,
+    spUnsupervised,
+    spSwarm,
+    clusters=NULL,
+    edge.cutoff=NULL,
+    distFun = function(frac, multiplets){(abs(multiplets - frac) / (frac + 1))},
+    ...
+){
+    #spCounts should only include multiplets
+    
+    frac <- getData(spSwarm, "spSwarm")
+    groupMeans <- getData(spUnsupervised, "groupMeans")
+    selectInd <- getData(spUnsupervised, "selectInd")
+    counts <- getData(spCounts, "counts.cpm")
+    
+    cellTypes <- groupMeans[selectInd, ]
+    multiplets <- counts[selectInd, ]
+    multiplets <- multiplets/mean(multiplets)
+    
+    a <- sapply(1:nrow(frac), function(j)
+        .makeSyntheticSlice(cellTypes, as.numeric(frac[j,]))
+    )
+    colnames(a) <- rownames(frac)
+    a <- a/mean(a)
+    
+    diff <- sapply(1:ncol(a), function(x)
+        distFun(a[,x],multiplets[,x])
+    )
+
+    colnames(diff) <- rownames(frac)
+    
+    if(!is.null(clusters) & !is.null(edge.cutoff)) {
+        diff <- diff[ , getMultipletsForEdge(
+            spSwarm,
+            edge.cutoff,
+            clusters[1],
+            clusters[2]
+        )]
+    }
+    return(diff)
+}
+
+#' getMultipletsForEdge
+#'
+#' Returns the names of the multiplets that are associated with an edge.
+#'
+#' Description
+#'
+#' @name getMultipletsForEdge
+#' @rdname getMultipletsForEdge
+#' @aliases getMultipletsForEdge
+#' @param spSwarm An spSwarm object.
+#' @param edge.cutoff The minimum fraction to consider (?).
+#' @param edges A data frame indicating the edges of interest. Edges are
+#'    indicated by the nodes they connect with one node in column one and the
+#'    other node in column 2.
+#' @param object spRSwarm object.
+#' @param .Object Internal object.
+#' @param ... additional arguments to pass on
+#' @return If the edges argument only includes on row, a vector of multiplet
+#'    names is returned. If several edges are interogated a list is returned
+#'    with one element per edge containing the names of the multiplets.
+#' @author Jason T. Serviss
+#' @keywords getMultipletsForEdge
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+#' #run function
+#'
+#'
+NULL
+
+#' @rdname getMultipletsForEdge
+#' @export
+
+setGeneric("getMultipletsForEdge", function(
+    spSwarm,
+    ...
+){
+    standardGeneric("getMultipletsForEdge")
 })
 
+#' @rdname getMultipletsForEdge
+#' @export
 
+setMethod("getMultipletsForEdge", "spSwarm", function(
+    spSwarm,
+    edge.cutoff,
+    edges,
+    ...
+){
+    edges[,1] <- as.character(edges[,1])
+    edges[,2] <- as.character(edges[,2])
+    
+    mulForEdges <- sapply(1:nrow(edges), function(j) {
+        frac <- getData(spSwarm, "spSwarm")[,c(edges[j,1], edges[j,2])]
+        o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
+        rownames(frac)[o]
+    })
+    
+    if(ncol(mulForEdges) == 1) {
+        return(unlist(mulForEdges))
+    } else {
+        names(mulForEdges) <- paste(edges[,1], edges[,2], sep="-")
+        return(mulForEdges)
+    }
+})
+
+#' getEdgesForMultiplet
+#'
+#' Returns the names of the edges are associated with a multiplet.
+#'
+#' Description
+#'
+#' @name getEdgesForMultiplet
+#' @rdname getEdgesForMultiplet
+#' @aliases getEdgesForMultiplet
+#' @param spSwarm An spSwarm object.
+#' @param edge.cutoff The minimum fraction to consider (?).
+#' @param multiplet The name of the multiplet of interest.
+#' @param object spRSwarm object.
+#' @param .Object Internal object.
+#' @param ... additional arguments to pass on
+#' @return Edge names.
+#' @author Jason T. Serviss
+#' @keywords getEdgesForMultiplet
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+#' #run function
+#'
+#'
+NULL
+
+#' @rdname getEdgesForMultiplet
+#' @export
+
+setGeneric("getEdgesForMultiplet", function(
+    spSwarm,
+    ...
+){
+    standardGeneric("getEdgesForMultiplet")
+})
+
+#' @rdname getEdgesForMultiplet
+#' @export
+
+setMethod("getEdgesForMultiplet", "spSwarm", function(
+    spSwarm,
+    edge.cutoff,
+    multiplet,
+    ...
+){
+    frac <- getData(spSwarm, "spSwarm")[multiplet,]
+    combs <- combn(names(frac)[frac > edge.cutoff], 2)
+    s <- spSwarmPoisson(spSwarm, edge.cutoff=edge.cutoff)
+    out <- as.data.frame(t(sapply(
+        1:ncol(combs),
+        function(j)
+            s[s$from == combs[1,j] & s$to == combs[2,j], ]
+    )))
+    if(nrow(out) == ncol(combs)) {
+        return(out)
+    } else {
+        stop("somethings went wrong, check the code")
+    }
+})

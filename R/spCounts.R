@@ -12,9 +12,8 @@ NULL
 #' @rdname spCounts
 #' @aliases spCounts
 #' @param counts Counts matrix with samples as columns and genes as rows.
-#' @param counts.cpm Counts per million.
-#' @param counts.log Log2 normalized counts per million.
 #' @param counts.ercc A matrix containing ercc spike-in reads and their counts.
+#' @param counts.log Log2 normalized counts per million.
 #' @param object spCounts object.
 #' @param x Default plot param, an spCounts object containing singlets.
 #' @param y Default plot param, an spCounts object containing multuplets.
@@ -41,28 +40,27 @@ setGeneric("spCounts", function(counts, ...
 
 #' @rdname spCounts
 #' @export
-setMethod("spCounts", "matrix",
-function(
+setMethod("spCounts", "matrix", function(
     counts,
     counts.ercc,
     ...
 ){
-    if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
-        stop("ncol(counts) != ncol(counts.ercc).")
-    }
-    
+    .inputCheckCounts(counts, counts.ercc)
     new("spCounts",
-        counts = counts,
-        counts.cpm = .norm.counts(counts),
-        counts.log = .norm.log.counts(counts),
-        counts.ercc = counts.ercc
+        counts=counts,
+        counts.log=.norm.log.counts(counts),
+        counts.cpm=.norm.counts(counts),
+        counts.ercc=counts.ercc
     )
 })
 
-.norm.counts <- function(counts) {
-    norm.fact <- colSums(counts)
-    counts.cpm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
-    return(counts.cpm)
+.inputCheckCounts <- function(counts, counts.ercc) {
+    if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
+        message("ncol(counts) != ncol(counts.ercc).")
+    }
+    if(any(is.na(c(counts, counts.ercc)))) {
+        message("is.na(c(counts, counts.ercc) returned TRUE")
+    }
 }
 
 .norm.log.counts <- function(counts) {
@@ -72,74 +70,87 @@ function(
     return(counts.log)
 }
 
-.sampleType <- function(sampleType, counts) {
-    dbl <- rep("Singlet", length=ncol(counts))
-    dbl[grepl(sampleType, colnames(counts))] <- "Multuplet"
-    return(dbl)
+.norm.counts <- function(counts) {
+    norm.fact <- colSums(counts)
+    counts.cpm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
 }
 
-#' Filter Cells
+
+
+#' estimateCells
 #'
-#' Select a cutoff for bad cells based on actin expression.
+#' Subtitle
 #'
-#' A method to filter low quality cells from the analysis.
+#' Uses ERCC data to calculate the fraction of ERCC reads in the samples. In
+#' addition, this function utilizes ERCC data to estimate the cell number
+#' in each sample.
 #'
-#' @name filterCells
-#' @rdname filterCells
-#' @aliases filterCells
-#' @param x Dataset of class Counts.
-#' @param quantile.cut "p" argument to qnorm.
-#' @param gene.name Gene to filter on.
+#' @name estimateCells
+#' @rdname estimateCells
+#' @aliases estimateCells
+#' @param spCountsSng A spCounts object with singlets.
+#' @param spCountsMul A spCounts object with multiplets.
 #' @param ... additional arguments to pass on
-#' @return The filterCells function returns an object of class Counts.
+#' @return A data frame including the fraction of ercc reads and cell counts for
+#'    each sample.
 #' @author Jason T. Serviss
-#' @keywords filterCells
+#' @keywords spCounts
 #' @examples
-#'
-#' #use demo data
 #'
 #' #run function
 #'
+#'
 NULL
 
-#' @rdname filterCells
 #' @export
 
-setGeneric("filterCells", function(x, ...
-){ standardGeneric("filterCells") })
-
-#' @rdname filterCells
-#' @export
-#' @importFrom stats median qnorm
-setMethod("filterCells", "spCounts",
-    function(
-        x,
-        quantile.cut = 0.001,
-        gene.name = 'ACTB',
-        ...
+setGeneric("estimateCells", function(
+    spCountsSng,
+    spCountsMul,
+    ...
 ){
-    counts.log <- getData(x, "counts.log")
-    counts <- getData(x, "counts")
-    counts.ercc <- getData(x, "counts.ercc")
-    sampleType <- getData(x, "sampleType")
-    
-    good.cells <- counts.log[gene.name,] > .get.cutoff.lognorm(counts.log, quantile.cut, gene.name)
-    
-    x@counts <- counts[ ,good.cells]
-    x@counts.log <- counts.log[ ,good.cells]
-    x@counts.ercc <- counts.ercc[ ,good.cells]
-    x@sampleType <- sampleType[good.cells]
-    
-    return(x)
+    standardGeneric("estimateCells")
 })
 
-.get.cutoff.lognorm <- function(my.counts.log, quantile.cut, gene.name) {
-    cl.act <- my.counts.log[gene.name,]
-    cl.act.m <- median(cl.act)
-    cl.act.sd <- sqrt(sum((cl.act[cl.act > cl.act.m] - cl.act.m)^2)/(sum(cl.act  > cl.act.m)-1))
-    my.cut <- qnorm(p=quantile.cut, mean=cl.act.m, sd=cl.act.sd)
-    my.cut
-}
+#' @rdname estimateCells
+#' @export
+setMethod("estimateCells", "spCounts", function(
+    spCountsSng,
+    spCountsMul,
+    ...
+){
+    sampleType <- c(
+        rep(
+            "Singlet",
+            ncol(getData(spCountsSng, "counts"))
+        ),
+        rep(
+            "Multiplet",
+            ncol(getData(spCountsMul, "counts"))
+        )
+    )
+    
+    counts <- cbind(
+        getData(spCountsSng, "counts"),
+        getData(spCountsMul, "counts")
+    )
+    counts.ercc <- cbind(
+        getData(spCountsSng, "counts.ercc"),
+        getData(spCountsMul, "counts.ercc")
+    )
+    
+    frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
+    cellNumberMedian <- median(frac.ercc[sampleType == "Singlet"]) / frac.ercc
+    cellNumberMin <- quantile(frac.ercc[sampleType == "Singlet"])[2] / frac.ercc
+    cellNumberMax <- quantile(frac.ercc[sampleType == "Singlet"])[4] / frac.ercc
 
-
-
+    d <- data.frame(
+        sampleType = factor(sampleType, levels=c("Singlet", "Multiplet")),
+        frac.ercc = frac.ercc,
+        cellNumberMin = cellNumberMin,
+        cellNumberMedian = cellNumberMedian,
+        cellNumberMax = cellNumberMax
+    )
+    return(d)
+    
+})

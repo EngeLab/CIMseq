@@ -1,179 +1,71 @@
 #context("spUnsupervised")
 
-##run test spNtopVar
-test_that("check that the spNtopVar function outputs the expected result", {
+##run test spTopVar
+test_that("check that the spTopVar function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    data <- matrix(
-        c(
-            1,1,2,2,
-            2,2,3,3,
-            3,3,0,0,
-            0,0,0,0
-        ),
-        nrow=4,
-        ncol=4,
-        byrow=TRUE
-    )
-
+    s <- grepl("^s", colnames(testCounts))
+    cObjSng <- spCounts(testCounts[,s], testErcc[,s])
+    
     #setup expected data
-    expected <- as.integer(c(3, 1))
+    expected1 <- 27L
+    expected2 <- 243L
     
     #run function
-    output <- spNtopVar(data, 2)
+    output <- spTopVar(cObjSng, 250)
     
     #test
-    expect_identical(expected, output)
+    expect_identical(expected1, output[1])
+    expect_identical(expected2, output[length(output)])
     
 })
 
-
-##run test spNtopMax
-test_that("check that the spNtopMax function outputs the expected result", {
+##run test spTopMax
+test_that("check that the spTopMax function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    data <- matrix(
-        c(
-            1,1,4,1,
-            2,2,3,3,
-            3,3,4,5,
-            0,0,0,0
-        ),
-        nrow=4,
-        ncol=4,
-        byrow=TRUE
-    )
+    s <- grepl("^s", colnames(testCounts))
+    cObjSng <- spCounts(testCounts[,s], testErcc[,s])
     
     #setup expected data
-    expected <- as.integer(c(3, 1))
+    expected1 <- 1L
+    expected2 <- 233L
     
     #run function
-    output <- spNtopMax(data, 2)
+    output <- spTopMax(cObjSng, 250)
     
     #test
-    expect_identical(expected, output)
+    expect_identical(expected1, output[1])
+    expect_identical(expected2, output[length(output)])
     
 })
 
-
-##run test spAverageGroupExpression
-test_that("check that the spAverageGroupExpression function outputs the expected result", {
+##run test pearsonsDist
+test_that("check that the pearsonsDist function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    sng <- matrix(
-        c(
-            1,10,2,20,
-            2,20,3,30,
-            3,30,0,0,
-            0,0,0,0
-        ),
-        nrow=4,
-        ncol=4,
-        byrow=TRUE
-    )
-    
-    classes <- rep(LETTERS[1:2], 2)
-    colnames(sng) <- classes
+    s <- grepl("^s", colnames(testCounts))
+    cObjSng <- spCounts(testCounts[,s], testErcc[,s])
+    select <- 1:5
 
     #setup expected data
-    expected <- matrix(
-        c(
-            1.5, 15,
-            2.5, 25,
-            1.5, 15,
-            0, 0
-        ),
-        byrow=TRUE,
-        nrow=4,
-        dimnames=list(
-            c(),
-            c(unique(classes))
-        )
-    )
+    expectHead <- c(0,1,1,1,1,0)
+    expectTail <- rep(0, 6)
     
     #run function
-    output <- spAverageGroupExpression(sng, classes)
+    output <- pearsonsDist(cObjSng, select)
     
     #test
-    expect_identical(expected, output)
-    expect_false(any(is.na(output)))
-})
-
-##run test .tsneGroupMeans
-test_that("check that the .tsneGroupMeans function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    x <- matrix(
-        c(
-            1,2,2,3,3,0,0,0,
-            2,1,3,2,0,3,0,0
-        ),
-        nrow=8,
-        ncol=2,
-    )
-    
-    class <- rep(LETTERS[1:2], 4)
-    
-    #setup expected data
-    expected <- data.frame(
-        classification = c(LETTERS[1:2]),
-        meanX = c(1.5, 1.25),
-        meanY = c(1.25, 1.5)
-    )
-    
-    #run function
-    output <- .tsneGroupMeans(x, class)
-    
-    #test
-    expect_identical(expected, output)
+    expect_equivalent(expectHead, round(head(output)))
+    expect_equivalent(expectTail, round(tail(output)))
     
 })
 
-##run test spPearsonDist
-test_that("check that the spPearsonDist function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    x <- matrix(
-        log2(c(
-            1,2,4,
-            2,3,3,
-            3,4,2,
-            4,5,1,
-            9,9,9
-        )),
-        nrow=5,
-        ncol=3,
-        byrow=TRUE
-    )
-    
-    select <- c(1,2,3)
-    
-    #setup expected data
-    expected <- as.dist(matrix(
-        c(
-            0.0,0.0,2.0,
-            0.0,0.0,2.0,
-            2.0,2.0,0.0
-        ),
-        nrow=3,
-        byrow=TRUE
-    ))
-    
-    #run function
-    output <- spPearsonDist(x, select)
-    
-    #test
-    expect_equivalent(expected, output)
-    
-})
-
-##run test spTsne
-test_that("check that the spTsne function outputs the expected result", {
+##run test runTsne
+test_that("check that the runTsne function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -182,29 +74,39 @@ test_that("check that the spTsne function outputs the expected result", {
             0, 9, 19,
             1, 10, 20,
             2, 11, 21),
-        nrow=3
+            nrow=3
     ))
     
-    k <- 2
-    plot.callback <- NULL
+    dims <- 2
+    theta <- 0
     initial_dims <- 3
     max_iter <- 5
     perplexity <- 0.1
     seed <- 11
+    is_distance <- TRUE
     
     #setup expected data
     #no expected at the moment for this function
     
     #run function
-    output <- spTsne(my.dist, k, initial_dims, max_iter, perplexity, seed, theta=0)
+    output <- runTsne(
+        my.dist,
+        dims,
+        theta,
+        initial_dims,
+        max_iter,
+        perplexity,
+        seed,
+        is_distance
+    )
     
     #test
     expect_length(output, 6)
     
 })
 
-##run test spMclust
-test_that("check that the spMclust function outputs the expected result", {
+##run test runMclust
+test_that("check that the runMclust function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -229,11 +131,70 @@ test_that("check that the spMclust function outputs the expected result", {
         "A1", "A1", "A1",
         "B1", "B1", "B1"
     )
+    exp_uncertainty <- rep(0, 6)
     
     #run function
-    output <- spMclust(my.tsne, seed, Gmax)
+    output <- runMclust(my.tsne, Gmax, seed)
+    out_classes <- output[[1]]
+    out_uncertainty <- output[[2]]
     
     #test
-    expect_identical(output$classification, exp_classification)
+    expect_identical(out_classes, exp_classification)
+    expect_identical(out_uncertainty, exp_uncertainty)
+    
+})
+
+##run test averageGroupExpression
+test_that("check that the averageGroupExpression function outputs the expected
+result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    s <- grepl("^s", colnames(testCounts))
+    cObjSng <- spCounts(testCounts[,s], testErcc[,s])
+    classes <- getData(testUns, "classification")
+
+    #setup expected data
+    expectedFirstRow <- c(5954, 998, 1651, 1054)
+    expectedLastRow <- c(3603, 289, 1530, 753)
+
+    names(expectedFirstRow) <- unique(classes)
+    names(expectedLastRow) <- unique(classes)
+
+
+    #run function
+    output <- averageGroupExpression(cObjSng, classes, weighted=FALSE)
+    
+    #test
+    expect_identical(expectedFirstRow, round(output[1,]))
+    expect_identical(expectedLastRow, round(output[nrow(output),]))
+    expect_false(any(is.na(output)))
+})
+
+
+##run test tsneGroupMeans
+test_that("check that the tsneGroupMeans function outputs the expected result",{
+    
+    ###TEST1####
+    #prepare normal input data
+    classes <- getData(testUns, "classification")
+    tsne <- getData(testUns, "tsne")
+    
+    #setup expected data
+    expected <- data.frame(
+        classification=c("A1", "B1", "C1", "D1"),
+        x=c(-33,44,-15,4),
+        y=c(-2,-6,-40,47)
+    )
+    
+    #run function
+    output <- tsneGroupMeans(tsne, classes)
+    
+    #round output
+    output$x <- round(output$x)
+    output$y <- round(output$y)
+    
+    #test
+    expect_identical(expected, output)
     
 })
