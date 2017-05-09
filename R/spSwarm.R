@@ -72,7 +72,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     #subset top genes for use with optimization
     selectInd <- getData(spUnsupervised, "selectInd")
     cellTypes <- groupMeans[selectInd, ]
-    multiplets <- counts[selectInd, ]
+    multiplets <- matrix(counts[selectInd, ])
     
     ##run pySwarm
     tmp <- .runPyRSwarm(
@@ -117,8 +117,10 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     control=list(maxit=maxiter, s=swarmsize)
     
     set.seed(seed)
+    to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
+    
     tmp <- mclapply(
-        1:(dim(multiplets)[2]),
+        1:to,
         function(i)
             .optim.fn(
                 i,
@@ -570,7 +572,7 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
         rownames(frac)[o]
     })
     
-    if(length(mulForEdges) == 1) {
+    if(ncol(mulForEdges) == 1) {
         return(unlist(mulForEdges))
     } else {
         names(mulForEdges) <- paste(edges[,1], edges[,2], sep="-")
