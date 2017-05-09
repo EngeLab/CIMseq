@@ -1,11 +1,18 @@
 #context("spSwarm")
 
+<<<<<<< HEAD
 s <- grepl("^s", colnames(testCounts))
 cObjSng <- spCounts(testCounts[,s], testErcc[,s])
 cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
 uObj <- spUnsupervised(cObjSng, max=250, max_iter=1000)
 sObj <- spSwarm(cObjMul, uObj)
 
+#cObj <- spCounts(testData, matrix(), "m.")
+#uObj <- spUnsupervised(cObj, max=250, max_iter=1000)
+#sObj <- spSwarm(uObj, swarmsize = 150, cores=1, cutoff=0.14)
+
+=======
+>>>>>>> 2bfd2629ca6ae01bf031ad0b1aca209bea093de5
 ##run test .defineImport
 test_that("check that the .defineImport function outputs the expected result", {
     

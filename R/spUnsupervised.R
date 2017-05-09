@@ -13,7 +13,7 @@ NULL
 #' @aliases spUnsupervised
 #' @param spCounts spCounts object with singlets only.
 #' @param theta Passed to Rtsne.
-#' @param dims The dimensions of the resulting tsne. Passed to tsne function.
+#' @param k The dimensions of the resulting tsne. Passed to tsne function.
 #' @param max_iter The max number of tSNE iterations. Passed to tsne function.
 #' @param perplexity The perplexity argument to tsne. Passed to tsne function.
 #' @param initial_dims The initial dimensions argument. Passed to tsne function.
@@ -45,10 +45,6 @@ NULL
 #' @param object spUnsupervised object.
 #' @param n Data to extract from spUnsupervised object.
 #' @param value Data to replace in spUnsupervised object.
-#' @param x Default plot param, an spCounts object containing singlets.
-#' @param y Default plot param, an spCounts object containing multuplets.
-#' @param type Character; The type of plot desired. Currently \emph{markers} or \emph{ercc}.
-#' @param markers Markers/genes to plot.
 #' @param .Object Internal object.
 #' @param ... Additional arguments to pass on
 #' @return spUnsupervised object.
@@ -71,20 +67,6 @@ setGeneric("spUnsupervised", function(spCounts, ...
 
 #' @rdname spUnsupervised
 #' @export
-
-setMethod("spUnsupervised", "missing", function(
-...
-){
-    new("spUnsupervised",
-        unsupervisedC=matrix(),
-        groupMeans=matrix(),
-        classification=factor(),
-        selectIdx=numeric()
-    )
-})
-
-#' @rdname spUnsupervised
-#' @export
 #' @importFrom Rtsne Rtsne
 #' @importFrom mclust Mclust mclustBIC
 #' @importFrom plyr ddply summarize
@@ -99,12 +81,13 @@ setMethod("spUnsupervised", "spCounts", function(
     initial_dims = 50,
     Gmax = 50,
     seed = 11,
-    geneSelectType = "max",
+    type = "max",
     max = 2000,
     genes=NULL,
     weighted=TRUE,
     ...
 ){
+    
     #filter genes to be included in analysis
     if(type == "var") {
         select <- spTopVar(spCounts, max)
@@ -181,6 +164,8 @@ setMethod("spUnsupervised", "spCounts", function(
         You probably need to adjust the Gmax argument and run again.")
     }
 }
+
+
 
 #' spTopVar
 #'
@@ -286,24 +271,7 @@ pearsonsDist <- function(data, select) {
             method="p"
         )
     )
-})
-
-#' @rdname spPearsonDist
-#' @importFrom stats as.dist
-#' @export
-
-setMethod("spPearsonDist", "matrix", function(
-    counts,
-    selectIdx,
-    ...
-){
-    as.dist(
-        1-cor(
-            2^counts[selectIdx, ],
-            method="p"
-        )
-    )
-})
+}
 
 #' runTsne
 #'
@@ -359,13 +327,12 @@ runTsne <- function(
         initial_dims = initial_dims,
         max_iter = max_iter,
         perplexity = perplexity,
-        theta = theta,
-        is_distance=TRUE
+        theta = theta
     )$Y
     
-    rownames(my.tsne) <- rownames(distances)
+    rownames(my.tsne) <- rownames(my.dist)
     return(my.tsne)
-})
+}
 
 #' runMclust
 #'
@@ -409,7 +376,7 @@ runMclust <- function(
     seed = 11
 ){
     set.seed(seed)
-    mod1 <- Mclust(unsupervised, G=1:Gmax)
+    mod1 <- Mclust(my.tsne, G=1:Gmax)
     
     #rename classification classes
     x <- unique(mod1$classification)

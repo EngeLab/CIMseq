@@ -8,7 +8,6 @@ setMethod("initialize","spCounts", function(
     .Object,
     ...,
     counts,
-    counts.cpm,
     counts.log,
     counts.cpm,
     counts.ercc
@@ -17,7 +16,6 @@ setMethod("initialize","spCounts", function(
         .Object,
         ...,
         counts = counts,
-        counts.cpm = counts.cpm,
         counts.log = counts.log,
         counts.cpm = counts.cpm,
         counts.ercc = counts.ercc
@@ -61,11 +59,11 @@ setMethod("initialize","spSwarm", function(
     arguments
 ){
     callNextMethod(
-        .Object,
-        ...,
-        spSwarm = spSwarm,
-        costs = costs,
-        convergence = convergence,
-        arguments = arguments
+    .Object,
+    ...,
+    spSwarm = spSwarm,
+    costs = costs,
+    convergence = convergence,
+    arguments = arguments
     )
 })

@@ -15,10 +15,6 @@ NULL
 #' @param counts.ercc A matrix containing ercc spike-in reads and their counts.
 #' @param counts.log Log2 normalized counts per million.
 #' @param object spCounts object.
-#' @param x Default plot param, an spCounts object containing singlets.
-#' @param y Default plot param, an spCounts object containing multuplets.
-#' @param type Character; The type of plot desired. Currently \emph{markers} or \emph{ercc}.
-#' @param markers Markers/genes to plot. Limited to two.
 #' @param n Data to extract from spCounts object.
 #' @param .Object Internal object.
 #' @param ... additional arguments to pass on
@@ -28,7 +24,7 @@ NULL
 #' @examples
 #'
 #' #run function
-#' cObj <- spCounts(testCounts, testErcc)
+#' cObj <- spCounts(testCounts, testErcc, 'm.')
 #'
 NULL
 
@@ -67,7 +63,6 @@ setMethod("spCounts", "matrix", function(
     norm.fact <- colSums(counts)
     counts.norm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
     counts.log <- log2(counts.norm)
-    return(counts.log)
 }
 
 .norm.counts <- function(counts) {

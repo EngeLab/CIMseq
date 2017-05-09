@@ -153,7 +153,7 @@ The resulting "connectome" can be plotted via the commands below. Here we need t
 spPlot(sObj, uObj, cObjSng, edge.cutoff=1/10.5, min.num.edges=1)
 ```
 
-The network plot can be made in the above way or with a "natural" layout as below:
+The netwrok plot can be made in the above way or with a "natural" layout as below:
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE, warning=FALSE}
 spPlot(sObj, uObj, cObjSng, layout="igraph", edge.cutoff=1/10.5, min.num.edges=1)

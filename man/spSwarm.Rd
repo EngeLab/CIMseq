@@ -8,8 +8,6 @@
 \alias{getData,spSwarm-method}
 \alias{initialize,spSwarm-method}
 \alias{show,spSwarm-method}
-\alias{plot,spSwarm,missing-method}
-\alias{spSwarm}
 \alias{spSwarm}
 \alias{spSwarm}
 \alias{spSwarm,spCounts,spUnsupervised-method}

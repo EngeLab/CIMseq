@@ -11,8 +11,8 @@ NULL
 #' @export
 .spCounts <- setClass("spCounts", representation(
     counts="matrix",
-    counts.cpm="matrix",
     counts.log="matrix",
+    counts.cpm="matrix",
     counts.ercc="matrix"
 ))
 
@@ -101,14 +101,14 @@ setMethod("groupMeans", "spUnsupervised", function(object)
 })
 
 #' @rdname spUnsupervised
-setGeneric("selectIdx", function(object
-) standardGeneric("selectIdx"))
+setGeneric("classification", function(object
+) standardGeneric("classification"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("selectIdx", "spUnsupervised", function(object)
+setMethod("classification", "spUnsupervised", function(object)
 {
-    object@selectIdx
+    object@classification
 })
 
 #' @rdname spUnsupervised
@@ -175,15 +175,16 @@ setMethod("groupMeans<-", "spUnsupervised", function(object, value)
 {
     object@groupMeans <- value
     if (validObject(object)) return(object)
+    
 })
 
 #' @rdname spUnsupervised
-setGeneric("selectIdx<-", function(object, value
-) standardGeneric("selectIdx<-"))
+setGeneric("classification<-", function(object, value
+) standardGeneric("classification<-"))
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("selectIdx<-", "spUnsupervised", function(object, value)
+setMethod("classification<-", "spUnsupervised", function(object, value)
 {
     object@classification <- value
     if (validObject(object)) return(object)

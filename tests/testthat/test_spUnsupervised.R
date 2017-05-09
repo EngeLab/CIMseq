@@ -1,5 +1,6 @@
 #context("spUnsupervised")
 
+
 ##run test spTopVar
 test_that("check that the spTopVar function outputs the expected result", {
     

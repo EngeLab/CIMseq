@@ -26,7 +26,6 @@ getData(object, ...)
 spCounts(counts, ...)
 
 \S4method{spCounts}{matrix}(counts, counts.ercc, ...)
-
 }
 \arguments{
 \item{object}{spCounts object.}
@@ -39,12 +38,9 @@ spCounts(counts, ...)
 
 \item{counts}{Counts matrix with samples as columns and genes as rows.}
 
-\item{counts.cpm}{Counts per million.}
-
 \item{counts.log}{Log2 normalized counts per million.}
 
 \item{counts.ercc}{A matrix containing ercc spike-in reads and their counts.}
-
 }
 \value{
 spCounts object.
@@ -58,7 +54,7 @@ Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
 \examples{
 
 #run function
-cObj <- spCounts(testCounts, testErcc)
+cObj <- spCounts(testCounts, testErcc, 'm.')
 
 }
 \author{

@@ -43,7 +43,6 @@ setGeneric("plotCounts", function(
 #' @import ggplot2
 #' @importFrom ggthemes theme_few scale_colour_economist
 
-
 setMethod("plotCounts", "spCounts", function(
     x,
     y,
@@ -55,7 +54,6 @@ setMethod("plotCounts", "spCounts", function(
     #y should be an spCounts object with multuplets
     #check that type is valid
     if( type == "ercc" ) {
-
         p <- .countsErccPlot(
             x,
             y
@@ -64,7 +62,6 @@ setMethod("plotCounts", "spCounts", function(
         return(p)
     }
     if( type == "markers" ) {
-
         p <- .countsMarkersPlot(
             x,
             y,
@@ -253,9 +250,8 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     #y should be null or an spCounts object containig singlets.
     
     #check that type is valid
-    if( !type %in% c("clusters", "markers") ) {stop("The type argument was not specified.")}
+    if( type == "" ) {stop("The type argument was not specified.")}
     if( type == "clusters" ) {
-        
         p <- .unsupClustersPlot(x, plotUncertainty)
         p
         return(p)

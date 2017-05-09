@@ -1,17 +1,7 @@
 #context("spPlot")
 
-cObj.sng <- spCounts(
-    testCounts[ ,grepl("s.", colnames(testCounts))],
-    testErcc[ ,grepl("s.", colnames(testCounts))]
-)
-
-
-cObj.mul <- spCounts(
-    testCounts[ ,grepl("m.", colnames(testCounts))],
-    testErcc[ ,grepl("m.", colnames(testCounts))]
-)
-
-uObj <- spUnsupervised(cObj.sng, max=250, max_iter=1000)
+cObj <- spCounts(testCounts, matrix(), "m.")
+uObj <- spUnsupervised(cObj, max=250, max_iter=1000)
 sObj <- spSwarm(uObj, swarmsize = 150, cores=1, cutoff=0.14)
 
 ##run test .countsErccPlotProcess
@@ -21,9 +11,8 @@ test_that("check that the .countsErccPlotProcess function outputs the expected r
     
     ###TEST1####
     #prepare normal input data
-    inputA <- cObj.sng
-    inputB <- cObj.mul
-
+    input <- cObj
+    
     #setup expected data
     expected <- data.frame(
         sampleType = c(rep("Singlet", 850), rep("Multuplet", 2)),
@@ -31,13 +20,10 @@ test_that("check that the .countsErccPlotProcess function outputs the expected r
     )
     
     #run function
-    output <- .countsErccPlotProcess(inputA, inputB)
+    output <- .countsErccPlotProcess(input)
     
     #test
-    expect_identical(expected$sampleType, output$sampleType)
-    expect_identical(class(expected$frac.ercc), class(output$frac.ercc))
-    expect_true(max(output$frac.ercc) < 1)
-    expect_true(min(output$frac.ercc) > 0)
+    expect_identical(expected, output)
 
 })
 
@@ -46,14 +32,13 @@ test_that("check that the .countsErccPlot function outputs the expected result",
     
     ###TEST1####
     #prepare normal input data
-    inputA <- cObj.sng
-    inputB <- cObj.mul
+    input <- cObj
 
     #run function
-    output <- .countsErccPlot(inputA, inputB)
+    output <- .countsErccPlot(input)
     
     #test
-    expect_silent(.countsErccPlot(inputA, inputB))
+    expect_silent(.countsErccPlot(input))
     expect_false(is.null(output))
     
 })
@@ -63,8 +48,7 @@ test_that("check that the .countsMarkersPlotProcess function outputs the expecte
     
     ###TEST1####
     #prepare normal input data
-    inputA <- cObj.sng
-    inputB <- cObj.mul
+    input <- cObj
     markers <- c("a1", "b1")
     
     #setup expected data
@@ -75,7 +59,7 @@ test_that("check that the .countsMarkersPlotProcess function outputs the expecte
     )
     
     #run function
-    output <- .countsMarkersPlotProcess(inputA, inputB, markers)
+    output <- .countsMarkersPlotProcess(input, markers)
     
     #test
     expect_equivalent(expected, output)
@@ -87,15 +71,14 @@ test_that("check that the .countsMarkersPlot function outputs the expected resul
     
     ###TEST1####
     #prepare normal input data
-    inputA <- cObj.sng
-    inputB <- cObj.mul
+    input <- cObj
     markers <- c("a1", "b1")
     
     #run function
-    output <- .countsMarkersPlot(inputA, inputB, markers)
+    output <- .countsMarkersPlot(input, markers)
     
     #test
-    expect_warning(.countsMarkersPlot(inputA, inputB, markers), regexp = NA)
+    expect_warning(.countsMarkersPlot(input, markers), regexp = NA)
     expect_false(is.null(output))
     
 })
@@ -141,12 +124,11 @@ test_that("check that the .unsupMarkerPlotProcess function outputs the expected 
     
     ###TEST1####
     #prepare normal input data
-    inputA <- cObj.sng
-    inputB <- uObj
+    input <- uObj
     markers <- c("a1", "b1")
     
     #run function
-    output <- .unsupMarkerPlotProcess(inputA, inputB, markers)
+    output <- .unsupMarkerPlotProcess(input, markers)
     
     #test
     expect_equivalent(nrow(output), 850*2)
@@ -165,15 +147,14 @@ test_that("check that the .unsupMarkersPlot function outputs the expected result
     
     ###TEST1####
     #prepare normal input data
-    inputA <- cObj.sng
-    inputB <- uObj
+    input <- uObj
     markers <- c("a1", "b1")
 
     #run function
-    output <- .unsupMarkersPlot(inputA, inputB, markers)
+    output <- .unsupMarkersPlot(input, markers)
     
     #test
-    expect_warning(.unsupMarkersPlot(inputA, inputB, markers), regexp = NA)
+    expect_warning(.unsupMarkersPlot(input, markers), regexp = NA)
     expect_false(is.null(output))
     
 })

@@ -32,8 +32,6 @@
 \alias{selectInd<-,spUnsupervised-method}
 \alias{initialize,spUnsupervised-method}
 \alias{show,spUnsupervised-method}
-\alias{plot,spCounts,spUnsupervised-method}
-\alias{spUnsupervised}
 \alias{spUnsupervised}
 \alias{spUnsupervised}
 \alias{spUnsupervised,spCounts-method}
@@ -94,8 +92,6 @@ selectInd(object) <- value
 
 \S4method{show}{spUnsupervised}(object)
 
-\S4method{plot}{spCounts,spUnsupervised}(x, y, type, markers = NULL, ...)
-
 spUnsupervised(spCounts, ...)
 
 \S4method{spUnsupervised}{spCounts}(spCounts, theta = 0, k = 2,
@@ -135,7 +131,7 @@ Reported from mclust.}
 
 \item{theta}{Passed to Rtsne.}
 
-\item{dims}{The dimensions of the resulting tsne. Passed to tsne function.}
+\item{k}{The dimensions of the resulting tsne. Passed to tsne function.}
 
 \item{max_iter}{The max number of tSNE iterations. Passed to tsne function.}
 

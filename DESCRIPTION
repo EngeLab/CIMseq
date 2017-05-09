@@ -1,41 +1,43 @@
 Package: sp.scRNAseq
 Title: sp.scRNAseq is a software suite for analysis of scRNAseq data that has
-    been produced using the spatial scRNAseq methodVersion: 0.0.0.9000
+    been produced using the spatial scRNAseq method
+Version: 0.0.0.9000
 Author: Jason T. Serviss
 Maintainer: Jason T Serviss <jason.serviss@ki.se>
-Version: 0.0.0.9000
 Description: What the package does (one paragraph).
-Depends: R (>= 3.3.2)
-License: GPL-3
-Encoding: UTF-8
-LazyData: true
-VignetteBuilder: knitr
-NeedsCompilation: no
+Depends:
+    R (>= 3.3.0)
+Imports:
+    RColorBrewer,
+    ggplot2,
+    rgl,
+    mclust,
+    optimx,
+    Rtsne,
+    doMC,
+    foreach,
+    ggforce,
+    ggraph,
+    ggthemes,
+    igraph,
+    methods,
+    plyr,
+    rPython,
+    reshape2,
+    S4Vectors,
+    viridis,
+    printr
 Suggests:
     knitr,
     rmarkdown,
     testthat,
     BiocStyle
-Imports:
-    RColorBrewer,
-    printr,
-    viridis,
-    S4Vectors,
-    reshape2,
-    rPython,
-    plyr,
-    methods,
-    igraph,
-    ggthemes,
-    ggraph,
-    ggforce,
-    foreach,
-    doMC,
-    Rtsne,
-    optimx,
-    mclust,
-    ggplot2
-Collate: 
+VignetteBuilder: knitr
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+NeedsCompilation: no
+Collate:
     'sp.scRNAseq-package.R'
     'All-classes.R'
     'expData.R'
