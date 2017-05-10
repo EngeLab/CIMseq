@@ -2,12 +2,16 @@
 NULL
 
 #' @rdname spCounts
-#' @import S4Vectors
+#' @importFrom S4Vectors show
+#' @importFrom utils head
 #' @export
-setMethod("show", "spCounts", function(object){ .showCounts(object) })
+setMethod("show", "spCounts", function(object){
+    .showCounts(object)
+})
 
 #internal show function
-.showCounts <- function(object
+.showCounts <- function(
+    object
 ){
     names <- slotNames(object)
     cat("Class:","spCounts\n")
@@ -15,7 +19,7 @@ setMethod("show", "spCounts", function(object){ .showCounts(object) })
     for(i in 1:length(names)){
         cat(paste(i,". ", names[i], "\n",sep=""))
         mat <- slot(object, names[i])
-        
+
         if(class(mat) == "matrix") {
             .showMatrix(mat)
         } else {
@@ -25,9 +29,12 @@ setMethod("show", "spCounts", function(object){ .showCounts(object) })
 }
 
 #' @rdname spUnsupervised
-#' @import S4Vectors
+#' @importFrom S4Vectors show
+#' @importFrom utils head
 #' @export
-setMethod("show", "spUnsupervised", function(object){ .showUnsupervised(object) })
+setMethod("show", "spUnsupervised", function(object){
+    .showUnsupervised(object)
+})
 
 #internal show function
 .showUnsupervised <- function(object
@@ -51,7 +58,8 @@ setMethod("show", "spUnsupervised", function(object){ .showUnsupervised(object) 
 }
 
 #' @rdname spSwarm
-#' @import S4Vectors
+#' @importFrom S4Vectors show
+#' @importFrom utils head
 #' @export
 setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
 
@@ -78,11 +86,11 @@ setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
     }
 }
 
-####################################################################################
-#                                                                                  #
-#                                   Units                                          #
-#                                                                                  #
-####################################################################################
+################################################################################
+#                                                                              #
+#                                   Units                                      #
+#                                                                              #
+################################################################################
 
 .showBasics <- function(obj) {
     
@@ -102,7 +110,7 @@ setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
 
 
 .showList <- function(obj) {
-    S4Vectors::show(as(obj, "List"))
+    show(as(obj, "List"))
 }
 
 .showMatrix <- function(obj) {
@@ -119,38 +127,3 @@ setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
     }
 
 }
-
-#.showMatrix <- function(obj) {
-#
-#    if(all(is.na(obj)) == TRUE) {
-#
-#        print("NA")
-#        cat("\n-----------\n\n")
-#
-#    } else {
-#
-#        if(nrow(obj) <= 10) {
-#            additionalRows <- 0
-#        } else {
-#            additionalRows <- nrow(obj) - 10
-#        }
-#
-#        if(ncol(obj) <= 5) {
-#            additionalColumns <- 0
-#        } else {
-#            additionalColumns <- ncol(obj) - 5
-#        }
-#
-#        p <- S4Vectors:::makePrettyMatrixForCompactPrinting(
-#            obj,
-#           function(x){
-#                x[,1:2]
-#            }
-#        )
-#        print(p)
-#        cat("...\n")
-#        cat(paste("<", additionalRows, " more elements>", sep=""))
-#        cat(paste("<", additionalColumns, " more columns>", sep=""))
-#        cat("\n-----------\n\n")
-#    }
-#}

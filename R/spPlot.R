@@ -41,7 +41,8 @@ setGeneric("plotCounts", function(
 #' @rdname plotCounts
 #' @export
 #' @import ggplot2
-#' @import dplyr
+#' @importFrom dplyr filter
+#' @importFrom stringr %>%
 #' @importFrom stats median
 #' @importFrom ggthemes theme_few scale_colour_economist
 

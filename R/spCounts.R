@@ -109,8 +109,7 @@ setGeneric("estimateCells", function(
 })
 
 #' @rdname estimateCells
-#' @import tibble
-#' @import dplyr
+#' @import tibble tibble
 #' @importFrom stats median quantile
 #' @export
 setMethod("estimateCells", "spCounts", function(

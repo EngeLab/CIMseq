@@ -66,7 +66,6 @@ setGeneric("spUnsupervised", function(spCounts, ...
 #' @export
 #' @importFrom Rtsne Rtsne
 #' @importFrom mclust Mclust mclustBIC
-#' @importFrom plyr ddply summarize
 #' @importFrom stats as.dist
 
 setMethod("spUnsupervised", "spCounts", function(
@@ -188,6 +187,7 @@ setMethod("spUnsupervised", "spCounts", function(
 NULL
 
 #' @rdname spTopVar
+#' @importFrom stats var
 #' @export
 
 spTopVar <- function(spCounts, n) {
@@ -256,6 +256,7 @@ spTopMax <- function(spCounts, n) {
 NULL
 
 #' @rdname pearsonsDist
+#' @importFrom stats cor
 #' @export
 
 pearsonsDist <- function(spCounts, select) {
@@ -488,19 +489,21 @@ averageGroupExpression <- function(data, classes, weighted, uncertainty) {
 NULL
 
 #' @rdname tsneGroupMeans
-#' @importFrom plyr ddply
+#' @import dplyr
 #' @export
 
 tsneGroupMeans <- function(data, classes) {
     d <- data.frame(data[ ,1], data[ ,2], classes)
     colnames(d) <- c("x", "y", "classification")
-    means <- ddply(
-        d,
-        "classification",
-        summarize,
-        x=mean(substitute(x)),
-        y=mean(substitute(y))
-    )
+    
+    means <- d %>%
+        group_by(classification) %>%
+        summarise(
+            x=mean(substitute(x)),
+            y=mean(substitute(y))
+        ) %>%
+        as.data.frame()
+        
     return(means)
 }
 
