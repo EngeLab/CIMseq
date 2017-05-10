@@ -54,6 +54,8 @@ spSwarm(spCounts, spUnsupervised, ...)
 \item{swarmsize}{pySwarm argument indicating the number of swarm particals.}
 
 \item{cores}{The number of cores to be used while running spRSwarm.}
+
+\item{seed}{The desired seed to set before running.}
 }
 \value{
 spSwarm output.

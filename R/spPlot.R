@@ -41,6 +41,8 @@ setGeneric("plotCounts", function(
 #' @rdname plotCounts
 #' @export
 #' @import ggplot2
+#' @import dplyr
+#' @importFrom stats median
 #' @importFrom ggthemes theme_few scale_colour_economist
 
 setMethod("plotCounts", "spCounts", function(
@@ -84,10 +86,21 @@ setMethod("plotCounts", "spCounts", function(
     
     #add function for ERCC fraction conversion
     convertToERCC <- function(x, d) {
-        100*(median(d[d[,1] == "Singlet", "frac.ercc"])/x)
+        d %>%
+            filter(sampleType == "Singlet") %>%
+            .$frac.ercc %>%
+            median %>%
+            `*` (100) %>%
+            `/` (x)
     }
     
-    p <- ggplot(d, aes_string(x='sampleType', y='cellNumberMedian'))+
+    p <- ggplot(
+        d,
+        aes_string(
+            x='factor(sampleType, levels=c("Singlet", "Multiplet"))',
+            y='cellNumberMedian'
+        )
+    )+
     geom_jitter()+
     labs(
         x="Sample type",
@@ -209,6 +222,8 @@ setMethod("plotCounts", "spCounts", function(
 #' @param y An spCounts object containing singlets.
 #' @param type Can be "clusters", "markers", or .......
 #' @param markers A character vector with markers to plot.
+#' @param plotUncertainty Logical indicating if uncertainty should be
+#'    represented as the point size in the plots.
 #' @param ... additional arguments to pass on.
 #' @return The plotUnsupervised function returns an object of class spCounts.
 #' @author Jason T. Serviss

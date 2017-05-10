@@ -1,142 +1,176 @@
 #context("spPlot")
 
-cObj <- spCounts(testCounts, matrix(), "m.")
-uObj <- spUnsupervised(cObj, max=250, max_iter=1000)
-sObj <- spSwarm(uObj, swarmsize = 150, cores=1, cutoff=0.14)
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[ ,s], testErcc[ ,s])
+cObjMul <- spCounts(testCounts[ ,!s], testErcc[ ,!s])
+uObj <- testUns
+sObj <- testSwa
 
-##run test .countsErccPlotProcess
-test_that("check that the .countsErccPlotProcess function outputs the expected result", {
-    
-    #note this test is not great at the moment since the example data has no ercc.counts
-    
-    ###TEST1####
-    #prepare normal input data
-    input <- cObj
-    
-    #setup expected data
-    expected <- data.frame(
-        sampleType = c(rep("Singlet", 850), rep("Multuplet", 2)),
-        frac.ercc = as.numeric(rep(NA, 852))
-    )
-    
-    #run function
-    output <- .countsErccPlotProcess(input)
-    
-    #test
-    expect_identical(expected, output)
-
-})
+################################################################################
+#                                                                              #
+# Counts Plots                                                                 #
+#                                                                              #
+################################################################################
 
 ##run test .countsErccPlot
-test_that("check that the .countsErccPlot function outputs the expected result", {
+test_that("check that .countsErccPlot outputs the expected result", {
     
     ###TEST1####
-    #prepare normal input data
-    input <- cObj
-
     #run function
-    output <- .countsErccPlot(input)
+    output <- .countsErccPlot(cObjSng, cObjMul)
     
     #test
-    expect_silent(.countsErccPlot(input))
+    expect_is(output$layers[[1]], "ggproto")
+    expect_identical(
+        class(output$layers[[1]]$geom),
+        c("GeomPoint","Geom","ggproto")
+    )
+    expect_identical(output$labels$x, "Sample type")
+    expect_identical(output$labels$y, "Cell number")
+    expect_identical(output$labels$title, "Fraction ERCC in singlets/doublets")
     expect_false(is.null(output))
+    expect_silent(.countsErccPlot(cObjSng, cObjMul))
+
+    ###TEST2###
+    #here you should probably try to trigger this monotome 2nd axis error from
+    #ggplot to see when it arises
     
 })
 
 ##run test .countsMarkersPlotProcess
-test_that("check that the .countsMarkersPlotProcess function outputs the expected result", {
+test_that("check that .countsMarkersPlotProcess outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    input <- cObj
     markers <- c("a1", "b1")
     
     #setup expected data
     expected <- data.frame(
-        sampleType = c(rep("Singlet", 850), rep("Multuplet", 2)),
-        marker1 = getData(cObj, "counts.log")['a1',],
-        marker2 = getData(cObj, "counts.log")['b1',]
+        sampleType = c(rep("Singlet", 340), rep("Multuplet", 2)),
+        marker1 = c(
+            getData(cObjSng, "counts.log")['a1',],
+            getData(cObjMul, "counts.log")['a1',]
+        ),
+        marker2 = c(
+            getData(cObjSng, "counts.log")['b1',],
+            getData(cObjMul, "counts.log")['b1',]
+        )
     )
     
     #run function
-    output <- .countsMarkersPlotProcess(input, markers)
+    output <- .countsMarkersPlotProcess(cObjSng, cObjMul, markers)
     
     #test
     expect_equivalent(expected, output)
-    
+    expect_type(output, "list")
+    expect_type(output$sampleType, "integer")
+    expect_type(output$marker1, "double")
+    expect_type(output$marker2, "double")
 })
 
 ##run test .countsMarkersPlot
-test_that("check that the .countsMarkersPlot function outputs the expected result", {
+test_that("check that .countsMarkersPlot outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    input <- cObj
     markers <- c("a1", "b1")
     
     #run function
-    output <- .countsMarkersPlot(input, markers)
+    output <- .countsMarkersPlot(cObjSng, cObjMul, markers)
     
     #test
-    expect_warning(.countsMarkersPlot(input, markers), regexp = NA)
+    expect_is(output$layers[[1]], "ggproto")
+    expect_identical(
+        class(output$layers[[1]]$geom),
+        c("GeomPoint","Geom","ggproto")
+    )
+    expect_identical(output$labels$x, "log2( Normalized counts: a1 )")
+    expect_identical(output$labels$y, "log2( Normalized counts: b1 )")
+    expect_identical(output$labels$title, "Cell Identity Markers")
+    expect_identical(output$labels$colour, "sampleType")
+    expect_identical(output$scales$scales[[1]]$name, "sampleType")
     expect_false(is.null(output))
-    
+    expect_silent(.countsMarkersPlot(cObjSng, cObjMul, markers))
 })
 
+################################################################################
+#                                                                              #
+# Unsupervised Plots                                                           #
+#                                                                              #
+################################################################################
+
 ##run test .unsupClusterPlotProcess
-test_that("check that the .unsupClusterPlotProcess function outputs the expected result", {
+test_that("check that .unsupClusterPlotProcess outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
     input <- uObj
     
     #run function
-    output <- .unsupClusterPlotProcess(input)
+    output <- .unsupClusterPlotProcess(input, plotUncertainty=FALSE)
     
     #test
-    expect_equivalent(nrow(output), 850)
-    expect_equivalent(ncol(output), 3)
-    expect_equivalent(colnames(output), c("V1", "V2", "classification"))
+    expect_equivalent(nrow(output), 340)
+    expect_equivalent(ncol(output), 4)
+    expect_identical(
+        colnames(output),
+        c("V1", "V2", "classification", "uncertainty")
+    )
+    expect_type(output, "list")
     expect_type(output$V1, "double")
     expect_type(output$V2, "double")
     expect_type(output$classification, "integer")
+    expect_type(output$uncertainty, "double")
 
 })
 
 ##run test .unsupClustersPlot
-test_that("check that the .unsupClustersPlot function outputs the expected result", {
+test_that("check that .unsupClustersPlot outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
     input <- uObj
 
     #run function
-    output <- .unsupClustersPlot(input)
+    output <- .unsupClustersPlot(input, plotUncertainty=FALSE)
     
     #test
-    expect_warning(.unsupClustersPlot(input), regexp = NA)
+    expect_identical(output$labels$x, "Dim 1")
+    expect_identical(output$labels$y, "Dim 2")
+    expect_identical(output$labels$title, "Clusters")
+    expect_identical(output$labels$colour, "classification")
+    expect_identical(output$scales$scales[[1]]$name, "sampleType")
+    expect_silent(.unsupClustersPlot(input, plotUncertainty=FALSE))
     expect_false(is.null(output))
     
 })
 
 ##run test .unsupMarkerPlotProcess
-test_that("check that the .unsupMarkerPlotProcess function outputs the expected result", {
+test_that("check that .unsupMarkerPlotProcess outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    input <- uObj
     markers <- c("a1", "b1")
     
     #run function
-    output <- .unsupMarkerPlotProcess(input, markers)
+    output <- .unsupMarkerPlotProcess(
+        uObj,
+        cObjSng,
+        markers,
+        plotUncertainty=FALSE
+    )
     
     #test
-    expect_equivalent(nrow(output), 850*2)
-    expect_equivalent(ncol(output), 5)
-    expect_equivalent(colnames(output), c("V1", "V2", "sample", "variable", "value"))
+    expect_equivalent(nrow(output), 340*2)
+    expect_equivalent(ncol(output), 6)
+    expect_identical(
+        colnames(output),
+        c("V1", "V2", "sample", "uncertainty", "variable", "value")
+    )
     expect_type(output$V1, "double")
     expect_type(output$V2, "double")
     expect_type(output$sample, "character")
+    expect_type(output$uncertainty, "double")
     expect_type(output$variable, "integer")
     expect_type(output$value, "double")
 
@@ -147,160 +181,28 @@ test_that("check that the .unsupMarkersPlot function outputs the expected result
     
     ###TEST1####
     #prepare normal input data
-    input <- uObj
     markers <- c("a1", "b1")
 
     #run function
-    output <- .unsupMarkersPlot(input, markers)
+    output <- .unsupMarkersPlot(
+        uObj,
+        cObjSng,
+        markers,
+        plotUncertainty=FALSE
+    )
     
     #test
-    expect_warning(.unsupMarkersPlot(input, markers), regexp = NA)
+    expect_identical(output$labels$x, "x")
+    expect_identical(output$labels$y, "y")
+    expect_identical(output$labels$title, "Markers")
+    expect_identical(output$labels$colour, "Expression")
+    expect_silent(.unsupMarkersPlot(uObj,cObjSng,markers,plotUncertainty=FALSE))
     expect_false(is.null(output))
     
 })
 
-##run test .swarmTsneMeansProcess
-test_that("check that the .swarmTsneMeansProcess function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    input <- sObj
-    
-    #run function
-    output <- .swarmTsneMeansProcess(input)
-    
-    #test
-    expect_equivalent(nrow(output), 10)
-    expect_equivalent(ncol(output), 3)
-    expect_equivalent(colnames(output), c("name", "x", "y"))
-    expect_type(output$name, "character")
-    expect_type(output$x, "double")
-    expect_type(output$y, "double")
-    
-})
-
-##run test .swarmTsneProcess
-test_that("check that the .swarmTsneProcess function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    input <- sObj
-    
-    #run function
-    output <- .swarmTsneProcess(input)
-    
-    #test
-    expect_warning(.swarmTsneProcess(input), regexp = NA)
-    expect_false(is.null(output))
-    
-})
-
-##run test .swarmNetworkDF
-test_that("check that the .swarmNetworkDF function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    codedSwarm <- data.frame(
-        fopt = 0,
-        sampleName = "m.1",
-        A1 = 0,
-        B1 = 0,
-        C1 = 0,
-        D1 = 0.5,
-        E1 = 0.5
-    )
-
-    #setup expected data
-    expected <- data.frame(
-        from = "D1",
-        to = "E1",
-        stringsAsFactors=FALSE
-    )
-    
-    #run function
-    output <- .swarmNetworkDF(codedSwarm)
-    
-    #test
-    expect_equivalent(output, expected)
-    
-    ###TEST2####
-    #prepare normal input data
-    codedSwarm <- data.frame(
-        fopt = 0,
-        sampleName = "m.1",
-        A1 = 1/5,
-        B1 = 1/5,
-        C1 = 1/5,
-        D1 = 1/5,
-        E1 = 1/5
-    )
-    
-    #setup expected data
-    tmp <- combn(paste(LETTERS[1:5], 1, sep=""), 2)
-    expected <- data.frame(
-        from = tmp[1,],
-        to = tmp[2,],
-        stringsAsFactors=FALSE
-    )
-    
-    #run function
-    output <- .swarmNetworkDF(codedSwarm)
-    
-    #test
-    expect_equivalent(output, expected)
-
-})
-
-##run test .swarmCalculateWeights
-test_that("check that the .swarmCalculateWeights function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    input <- data.frame(
-        from = c("A1", "A1", "A1", "A1"),
-        to = c("B1", "B1", "C1", "D1"),
-        stringsAsFactors=FALSE
-    )
-    
-    #setup expected data
-    expected <- data.frame(
-        from = rep("A1", 3),
-        to = c("B1", "C1", "D1"),
-        weight = c(2, 1, 1),
-        stringsAsFactors=FALSE
-    )
-    
-    #run function
-    output <- .swarmCalculateWeights(input)
-    
-    #test
-    expect_equivalent(output, expected)
-    
-})
-
-##run test .swarmSquareTable
-test_that("check that the .swarmSquareTable function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    input <- data.frame(
-        from = c("A1", "A1", "A1", "A1"),
-        to = c("B1", "B1", "C1", "D1"),
-        stringsAsFactors=FALSE
-    )
-    
-    #run function
-    output <- .swarmSquareTable(input$from, input$to)
-    
-    #test
-    expect_equivalent(
-        matrix(output[lower.tri(output)], ncol=3),
-        matrix(output[upper.tri(output)], ncol=3, byrow=TRUE)
-    )
-    
-})
-
-
-
-
-
+################################################################################
+#                                                                              #
+# Swarm Plots                                                                  #
+#                                                                              #
+################################################################################

@@ -22,6 +22,9 @@ plotUnsupervised(x, ...)
 \item{type}{Can be "clusters", "markers", or .......}
 
 \item{markers}{A character vector with markers to plot.}
+
+\item{plotUncertainty}{Logical indicating if uncertainty should be
+represented as the point size in the plots.}
 }
 \value{
 The plotUnsupervised function returns an object of class spCounts.

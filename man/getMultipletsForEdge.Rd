@@ -21,10 +21,6 @@ getMultipletsForEdge(spSwarm, ...)
 \item{edges}{A data frame indicating the edges of interest. Edges are
 indicated by the nodes they connect with one node in column one and the
 other node in column 2.}
-
-\item{object}{spRSwarm object.}
-
-\item{.Object}{Internal object.}
 }
 \value{
 If the edges argument only includes on row, a vector of multiplet

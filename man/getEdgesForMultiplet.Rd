@@ -19,10 +19,6 @@ getEdgesForMultiplet(spSwarm, ...)
 \item{edge.cutoff}{The minimum fraction to consider (?).}
 
 \item{multiplet}{The name of the multiplet of interest.}
-
-\item{object}{spRSwarm object.}
-
-\item{.Object}{Internal object.}
 }
 \value{
 Edge names.

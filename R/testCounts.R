@@ -1,15 +1,15 @@
-#' Test counts.
+#' Test counts data.
 #'
-#' @title Simulated data used to demonstrate sp.scRNAseq package.
+#' @title Simulated counts data used to demonstrate sp.scRNAseq package.
 #' @docType data
 #' @name testCounts
-#' @format Matrix
+#' @format matrix
 #' \describe{
-#' \item{rownames}{Gene counts}
-#' \item{colnames}{Cells}
+#'     \item{rownames}{Gene names}
+#'     \item{colnames}{Samples. Singlets prefixed with "s" and multiplets "m".}
 #' }
 #' @usage testCounts
-#' @return matrix
+#' @return Matrix of counts.
 #' @examples
 #' testCounts
 #'

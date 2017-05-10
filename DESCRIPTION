@@ -22,11 +22,15 @@ Imports:
     igraph,
     methods,
     plyr,
+    dplyr,
     rPython,
     reshape2,
     S4Vectors,
     viridis,
-    printr
+    printr,
+    pso,
+    ggrepel,
+    tibble
 Suggests:
     knitr,
     rmarkdown,
@@ -37,10 +41,11 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: no
-Collate:
+Collate: 
     'sp.scRNAseq-package.R'
     'All-classes.R'
-    'expData.R'
+    'expCounts.R'
+    'expErcc.R'
     'initialize-methods.R'
     'show-methods.R'
     'spCounts.R'
@@ -49,4 +54,6 @@ Collate:
     'spUnsupervised.R'
     'testCounts.R'
     'testErcc.R'
+    'testSwa.R'
+    'testUns.R'
 RoxygenNote: 6.0.1

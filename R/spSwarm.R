@@ -18,6 +18,7 @@ NULL
 #' @param maxiter pySwarm argument indicating maximum optimization iterations.
 #' @param swarmsize pySwarm argument indicating the number of swarm particals.
 #' @param cores The number of cores to be used while running spRSwarm.
+#' @param seed The desired seed to set before running.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per multiplet.
@@ -227,7 +228,6 @@ distToSliceTopFour <- function(
         return(999999999)
     }
     fractions[fractions < sort(fractions, decresing=T)[4]] <- 0 # 4 is an arbitrary number...
-    cat(fraction)
     normFractions <- fractions / sum(fractions)
     a = .makeSyntheticSlice(cellTypes, normFractions)
     sum(abs(a - oneMultiplet))
@@ -274,8 +274,6 @@ distToSlicePearson <- function(
 #' @param edge.cutoff The minimum fraction to consider (?).
 #' @param min.pval Minimum p-value to report.
 #' @param min.num.edges Minimum number of observed edges to report a connection.
-#' @param object spRSwarm object.
-#' @param .Object Internal object.
 #' @param ... additional arguments to pass on
 #' @return spSwarm connection strengths and p-values.
 #' @author Jason T. Serviss
@@ -291,6 +289,7 @@ distToSlicePearson <- function(
 NULL
 
 #' @rdname spSwarmPoisson
+#' @importFrom stats ppois
 #' @export
 
 spSwarmPoisson <- function(
@@ -450,8 +449,7 @@ spSwarmPoisson <- function(
 #' @param clusters A character vector of length 2 indicating 2 classes to
 #'    specifically extract residuals from.
 #' @param edge.cutoff The minimum fraction to consider (?).
-#' @param object spRSwarm object.
-#' @param .Object Internal object.
+#' @param distFun The distance function to be used to calculate the residuals.
 #' @param ... additional arguments to pass on
 #' @return spSwarm connection strengths and p-values.
 #' @author Jason T. Serviss
@@ -526,8 +524,6 @@ calcResiduals <- function(
 #' @param edges A data frame indicating the edges of interest. Edges are
 #'    indicated by the nodes they connect with one node in column one and the
 #'    other node in column 2.
-#' @param object spRSwarm object.
-#' @param .Object Internal object.
 #' @param ... additional arguments to pass on
 #' @return If the edges argument only includes on row, a vector of multiplet
 #'    names is returned. If several edges are interogated a list is returned
@@ -592,8 +588,6 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
 #' @param spSwarm An spSwarm object.
 #' @param edge.cutoff The minimum fraction to consider (?).
 #' @param multiplet The name of the multiplet of interest.
-#' @param object spRSwarm object.
-#' @param .Object Internal object.
 #' @param ... additional arguments to pass on
 #' @return Edge names.
 #' @author Jason T. Serviss

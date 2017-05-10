@@ -5,12 +5,12 @@
 \alias{pearsonsDist}
 \title{pearsonsDist}
 \usage{
-pearsonsDist(data, select)
+pearsonsDist(spCounts, select)
 }
 \arguments{
-\item{data}{An spCounts object.}
+\item{spCounts}{An spCounts object.}
 
-\item{classes}{A character vector indicating the class of each singlet.}
+\item{select}{A numeric vector indicating the indexes of genes to include.}
 }
 \value{
 A matrix containing the mean value for each gene for each
@@ -26,10 +26,7 @@ in the supplied unsupervised dimensionality reduction (t-SNE) data
 representation.
 }
 \examples{
-
-singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
-select <- spTopMax(singlets, 10)
-my.dist <- pearsonsDist(singlets, select)
+#write an example
 
 }
 \author{

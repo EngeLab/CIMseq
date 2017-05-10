@@ -13,6 +13,7 @@ NULL
 #' @aliases spCounts
 #' @param counts Counts matrix with samples as columns and genes as rows.
 #' @param counts.ercc A matrix containing ercc spike-in reads and their counts.
+#' @param counts.cpm Normalized counts per million.
 #' @param counts.log Log2 normalized counts per million.
 #' @param object spCounts object.
 #' @param n Data to extract from spCounts object.
@@ -108,6 +109,9 @@ setGeneric("estimateCells", function(
 })
 
 #' @rdname estimateCells
+#' @import tibble
+#' @import dplyr
+#' @importFrom stats median quantile
 #' @export
 setMethod("estimateCells", "spCounts", function(
     spCountsSng,
@@ -139,8 +143,8 @@ setMethod("estimateCells", "spCounts", function(
     cellNumberMin <- quantile(frac.ercc[sampleType == "Singlet"])[2] / frac.ercc
     cellNumberMax <- quantile(frac.ercc[sampleType == "Singlet"])[4] / frac.ercc
 
-    d <- data.frame(
-        sampleType = factor(sampleType, levels=c("Singlet", "Multiplet")),
+    d <- tibble(
+        sampleType = sampleType,
         frac.ercc = frac.ercc,
         cellNumberMin = cellNumberMin,
         cellNumberMedian = cellNumberMedian,

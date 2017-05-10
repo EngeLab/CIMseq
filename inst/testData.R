@@ -61,7 +61,7 @@ rownames(testCounts) <- sort(
 #make testErcc
 s <- grepl("^s", colnames(expCounts))
 s2 <- grepl("^s", colnames(testCounts))
-set.seed(1234)
+set.seed(129)
 singletsE <- expErcc[,s]
 singletsE <- singletsE[,sample(
     1:ncol(expErcc[,s]),
@@ -74,7 +74,7 @@ multipletsE <- multipletsE[,
     sample(1:ncol(expErcc[,!s]),
     size=length(s2[s2 == FALSE]),
     replace=TRUE
-)]/16
+)]
 
 testErcc <- matrix(c(singletsE, multipletsE), ncol=ncol(testCounts))
 

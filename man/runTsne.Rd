@@ -3,18 +3,34 @@
 \name{runTsne}
 \alias{runTsne}
 \alias{runTsne}
-\alias{runMclust}
 \title{runTsne}
 \usage{
 runTsne(my.dist, dims = 2, theta = 0, initial_dims = 50,
   max_iter = 2000, perplexity = 10, seed = 11, is_distance = TRUE, ...)
-
-runMclust(my.tsne, Gmax = 50, seed = 11)
 }
 \arguments{
-\item{data}{Singlet expression matrix.}
+\item{my.dist}{A distance object typically produced with pearsonsDist.}
 
-\item{classes}{A character vector indicating the class of each singlet.}
+\item{dims}{Argument to Rtsne. Numeric indicating the output dimensions.}
+
+\item{theta}{Argument to
+[Rtsne](https://cran.r-project.org/web/packages/Rtsne/index.html).}
+
+\item{initial_dims}{Argument to
+[Rtsne](https://cran.r-project.org/web/packages/Rtsne/index.html).}
+
+\item{max_iter}{Argument to
+[Rtsne](https://cran.r-project.org/web/packages/Rtsne/index.html).}
+
+\item{perplexity}{Argument to
+[Rtsne](https://cran.r-project.org/web/packages/Rtsne/index.html).}
+
+\item{seed}{The desired seed to set before running.}
+
+\item{is_distance}{Argument to
+[Rtsne](https://cran.r-project.org/web/packages/Rtsne/index.html).}
+
+\item{...}{Additional arguments to pass on}
 }
 \value{
 A matrix containing the mean value for each gene for each

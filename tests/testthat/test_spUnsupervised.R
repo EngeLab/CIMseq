@@ -1,20 +1,18 @@
 #context("spUnsupervised")
 
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[,s], testErcc[,s])
 
 ##run test spTopVar
-test_that("check that the spTopVar function outputs the expected result", {
+test_that("check that spTopVar outputs the expected result", {
     
     ###TEST1####
-    #prepare normal input data
-    s <- grepl("^s", colnames(testCounts))
-    cObjSng <- spCounts(testCounts[,s], testErcc[,s])
-    
     #setup expected data
-    expected1 <- 27L
-    expected2 <- 243L
+    expected1 <- 9L
+    expected2 <- 121L
     
     #run function
-    output <- spTopVar(cObjSng, 250)
+    output <- spTopVar(cObjSng, 10)
     
     #test
     expect_identical(expected1, output[1])
@@ -23,19 +21,15 @@ test_that("check that the spTopVar function outputs the expected result", {
 })
 
 ##run test spTopMax
-test_that("check that the spTopMax function outputs the expected result", {
+test_that("check that spTopMax outputs the expected result", {
     
     ###TEST1####
-    #prepare normal input data
-    s <- grepl("^s", colnames(testCounts))
-    cObjSng <- spCounts(testCounts[,s], testErcc[,s])
-    
     #setup expected data
-    expected1 <- 1L
-    expected2 <- 233L
+    expected1 <- 246L
+    expected2 <- 127L
     
     #run function
-    output <- spTopMax(cObjSng, 250)
+    output <- spTopMax(cObjSng, 10)
     
     #test
     expect_identical(expected1, output[1])
@@ -44,17 +38,15 @@ test_that("check that the spTopMax function outputs the expected result", {
 })
 
 ##run test pearsonsDist
-test_that("check that the pearsonsDist function outputs the expected result", {
+test_that("check that pearsonsDist outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    s <- grepl("^s", colnames(testCounts))
-    cObjSng <- spCounts(testCounts[,s], testErcc[,s])
     select <- 1:5
 
     #setup expected data
-    expectHead <- c(0,1,1,1,1,0)
-    expectTail <- rep(0, 6)
+    expectHead <- c(1,2,1,2,0,2)
+    expectTail <- c(0,1,0,1,0,0)
     
     #run function
     output <- pearsonsDist(cObjSng, select)
@@ -66,7 +58,7 @@ test_that("check that the pearsonsDist function outputs the expected result", {
 })
 
 ##run test runTsne
-test_that("check that the runTsne function outputs the expected result", {
+test_that("check that runTsne outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -107,7 +99,7 @@ test_that("check that the runTsne function outputs the expected result", {
 })
 
 ##run test runMclust
-test_that("check that the runMclust function outputs the expected result", {
+test_that("check that runMclust outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -146,18 +138,15 @@ test_that("check that the runMclust function outputs the expected result", {
 })
 
 ##run test averageGroupExpression
-test_that("check that the averageGroupExpression function outputs the expected
-result", {
+test_that("check that averageGroupExpression outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    s <- grepl("^s", colnames(testCounts))
-    cObjSng <- spCounts(testCounts[,s], testErcc[,s])
     classes <- getData(testUns, "classification")
 
     #setup expected data
-    expectedFirstRow <- c(5954, 998, 1651, 1054)
-    expectedLastRow <- c(3603, 289, 1530, 753)
+    expectedFirstRow <- c(8309,8322,331,717)
+    expectedLastRow <- c(2287,7040,2045,1901)
 
     names(expectedFirstRow) <- unique(classes)
     names(expectedLastRow) <- unique(classes)
@@ -174,7 +163,7 @@ result", {
 
 
 ##run test tsneGroupMeans
-test_that("check that the tsneGroupMeans function outputs the expected result",{
+test_that("check that tsneGroupMeans outputs the expected result",{
     
     ###TEST1####
     #prepare normal input data
@@ -182,20 +171,14 @@ test_that("check that the tsneGroupMeans function outputs the expected result",{
     tsne <- getData(testUns, "tsne")
     
     #setup expected data
-    expected <- data.frame(
-        classification=c("A1", "B1", "C1", "D1"),
-        x=c(-33,44,-15,4),
-        y=c(-2,-6,-40,47)
-    )
+    expected1 <- c(-35, -34)
+    expected2 <- c(48, -20)
     
     #run function
     output <- tsneGroupMeans(tsne, classes)
     
-    #round output
-    output$x <- round(output$x)
-    output$y <- round(output$y)
-    
     #test
-    expect_identical(expected, output)
-    
+    expect_identical(expected1, as.numeric(round(output[1, 2:3])))
+    expect_identical(expected2, as.numeric(round(output[nrow(output), 2:3])))
+
 })

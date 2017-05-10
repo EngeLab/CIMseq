@@ -40,6 +40,8 @@ spCounts(counts, ...)
 
 \item{counts.log}{Log2 normalized counts per million.}
 
+\item{counts.cpm}{Normalized counts per million.}
+
 \item{counts.ercc}{A matrix containing ercc spike-in reads and their counts.}
 }
 \value{

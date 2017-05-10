@@ -108,7 +108,7 @@ spUnsupervised(spCounts, ...)
 
 \item{.Object}{Internal object.}
 
-\item{...}{Additional arguments to pass on}
+\item{...}{Additional arguments to pass on.}
 
 \item{tsne}{tSNE results.}
 
@@ -155,12 +155,6 @@ character vector. These must match the rownames in the counts variable.}
 
 \item{weighted}{boolean indicating if the group means should be weighted with
 uncertainty.}
-
-\item{counts}{Passed from spCounts object.}
-
-\item{counts.log}{Passed from spCounts object.}
-
-\item{sampleType}{Passed from spCounts object.}
 }
 \value{
 spUnsupervised object.

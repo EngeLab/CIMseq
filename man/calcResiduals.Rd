@@ -21,11 +21,9 @@ specifically extract residuals from.}
 
 \item{edge.cutoff}{The minimum fraction to consider (?).}
 
+\item{distFun}{The distance function to be used to calculate the residuals.}
+
 \item{...}{additional arguments to pass on}
-
-\item{object}{spRSwarm object.}
-
-\item{.Object}{Internal object.}
 }
 \value{
 spSwarm connection strengths and p-values.

@@ -2,11 +2,17 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{runMclust}
 \alias{runMclust}
+\alias{runMclust}
 \title{runMclust}
+\usage{
+runMclust(my.tsne, Gmax = 50, seed = 11)
+}
 \arguments{
-\item{data}{Singlet expression matrix.}
+\item{my.tsne}{A tsne result.}
 
-\item{classes}{A character vector indicating the class of each singlet.}
+\item{Gmax}{A integer indicating the maximum number of clusters to evaluate.}
+
+\item{seed}{The desired seed to set before running.}
 }
 \value{
 A matrix containing the mean value for each gene for each

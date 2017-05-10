@@ -78,13 +78,13 @@ table(colnames(getData(cObjSng, "counts")))
 ### ERCC fraction plot
 The fractions of ERCC spike-ins and the number of approximated cells can be viewed in a plot using the spPlot command and specifying the type of plot desired.
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-spPlot(cObjSng, cObjMul, type="ercc")
+plotCounts(cObjSng, cObjMul, type="ercc")
 ```
 
 ### Markers plot
 Sometimes it may be desireable to view the expression of marker genes in the counts object. At the moment, this can only be accomplished with 2 markers at a time.
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-spPlot(cObjSng, cObjMul, type="markers", markers=c("c1", "b1"))
+plotCounts(cObjSng, cObjMul, type="markers", markers=c("c1", "b1"))
 ```
 
 ## spUnsupervised object
@@ -111,13 +111,13 @@ uObj <- spUnsupervised(cObjSng, max_iter=1000, max=250, weighted=TRUE)
 The results of the unsupervised clustering can be viewed using spPlot function and specifying the type as "clusters". The colors in the plot represent the classification of each cell. In addition, by default, the uncertainty from the cluster classification is represented with the size of the point. Even though this dataset is very "well behaved", we can see that points residing on the edges of some of the clusters have a higher degree of associated uncertainty than points residing in the middle of the clusters.
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-spPlot(uObj, type="clusters")
+plotUnsupervised(uObj, type="clusters")
 ```
 
 ### Markers plot
 The sp.scRNAseq unsupervised object also has an associated markers plot where the markers can be visualized overlayed with the unsupervised clustering results.
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-spPlot(uObj, cObjSng, type="markers", markers=c("c1", "b1"))
+plotUnsupervised(uObj, cObjSng, type="markers", markers=c("c1", "b1"))
 ```
 
 ## spSwarm object
@@ -150,13 +150,13 @@ This reports all of the detected edges. The edge.cutoff argument specifies the f
 The resulting "connectome" can be plotted via the commands below. Here we need to provide the plot function with the 
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-spPlot(sObj, uObj, cObjSng, edge.cutoff=1/10.5, min.num.edges=1)
+plotSwarm(sObj, uObj, cObjSng, edge.cutoff=1/10.5, min.num.edges=1, type="tsne")
 ```
 
 The netwrok plot can be made in the above way or with a "natural" layout as below:
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE, warning=FALSE}
-spPlot(sObj, uObj, cObjSng, layout="igraph", edge.cutoff=1/10.5, min.num.edges=1)
+plotSwarm(sObj, uObj, cObjSng, type="igraph", edge.cutoff=1/10.5, min.num.edges=1)
 ```
 
 In addition "self connections" can be turned on via specifying the "loop" argument as TRUE.

@@ -17,10 +17,6 @@ spSwarmPoisson(spSwarm, edge.cutoff, min.pval = 1, min.num.edges = 0, ...)
 \item{min.num.edges}{Minimum number of observed edges to report a connection.}
 
 \item{...}{additional arguments to pass on}
-
-\item{object}{spRSwarm object.}
-
-\item{.Object}{Internal object.}
 }
 \value{
 spSwarm connection strengths and p-values.

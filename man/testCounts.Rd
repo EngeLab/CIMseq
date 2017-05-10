@@ -3,20 +3,20 @@
 \docType{data}
 \name{testCounts}
 \alias{testCounts}
-\title{Simulated data used to demonstrate sp.scRNAseq package.}
-\format{Matrix
+\title{Simulated counts data used to demonstrate sp.scRNAseq package.}
+\format{matrix
 \describe{
-\item{rownames}{Gene counts}
-\item{colnames}{Cells}
+    \item{rownames}{Gene names}
+    \item{colnames}{Samples. Singlets prefixed with "s" and multiplets "m".}
 }}
 \usage{
 testCounts
 }
 \value{
-matrix
+Matrix of counts.
 }
 \description{
-Test counts.
+Test counts data.
 }
 \examples{
 testCounts

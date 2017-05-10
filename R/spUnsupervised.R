@@ -26,9 +26,6 @@ NULL
 #'    expression or maximum variance which is decided by the "type" paramater.
 #' @param genes If type = manual, genes to be included are specified here as a
 #'    character vector. These must match the rownames in the counts variable.
-#' @param counts Passed from spCounts object.
-#' @param counts.log Passed from spCounts object.
-#' @param sampleType Passed from spCounts object.
 #' @param tsne tSNE results.
 #' @param tsneMeans The mean x and y positions of each cell type in the tSNE
 #'    results.
@@ -46,7 +43,7 @@ NULL
 #' @param n Data to extract from spUnsupervised object.
 #' @param value Data to replace in spUnsupervised object.
 #' @param .Object Internal object.
-#' @param ... Additional arguments to pass on
+#' @param ... Additional arguments to pass on.
 #' @return spUnsupervised object.
 #' @author Jason T. Serviss
 #' @keywords spUnsupervised
@@ -247,27 +244,24 @@ spTopMax <- function(spCounts, n) {
 #' @name pearsonsDist
 #' @rdname pearsonsDist
 #' @aliases pearsonsDist
-#' @param data An spCounts object.
-#' @param classes A character vector indicating the class of each singlet.
+#' @param spCounts An spCounts object.
+#' @param select A numeric vector indicating the indexes of genes to include.
 #' @return A matrix containing the mean value for each gene for each
 #'    classification group.
 #' @author Jason T. Serviss
 #' @keywords pearsonsDist
 #' @examples
-#'
-#' singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
-#' select <- spTopMax(singlets, 10)
-#' my.dist <- pearsonsDist(singlets, select)
+#' #write an example
 #'
 NULL
 
 #' @rdname pearsonsDist
 #' @export
 
-pearsonsDist <- function(data, select) {
+pearsonsDist <- function(spCounts, select) {
     as.dist(
         1-cor(
-            2^getData(data, "counts.log")[select, ],
+            2^getData(spCounts, "counts.log")[select, ],
             method="p"
         )
     )
@@ -287,8 +281,20 @@ pearsonsDist <- function(data, select) {
 #' @name runTsne
 #' @rdname runTsne
 #' @aliases runTsne
-#' @param data Singlet expression matrix.
-#' @param classes A character vector indicating the class of each singlet.
+#' @param my.dist A distance object typically produced with pearsonsDist.
+#' @param dims Argument to Rtsne. Numeric indicating the output dimensions.
+#' @param theta Argument to
+#'    [Rtsne](https://cran.r-project.org/web/packages/Rtsne/index.html).
+#' @param initial_dims Argument to
+#'    [Rtsne](https://cran.r-project.org/web/packages/Rtsne/index.html).
+#' @param max_iter Argument to
+#'    [Rtsne](https://cran.r-project.org/web/packages/Rtsne/index.html).
+#' @param perplexity Argument to
+#'    [Rtsne](https://cran.r-project.org/web/packages/Rtsne/index.html).
+#' @param seed The desired seed to set before running.
+#' @param is_distance Argument to
+#'    [Rtsne](https://cran.r-project.org/web/packages/Rtsne/index.html).
+#' @param ... Additional arguments to pass on
 #' @return A matrix containing the mean value for each gene for each
 #'    classification group.
 #' @author Jason T. Serviss
@@ -348,8 +354,9 @@ runTsne <- function(
 #' @name runMclust
 #' @rdname runMclust
 #' @aliases runMclust
-#' @param data Singlet expression matrix.
-#' @param classes A character vector indicating the class of each singlet.
+#' @param my.tsne A tsne result.
+#' @param Gmax A integer indicating the maximum number of clusters to evaluate.
+#' @param seed The desired seed to set before running.
 #' @return A matrix containing the mean value for each gene for each
 #'    classification group.
 #' @author Jason T. Serviss
@@ -366,7 +373,7 @@ runTsne <- function(
 #'
 NULL
 
-#' @rdname runTsne
+#' @rdname runMclust
 #' @importFrom mclust Mclust mclustBIC
 #' @export
 
