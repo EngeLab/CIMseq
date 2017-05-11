@@ -24,7 +24,7 @@ spSwarm(spCounts, spUnsupervised, ...)
 
 \S4method{spSwarm}{spCounts,spUnsupervised}(spCounts, spUnsupervised,
   distFun = distToSlice, maxiter = 10, swarmsize = 150, cores = 1,
-  seed = 11, ...)
+  seed = 11, norm = TRUE, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}
@@ -56,6 +56,8 @@ spSwarm(spCounts, spUnsupervised, ...)
 \item{cores}{The number of cores to be used while running spRSwarm.}
 
 \item{seed}{The desired seed to set before running.}
+
+\item{norm}{Logical indicating if the sum of fractions should equal 1.}
 }
 \value{
 spSwarm output.

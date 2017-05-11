@@ -19,6 +19,7 @@ NULL
 #' @param swarmsize pySwarm argument indicating the number of swarm particals.
 #' @param cores The number of cores to be used while running spRSwarm.
 #' @param seed The desired seed to set before running.
+#' @param norm Logical indicating if the sum of fractions should equal 1.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per multiplet.
@@ -60,6 +61,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     swarmsize = 150,
     cores=1,
     seed=11,
+    norm=TRUE,
     ...
 ){
     
@@ -73,18 +75,24 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     #subset top genes for use with optimization
     selectInd <- getData(spUnsupervised, "selectInd")
     cellTypes <- groupMeans[selectInd, ]
-    multiplets <- matrix(counts[selectInd, ])
+    multiplets <- matrix(
+        counts[selectInd, ],
+        ncol=ncol(counts),
+        dimnames=list(1:length(selectInd), colnames(counts))
+    )
     
     ##run pySwarm
     tmp <- .runPyRSwarm(
-        cellTypes=cellTypes,
-        multiplets=multiplets,
-        fractions=fractions,
-        distFun=distFun,
-        maxiter=maxiter,
-        swarmsize=swarmsize,
-        cores=cores,
-        seed=seed
+        cellTypes = cellTypes,
+        multiplets = multiplets,
+        fractions = fractions,
+        distFun = distFun,
+        maxiter = maxiter,
+        swarmsize = swarmsize,
+        cores = cores,
+        seed = seed,
+        norm = norm,
+        ...
     )
     result <- tmp[[1]]
     cost <- tmp[[2]]
@@ -94,7 +102,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     new("spSwarm",
         spSwarm=result,
         costs=cost,
-        convergence=convergence,
+        convergence = convergence,
         arguments = list(
             maxiter=maxiter,
             swarmsize=swarmsize
@@ -112,7 +120,9 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     maxiter,
     swarmsize,
     cores,
-    seed
+    seed,
+    norm,
+    ...
 ){
     
     control=list(maxit=maxiter, s=swarmsize)
@@ -129,7 +139,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
                 distFun,
                 cellTypes,
                 control,
-                multiplets
+                multiplets,
+                ...
             ),
         mc.cores=cores
     )
@@ -149,8 +160,10 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     
     #normalize swarm output
-    output <- output * 1/rowSums(output)
-
+    if(norm) {
+        output <- output * 1/rowSums(output)
+    }
+    
     colnames(output) <- colnames(cellTypes)
     rownames(output) <- colnames(multiplets)
     return(list(output, cost, convergence))
@@ -162,7 +175,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     distFun,
     cellTypes,
     control,
-    multiplets
+    multiplets,
+    ...
 ){
     oneMultiplet <- multiplets[,i]
     psoptim(
@@ -172,7 +186,9 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         oneMultiplet=oneMultiplet,
         lower=0,
         upper=1,
-        control=control
+        control=control,
+        i=i,
+        ...
     )
 }
 
@@ -192,7 +208,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 distToSlice <- function(
     fractions,
     cellTypes,
-    oneMultiplet
+    oneMultiplet,
+    ...
 ){
     if(sum(fractions) == 0) {
         return(999999999)
@@ -206,7 +223,9 @@ distToSlice <- function(
 distToSliceNorm <- function(
     fractions,
     cellTypes,
-    oneMultiplet
+    oneMultiplet,
+    i,
+    ...
 ){
     if(sum(fractions) == 0) {
         return(999999999)
@@ -219,17 +238,25 @@ distToSliceNorm <- function(
 }
 
 #' @export
-distToSliceTopFour <- function(
+distToSliceTop <- function(
     fractions,
     cellTypes,
-    oneMultiplet
+    oneMultiplet,
+    i,
+    ...
 ){
+    if("cells" %in% names(list(...))) {
+        l <- list(...)
+        cells <- ceiling(l[['cells']][i])
+    }
+    
     if(sum(fractions) == 0) {
         return(999999999)
     }
-    fractions[fractions < sort(fractions, decresing=T)[4]] <- 0 # 4 is an arbitrary number...
-    normFractions <- fractions / sum(fractions)
-    a = .makeSyntheticSlice(cellTypes, normFractions)
+    #normFractions <- fractions / sum(fractions)
+    fractions[fractions < sort(fractions, decreasing=TRUE)[cells]] <- 0
+    cat(fractions, "\n")
+    a = .makeSyntheticSlice(cellTypes, fractions)
     sum(abs(a - oneMultiplet))
 }
 
@@ -237,7 +264,9 @@ distToSliceTopFour <- function(
 distToSliceEuclid <- function(
     fractions,
     cellTypes,
-    oneMultiplet
+    oneMultiplet,
+    i,
+    ...
 ){
     if(sum(fractions) == 0) {
         return(999999999)
@@ -251,7 +280,9 @@ distToSliceEuclid <- function(
 distToSlicePearson <- function(
     fractions,
     cellTypes,
-    oneMultiplet
+    oneMultiplet,
+    i,
+    ...
 ){
     if(sum(fractions) == 0) {
         return(999999999)
@@ -367,7 +398,8 @@ spSwarmPoisson <- function(
         from=xy[,1],
         to=xy[,2],
         weight=res,
-        stringsAsFactors=FALSE
+        stringsAsFactors=FALSE,
+        row.names=1:nrow(xy)
     )
     
     return(edges)
@@ -568,7 +600,7 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
         rownames(frac)[o]
     })
     
-    if(ncol(mulForEdges) == 1) {
+    if(class(mulForEdges) == "matrix") {
         return(unlist(mulForEdges))
     } else {
         names(mulForEdges) <- paste(edges[,1], edges[,2], sep="-")
@@ -624,11 +656,14 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
     frac <- getData(spSwarm, "spSwarm")[multiplet,]
     combs <- combn(names(frac)[frac > edge.cutoff], 2)
     s <- spSwarmPoisson(spSwarm, edge.cutoff=edge.cutoff)
-    out <- as.data.frame(t(sapply(
-        1:ncol(combs),
-        function(j)
-            s[s$from == combs[1,j] & s$to == combs[2,j], ]
-    )))
+    
+    #out <- as.data.frame(t(sapply(
+    #    1:ncol(combs),
+    #    function(j)
+    #        s[s$from == combs[1,j] & s$to == combs[2,j], ]
+    #)))
+    out <- s[s[,1] %in% t(combs)[,1] & s[,2] %in% t(combs)[,2], ]
+    
     if(nrow(out) == ncol(combs)) {
         return(out)
     } else {
