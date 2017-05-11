@@ -26,7 +26,7 @@ s.J1 <- syntheticData[ ,grepl("s.J1", colnames(syntheticData))][ ,1:85]
 
 #add multuplets
 m.A1B1 <- syntheticData[ ,'m.A1B1']
-m.I1J1 <- syntheticData[ ,'m.I1J1']
+m.C1D1 <- syntheticData[ ,'m.I1J1']
 
 #make counts
 counts <- cbind(
@@ -35,7 +35,7 @@ counts <- cbind(
     s.I1,
     s.J1,
     m.A1B1,
-    m.I1J1
+    m.C1D1
 )
 
 #minimise genes
