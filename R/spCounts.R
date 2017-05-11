@@ -117,38 +117,57 @@ setMethod("estimateCells", "spCounts", function(
     spCountsMul,
     ...
 ){
-    sampleType <- c(
-        rep(
-            "Singlet",
-            ncol(getData(spCountsSng, "counts"))
-        ),
-        rep(
-            "Multiplet",
-            ncol(getData(spCountsMul, "counts"))
-        )
-    )
-    
     counts <- cbind(
         getData(spCountsSng, "counts"),
         getData(spCountsMul, "counts")
     )
+    
     counts.ercc <- cbind(
         getData(spCountsSng, "counts.ercc"),
         getData(spCountsMul, "counts.ercc")
     )
     
-    frac.ercc <- colSums(counts.ercc) / (colSums(counts.ercc)+colSums(counts))
-    cellNumberMedian <- median(frac.ercc[sampleType == "Singlet"]) / frac.ercc
-    cellNumberMin <- quantile(frac.ercc[sampleType == "Singlet"])[2] / frac.ercc
-    cellNumberMax <- quantile(frac.ercc[sampleType == "Singlet"])[4] / frac.ercc
-
     d <- tibble(
-        sampleType = sampleType,
-        frac.ercc = frac.ercc,
-        cellNumberMin = cellNumberMin,
-        cellNumberMedian = cellNumberMedian,
-        cellNumberMax = cellNumberMax
+        sampleName = c(
+            colnames(getData(spCountsSng, "counts")),
+            colnames(getData(spCountsMul, "counts"))
+        ),
+        sampleType = c(
+            rep(
+                "Singlet",
+                ncol(getData(spCountsSng, "counts"))
+            ),
+            rep(
+                "Multiplet",
+                ncol(getData(spCountsMul, "counts"))
+            )
+        ),
+        frac.ercc = colSums(counts.ercc) /
+            (colSums(counts.ercc)+colSums(counts))
     )
-    return(d)
     
+    d$cellNumberMin <-
+        d %>%
+            filter(sampleType == "Singlet") %>%
+            .$frac.ercc %>%
+            quantile %>%
+            .[4] %>%
+            `/` (d$frac.ercc)
+            
+    d$cellNumberMedian <-
+        d %>%
+            filter(sampleType == "Singlet") %>%
+            .$frac.ercc %>%
+            median %>%
+            `/` (d$frac.ercc)
+    
+    d$cellNumberMax <-
+        d %>%
+            filter(sampleType == "Singlet") %>%
+            .$frac.ercc %>%
+            quantile %>%
+            .[2] %>%
+            `/` (d$frac.ercc)
+    
+    return(d)
 })
