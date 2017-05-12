@@ -44,8 +44,13 @@ NULL
 #' @rdname spSwarm
 #' @export
 
-setGeneric("spSwarm", function(spCounts, spUnsupervised, ...
-){ standardGeneric("spSwarm") })
+setGeneric("spSwarm", function(
+    spCounts,
+    spUnsupervised,
+    ...
+){
+    standardGeneric("spSwarm")
+})
 
 
 #' @importFrom parallel mclapply
@@ -97,14 +102,14 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     result <- tmp[[1]]
     cost <- tmp[[2]]
     convergence <- tmp[[3]]
-    stats <- tmp[[4]]
+    #stats <- tmp[[4]]
     
     #create object
     new("spSwarm",
         spSwarm=result,
         costs=cost,
         convergence = convergence,
-        stats = stats,
+        #stats = stats,
         arguments = list(
             maxiter=maxiter,
             swarmsize=swarmsize
@@ -129,10 +134,10 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     control=list(
         maxit=maxiter,
-        s=swarmsize,
-        trace=1,
-        REPORT=100,
-        trace.stats=TRUE
+        s=swarmsize
+        #trace=1,
+        #REPORT=10,
+        #trace.stats=TRUE
     )
     
     set.seed(seed)
@@ -165,7 +170,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         "Maximal number of iterations without improvement reached." = 4
     )
     convergence <- names(convergenceKey)[match(convergence, convergenceKey)]
-    stats <- lapply(tmp, function(j) j[[6]])
+    #stats <- lapply(tmp, function(j) j[[6]])
     
     #normalize swarm output
     if(norm) {
@@ -174,7 +179,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     colnames(output) <- colnames(cellTypes)
     rownames(output) <- colnames(multiplets)
-    return(list(output, cost, convergence, stats))
+    return(list(output, cost, convergence))
 }
 
 .optim.fn <- function(
@@ -357,7 +362,7 @@ spSwarmPoisson <- function(
 
 .fractionCutoff <- function(mat, cutoff) {
     if(length(cutoff) == 1) {
-        return(mat > edge.cutoff)
+        return(mat > cutoff)
     } else {
         logic <- t(sapply(1:nrow(mat), function(j) {
             mat[j,] >= as.numeric(
@@ -390,9 +395,6 @@ spSwarmPoisson <- function(
 .calculateWeight <- function(
     mat,
     logic,
-    edge.cutoff,
-    min.pval=1,
-    min.num.edges=0,
     ...
 ){
     totcomb <- c(
@@ -440,49 +442,6 @@ spSwarmPoisson <- function(
     }
     return(out)
 }
-
-#spSwarmPoisson <- function(
-#    spSwarm,
-#    edge.cutoff,
-#    min.pval=1,
-#    min.num.edges=0,
-#    ...
-#){
-# FIXME: transpose because of cross-commit, should just fix indices below istead
-#    swarmT <- as.data.frame(t(getData(spSwarm, "spSwarm")))
-#    sobj.bool <- swarmT > edge.cutoff
-#    nodes <- rownames(swarmT)
-#    nclusts <- length(nodes)
-#    edges <- data.frame(
-#        from=rep(nodes, each=nclusts),
-#        to=rep(nodes, nclusts),
-#        weight=rep(0, nclusts^2)
-#    )
-    
-    #calculate edge weight, i.e. number of observed edges
-#    for(i in 1:(dim(sobj.bool)[2])) {
-#        o <- which(sobj.bool[,i])
-#        if(length(o) > 1) {
-#            for(j in 1:(length(o)-1)) {
-#                for(k in (j+1):length(o)) {
-#                    ind1 <- (o[j]-1)*nclusts+o[k]
-#                    edges[ind1,3] <- edges[ind1,3]+1
-#                    ind2 <- (o[k]-1)*nclusts+o[j]
-#                    edges[ind2,3] <- edges[ind2,3]+1
-#                }
-#            }
-#        } else { #add self-connections
-#            edges[o,3] <- edges[ind1,3]
-#        }
-#    }
-    
-    #calculate p-value
-#    mean.edges <- mean(edges$weight)
-#    edges$pval <- ppois(edges$weight, mean.edges, lower.tail=FALSE)
-#    out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
-#    return(out)
-#}
-
 
 #' calcResiduals
 #'
@@ -689,3 +648,141 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
         stop("somethings went wrong, check the code")
     }
 })
+
+#' permuteSwarm
+#'
+#' Write something
+#'
+#' Description
+#'
+#' @name permuteSwarm
+#' @rdname permuteSwarm
+#' @aliases permuteSwarm
+#' @param spSwarm An spSwarm object.
+#' @param edge.cutoff The minimum fraction to consider (?).
+#' @param multiplet The name of the multiplet of interest.
+#' @param ... additional arguments to pass on
+#' @return Edge names.
+#' @author Jason T. Serviss
+#' @keywords permuteSwarm
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+#' #run function
+#'
+#'
+NULL
+
+#' @rdname permuteSwarm
+#' @export
+
+setGeneric("permuteSwarm", function(
+    spCounts,
+    ...
+){
+    standardGeneric("permuteSwarm")
+})
+
+#' @rdname permuteSwarm
+#' @export
+
+setMethod("permuteSwarm", "spCounts", function(
+    spCounts,
+    spCountsMul,
+    spUnsupervised,
+    spSwarm,
+    distFun = distToSlice,
+    maxiter = 10,
+    swarmsize = 150,
+    cores=1,
+    seed=11,
+    norm=TRUE,
+    iter,
+    ...
+){
+    classes <- getData(spUnsupervised, "classification")
+    
+    permMatrix <- .makePermutations(classes, iter)
+    
+    rows <- ncol(getData(spCountsMul, "counts"))
+    cols <- length(unique(classes))
+    dims <- iter
+    permData <- array(
+        NA,
+        dim=c(rows, cols, dims),
+        dimnames=list(
+            colnames(getData(spCountsMul, "counts")),
+            sort(unique(classes)),
+            1:iter
+        )
+    )
+    
+    for(i in 1:iter) {
+        classification(spUnsupervised) <- permMatrix[,i]
+        groupMeans(spUnsupervised) <- averageGroupExpression(
+            spCounts,
+            permMatrix[,i],
+            weighted=FALSE
+        )
+        sObj <- spSwarm(
+            spCountsMul,
+            spUnsupervised,
+            distFun = distToSlice,
+            maxiter = maxiter,
+            swarmsize = swarmsize,
+            cores=cores,
+            seed=seed,
+            norm=norm
+        )
+        mat <- getData(sObj, "spSwarm")
+        order <- as.matrix(mat[ , order(colnames(mat))])
+        permData[,,i] <- order
+    }
+    
+    return(.calculatePermP(permData, iter))
+})
+
+.makePermutations <- function(classes, iter){
+    sapply(1:iter, function(j) {
+        classes[sample(1:length(classes), size=length(classes), replace=FALSE)]
+    })
+}
+
+.calculatePermP <- function(permData, spSwarm) {
+    swarm <- getData(spSwarm, "spSwarm")
+    logic <- .fractionCutoff(swarm, 0)
+    edges <- .calculateWeight(swarm, logic, 0, 1, 0)[,1:3]
+    
+    #remove self connections for now
+    edges <- edges[edges$from != edges$to, ]
+    
+    p <- c()
+    #get null for each edge
+    for(i in 1:nrow(edges)) {
+        node1 <- edges[i, 1]
+        node2 <- edges[i, 2]
+        idx1 <- which(colnames(swarm) == node1)
+        idx2 <- which(colnames(swarm) == node2)
+
+        swarm1 <- swarm[,idx1]
+        swarm2 <- swarm[,idx2]
+        
+        null1 <- permData[,idx1,]
+        null2 <- permData[,idx2,]
+        
+        l1 <- swarm1 > null1
+        l2 <- swarm2 > null2
+        l <- l1+l2
+        l[l < 2] <- 0
+        l[l == 2] <- 1
+        
+        p <- c(p, sum(l)/(iter*nrow(swarm)))
+
+    }
+    
+    edges$p <- p
+    return(edges)
+}
+
