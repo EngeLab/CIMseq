@@ -229,7 +229,7 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value)
     spSwarm="data.frame",
     costs="numeric",
     convergence="character",
-    stats="list",
+#stats="list",
     arguments="list"
 ))
 
