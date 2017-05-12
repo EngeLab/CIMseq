@@ -412,7 +412,8 @@ runMclust <- function(
 #' @aliases averageGroupExpression
 #' @param data Singlet expression matrix.
 #' @param classes A character vector indicating the class of each singlet.
-#' @param weighted If the group means shoule be weighted with the uncertainty.
+#' @param weighted Logical indicating if the group means shoule be weighted with
+#'    the uncertainty.
 #' @param uncertainty A numeric vector indicating the uncertainty if weighted is
 #'    TRUE.
 #' @return A matrix containing the mean value for each gene for each
