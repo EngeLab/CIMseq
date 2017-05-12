@@ -331,7 +331,7 @@ spSwarmPoisson <- function(
     ...
 ){
     mat <- getData(spSwarm, "spSwarm")
-    logic <- mat > edge.cutoff
+    logic <- .fractionCutoff(mat, edge.cutoff)
     
     #calcluate weight
     edges <- .calculateWeight(
@@ -349,6 +349,17 @@ spSwarmPoisson <- function(
     return(out)
 }
 
+.fractionCutoff <- function(mat, cutoff) {
+    if(length(cutoff) == 1) {
+        return(mat > edge.cutoff)
+    } else {
+        logic <- t(sapply(1:nrow(mat), function(j) {
+            mat[j,] >= as.numeric(sort(mat[j,], decreasing=TRUE)[ceiling(cutoff[j])])
+        }))
+        colnames(logic) <- colnames(mat)
+        return(logic)
+    }
+}
 .calculateP <- function(
     edges,
     min.pval,
