@@ -507,6 +507,51 @@ tsneGroupMeans <- function(data, classes) {
     return(means)
 }
 
+#' erccPerClass
+#'
+#'
+#' Calculates median ercc reads per class.
+#'
+#'
+#'
+#' @name erccPerClass
+#' @rdname erccPerClass
+#' @aliases erccPerClass
+#' @param data Singlet 2D tsne.
+#' @param classes A character vector indicating the class of each singlet.
+#' @return A matrix containing the mean value for each gene for each
+#'    classification group.
+#' @author Jason T. Serviss
+#' @keywords erccPerClass
+#' @examples
+#'
+#' #write something
+#'
+NULL
+
+#' @rdname erccPerClass
+#' @importFrom dplyr group_by summarise right_join
+#' @inportFrom tibble tibble
+#' @export
+
+erccPerClass <- function(
+    spCountsSng,
+    spCountsMul,
+    spUnsupervised
+){
+    d <- estimateCells(spCountsSng, spCountsMul)
+    class <- tibble(
+        class = getData(spUnsupervised, "classification"),
+        sampleName = colnames(getData(spCountsSng, "counts"))
+    )
+    d <- right_join(d, class, by="sampleName")
+    
+    median <- d %>%
+        group_by(class) %>%
+        summarise(median=median(frac.ercc))
+    
+    return(median)
+}
 
 
 
