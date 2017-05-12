@@ -151,9 +151,9 @@ setMethod("estimateCells", "spCounts", function(
             filter(sampleType == "Singlet") %>%
             .$frac.ercc %>%
             quantile %>%
-            .[4] %>%
+            .[2] %>%
             `/` (d$frac.ercc)
-            
+    
     d$cellNumberMedian <-
         d %>%
             filter(sampleType == "Singlet") %>%
@@ -161,13 +161,15 @@ setMethod("estimateCells", "spCounts", function(
             median %>%
             `/` (d$frac.ercc)
     
+    
+            
     d$cellNumberMax <-
-        d %>%
-            filter(sampleType == "Singlet") %>%
-            .$frac.ercc %>%
-            quantile %>%
-            .[2] %>%
-            `/` (d$frac.ercc)
+            d %>%
+                filter(sampleType == "Singlet") %>%
+                .$frac.ercc %>%
+                quantile %>%
+                .[4] %>%
+                `/` (d$frac.ercc)
     
     return(d)
 })
