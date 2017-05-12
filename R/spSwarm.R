@@ -700,6 +700,7 @@ setMethod("permuteSwarm", "spCounts", function(
     seed=11,
     norm=TRUE,
     iter,
+    edgeAlpha = 0.05,
     ...
 ){
     classes <- getData(spUnsupervised, "classification")
@@ -741,7 +742,7 @@ setMethod("permuteSwarm", "spCounts", function(
         permData[,,i] <- order
     }
     
-    return(.calculatePermP(permData, iter))
+    return(.calculatePermP(permData, iter, edgeAlpha))
 })
 
 .makePermutations <- function(classes, iter){
@@ -750,15 +751,17 @@ setMethod("permuteSwarm", "spCounts", function(
     })
 }
 
-.calculatePermP <- function(permData, spSwarm) {
+.calculatePermP <- function(permData, spSwarm, edgeAlpha) {
     swarm <- getData(spSwarm, "spSwarm")
     logic <- .fractionCutoff(swarm, 0)
-    edges <- .calculateWeight(swarm, logic, 0, 1, 0)[,1:3]
+    edges <- .calculateWeight(swarm, logic, 0, 1, 0)[,1:2]
     
     #remove self connections for now
     edges <- edges[edges$from != edges$to, ]
     
     p <- c()
+    weight <- c()
+    
     #get null for each edge
     for(i in 1:nrow(edges)) {
         node1 <- edges[i, 1]
@@ -779,10 +782,25 @@ setMethod("permuteSwarm", "spCounts", function(
         l[l == 2] <- 1
         
         p <- c(p, sum(l)/(iter*nrow(swarm)))
-
+        
+        #calculate edge weight
+        l1 <- swarm1 < null1
+        l2 <- swarm2 < null2
+        
+        n1 <- rowSums(l1)
+        n2 <- rowSums(l2)
+        n1P <- ifelse(n1 == 0, 10^-log10(iter), n1/iter)
+        n2P <- ifelse(n2 == 0, 10^-log10(iter), n2/iter)
+        weight <- c(weight, length(
+            intersect(
+                which(n1P < edgeAlpha),
+                which(n2P < edgeAlpha)
+            )
+        ))
     }
     
     edges$p <- p
+    edges$weight <- weight
     return(edges)
 }
 
