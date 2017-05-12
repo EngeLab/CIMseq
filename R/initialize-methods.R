@@ -56,6 +56,7 @@ setMethod("initialize","spSwarm", function(
     spSwarm,
     costs,
     convergence,
+    stats,
     arguments
 ){
     callNextMethod(
@@ -64,6 +65,7 @@ setMethod("initialize","spSwarm", function(
     spSwarm = spSwarm,
     costs = costs,
     convergence = convergence,
+    stats = stats,
     arguments = arguments
     )
 })

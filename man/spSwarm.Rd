@@ -15,7 +15,7 @@
 \usage{
 \S4method{getData}{spSwarm}(object, n = NULL)
 
-\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costs, convergence,
+\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costs, convergence, stats,
   arguments)
 
 \S4method{show}{spSwarm}(object)

@@ -97,12 +97,14 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     result <- tmp[[1]]
     cost <- tmp[[2]]
     convergence <- tmp[[3]]
+    stats <- tmp[[4]]
     
     #create object
     new("spSwarm",
         spSwarm=result,
         costs=cost,
         convergence = convergence,
+        stats = stats,
         arguments = list(
             maxiter=maxiter,
             swarmsize=swarmsize
@@ -125,7 +127,13 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     ...
 ){
     
-    control=list(maxit=maxiter, s=swarmsize)
+    control=list(
+        maxit=maxiter,
+        s=swarmsize,
+        trace=1,
+        REPORT=100,
+        trace.stats=TRUE
+    )
     
     set.seed(seed)
     to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
@@ -157,7 +165,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         "Maximal number of iterations without improvement reached." = 4
     )
     convergence <- names(convergenceKey)[match(convergence, convergenceKey)]
-    
+    stats <- lapply(tmp, function(j) j[[6]])
     
     #normalize swarm output
     if(norm) {
@@ -166,7 +174,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     colnames(output) <- colnames(cellTypes)
     rownames(output) <- colnames(multiplets)
-    return(list(output, cost, convergence))
+    return(list(output, cost, convergence, stats))
 }
 
 .optim.fn <- function(
@@ -249,13 +257,11 @@ distToSliceTop <- function(
         l <- list(...)
         cells <- ceiling(l[['cells']][i])
     }
-    
+    cat(fractions, "\n")
     if(sum(fractions) == 0) {
         return(999999999)
     }
-    #normFractions <- fractions / sum(fractions)
     fractions[fractions < sort(fractions, decreasing=TRUE)[cells]] <- 0
-    cat(fractions, "\n")
     a = .makeSyntheticSlice(cellTypes, fractions)
     sum(abs(a - oneMultiplet))
 }
@@ -354,7 +360,9 @@ spSwarmPoisson <- function(
         return(mat > edge.cutoff)
     } else {
         logic <- t(sapply(1:nrow(mat), function(j) {
-            mat[j,] >= as.numeric(sort(mat[j,], decreasing=TRUE)[ceiling(cutoff[j])])
+            mat[j,] >= as.numeric(
+                sort(mat[j,], decreasing=TRUE)[ceiling(cutoff[j])]
+            )
         }))
         colnames(logic) <- colnames(mat)
         return(logic)
