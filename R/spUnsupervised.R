@@ -531,7 +531,7 @@ NULL
 
 #' @rdname erccPerClass
 #' @importFrom dplyr group_by summarise right_join
-#' @inportFrom tibble tibble
+#' @importFrom tibble tibble
 #' @export
 
 erccPerClass <- function(
@@ -548,7 +548,7 @@ erccPerClass <- function(
     
     median <- d %>%
         group_by(class) %>%
-        summarise(median=median(frac.ercc))
+        summarise(medianFracErcc=median(frac.ercc))
     
     return(median)
 }

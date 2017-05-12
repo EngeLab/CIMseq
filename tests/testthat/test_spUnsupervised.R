@@ -2,6 +2,7 @@
 
 s <- grepl("^s", colnames(testCounts))
 cObjSng <- spCounts(testCounts[,s], testErcc[,s])
+cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
 
 ##run test spTopVar
 test_that("check that spTopVar outputs the expected result", {
@@ -182,3 +183,26 @@ test_that("check that tsneGroupMeans outputs the expected result",{
     expect_identical(expected2, as.numeric(round(output[nrow(output), 2:3])))
 
 })
+
+##run test erccPerClass
+test_that("check that erccPerClass outputs the expected result",{
+    
+    ###TEST1####
+    #setup expected data
+    expected1 <- tibble(
+        class = c("A1", "B1", "C1", "D1"),
+        medianFracErcc = rep(1, 4)
+    )
+    
+    #run function
+    output <- erccPerClass(cObjSng, cObjMul, testUns)
+    output$medianFracErcc <- round(output$medianFracErcc)
+    
+    #test
+    expect_identical(expected1, output)
+    expect_type(output$class, "character")
+    expect_type(output$medianFracErcc, "double")
+    expect_false(any(is.na(output$medianFracErcc)))
+    
+})
+
