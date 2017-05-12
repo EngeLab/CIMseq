@@ -12,7 +12,8 @@ averageGroupExpression(data, classes, weighted, uncertainty)
 
 \item{classes}{A character vector indicating the class of each singlet.}
 
-\item{weighted}{If the group means shoule be weighted with the uncertainty.}
+\item{weighted}{Logical indicating if the group means shoule be weighted with
+the uncertainty.}
 
 \item{uncertainty}{A numeric vector indicating the uncertainty if weighted is
 TRUE.}
