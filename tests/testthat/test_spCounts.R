@@ -88,12 +88,14 @@ test_that("check that estimateCells outputs the expected result", {
     expected1 <- tibble(
         sampleType=c(rep("Singlet", 340), rep("Multiplet", 2))
     )
+    
     expected2 <- tibble(
         frac.ercc=1,
         cellNumberMin=1,
         cellNumberMedian=1,
         cellNumberMax=1
     )
+    
     expected3 <- tibble(
         frac.ercc=0,
         cellNumberMin=2,
@@ -105,14 +107,36 @@ test_that("check that estimateCells outputs the expected result", {
     output <- estimateCells(cObjSng, cObjMul)
     
     #test
-    expect_identical(expected1, output %>% select(1:1))
-    expect_identical(expected2, round(output %>% slice(1:1) %>% select(2:5)))
-    expect_identical(expected3, round(output %>% slice(nrow(output)) %>% select(2:5)))
-    expect_type(output[[1]], "character")
-    expect_type(output[[2]], "double")
-    expect_type(output[[3]], "double")
-    expect_type(output[[4]], "double")
-    expect_type(output[[5]], "double")
+    expect_identical(expected1, output %>% select(`sampleType`))
+    expect_identical(
+        expected2, round(
+            output %>%
+                slice(1:1) %>%
+                select(c(
+                    `frac.ercc`,
+                    `cellNumberMin`,
+                    `cellNumberMedian`,
+                    `cellNumberMax`
+                ))
+        )
+    )
+    expect_identical(expected3, round(
+        output %>%
+            slice(nrow(output)) %>%
+            select(c(
+                `frac.ercc`,
+                `cellNumberMin`,
+                `cellNumberMedian`,
+                `cellNumberMax`
+            ))
+        )
+    )
+    expect_type(output$sampleName, "character")
+    expect_type(output$sampleType, "character")
+    expect_type(output$frac.ercc, "double")
+    expect_type(output$cellNumberMin, "double")
+    expect_type(output$cellNumberMedian, "double")
+    expect_type(output$cellNumberMax, "double")
 
 })
 

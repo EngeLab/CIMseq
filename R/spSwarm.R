@@ -700,30 +700,57 @@ setMethod("permuteSwarm", "spCounts", function(
     seed=11,
     norm=TRUE,
     iter,
-    edgeAlpha = 0.05,
     ...
 ){
     classes <- getData(spUnsupervised, "classification")
     
-    permMatrix <- .makePermutations(classes, iter)
-    
-    rows <- ncol(getData(spCountsMul, "counts"))
-    cols <- length(unique(classes))
-    dims <- iter
-    permData <- array(
-        NA,
-        dim=c(rows, cols, dims),
-        dimnames=list(
-            colnames(getData(spCountsMul, "counts")),
-            sort(unique(classes)),
-            1:iter
-        )
+    permMatrix <- .makePermutations(classes, iter, seed)
+    permData <- .runPermutations(
+        permMatrix,
+        iter,
+        spCounts,
+        spCountsMul,
+        spUnsupervised,
+        classes,
+        distFun = distToSlice,
+        maxiter = maxiter,
+        swarmsize = swarmsize,
+        cores = cores,
+        seed = seed,
+        norm = norm
     )
+    
+    return(.calculatePermP(permData, spSwarm, iter))
+})
+
+.makePermutations <- function(classes, iter, seed){
+    set.seed(seed)
+    sapply(1:iter, function(j) {
+        classes[sample(1:length(classes), size=length(classes), replace=FALSE)]
+    })
+}
+
+.runPermutations <- function(
+    permMatrix,
+    iter,
+    spCountsSng,
+    spCountsMul,
+    spUnsupervised,
+    classes,
+    distFun = distToSlice,
+    maxiter = 10,
+    swarmsize = 150,
+    cores=1,
+    seed=11,
+    norm=TRUE
+){
+    
+    permData <- list()
     
     for(i in 1:iter) {
         classification(spUnsupervised) <- permMatrix[,i]
         groupMeans(spUnsupervised) <- averageGroupExpression(
-            spCounts,
+            spCountsSng,
             permMatrix[,i],
             weighted=FALSE
         )
@@ -737,70 +764,108 @@ setMethod("permuteSwarm", "spCounts", function(
             seed=seed,
             norm=norm
         )
-        mat <- getData(sObj, "spSwarm")
-        order <- as.matrix(mat[ , order(colnames(mat))])
-        permData[,,i] <- order
+        permData[[i]] <- sObj
     }
     
-    return(.calculatePermP(permData, iter, edgeAlpha))
-})
-
-.makePermutations <- function(classes, iter){
-    sapply(1:iter, function(j) {
-        classes[sample(1:length(classes), size=length(classes), replace=FALSE)]
+    pEdges <- sapply(1:length(permData), function(j) {
+        pEdges <- spSwarmPoisson(permData[[j]], edge.cutoff=0)$weight
     })
+    
+    return(pEdges)
 }
 
-.calculatePermP <- function(permData, spSwarm, edgeAlpha) {
-    swarm <- getData(spSwarm, "spSwarm")
-    logic <- .fractionCutoff(swarm, 0)
-    edges <- .calculateWeight(swarm, logic, 0, 1, 0)[,1:2]
+.calculatePermP <- function(pEdges, spSwarm, iter) {
+    rEdges <- spSwarmPoisson(spSwarm, edge.cutoff=0)
+    rEdges$pval <- NULL
     
-    #remove self connections for now
-    edges <- edges[edges$from != edges$to, ]
+    rownames(pEdges) <- paste(rEdges$from, rEdges$to, sep="-")
     
-    p <- c()
-    weight <- c()
+    pValues <- sapply(1:nrow(rEdges), function(g) {
+        if(rEdges[g, "weight"] == 0) {
+            NA
+        } else if(sum(pEdges[g,] >= rEdges[g, "weight"]) == 0) {
+            10^-log10(iter)
+        } else {
+            sum(pEdges[g,] >= rEdges[g, "weight"]) / iter
+        }
+    })
     
-    #get null for each edge
-    for(i in 1:nrow(edges)) {
-        node1 <- edges[i, 1]
-        node2 <- edges[i, 2]
-        idx1 <- which(colnames(swarm) == node1)
-        idx2 <- which(colnames(swarm) == node2)
-
-        swarm1 <- swarm[,idx1]
-        swarm2 <- swarm[,idx2]
-        
-        null1 <- permData[,idx1,]
-        null2 <- permData[,idx2,]
-        
-        l1 <- swarm1 > null1
-        l2 <- swarm2 > null2
-        l <- l1+l2
-        l[l < 2] <- 0
-        l[l == 2] <- 1
-        
-        p <- c(p, sum(l)/(iter*nrow(swarm)))
-        
-        #calculate edge weight
-        l1 <- swarm1 < null1
-        l2 <- swarm2 < null2
-        
-        n1 <- rowSums(l1)
-        n2 <- rowSums(l2)
-        n1P <- ifelse(n1 == 0, 10^-log10(iter), n1/iter)
-        n2P <- ifelse(n2 == 0, 10^-log10(iter), n2/iter)
-        weight <- c(weight, length(
-            intersect(
-                which(n1P < edgeAlpha),
-                which(n2P < edgeAlpha)
-            )
-        ))
-    }
-    
-    edges$p <- p
-    edges$weight <- weight
-    return(edges)
+    rEdges$pValue <- pValues
+    return(rEdges)
 }
+
+#rows <- ncol(getData(spCountsMul, "counts"))
+#cols <- length(unique(classes))
+#dims <- iter
+#permData <- array(
+#    NA,
+#    dim=c(rows, cols, dims),
+#    dimnames=list(
+#        colnames(getData(spCountsMul, "counts")),
+#        sort(unique(classes)),
+#        1:iter
+#    )
+#)
+
+#mat <- getData(sObj, "spSwarm")
+#order <- as.matrix(mat[ , order(colnames(mat))])
+#permData[,,i] <- order
+
+
+
+#.calculatePermP <- function(permData, spSwarm, edgeAlpha) {
+#    swarm <- getData(spSwarm, "spSwarm")
+#    logic <- .fractionCutoff(swarm, 0)
+#    edges <- .calculateWeight(swarm, logic, 0, 1, 0)[,1:2]
+#
+#    #remove self connections for now
+#    edges <- edges[edges$from != edges$to, ]
+#
+#    p <- c()
+#    weight <- c()
+#
+#    #get null for each edge
+#    for(i in 1:nrow(edges)) {
+#        node1 <- edges[i, 1]
+#        node2 <- edges[i, 2]
+#        idx1 <- which(colnames(swarm) == node1)
+#        idx2 <- which(colnames(swarm) == node2)
+#
+#        swarm1 <- swarm[,idx1]
+#        swarm2 <- swarm[,idx2]
+#
+#        null1 <- permData[,idx1,]
+#        null2 <- permData[,idx2,]
+#
+#        l1 <- swarm1 > null1
+#        l2 <- swarm2 > null2
+#        l <- l1+l2
+#        l[l < 2] <- 0
+#        l[l == 2] <- 1
+#
+#        p <- c(p, sum(l)/(iter*nrow(swarm)))
+#
+#        #calculate edge weight
+#        l1 <- swarm1 < null1
+#        l2 <- swarm2 < null2
+#
+#        n1 <- rowSums(l1)
+#        n2 <- rowSums(l2)
+#        n1P <- ifelse(n1 == 0, 10^-log10(iter), n1/iter)
+#        n2P <- ifelse(n2 == 0, 10^-log10(iter), n2/iter)
+#        weight <- c(weight, length(
+#        intersect(
+#        which(n1P < edgeAlpha),
+#        which(n2P < edgeAlpha)
+#        )
+#        ))
+#    }
+#
+#    edges$p <- p
+#    edges$weight <- weight
+#    return(edges)
+#}
+
+
+
 
