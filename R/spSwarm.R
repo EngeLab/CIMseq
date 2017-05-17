@@ -398,9 +398,9 @@ spSwarmPoisson <- function(
     ...
 ){
     totcomb <- c(
-        paste(colnames(mat), colnames(mat), sep=""),
+        paste(sort(colnames(mat)), sort(colnames(mat)), sep=""),
         apply(
-            t(combn(colnames(mat),2)),
+            t(combn(sort(colnames(mat)), 2)),
             1,
             paste,
             collapse=""
@@ -411,8 +411,8 @@ spSwarmPoisson <- function(
     rownames(com) <- totcomb
     res <- apply(com, 1, sum)
     xy <- rbind(
-        matrix(c(colnames(mat), colnames(mat)), ncol=2),
-        t(combn(colnames(mat), 2))
+        matrix(c(sort(colnames(mat)), sort(colnames(mat))), ncol=2),
+        t(combn(sort(colnames(mat)), 2))
     )
     
     edges <- data.frame(
@@ -767,10 +767,13 @@ setMethod("permuteSwarm", "spCounts", function(
         permData[[i]] <- sObj
     }
     
-    pEdges <- sapply(1:length(permData), function(j) {
-        pEdges <- spSwarmPoisson(permData[[j]], edge.cutoff=0)$weight
+    pEdges <- lapply(1:length(permData), function(j) {
+        mat <- getData(permData[[j]], "spSwarm")
+        logic <- .fractionCutoff(mat, 0)
+        .calculateWeight(mat, logic)$weight
     })
     
+    pEdges <- t(do.call(rbind,pEdges))
     return(pEdges)
 }
 

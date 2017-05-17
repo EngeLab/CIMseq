@@ -6,20 +6,6 @@ cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
 uObj <- testUns
 sObj <- testSwa
 
-##run test .defineImport
-test_that("check that    outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    
-    #setup expected data
-    
-    #run function
-
-    #test
-
-})
-
 ##run test getMultipletsForEdge
 test_that("check that getMultipletsForEdge outputs the expected result", {
     
@@ -156,7 +142,7 @@ test_that("check that .runPermutations outputs the expected result", {
     )
     
     #test
-    expect_identical(dim(output), c(10L,5L))
+    expect_identical(dim(output), c(10L, 5L))
     expect_true(class(output) == "matrix")
     expect_type(output, "integer")
 })
