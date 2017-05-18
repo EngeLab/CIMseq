@@ -720,7 +720,7 @@ setMethod("permuteSwarm", "spCounts", function(
         norm = norm
     )
     
-    return(.calculatePermP(permData, spSwarm, iter))
+    return(list(.calculatePermP(permData, spSwarm, iter), permData))
 })
 
 .makePermutations <- function(classes, iter, seed){
