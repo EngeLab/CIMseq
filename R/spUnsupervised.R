@@ -500,8 +500,8 @@ tsneGroupMeans <- function(data, classes) {
     means <- d %>%
         group_by(classification) %>%
         summarise(
-            x=mean(substitute(x)),
-            y=mean(substitute(y))
+            x=mean(x),
+            y=mean(y)
         ) %>%
         as.data.frame()
         

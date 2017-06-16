@@ -10,7 +10,7 @@ load('inst/counts.ercc.rda')
 expCounts <- counts
 expErcc <- counts.ercc
 
-suffix <- ifelse(grepl('1000102901', colnames(counts)), "s", "m")
+suffix <- ifelse(grepl('1000102901', colnames(counts)), "m", "s")
 colnames(expCounts) <- paste(suffix, colnames(counts), sep='.')
 colnames(expErcc) <- paste(suffix, colnames(counts.ercc), sep='.')
 
