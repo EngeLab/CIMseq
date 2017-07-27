@@ -630,15 +630,42 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
     
     mulForEdges <- sapply(1:nrow(edges), function(j) {
         cols <- c(pull(edges, 1)[j], pull(edges, 2)[j])
-        frac <- getData(spSwarm, "spSwarm")[, cols]
-        o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
-        rownames(frac)[o]
+        
+        if(identical(cols[1], cols[2])) {
+            .self(j, cols, edges, spSwarm, edge.cutoff)
+        } else {
+            .nonSelf(j, cols, edges, spSwarm, edge.cutoff)
+        }
+        
     })
     
     edges %>%
         add_column(multiplet = mulForEdges) %>%
         as_tibble()
 })
+
+#note to self: when considering self-connections in multiplets it is important
+#to remember that, at least now, if another edge is detected in the multiplet,
+#the self-coonection will not be detected by the swarm optimization. For
+#example, if the multiplet contains cell types A1, A1 and B1, the A1 self-
+#connection will not be detected. On the other hand if the multiplet contains
+#A1, A1, A1, then a self-connection will be reported.
+
+.self <- function(j, cols, edges, spSwarm, edge.cutoff) {
+    mat <- getData(spSwarm, "spSwarm")
+    logic <- mat > edge.cutoff
+    rs <- rowSums(logic)
+    
+    frac <- getData(spSwarm, "spSwarm")[, unique(cols)]
+    o <- which(frac > edge.cutoff & rs == 1)
+    rownames(getData(spSwarm, "spSwarm"))[o]
+}
+
+.nonSelf <- function(j, cols, edges, spSwarm, edge.cutoff) {
+    frac <- getData(spSwarm, "spSwarm")[, cols]
+    o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
+    rownames(frac)[o]
+}
 
 #' getEdgesForMultiplet
 #'
