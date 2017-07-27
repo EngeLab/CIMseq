@@ -628,7 +628,7 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
     edges[,1] <- as.character(pull(edges, 1))
     edges[,2] <- as.character(pull(edges, 2))
     
-    mulForEdges <- sapply(1:nrow(edges), function(j) {
+    mulForEdges <- lapply(1:nrow(edges), function(j) {
         cols <- c(pull(edges, 1)[j], pull(edges, 2)[j])
         
         if(identical(cols[1], cols[2])) {
@@ -639,9 +639,14 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
         
     })
     
-    edges %>%
-        add_column(multiplet = mulForEdges) %>%
-        as_tibble()
+    names(mulForEdges) <- paste(pull(edges, 1), pull(edges, 2), sep = "-")
+    
+    namedListToTibble(mulForEdges) %>%
+        mutate(from = gsub("(.*)-.*", "\\1", names)) %>%
+        mutate(to = gsub(".*-(.*)", "\\1", names)) %>%
+        select(variables, from, to, -names) %>%
+        rename(multiplet = variables)
+
 })
 
 #note to self: when considering self-connections in multiplets it is important
