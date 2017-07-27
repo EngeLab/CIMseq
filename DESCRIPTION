@@ -43,6 +43,7 @@ Collate:
     'debugging.R'
     'expCounts.R'
     'expErcc.R'
+    'generalFunctions.R'
     'initialize-methods.R'
     'show-methods.R'
     'spCounts.R'
