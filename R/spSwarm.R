@@ -88,8 +88,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     cellTypes <- groupMeans[selectInd, ]
     multiplets <- matrix(
         counts[selectInd, ],
-        ncol=ncol(counts),
-        dimnames=list(1:length(selectInd), colnames(counts))
+        ncol = ncol(counts),
+        dimnames = list(1:length(selectInd), colnames(counts))
     )
     
     ##run pySwarm
@@ -114,13 +114,13 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     #create object
     new("spSwarm",
-        spSwarm=result,
-        costs=cost,
+        spSwarm = result,
+        costs = cost,
         convergence = convergence,
         stats = stats,
         arguments = list(
-            maxiter=maxiter,
-            swarmsize=swarmsize
+            maxiter = maxiter,
+            swarmsize = swarmsize
         )
     )
 })
@@ -213,14 +213,14 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 ){
     oneMultiplet <- multiplets[,i]
     psoptim(
-        par=fractions,
-        fn=distFun,
-        cellTypes=cellTypes,
-        oneMultiplet=oneMultiplet,
-        lower=0,
-        upper=1,
-        control=control,
-        i=i,
+        par = fractions,
+        fn = distFun,
+        cellTypes = cellTypes,
+        oneMultiplet = oneMultiplet,
+        lower = 0,
+        upper = 1,
+        control = control,
+        i = i,
         ...
     )
 }
@@ -454,12 +454,12 @@ spSwarmPoisson <- function(
     ...
 ){
     totcomb <- c(
-        paste(sort(colnames(mat)), sort(colnames(mat)), sep=""),
+        paste(sort(colnames(mat)), sort(colnames(mat)), sep = ""),
         apply(
             t(combn(sort(colnames(mat)), 2)),
             1,
             paste,
-            collapse=""
+            collapse = ""
         )
     )
     
@@ -467,7 +467,7 @@ spSwarmPoisson <- function(
     rownames(com) <- totcomb
     res <- apply(com, 1, sum)
     xy <- rbind(
-        matrix(c(sort(colnames(mat)), sort(colnames(mat))), ncol=2),
+        matrix(c(sort(colnames(mat)), sort(colnames(mat))), ncol = 2),
         t(combn(sort(colnames(mat)), 2))
     )
     
@@ -488,12 +488,12 @@ spSwarmPoisson <- function(
 ){
     pick <- names(row)[which(row)]
     if(length(pick) == 1) {
-        out <- totcomb %in% paste(pick, pick, sep="")
+        out <- totcomb %in% paste(pick, pick, sep = "")
     } else {
         out <- totcomb %in% apply(
             t(combn(pick, 2)),
             1,
-            paste,collapse=""
+            paste,collapse = ""
         )
     }
     return(out)
@@ -537,8 +537,8 @@ calcResiduals <- function(
     spCounts,
     spUnsupervised,
     spSwarm,
-    clusters=NULL,
-    edge.cutoff=NULL,
+    clusters = NULL,
+    edge.cutoff = NULL,
     distFun = function(frac, multiplets){(abs(multiplets - frac) / (frac + 1))},
     ...
 ){
@@ -765,9 +765,9 @@ setMethod("permuteSwarm", "spCounts", function(
     distFun = distToSlice,
     maxiter = 10,
     swarmsize = 150,
-    cores=1,
-    seed=11,
-    norm=TRUE,
+    cores = 1,
+    seed = 11,
+    norm = TRUE,
     iter,
     ...
 ){
@@ -809,9 +809,9 @@ setMethod("permuteSwarm", "spCounts", function(
     distFun = distToSlice,
     maxiter = 10,
     swarmsize = 150,
-    cores=1,
-    seed=11,
-    norm=TRUE
+    cores = 1,
+    seed = 11,
+    norm = TRUE
 ){
     
     permData <- list()

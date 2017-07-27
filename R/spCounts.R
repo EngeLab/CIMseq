@@ -44,10 +44,10 @@ setMethod("spCounts", "matrix", function(
 ){
     .inputCheckCounts(counts, counts.ercc)
     new("spCounts",
-        counts=counts,
-        counts.log=.norm.log.counts(counts),
-        counts.cpm=.norm.counts(counts),
-        counts.ercc=counts.ercc
+        counts = counts,
+        counts.log = .norm.log.counts(counts),
+        counts.cpm = .norm.counts(counts),
+        counts.ercc = counts.ercc
     )
 })
 
@@ -62,16 +62,18 @@ setMethod("spCounts", "matrix", function(
 
 .norm.log.counts <- function(counts) {
     norm.fact <- colSums(counts)
-    counts.norm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
+    counts.norm <- t(apply(counts, 1, .norm, n = norm.fact))
     counts.log <- log2(counts.norm)
 }
 
 .norm.counts <- function(counts) {
     norm.fact <- colSums(counts)
-    counts.cpm <- t(apply(counts, 1, function(x) {x/norm.fact*1000000+1}))
+    counts.cpm <- t(apply(counts, 1, .norm, n = norm.fact))
 }
 
-
+.norm <- function(x, n) {
+    x / n * 1000000 + 1
+}
 
 #' estimateCells
 #'
@@ -161,8 +163,6 @@ setMethod("estimateCells", "spCounts", function(
             median %>%
             `/` (d$frac.ercc)
     
-    
-            
     d$cellNumberMax <-
             d %>%
                 filter(sampleType == "Singlet") %>%

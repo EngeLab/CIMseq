@@ -79,8 +79,8 @@ setMethod("spUnsupervised", "spCounts", function(
     seed = 11,
     type = "max",
     max = 2000,
-    genes=NULL,
-    weighted=TRUE,
+    genes = NULL,
+    weighted = TRUE,
     ...
 ){
     
@@ -133,17 +133,17 @@ setMethod("spUnsupervised", "spCounts", function(
     
     #create object
     new("spUnsupervised",
-        tsne=tsne,
-        tsneMeans=tsneGroupMeans(tsne, class),
-        groupMeans=averageGroupExpression(
+        tsne = tsne,
+        tsneMeans = tsneGroupMeans(tsne, class),
+        groupMeans = averageGroupExpression(
             spCounts,
             class,
             weighted,
             uncertainty
         ),
-        classification=class,
-        uncertainty=uncertainty,
-        selectInd=select
+        classification = class,
+        uncertainty = uncertainty,
+        selectInd = select
     )
 })
 
@@ -192,7 +192,7 @@ NULL
 
 spTopVar <- function(spCounts, n) {
     rv = apply(getData(spCounts, "counts.cpm"), 1, var)
-    select = order(rv, decreasing=TRUE)[1:n]
+    select = order(rv, decreasing = TRUE)[1:n]
     return(select)
 }
 
@@ -226,7 +226,7 @@ spTopMax <- function(spCounts, n) {
     data <- getData(spCounts, "counts.cpm")
     n <- min(n, dim(data)[1])
     rv = apply(data, 1, max)
-    select = order(rv, decreasing=TRUE)[1:n]
+    select = order(rv, decreasing = TRUE)[1:n]
     return(select)
 }
 
@@ -263,7 +263,7 @@ pearsonsDist <- function(spCounts, select) {
     as.dist(
         1-cor(
             2^getData(spCounts, "counts.log")[select, ],
-            method="p"
+            method = "p"
         )
     )
 }
@@ -323,7 +323,7 @@ runTsne <- function(
     max_iter = 2000,
     perplexity = 10,
     seed = 11,
-    is_distance=TRUE,
+    is_distance = TRUE,
     ...
 ){
     set.seed(seed)
@@ -384,13 +384,13 @@ runMclust <- function(
     seed = 11
 ){
     set.seed(seed)
-    mod1 <- Mclust(my.tsne, G=1:Gmax)
+    mod1 <- Mclust(my.tsne, G = 1:Gmax)
     
     #rename classification classes
     x <- unique(mod1$classification)
     n <- ceiling(length(x)/26)
     names <- unlist(lapply(1:n, function(u)
-        paste(LETTERS, u, sep=""))
+        paste(LETTERS, u, sep = ""))
     )[1:length(x)]
     mod1$classification <- names[match(mod1$classification, x)]
     
@@ -449,14 +449,14 @@ averageGroupExpression <- function(
     exp <- getData(data, "counts.cpm")
     
     if(weighted) {
-        u <- 1-uncertainty
-        w <- t(t(exp)*u)
+        u <- 1 - uncertainty
+        w <- t(t(exp) * u)
         means <- lapply(c, function(x) {
-            rowSums(w[ ,classes == x]) / sum(u[classes == x])
+            rowSums(w[, classes == x]) / sum(u[classes == x])
         })
     } else {
         means <- lapply(c, function(x) {
-            rowMeans(exp[ ,classes == x])
+            rowMeans(exp[, classes == x])
         })
     }
     
@@ -505,8 +505,8 @@ tsneGroupMeans <- function(data, classes) {
     means <- d %>%
         group_by(classification) %>%
         summarise(
-            x=mean(x),
-            y=mean(y)
+            x = mean(x),
+            y = mean(y)
         ) %>%
         as.data.frame()
         
@@ -550,11 +550,11 @@ erccPerClass <- function(
         class = getData(spUnsupervised, "classification"),
         sampleName = colnames(getData(spCountsSng, "counts"))
     )
-    d <- right_join(d, class, by="sampleName")
+    d <- right_join(d, class, by = "sampleName")
     
     median <- d %>%
         group_by(class) %>%
-        summarise(medianFracErcc=median(frac.ercc))
+        summarise(medianFracErcc = median(frac.ercc))
     
     return(median)
 }
