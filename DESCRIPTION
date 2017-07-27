@@ -40,6 +40,7 @@ NeedsCompilation: no
 Collate: 
     'sp.scRNAseq-package.R'
     'All-classes.R'
+    'debugging.R'
     'expCounts.R'
     'expErcc.R'
     'initialize-methods.R'
