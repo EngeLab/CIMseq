@@ -15,7 +15,7 @@
 \usage{
 \S4method{getData}{spSwarm}(object, n = NULL)
 
-\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costs, convergence,
+\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costs, convergence, stats,
   arguments)
 
 \S4method{show}{spSwarm}(object)
@@ -24,7 +24,7 @@ spSwarm(spCounts, spUnsupervised, ...)
 
 \S4method{spSwarm}{spCounts,spUnsupervised}(spCounts, spUnsupervised,
   distFun = distToSlice, maxiter = 10, swarmsize = 150, cores = 1,
-  seed = 11, norm = TRUE, ...)
+  seed = 11, norm = TRUE, report = FALSE, reportRate = NULL, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}
@@ -58,6 +58,12 @@ spSwarm(spCounts, spUnsupervised, ...)
 \item{seed}{The desired seed to set before running.}
 
 \item{norm}{Logical indicating if the sum of fractions should equal 1.}
+
+\item{report}{Logical indicating if additional reporting from the
+optimization should be included.}
+
+\item{reportRate}{If report is TRUE, the iteration interval that a report
+should be generated.}
 }
 \value{
 spSwarm output.

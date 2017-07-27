@@ -11,7 +11,7 @@ permuteSwarm(spCounts, ...)
 
 \S4method{permuteSwarm}{spCounts}(spCounts, spCountsMul, spUnsupervised,
   spSwarm, distFun = distToSlice, maxiter = 10, swarmsize = 150,
-  cores = 1, seed = 11, norm = TRUE, iter, edgeAlpha = 0.05, ...)
+  cores = 1, seed = 11, norm = TRUE, iter, ...)
 }
 \arguments{
 \item{...}{additional arguments to pass on}

@@ -138,7 +138,7 @@ sObj <- spSwarm(cObjMul, uObj, swarmsize = 150, cores=2, maxiter=10)
 
 ### spSwarm results
 
-We can exmaine the resulting sonnections with the `spSwarmPoisson` command:
+We can exmaine the resulting connections with the `spSwarmPoisson` command:
 
 ```{r}
 head(spSwarmPoisson(sObj, edge.cutoff=1/10.5, min.num.edges=0, min.pval=1))

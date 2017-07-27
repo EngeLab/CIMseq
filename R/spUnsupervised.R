@@ -439,7 +439,12 @@ NULL
 #' @rdname averageGroupExpression
 #' @export
 
-averageGroupExpression <- function(data, classes, weighted, uncertainty) {
+averageGroupExpression <- function(
+    data,
+    classes,
+    weighted,
+    uncertainty
+){
     c <- unique(classes)
     exp <- getData(data, "counts.cpm")
     

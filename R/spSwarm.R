@@ -20,6 +20,10 @@ NULL
 #' @param cores The number of cores to be used while running spRSwarm.
 #' @param seed The desired seed to set before running.
 #' @param norm Logical indicating if the sum of fractions should equal 1.
+#' @param report Logical indicating if additional reporting from the
+#'   optimization should be included.
+#' @param reportRate If report is TRUE, the iteration interval that a report
+#'    should be generated.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per multiplet.
@@ -64,9 +68,11 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     distFun = distToSlice,
     maxiter = 10,
     swarmsize = 150,
-    cores=1,
-    seed=11,
-    norm=TRUE,
+    cores = 1,
+    seed = 11,
+    norm = TRUE,
+    report = FALSE,
+    reportRate = NULL,
     ...
 ){
     
@@ -97,19 +103,21 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         cores = cores,
         seed = seed,
         norm = norm,
+        report = report,
+        reportRate = reportRate,
         ...
     )
     result <- tmp[[1]]
     cost <- tmp[[2]]
     convergence <- tmp[[3]]
-    #stats <- tmp[[4]]
+    stats <- tmp[[4]]
     
     #create object
     new("spSwarm",
         spSwarm=result,
         costs=cost,
         convergence = convergence,
-        #stats = stats,
+        stats = stats,
         arguments = list(
             maxiter=maxiter,
             swarmsize=swarmsize
@@ -129,16 +137,26 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     cores,
     seed,
     norm,
+    report,
+    reportRate,
     ...
 ){
+    if(report) {
+        control <- list(
+            maxit = maxiter,
+            s = swarmsize,
+            trace = 1,
+            REPORT = reportRate,
+            trace.stats = TRUE
+        )
+    } else {
+        control <- list(
+            maxit = maxiter,
+            s = swarmsize
+        )
+        stats <- list()
+    }
     
-    control=list(
-        maxit=maxiter,
-        s=swarmsize
-        #trace=1,
-        #REPORT=10,
-        #trace.stats=TRUE
-    )
     
     set.seed(seed)
     to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
@@ -155,7 +173,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
                 multiplets,
                 ...
             ),
-        mc.cores=cores
+        mc.cores = cores
     )
     
     #compile results
@@ -170,7 +188,9 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         "Maximal number of iterations without improvement reached." = 4
     )
     convergence <- names(convergenceKey)[match(convergence, convergenceKey)]
-    #stats <- lapply(tmp, function(j) j[[6]])
+    
+    if(report) stats <- lapply(tmp, function(x) x[[6]])
+    
     
     #normalize swarm output
     if(norm) {
@@ -179,7 +199,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     colnames(output) <- colnames(cellTypes)
     rownames(output) <- colnames(multiplets)
-    return(list(output, cost, convergence))
+    return(list(output, cost, convergence, stats))
 }
 
 .optim.fn <- function(
@@ -303,6 +323,26 @@ distToSlicePearson <- function(
     1-(cor(a, oneMultiplet))
 }
 
+#' @export
+bic <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    i,
+    ...
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a <- .makeSyntheticSlice(cellTypes, normFractions)
+    e <- sum(abs(a - oneMultiplet)^2) * 1/length(fractions)
+    n <- length(fractions)
+    k <- length(which(fractions > 0))
+    
+    (n * log(e)) + (k * log(n))
+}
+
 #' spSwarmPoisson
 #'
 #' Subtitle
@@ -332,13 +372,14 @@ NULL
 
 #' @rdname spSwarmPoisson
 #' @importFrom stats ppois
+#' @importFrom dplyr filter pull rowwise do ungroup
 #' @export
 
 spSwarmPoisson <- function(
     spSwarm,
     edge.cutoff,
-    min.pval=1,
-    min.num.edges=0,
+    min.pval = 1,
+    min.num.edges = 0,
     ...
 ){
     mat <- getData(spSwarm, "spSwarm")
@@ -373,22 +414,37 @@ spSwarmPoisson <- function(
         return(logic)
     }
 }
+
 .calculateP <- function(
     edges,
     min.pval,
     min.num.edges,
     ...
 ){
-    means <- sapply(1:nrow(edges), function(o) {
-        mean(subset(
-            edges,
-            from %in% c(edges[o, 1], edges[o, 2]) |
-            to %in% c(edges[o, 1], edges[o, 2])
-        )$weight)
-    })
+    ps <- function(edges, f, t, weight) {
+        edges %>%
+            filter(from %in% c(f, t) | to %in% c(f, t)) %>%
+            pull(weight) %>%
+            mean() %>%
+            ppois(weight, ., lower.tail = FALSE)
+    }
     
-    edges$pval <- ppois(edges$weight, means, lower.tail=FALSE)
-    out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
+    out <- edges %>%
+        rowwise() %>%
+        do(bind_cols(., tibble(pval = ps(edges, .$from, .$to, .$weight)))) %>%
+        ungroup %>%
+        filter(pval < min.pval & weight >= min.num.edges)
+        
+    #means <- sapply(1:nrow(edges), function(o) {
+    #    mean(subset(
+    #        edges,
+    #        from %in% c(edges[o, 1], edges[o, 2]) |
+    #        to   %in% c(edges[o, 1], edges[o, 2])
+    #    )$weight)
+    #})
+    
+    #edges$pval <- ppois(edges$weight, means, lower.tail=FALSE)
+    #out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
     return(out)
 }
 
@@ -416,11 +472,11 @@ spSwarmPoisson <- function(
     )
     
     edges <- data.frame(
-        from=xy[,1],
-        to=xy[,2],
-        weight=res,
-        stringsAsFactors=FALSE,
-        row.names=1:nrow(xy)
+        from = xy[,1],
+        to = xy[,2],
+        weight = res,
+        stringsAsFactors = FALSE,
+        row.names = 1:nrow(xy)
     )
     
     return(edges)
@@ -569,21 +625,19 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
     edges,
     ...
 ){
-    edges[,1] <- as.character(edges[,1])
-    edges[,2] <- as.character(edges[,2])
+    edges[,1] <- as.character(pull(edges, 1))
+    edges[,2] <- as.character(pull(edges, 2))
     
     mulForEdges <- sapply(1:nrow(edges), function(j) {
-        frac <- getData(spSwarm, "spSwarm")[,c(edges[j,1], edges[j,2])]
+        cols <- c(pull(edges, 1)[j], pull(edges, 2)[j])
+        frac <- getData(spSwarm, "spSwarm")[, cols]
         o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
         rownames(frac)[o]
     })
     
-    if(class(mulForEdges) == "matrix") {
-        return(unlist(mulForEdges))
-    } else {
-        names(mulForEdges) <- paste(edges[,1], edges[,2], sep="-")
-        return(mulForEdges)
-    }
+    edges %>%
+        add_column(multiplet = mulForEdges) %>%
+        as_tibble()
 })
 
 #' getEdgesForMultiplet
@@ -614,6 +668,9 @@ NULL
 
 #' @rdname getEdgesForMultiplet
 #' @export
+#' @importFrom purrr map_dfr
+#' @importFrom tibble as_tibble add_column
+#' @importFrom dplyr select
 
 setGeneric("getEdgesForMultiplet", function(
     spSwarm,
@@ -631,23 +688,35 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
     multiplet,
     ...
 ){
+    s <- spSwarmPoisson(spSwarm, edge.cutoff = edge.cutoff)
     frac <- getData(spSwarm, "spSwarm")[multiplet,]
-    combs <- combn(names(frac)[frac > edge.cutoff], 2)
-    s <- spSwarmPoisson(spSwarm, edge.cutoff=edge.cutoff)
-    
-    #out <- as.data.frame(t(sapply(
-    #    1:ncol(combs),
-    #    function(j)
-    #        s[s$from == combs[1,j] & s$to == combs[2,j], ]
-    #)))
-    out <- s[s[,1] %in% t(combs)[,1] & s[,2] %in% t(combs)[,2], ]
-    
-    if(nrow(out) == ncol(combs)) {
-        return(out)
-    } else {
-        stop("somethings went wrong, check the code")
-    }
+    map_dfr(multiplet, .edgeFunx, edge.cutoff, frac, s)
 })
+
+.edgeFunx <- function(x, edge.cutoff, frac, s) {
+    keep <- as.logical(frac[x, ] > edge.cutoff)
+    
+    if(length(which(keep)) > 1) {
+        
+        combs <- combn(names(frac)[keep], 2)
+        sapply(1:ncol(combs), function(y) {
+            bool1 <- s$from == combs[1, y] & s$to == combs[2, y]
+            bool2 <- s$from == combs[2, y] & s$to == combs[1, y]
+            as.character(filter(s, bool1 | bool2)[, 1:2])
+        }) %>%
+        t() %>%
+        as_tibble() %>%
+        setNames(c("from", "to")) %>%
+        add_column(multiplet = x) %>%
+        select(multiplet, from, to)
+        
+    } else if(length(which(keep)) == 1) {
+        names(frac)[keep]
+        filter(s, to == names(frac)[keep] & from == names(frac)[keep]) %>%
+        add_column(multiplet = x) %>%
+        select(-weight, -pval)
+    }
+}
 
 #' permuteSwarm
 #'

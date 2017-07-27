@@ -57,6 +57,7 @@ setMethod("getData", "spCounts", function(object, n=NULL)
 # Accessors #
 #           #
 #############
+#slot access is achieved with for ex. classification(uObj) <- newClassification
 
 #' @rdname spUnsupervised
 #' @export
@@ -229,7 +230,7 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value)
     spSwarm="data.frame",
     costs="numeric",
     convergence="character",
-#stats="list",
+    stats="list",
     arguments="list"
 ))
 

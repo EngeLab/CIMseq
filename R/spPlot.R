@@ -65,6 +65,20 @@ setMethod("plotCounts", "spCounts", function(
         return(p)
     }
     if( type == "markers" ) {
+        
+        if(length(markers) != 2) {
+            stop("Markers must be a character vector of length = 2.")
+        }
+        
+        genes <- unique(c(
+            rownames(getData(x, "counts")),
+            rownames(getData(y, "counts"))
+        ))
+        
+        if(!all(markers %in% genes)) {
+            stop("The specified markers are not in the counts matrix.")
+        }
+        
         p <- .countsMarkersPlot(
             x,
             y,
@@ -81,10 +95,6 @@ setMethod("plotCounts", "spCounts", function(
     y,
     ...
 ){
-    
-    #get and process data for ercc plot
-    d <- estimateCells(x, y)
-    
     #add function for ERCC fraction conversion
     convertToERCC <- function(x, d) {
         d %>%
@@ -95,8 +105,9 @@ setMethod("plotCounts", "spCounts", function(
             `/` (x)
     }
     
-    p <- ggplot(
-        d,
+    p <- estimateCells(x, y) %>%
+    ggplot(
+        .,
         aes_string(
             x='factor(sampleType, levels=c("Singlet", "Multiplet"))',
             y='cellNumberMedian'
@@ -176,11 +187,12 @@ setMethod("plotCounts", "spCounts", function(
     ...
 ){
     
-    d <- .countsMarkersPlotProcess(x, y, markers)
+    d <-
     
-    colors <- .setColors()[1:2]
+    colors <- col64()[7:9]
     
-    p <- ggplot(d, aes_string(x='marker1', y='marker2', colour='sampleType'))+
+    p <- .countsMarkersPlotProcess(x, y, markers) %>%
+    ggplot(., aes_string(x='marker1', y='marker2', colour='sampleType'))+
     geom_point(size=5, alpha=0.7)+
     labs(
         x=paste("log2( Normalized counts: ", markers[1], " )", sep=""),
@@ -257,9 +269,9 @@ setGeneric("plotUnsupervised", function(
 setMethod("plotUnsupervised", "spUnsupervised", function(
     x,
     y = NULL,
-    type,
+    type = "clusters",
     markers = NULL,
-    plotUncertainty=TRUE,
+    plotUncertainty = TRUE,
     ...
 ){
     #x should be a spUnsupervised object.
@@ -311,7 +323,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 ){
     
     d <- .unsupClusterPlotProcess(x, plotUncertainty)
-    colors <- .setColors()
+    colors <- col64()
     
     p <- ggplot(d, aes_string(x='V1', y='V2', colour='classification'))+
     #geom_point(size=3, alpha=0.75)+
@@ -429,20 +441,6 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
         return(p)
 }
 
-.setColors <- function() {
-    colors <- c(
-        '#0075DC', '#005C31', '#4C005C', '#2BCE48', '#FFCC99',
-        '#808080', '#94FFB5', '#8F7C00', '#9DCC00', '#C20088', '#003380',
-        '#FFA405', '#FFA8BB', '#426600', '#FF0010', '#5EF1F2', '#00998F',
-        '#E0FF66', '#740AFF', '#990000', '#FFFF80', '#FFFF00', '#FF5005',
-        '#993D59', '#00FFEF', '#FF6440', '#CC1D14', '#40FF6C', '#893D99',
-        '#4800FF', '#FFDD40', '#CC9914', '#993D3D', '#CCCA14', '#3D996E',
-        '#993D3D', '#191919', 'cadetblue3', 'antiquewhite4', 'aquamarine3',
-        'brown4', 'darkgoldenrod3'
-    )
-    return(colors)
-}
-
 #' plotSwarm
 #'
 #' Description.
@@ -503,15 +501,15 @@ setGeneric("plotSwarm", function(
 setMethod("plotSwarm", "spSwarm", function(
     x,
     y,
-    z=NULL,
-    w=NULL,
-    type=NULL,
-    loop=FALSE,
-    markers=NULL,
-    edge.cutoff=NULL,
-    min.pval=NULL,
-    min.num.edges=NULL,
-    label.cutoff=NULL,
+    z = NULL,
+    w = NULL,
+    type = NULL,
+    loop = FALSE,
+    markers = NULL,
+    edge.cutoff = NULL,
+    min.pval = NULL,
+    min.num.edges = NULL,
+    label.cutoff = NULL,
     ...
 ){
     
@@ -525,7 +523,7 @@ setMethod("plotSwarm", "spSwarm", function(
     #z should be an spCounts object with singlets
     #w should be an spCounts object with multiplets
     
-    if(is.null(edge.cutoff)) {edge.cutoff <- 1/ncol(getData(x, "spSwarm"))}
+    if(is.null(edge.cutoff)) {edge.cutoff <- 1 / ncol(getData(x, "spSwarm"))}
     if(is.null(min.num.edges)) {min.num.edges <- 0}
     if(is.null(min.pval)) {min.pval <- 1}
     if(is.null(label.cutoff)) {label.cutoff <- 1}
@@ -561,8 +559,8 @@ setMethod("plotSwarm", "spSwarm", function(
             y,
             z,
             type,
-            loop=FALSE,
-            markers=NULL,
+            loop = FALSE,
+            markers = NULL,
             edge.cutoff,
             min.pval,
             min.num.edges
@@ -618,9 +616,9 @@ setMethod("plotSwarm", "spSwarm", function(
     
     graph <- spSwarmPoisson(
         x,
-        edge.cutoff=edge.cutoff,
-        min.pval=1,
-        min.num.edges=0
+        edge.cutoff = edge.cutoff,
+        min.pval = 1,
+        min.num.edges = 0
     )
     
     #convert to igraph
@@ -628,14 +626,14 @@ setMethod("plotSwarm", "spSwarm", function(
     
     #remove edges according to min.num.edges and min.pval
     graphDF <- subgraph.edges(
-        graph=graphDF,
-        eids=which(E(graphDF)$weight >= min.num.edges),
+        graph = graphDF,
+        eids = which(E(graphDF)$weight >= min.num.edges),
         delete.vertices = FALSE
     )
     
     graphDF <- subgraph.edges(
-        graph=graphDF,
-        eids=which(E(graphDF)$pval < min.pval),
+        graph = graphDF,
+        eids = which(E(graphDF)$pval < min.pval),
         delete.vertices = FALSE
     )
 
@@ -654,16 +652,16 @@ setMethod("plotSwarm", "spSwarm", function(
     #name edges
     graphDF <- set_edge_attr(
         graphDF,
-        name="name",
-        value=paste(
+        name = "name",
+        value = paste(
             get.edgelist(graphDF)[,1],
             get.edgelist(graphDF)[,2],
-            sep="->"
+            sep = "->"
         )
     )
     
     #setup colors
-    colors <- .setColors()[1:length(unique(tsneMeans$classification))]
+    colors <- col64()[1:length(unique(tsneMeans$classification))]
     names(colors) <- tsneMeans$classification
     
     if(type == "tsne" & loop == TRUE) {
@@ -694,8 +692,8 @@ setMethod("plotSwarm", "spSwarm", function(
     
     d <- cbind(as.data.frame(
         tsne[ ,1:2]),
-        classification=classification,
-        stringsAsFactors=FALSE
+        classification = classification,
+        stringsAsFactors = FALSE
     )
     
     colnames(d) <- c("x", "y", "classification")
@@ -720,28 +718,28 @@ setMethod("plotSwarm", "spSwarm", function(
         node.positions = layout
     )+
     geom_edge_link(
-        edge_colour="black",
-        aes_string(edge_width ='factor(weight)'),
-        edge_alpha=0.3,
+        edge_colour = "black",
+        aes_string(edge_width = 'factor(weight)'),
+        edge_alpha = 0.3,
         lineend = "round"
     )+
     geom_node_point(
-        data=d,
-        aes_string(colour='classification'),
-        alpha=0.3
+        data = d,
+        aes_string(colour = 'classification'),
+        alpha = 0.3
     )+
     geom_node_point(
-        data=tsneMeans,
-        aes_string(colour='classification'),
-        size=5
+        data = tsneMeans,
+        aes_string(colour = 'classification'),
+        size = 5
     )+
     scale_colour_manual(
-        name="classification",
-        values=colors
+        name = "classification",
+        values = colors
     )+
     guides(
-        colour = guide_legend(title="Classification"),
-        edge_width = guide_legend(title="Weight")
+        colour = guide_legend(title = "Classification"),
+        edge_width = guide_legend(title = "Weight")
     )+
     theme_few()
         
@@ -765,39 +763,39 @@ setMethod("plotSwarm", "spSwarm", function(
         node.positions = layout
     )+
     geom_edge_link(
-        edge_colour="black",
-        aes_string(edge_width ='factor(weight)'),
-        edge_alpha=0.3,
+        edge_colour = "black",
+        aes_string(edge_width = 'factor(weight)'),
+        edge_alpha = 0.3,
         lineend = "round"
     )+
     geom_edge_loop(
-        edge_colour="black",
-        edge_alpha=0.3,
+        edge_colour = "black",
+        edge_alpha = 0.3,
         aes_string(
-            angle=90,
-            direction=270,
-            strength=50,
-            edge_width='factor(weight)'
+            angle = 90,
+            direction = 270,
+            strength = 50,
+            edge_width = 'factor(weight)'
         ),
         lineend = "round"
     )+
     geom_node_point(
-        data=d,
-        aes_string(colour='classification'),
-        alpha=0.3
+        data = d,
+        aes_string(colour = 'classification'),
+        alpha = 0.3
     )+
     geom_node_point(
-        data=tsneMeans,
-        aes_string(colour='classification'),
-        size=5
+        data = tsneMeans,
+        aes_string(colour = 'classification'),
+        size = 5
     )+
     scale_colour_manual(
-        name="classification",
-        values=colors
+        name = "classification",
+        values = colors
     )+
     guides(
-        colour = guide_legend(title="Classification"),
-        edge_width = guide_legend(title="Weight")
+        colour = guide_legend(title = "Classification"),
+        edge_width = guide_legend(title = "Weight")
     )+
     theme_few()
     
@@ -815,21 +813,21 @@ setMethod("plotSwarm", "spSwarm", function(
         algorithm = 'kk'
     )+
     geom_edge_link(
-        edge_colour="black",
+        edge_colour = "black",
         aes_string(
-            edge_width='factor(weight)'
+            edge_width = 'factor(weight)'
         ),
-        edge_alpha=0.3
+        edge_alpha = 0.3
     )+
     geom_node_point(
-        aes_string(colour='name'),
-        size=4
+        aes_string(colour = 'name'),
+        size = 4
     )+
-    scale_colour_manual(values=colors)+
+    scale_colour_manual(values = colors)+
     theme_few()+
     guides(
-        colour = guide_legend(title="Classification"),
-        edge_width = guide_legend(title="Weight")
+        colour = guide_legend(title = "Classification"),
+        edge_width = guide_legend(title = "Weight")
     )
     
     return(plot)
@@ -846,32 +844,32 @@ setMethod("plotSwarm", "spSwarm", function(
         algorithm = 'kk'
     )+
     geom_edge_link(
-        edge_colour="black",
-        edge_alpha=0.3,
-        aes_string(edge_width='factor(weight)')
+        edge_colour = "black",
+        edge_alpha = 0.3,
+        aes_string(edge_width = 'factor(weight)')
     )+
     geom_edge_loop(
-        edge_colour="black",
-        edge_alpha=0.3,
+        edge_colour = "black",
+        edge_alpha = 0.3,
         aes_string(
-            angle=90,
-            direction=270,
-            strength=1,
-            edge_width='factor(weight)'
+            angle = 90,
+            direction = 270,
+            strength = 1,
+            edge_width = 'factor(weight)'
         )
     )+
     geom_node_point(
-        aes_string(colour='name'),
-        size=4
+        aes_string(colour = 'name'),
+        size = 4
     )+
-    scale_colour_manual(values=colors)+
+    scale_colour_manual(values = colors)+
     theme_few()+
     guides(
-        colour = guide_legend(title="Classification"),
-        edge_width = guide_legend(title="Weight")
+        colour = guide_legend(title = "Classification"),
+        edge_width = guide_legend(title = "Weight")
     )+
     labs(
-        x=
+        x = "FIX THIS"
     )
 }
 
@@ -882,22 +880,22 @@ setMethod("plotSwarm", "spSwarm", function(
 ){
     
     values <- values[rownames(values) %in% targets, ]
-    pal <- .setColors()
+    pal <- col64()
     targets <- pal[1:length(targets)]
     targets <- targets[1:(dim(values)[1])]
     if(is.matrix(values)) {
         
         #normalize each genes values so that all genes aer on the same scale
-        v <- t(apply(values, 1, function(x) {(x-min(x))/(max(x)-min(x))}))
+        v <- t(apply(values, 1, function(x) {(x - min(x)) / (max(x) - min(x))}))
         
         #calculates the fraction that each gene is expressed in a sample
         #relative to all input genes expression
-        fractions <- apply(v, 2, function(x) {x/sum(x)})
+        fractions <- apply(v, 2, function(x) {x / sum(x)})
         
         #this fixes the Nan problem, due to division with 0, but results in
         #positive expression values for genes samples that had no expression...
         #Do these end up being white in the end?
-        fractions[is.nan(fractions)] <- 1.0/(dim(fractions)[1])
+        fractions[is.nan(fractions)] <- 1.0 / (dim(fractions)[1])
         
         #changes the color values from hex to rgb
         targets.rgb <- col2rgb(targets)
@@ -985,15 +983,28 @@ setMethod("plotSwarm", "spSwarm", function(
     
     if(!type %in% c("multiplets", "edges")) {stop("Plot type not supported")}
     
-    resid <- calcResiduals(x, y, z, edge.cutoff=edge.cutoff)
+    resid <- calcResiduals(x, y, z, edge.cutoff = edge.cutoff)
     
     switch(
         type,
         multiplets = {
-            d <- .resPlotMultiplets(x, y, z, resid)
+            d <- .resPlotMultiplets(
+                x,
+                y,
+                z,
+                resid
+            )
         },
         edges = {
-            d <- .resPlotEdge(x, y, z, edge.cutoff, min.num.edges, min.pval, resid)
+            d <- .resPlotEdge(
+                x,
+                y,
+                z,
+                edge.cutoff,
+                min.num.edges,
+                min.pval,
+                resid
+            )
         }
     )
     
@@ -1006,36 +1017,36 @@ setMethod("plotSwarm", "spSwarm", function(
     
     p <- ggplot(
         d,
-        aes_string(x='multiplet', y='residuals')
+        aes_string(x = 'multiplet', y = 'residuals')
     )+
     geom_violin(
-        color="grey"
+        color = "grey"
     )+
     geom_segment(
         aes_string(
-            x='match(multiplet, levels(multiplet))-0.1',
-            xend='match(multiplet, levels(multiplet))+0.1',
-            y='residuals',
-            yend='residuals'
+            x = 'match(multiplet, levels(multiplet))-0.1',
+            xend = 'match(multiplet, levels(multiplet))+0.1',
+            y = 'residuals',
+            yend = 'residuals'
         ),
-        color="black"
+        color = "black"
     )+
     geom_label_repel(
-        data=label,
+        data = label,
         aes_string(
-            x='multiplet',
-            y='residuals',
-            label='genes'
+            x = 'multiplet',
+            y = 'residuals',
+            label = 'genes'
         ),
         min.segment.length = unit(0.1, "lines")
     )+
     theme_few()+
     theme(
-        axis.text.x=element_text(angle=90)
+        axis.text.x = element_text(angle = 90)
     )+
     labs(
-        x=ifelse(type == "multiplets", "Multiplet", "Edge"),
-        y="Residuals"
+        x = ifelse(type == "multiplets", "Multiplet", "Edge"),
+        y = "Residuals"
     )
     
     p
@@ -1052,11 +1063,11 @@ setMethod("plotSwarm", "spSwarm", function(
     
     m <- melt(resid)
     d <- data.frame(
-        residuals=m$value,
-        multiplet=m$Var2,
-        genes=m$Var1
+        residuals = m$value,
+        multiplet = m$Var2,
+        genes     = m$Var1
     )
-    d <- d[order(d$multiplet, d$residuals, decreasing=TRUE), ]
+    d <- d[order(d$multiplet, d$residuals, decreasing = TRUE), ]
     return(d)
 }
 
@@ -1081,8 +1092,8 @@ setMethod("plotSwarm", "spSwarm", function(
     
     multiplets <- getMultipletsForEdge(
         spSwarm,
-        edge.cutoff=edge.cutoff,
-        edges=edges[,1:2]
+        edge.cutoff = edge.cutoff,
+        edges = edges[,1:2]
     )
     multiplets <- lapply(multiplets, function(o) {
         if(!is.null(o)) {o}
@@ -1102,18 +1113,18 @@ setMethod("plotSwarm", "spSwarm", function(
     m <- merge(
         resSums2,
         edges,
-        by.x="Var2",
-        by.y="edge",
-        all.x=TRUE
+        by.x  = "Var2",
+        by.y  = "edge",
+        all.x = TRUE
     )
     
     d <- data.frame(
-        residuals=m$value,
-        multiplet=m$Var2,
-        genes=m$Var1
+        residuals = m$value,
+        multiplet = m$Var2,
+        genes = m$Var1
     )
     
-    d <- d[order(d$multiplet, d$residuals, decreasing=TRUE), ]
+    d <- d[order(d$multiplet, d$residuals, decreasing = TRUE), ]
     
     return(d)
 }
@@ -1158,22 +1169,21 @@ setMethod("plotSwarm", "spSwarm", function(
     
     d <- data.frame(
         from = sort(rep(types, length(types))),
-        to = rep(types, length(types))
+        to   = rep(types, length(types))
     )
     
     results <- spSwarmPoisson(
-        sObj,
-        edge.cutoff=edge.cutoff,
-        min.pval=min.pval,
-        min.num.edges=min.num.edges
+        spSwarm       = sObj,
+        edge.cutoff   = edge.cutoff,
+        min.pval      = min.pval,
+        min.num.edges = min.num.edges
     )
     
-    tmp1 <- merge(d, results, by.x=c("from", "to"), by.y=c("from", "to"))
-    tmp2 <- merge(d, results, by.x=c("from", "to"), by.y=c("to", "from"))
+    tmp1 <- merge(d, results, by.x = c("from", "to"), by.y = c("from", "to"))
+    tmp2 <- merge(d, results, by.x = c("from", "to"), by.y = c("to", "from"))
     input <- unique(rbind(tmp1, tmp2))
     
     return(input)
-
 }
 
 .pvalueBar <- function(
@@ -1181,40 +1191,40 @@ setMethod("plotSwarm", "spSwarm", function(
     ...
 ){
     
-    colors <- .setColors()[1:length(unique(input[,1]))]
+    colors <- col64()[1:length(unique(input[,1]))]
     
     p <- ggplot(
         input,
         aes_string(
-            x='to',
-            y='-log10(pval)'
+            x = 'to',
+            y = '-log10(pval)'
         )
     )+
     geom_bar(
-        aes_string(fill='to'),
-        stat="identity",
-        position=position_dodge(width=1)
+        aes_string(fill = 'to'),
+        stat = "identity",
+        position = position_dodge(width = 1)
     )+
     facet_grid(
-        from~to,
-        scales="free_x"
+        from ~ to,
+        scales = "free_x"
     )+
     geom_hline(
-        yintercept=-log10(0.05),
-        lty=2,
-        colour="darkgrey"
+        yintercept = -log10(0.05),
+        lty = 2,
+        colour = "darkgrey"
     )+
     theme_few()+
     labs(
-        x="Node 1",
-        y="-log10(p-value)"
+        x = "Node 1",
+        y = "-log10(p-value)"
     )+
-    scale_fill_manual(values=colors)+
-    guides(fill=FALSE)+
+    scale_fill_manual(values = colors)+
+    guides(fill = FALSE)+
     theme(
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.title.x=element_blank()
+        axis.text.x  = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank()
     )
     
     return(p)
@@ -1224,7 +1234,7 @@ setMethod("plotSwarm", "spSwarm", function(
     input,
     ...
 ){
-    colors <- .setColors()[1:length(unique(input[,1]))]
+    colors <- col64()[1:length(unique(input[,1]))]
     
     input$pStars <- ifelse(
         input$pval < 0.05 & input$pval > 0.0049,
@@ -1244,62 +1254,64 @@ setMethod("plotSwarm", "spSwarm", function(
         "\u2605 = p < 0.05",
         "\u2605\u2605 = p < 0.005",
         "\u2605\u2605\u2605 = p < 0.0005.",
-        sep="; "
+        sep = "; "
     )
     
     p <- ggplot(
         input,
         aes_string(
-            x='to',
-            y='weight'
+            x = 'to',
+            y = 'weight'
         )
     )+
     geom_bar(
         aes_string(
-            fill='to'
+            fill = 'to'
         ),
-        stat="identity",
-        position=position_dodge(width=1)
+        stat = "identity",
+        position = position_dodge(width = 1)
     )+
     facet_grid(
-        from~to,
-        scales="free_x"
+        from ~ to,
+        scales = "free_x"
     )+
     geom_label(
         aes_string(
-            x='to',
-            y='weight+6',
-            label='pStars'
+            x = 'to',
+            y = 'weight + 6',
+            label = 'pStars'
         ),
-        fill="white",
-        label.size=0,
-        label.padding=unit(0.01, "lines"),
-        position=position_dodge(width=0.9),
+        fill = "white",
+        label.size = 0,
+        label.padding = unit(0.01, "lines"),
+        position = position_dodge(width = 0.9),
         show.legend = FALSE,
-        family="Arial Unicode MS",
-        size=3
+        family = "Arial Unicode MS",
+        size = 3
     )+
     theme_few()+
     labs(
-        y="Number of Edges",
-        caption=caption
+        y = "Number of Edges",
+        caption = caption
     )+
     scale_fill_manual(
-        values=colors
+        values = colors
     )+
     guides(
-        fill=FALSE
+        fill = FALSE
     )+
     theme(
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.title.x=element_blank(),
-        plot.caption=element_text(
-            family="Arial Unicode MS",
-            hjust=0
+        axis.text.x  = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.x = element_blank(),
+        strip.text.x = element_text(angle = 90, vjust = 0),
+        strip.text.y = element_text(angle = 0,  hjust = 0),
+        plot.caption = element_text(
+            family = "Arial Unicode MS",
+            hjust  = 0
         )
     )+
-    ylim(0, max(input$weight+10))
+    ylim(0, max(input$weight + 10))
     
     return(p)
 }
@@ -1342,42 +1354,76 @@ setMethod("plotSwarm", "spSwarm", function(
         "\u2605 = p < 0.05",
         "\u2605\u2605 = p < 0.005",
         "\u2605\u2605\u2605 = p < 0.0005.",
-        sep="; "
+        sep = "; "
     )
     
     plot <- ggplot(
         input,
         aes_string(
-            x='from',
-            y='to'
+            x = 'from',
+            y = 'to'
         )
     )+
     geom_tile(
         aes_string(
-            fill='weight'
+            fill = 'weight'
         )
     )+
     theme_few()+
     labs(
-        x="From",
-        y="To",
-        caption=caption
+        x = "From",
+        y = "To",
+        caption = caption
     )+
-    guides(fill=guide_legend(title="Weight"))+
+    guides(fill = guide_legend(title = "Weight"))+
     scale_fill_viridis()+
     geom_text(
         aes_string(
-            label='pStars'
+            label = 'pStars'
         ),
-        family="Arial Unicode MS"
+        family = "Arial Unicode MS"
     )+
     theme(
-        plot.caption=element_text(
-            family="Arial Unicode MS",
-            hjust=0
+        plot.caption = element_text(
+            family = "Arial Unicode MS",
+            hjust = 0
         )
     )
     
     return(plot)
     
+}
+
+#' col64
+#'
+#' Diverging color palette.
+#'
+#' @name col64
+#' @rdname col64
+#' @author Jason T. Serviss
+#' @keywords col64
+#' @examples
+#' col64()
+#'
+#' @export
+NULL
+
+col64 <- function() {
+    c(
+    "#000000", "#FFFF00", "#1CE6FF", "#FF34FF", "#FF4A46", "#008941", "#006FA6",
+    "#A30059", "#FFDBE5", "#7A4900", "#0000A6", "#63FFAC", "#B79762", "#004D43",
+    "#8FB0FF", "#997D87", "#5A0007", "#809693", "#FEFFE6", "#1B4400", "#4FC601",
+    "#3B5DFF", "#4A3B53", "#FF2F80", "#61615A", "#BA0900", "#6B7900", "#00C2A0",
+    "#FFAA92", "#FF90C9", "#B903AA", "#D16100", "#DDEFFF", "#000035", "#7B4F4B",
+    "#A1C299", "#300018", "#0AA6D8", "#013349", "#00846F", "#372101", "#FFB500",
+    "#C2FFED", "#A079BF", "#CC0744", "#C0B9B2", "#C2FF99", "#001E09", "#00489C",
+    "#6F0062", "#0CBD66", "#EEC3FF", "#456D75", "#B77B68", "#7A87A1", "#788D66",
+    "#885578", "#FAD09F", "#FF8A9A", "#D157A0", "#BEC459", "#456648", "#0086ED",
+    "#886F4C", "#34362D", "#B4A8BD", "#00A6AA", "#452C2C", "#636375", "#A3C8C9",
+    "#FF913F", "#938A81", "#575329", "#00FECF", "#B05B6F", "#8CD0FF", "#3B9700",
+    "#04F757", "#C8A1A1", "#1E6E00", "#7900D7", "#A77500", "#6367A9", "#A05837",
+    "#6B002C", "#772600", "#D790FF", "#9B9700", "#549E79", "#FFF69F", "#201625",
+    "#72418F", "#BC23FF", "#99ADC0", "#3A2465", "#922329", "#5B4534", "#FDE8DC",
+    "#404E55", "#0089A3", "#CB7E98", "#A4E804", "#324E72", "#6A3A4C"
+    )
 }

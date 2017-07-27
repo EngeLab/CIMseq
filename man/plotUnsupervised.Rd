@@ -9,7 +9,7 @@
 \usage{
 plotUnsupervised(x, ...)
 
-\S4method{plotUnsupervised}{spUnsupervised}(x, y = NULL, type,
+\S4method{plotUnsupervised}{spUnsupervised}(x, y = NULL, type = "clusters",
   markers = NULL, plotUncertainty = TRUE, ...)
 }
 \arguments{
