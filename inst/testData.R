@@ -25,8 +25,16 @@ s.I1 <- syntheticData[ ,grepl("s.I1", colnames(syntheticData))][ ,1:85]
 s.J1 <- syntheticData[ ,grepl("s.J1", colnames(syntheticData))][ ,1:85]
 
 #add multuplets
-m.A1B1 <- syntheticData[ ,'m.A1B1']
-m.C1D1 <- syntheticData[ ,'m.I1J1']
+#note that the names A1B1 and C1D1 are kept although, in the synthetic data,
+#these are actually B1A1 and J1I1. This is necessary because during the
+#spUnsupervised phase the names of the cell types are automatically set using a
+#combination of letters and numbers. Each cell type will be names with A1, B1,
+#C1, etc. Therefore, since there are 4 cell types in the data, we know their
+#names ahead of time and setting the multiplet names to something else only
+#makes a correct result look incorrect.
+
+m.A1B1 <- syntheticData[ ,'m.B1A1']
+m.C1D1 <- syntheticData[ ,'m.J1I1']
 
 #make counts
 counts <- cbind(
@@ -76,24 +84,28 @@ multipletsE <- multipletsE[,
     replace=TRUE
 )]
 
-testErcc <- matrix(c(singletsE, multipletsE), ncol=ncol(testCounts))
+testErcc <- matrix(c(singletsE, multipletsE), ncol = ncol(testCounts))
 
 #make test spUnsupervised and spSwarm
 cObjSng <- spCounts(testCounts[,s2], testErcc[,s2])
 cObjMul <- spCounts(testCounts[,!s2], testErcc[,!s2])
-testUns <- spUnsupervised(cObjSng, max=250, max_iter=1000)
+testUns <- spUnsupervised(cObjSng, max = 250, max_iter = 1000)
 
 testSwa <- spSwarm(
     cObjMul,
     testUns,
-    distFun=distToSlice,
-    maxiter=100,
-    swarmsize=500,
-    cores=2
+    distFun = bic,
+    maxiter = 100,
+    swarmsize = 500,
+    cores = 2
 )
 
 #save
-save(testErcc, file="data/testErcc.rda", compress="bzip2")
-save(testCounts, file="data/testCounts.rda", compress="bzip2")
-save(testUns, file="data/testUns.rda", compress="bzip2")
-save(testSwa, file="data/testSwa.rda", compress="bzip2")
+save(
+    testErcc,
+    testCounts,
+    testUns,
+    testSwa,
+    file = "data/testData.rda",
+    compress = "bzip2"
+)
