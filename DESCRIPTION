@@ -24,14 +24,14 @@ Imports:
     ggrepel,
     tibble,
     stringr,
-    S4Vectors
+    S4Vectors,
+    ggforce,
+    ggraph
 Suggests:
     knitr,
     rmarkdown,
     testthat,
-    BiocStyle,
-    ggforce,
-    ggraph
+    BiocStyle
 VignetteBuilder: knitr
 License: GPL-3
 Encoding: UTF-8
