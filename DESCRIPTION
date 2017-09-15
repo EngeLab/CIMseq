@@ -13,8 +13,6 @@ Imports:
     rgl,
     mclust,
     Rtsne,
-    ggforce,
-    ggraph,
     ggthemes,
     igraph,
     methods,
@@ -31,7 +29,9 @@ Suggests:
     knitr,
     rmarkdown,
     testthat,
-    BiocStyle
+    BiocStyle,
+    ggforce,
+    ggraph
 VignetteBuilder: knitr
 License: GPL-3
 Encoding: UTF-8
