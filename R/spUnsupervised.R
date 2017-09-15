@@ -225,8 +225,8 @@ NULL
 spTopMax <- function(spCounts, n) {
     data <- getData(spCounts, "counts.cpm")
     n <- min(n, dim(data)[1])
-    rv = apply(data, 1, max)
-    select = order(rv, decreasing = TRUE)[1:n]
+    rv <- apply(data, 1, max)
+    select <- order(rv, decreasing = TRUE)[1:n]
     return(select)
 }
 
@@ -334,7 +334,8 @@ runTsne <- function(
         initial_dims = initial_dims,
         max_iter = max_iter,
         perplexity = perplexity,
-        theta = theta
+        theta = theta,
+        is_distance = is_distance
     )$Y
     
     rownames(my.tsne) <- rownames(my.dist)
