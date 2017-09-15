@@ -11,4 +11,3 @@ r_check_args: "--no-build-vignettes --no-manual --timings"
   - osx
 before_install:
   Rscript -e 'update.packages(ask = FALSE)'
-apt_packages: libudunits2-dev
