@@ -23,6 +23,7 @@ Imports:
     pso,
     ggrepel,
     tibble,
+    purrr,
     stringr,
     S4Vectors,
     ggforce,
