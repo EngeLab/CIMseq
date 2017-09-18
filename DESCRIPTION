@@ -24,6 +24,8 @@ Imports:
     ggrepel,
     tibble,
     purrr,
+    tidyr,
+    magrittr,
     stringr,
     S4Vectors,
     ggforce,
