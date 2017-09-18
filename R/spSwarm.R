@@ -29,8 +29,10 @@ NULL
 #'    should be generated.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
-#' @param convergence The convergence output from psoptim. One value per multiplet.
-#' @param arguments Arguments passed to the spRSwarm function.
+#' @param convergence The convergence output from psoptim. One value per
+#'    multiplet.
+#' @param stats The stats output from psoptim.
+#' @param arguments Arguments passed to the spSwarm function.
 #' @param object spRSwarm object.
 #' @param n Data to extract from spRSwarm object.
 #' @param .Object Internal object.
