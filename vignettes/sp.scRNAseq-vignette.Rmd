@@ -13,6 +13,10 @@ vignette: >
     %\SweaveUTF8
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(eval=FALSE)
+```
+
 <style>
     .col2 {
         columns: 2 200px;         /* number of columns and width in pixels*/
