@@ -765,7 +765,14 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
 #' @name permuteSwarm
 #' @rdname permuteSwarm
 #' @aliases permuteSwarm
+#' @param spCountsSng An spCounts object containing singlets.
+#' @param spCountsMul An spCounts object containing multiplets.
+#' @param spUnsupervised An spUnsupervised object.
 #' @param spSwarm An spSwarm object.
+#' @param distFun The distance function used to calculate the cost. Either the
+#'    name of a custom function in the local environment or one of the included
+#'    functions, i.e. \code{distToSlice, distToSliceNorm, distToSliceTop,
+#'    distToSliceEuclid, distToSlicePearson, bic}.
 #' @param edge.cutoff The minimum fraction to consider (?).
 #' @param multiplet The name of the multiplet of interest.
 #' @param ... additional arguments to pass on
@@ -796,11 +803,18 @@ setGeneric("permuteSwarm", function(
 #' @export
 
 setMethod("permuteSwarm", "spCounts", function(
-    spCounts,
+    spCountsSng,
     spCountsMul,
     spUnsupervised,
     spSwarm,
-    distFun = distToSlice,
+    distFun = distFun = c(
+        "distToSlice",
+        "distToSliceNorm",
+        "distToSliceTop",
+        "distToSliceEuclid",
+        "distToSlicePearson",
+        "bic"
+    ),
     maxiter = 10,
     swarmsize = 150,
     cores = 1,
@@ -809,6 +823,8 @@ setMethod("permuteSwarm", "spCounts", function(
     iter,
     ...
 ){
+    distFun <- match.fun(distFun)
+
     classes <- getData(spUnsupervised, "classification")
     
     permMatrix <- .makePermutations(classes, iter, seed)
