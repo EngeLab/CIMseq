@@ -5,7 +5,9 @@ NULL
 #' @importFrom S4Vectors show
 #' @importFrom utils head
 #' @export
-setMethod("show", "spCounts", function(object){
+setMethod("show", "spCounts", function(
+    object
+){
     .showCounts(object)
 })
 
@@ -32,12 +34,15 @@ setMethod("show", "spCounts", function(object){
 #' @importFrom S4Vectors show
 #' @importFrom utils head
 #' @export
-setMethod("show", "spUnsupervised", function(object){
+setMethod("show", "spUnsupervised", function(
+    object
+){
     .showUnsupervised(object)
 })
 
 #internal show function
-.showUnsupervised <- function(object
+.showUnsupervised <- function(
+    object
 ){
     names <- slotNames(object)
     cat("Class:","spUnsupervised\n")
@@ -61,10 +66,15 @@ setMethod("show", "spUnsupervised", function(object){
 #' @importFrom S4Vectors show
 #' @importFrom utils head
 #' @export
-setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
+setMethod("show", "spSwarm", function(
+    object
+){
+    .showSpSwarm(object)
+})
 
 #internal show function
-.showSpSwarm <- function(object
+.showSpSwarm <- function(
+    object
 ){
     names <- slotNames(object)
     cat("Class:","spSwarm\n")
@@ -92,7 +102,9 @@ setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
 #                                                                              #
 ################################################################################
 
-.showBasics <- function(obj) {
+.showBasics <- function(
+    obj
+){
     
     if(class(obj) == "call") {return("")}
     
@@ -109,11 +121,15 @@ setMethod("show", "spSwarm", function(object){ .showSpSwarm(object) })
 }
 
 
-.showList <- function(obj) {
+.showList <- function(
+    obj
+){
     show(as(obj, "List"))
 }
 
-.showMatrix <- function(obj) {
+.showMatrix <- function(
+    obj
+){
     if(all(is.na(obj)) == TRUE) {
         
         print("NA")

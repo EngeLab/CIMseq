@@ -9,8 +9,8 @@ test_that("check that spTopVar outputs the expected result", {
     
     ###TEST1####
     #setup expected data
-    expected1 <- 9L
-    expected2 <- 121L
+    expected1 <- 191L
+    expected2 <- 25L
     
     #run function
     output <- spTopVar(cObjSng, 10)
@@ -18,7 +18,6 @@ test_that("check that spTopVar outputs the expected result", {
     #test
     expect_identical(expected1, output[1])
     expect_identical(expected2, output[length(output)])
-    
 })
 
 ##run test spTopMax
@@ -26,8 +25,8 @@ test_that("check that spTopMax outputs the expected result", {
     
     ###TEST1####
     #setup expected data
-    expected1 <- 246L
-    expected2 <- 127L
+    expected1 <- 1L
+    expected2 <- 107L
     
     #run function
     output <- spTopMax(cObjSng, 10)
@@ -35,7 +34,6 @@ test_that("check that spTopMax outputs the expected result", {
     #test
     expect_identical(expected1, output[1])
     expect_identical(expected2, output[length(output)])
-    
 })
 
 ##run test pearsonsDist
@@ -46,8 +44,8 @@ test_that("check that pearsonsDist outputs the expected result", {
     select <- 1:5
 
     #setup expected data
-    expectHead <- c(1,2,1,2,0,2)
-    expectTail <- c(0,1,0,1,0,0)
+    expectHead <- c(1, 2, 0, 1, 1, 1)
+    expectTail <- rep(0, 6)
     
     #run function
     output <- pearsonsDist(cObjSng, select)
@@ -55,7 +53,6 @@ test_that("check that pearsonsDist outputs the expected result", {
     #test
     expect_equivalent(expectHead, round(head(output)))
     expect_equivalent(expectTail, round(tail(output)))
-    
 })
 
 ##run test runTsne
@@ -68,7 +65,7 @@ test_that("check that runTsne outputs the expected result", {
             0, 9, 19,
             1, 10, 20,
             2, 11, 21),
-            nrow=3
+            nrow = 3
     ))
     
     dims <- 2
@@ -96,7 +93,6 @@ test_that("check that runTsne outputs the expected result", {
     
     #test
     expect_length(output, 6)
-    
 })
 
 ##run test runMclust
@@ -146,8 +142,8 @@ test_that("check that averageGroupExpression outputs the expected result", {
     classes <- getData(testUns, "classification")
 
     #setup expected data
-    expectedFirstRow <- c(8309,8322,331,717)
-    expectedLastRow <- c(2287,7040,2045,1901)
+    expectedFirstRow <- c(4624, 598, 1505, 1920)
+    expectedLastRow <- c(3921, 827, 3327, 6222)
 
     names(expectedFirstRow) <- unique(classes)
     names(expectedLastRow) <- unique(classes)
@@ -172,8 +168,8 @@ test_that("check that tsneGroupMeans outputs the expected result",{
     tsne <- getData(testUns, "tsne")
     
     #setup expected data
-    expected1 <- c(-35, -34)
-    expected2 <- c(48, -20)
+    expected1 <- c(-18, -6)
+    expected2 <- c(7, -52)
     
     #run function
     output <- tsneGroupMeans(tsne, classes)
@@ -181,7 +177,6 @@ test_that("check that tsneGroupMeans outputs the expected result",{
     #test
     expect_identical(expected1, as.numeric(round(output[1, 2:3])))
     expect_identical(expected2, as.numeric(round(output[nrow(output), 2:3])))
-
 })
 
 ##run test erccPerClass
@@ -203,6 +198,5 @@ test_that("check that erccPerClass outputs the expected result",{
     expect_type(output$class, "character")
     expect_type(output$medianFracErcc, "double")
     expect_false(any(is.na(output$medianFracErcc)))
-    
 })
 

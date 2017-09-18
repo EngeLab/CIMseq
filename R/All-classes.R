@@ -227,11 +227,11 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value)
 #' @rdname spSwarm
 #' @export
 .spSwarm <- setClass("spSwarm", representation(
-    spSwarm="data.frame",
-    costs="numeric",
-    convergence="character",
-    stats="list",
-    arguments="list"
+    spSwarm = "data.frame",
+    costs = "numeric",
+    convergence = "character",
+    stats = "list",
+    arguments = "list"
 ))
 
 #############
@@ -244,7 +244,7 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value)
 #' @export
 setMethod("getData", "spSwarm", function(object, n=NULL)
 {
-    if(class(n)=="character"){
+    if(class(n) == "character"){
         slot(object,n)
     }
 })

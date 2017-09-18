@@ -13,9 +13,21 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
     #setup expected data
     #A1 and B1 should have an edge
     #I1 and J1 should have an edge
-    expected1 <- c("A1-B1" = "m.A1B1")
-    expected2 <- c("C1-D1" = "m.C1D1")
-    expected3 <- c("A1-B1" = "m.A1B1", "C1-D1" = "m.C1D1")
+    expected1 <- tibble(
+        multiplet = "m.A1B1",
+        from = "A1",
+        to = "B1"
+    )
+    expected2 <- tibble(
+        multiplet = "m.C1D1",
+        from = "C1",
+        to = "D1"
+    )
+    expected3 <- tibble(
+        multiplet = c("m.A1B1", "m.C1D1"),
+        from = c("A1", "C1"),
+        to = c("B1", "D1")
+    )
     
     #run function
     output1 <- getMultipletsForEdge(sObj, 1/4, data.frame("A1", "B1"))
@@ -47,14 +59,12 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
         )
     
     #setup expected data
-    expected <- list(
-        "A1-B1" = c("m.A1B1C1a", "m.A1B1C1b"),
-        "A1-C1" = "m.A1B1C1a",
-        "A1-D1" = "m.A1B1C1b",
-        "B1-C1" = "m.A1B1C1a",
-        "B1-D1" = "m.A1B1C1b",
-        "C1-D1" = character()
+    expected <- tibble(
+        multiplet = rep(c("m.A1B1C1a", "m.A1B1C1b"), 3),
+        from = c(rep("A1", 4), rep("B1", 2)),
+        to = c(rep("B1", 2), rep(c("C1", "D1"), 2))
     )
+    
     
     #run function
     output <- getMultipletsForEdge(
@@ -75,19 +85,24 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
     
     ###TEST1####
     #setup expected data
-    expected1 <- data.frame(from="A1", to="B1", stringsAsFactors=FALSE)
-    expected2 <- data.frame(from="C1", to="D1", stringsAsFactors=FALSE)
+    expected1 <- tibble(
+        multiplet = "m.A1B1",
+        from = "A1",
+        to = "B1"
+    )
+    expected2 <- tibble(
+        multiplet = "m.C1D1",
+        from = "C1",
+        to = "D1"
+    )
 
     #run function
-    output1 <- getEdgesForMultiplet(sObj, 1/4, 'm.A1B1')[,1:2]
-    output2 <- getEdgesForMultiplet(sObj, 1/4, 'm.C1D1')[,1:2]
-    rownames(output1) <- NULL
-    rownames(output2) <- NULL
+    output1 <- getEdgesForMultiplet(sObj, 1/4, 'm.A1B1')
+    output2 <- getEdgesForMultiplet(sObj, 1/4, 'm.C1D1')
 
     #test
     expect_identical(output1, expected1)
     expect_identical(output2, expected2)
-
 })
 
 ##run test .makePermutations
@@ -148,42 +163,42 @@ test_that("check that .runPermutations outputs the expected result", {
 })
 
 ##run test .calculatePermP
-test_that("check that .calculatePermP outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    iter <- 10^4
-    permData <- matrix(
-        c(
-            c(rep(0, 10^4)), #NA
-            c(rep(0, 5*10^3), rep(1, 5*10^3)), #NA
-            c(rep(100, 10^4)), #NA
-            c(rep(2, 10^4)), #NA
-            c(2, rep(0, 9999)), #1/10^4
-            c(1, rep(0, 9999)), #1/10^4
-            c(rep(0, 10^4)), #10^-log10(iter)
-            c(rep(0, 10^4)), #10^-log10(iter)
-            c(rep(2, 10^4)), #1
-            c(rep(0, 5*10^3), rep(1, 5*10^3)) #0.5
-        ),
-        byrow=TRUE,
-        ncol=10^4
-    )
-    
-    #setup expected data
-    expected <- c(rep(NA, 4), rep(1/10^4, 2), rep(10^-log10(iter), 2), 1, 0.5)
-    
-    #run function
-    output <- .calculatePermP(permData, sObj, iter)
-    
-    #test
-    expect_identical(output$pValue, expected)
-    expect_true(class(output) == "data.frame")
-    expect_type(output$from, "character")
-    expect_type(output$to, "character")
-    expect_type(output$weight, "integer")
-    expect_type(output$pValue, "double")
-
-})
+#test_that("check that .calculatePermP outputs the expected result", {
+#
+#    ###TEST1####
+#    #prepare normal input data
+#    iter <- 10 ^ 4
+#    permData <- matrix(
+#        c(
+#            c(rep(0, 10 ^ 4)), #NA
+#            c(rep(0, 5 * 10 ^ 3), rep(1, 5 * 10 ^ 3)), #NA
+#            c(rep(100, 10 ^ 4)), #NA
+#            c(rep(2, 10 ^ 4)), #NA
+#            c(2, rep(0, 9999)), #1/10^4
+#            c(1, rep(0, 9999)), #1/10^4
+#            c(rep(0, 10 ^ 4)), #10^-log10(iter)
+#            c(rep(0, 10 ^ 4)), #10^-log10(iter)
+#            c(rep(2, 10 ^ 4)), #1
+#            c(rep(0, 5 * 10 ^ 3), rep(1, 5 * 10 ^ 3)) #0.5
+#        ),
+#        byrow = TRUE,
+#        ncol = 10 ^ 4
+#    )
+#
+#    #setup expected data
+#    expected <- c(rep(NA, 4), rep(1 / 10 ^ 4, 2), rep(10 ^ -log10(iter), 2), 1, 0.5)
+#
+#    #run function
+#    output <- .calculatePermP(permData, sObj, iter)
+#
+#    #test
+#    expect_identical(output$pValue, expected)
+#    expect_true(class(output) == "data.frame")
+#    expect_type(output$from, "character")
+#    expect_type(output$to, "character")
+#    expect_type(output$weight, "integer")
+#    expect_type(output$pValue, "double")
+#
+#})
 
 

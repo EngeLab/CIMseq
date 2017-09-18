@@ -1,15 +1,15 @@
 #context("spCounts")
 
 s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[,s], testErcc[,s])
-cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 
 ##run test
 test_that("check that the .norm.log.counts function outputs the expected result", {
 
     ###TEST1####
     #prepare normal input data
-    input <- matrix(c(0,1,1,0), nrow=2, ncol=2)
+    input <- matrix(c(0, 1, 1, 0), nrow = 2, ncol = 2)
     
     #setup expected data
     expected <- matrix(
@@ -19,8 +19,8 @@ test_that("check that the .norm.log.counts function outputs the expected result"
             log2(1000001),
             0
         ),
-        nrow=2,
-        ncol=2
+        nrow = 2,
+        ncol = 2
     )
 
     #run function
@@ -35,7 +35,7 @@ test_that("check that the .norm.counts function outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    input <- matrix(c(0,1,1,0), nrow=2, ncol=2)
+    input <- matrix(c(0,1,1,0), nrow = 2, ncol = 2)
     
     #setup expected data
     expected <- matrix(
@@ -45,8 +45,8 @@ test_that("check that the .norm.counts function outputs the expected result", {
             1000001,
             1
         ),
-        nrow=2,
-        ncol=2
+        nrow = 2,
+        ncol = 2
     )
     
     #run function
@@ -63,8 +63,8 @@ test_that("check that the .inputCheckCounts function outputs the expected result
     ###TEST1####
     #non-conforming counts and counts.ercc
     #setup input
-    counts <- matrix(1:10, ncol=10)
-    counts.ercc <- matrix(1:11, ncol=11)
+    counts <- matrix(1:10, ncol = 10)
+    counts.ercc <- matrix(1:11, ncol = 11)
     
     #test
     expect_message(.inputCheckCounts(counts, counts.ercc))
@@ -72,8 +72,8 @@ test_that("check that the .inputCheckCounts function outputs the expected result
     ###TEST2####
     #NA's present
     #setup input
-    counts <- matrix(NA, ncol=10)
-    counts.ercc <- matrix(NA, ncol=11)
+    counts <- matrix(NA, ncol = 10)
+    counts.ercc <- matrix(NA, ncol = 11)
     
     #test
     expect_message(.inputCheckCounts(counts, counts.ercc))
@@ -90,17 +90,17 @@ test_that("check that estimateCells outputs the expected result", {
     )
     
     expected2 <- tibble(
-        frac.ercc=1,
-        cellNumberMin=1,
-        cellNumberMedian=1,
-        cellNumberMax=1
+        frac.ercc = 1,
+        cellNumberMin = 1,
+        cellNumberMedian = 1,
+        cellNumberMax = 1
     )
     
     expected3 <- tibble(
-        frac.ercc=0,
-        cellNumberMin=2,
-        cellNumberMedian=2,
-        cellNumberMax=2
+        frac.ercc = 0,
+        cellNumberMin = 2,
+        cellNumberMedian = 2,
+        cellNumberMax = 2
     )
     
     #run function
@@ -137,6 +137,5 @@ test_that("check that estimateCells outputs the expected result", {
     expect_type(output$cellNumberMin, "double")
     expect_type(output$cellNumberMedian, "double")
     expect_type(output$cellNumberMax, "double")
-
 })
 

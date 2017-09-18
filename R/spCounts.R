@@ -145,7 +145,7 @@ setMethod("estimateCells", "spCounts", function(
             )
         ),
         frac.ercc = colSums(counts.ercc) /
-            (colSums(counts.ercc)+colSums(counts))
+            (colSums(counts.ercc) + colSums(counts))
     )
     
     d$cellNumberMin <-
@@ -164,12 +164,12 @@ setMethod("estimateCells", "spCounts", function(
             `/` (d$frac.ercc)
     
     d$cellNumberMax <-
-            d %>%
-                filter(sampleType == "Singlet") %>%
-                .$frac.ercc %>%
-                quantile %>%
-                .[4] %>%
-                `/` (d$frac.ercc)
+        d %>%
+            filter(sampleType == "Singlet") %>%
+            .$frac.ercc %>%
+            quantile %>%
+            .[4] %>%
+            `/` (d$frac.ercc)
     
     return(d)
 })

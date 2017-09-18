@@ -41,9 +41,12 @@ spSwarm(spCounts, spUnsupervised, ...)
 
 \item{costs}{The costs after optimization.}
 
-\item{convergence}{The convergence output from psoptim. One value per multiplet.}
+\item{convergence}{The convergence output from psoptim. One value per
+multiplet.}
 
-\item{arguments}{Arguments passed to the spRSwarm function.}
+\item{stats}{The stats output from psoptim.}
+
+\item{arguments}{Arguments passed to the spSwarm function.}
 
 \item{spCounts}{an spCount object with multiplets.}
 

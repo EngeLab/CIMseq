@@ -86,7 +86,7 @@ setMethod("plotSwarmPosition", "spSwarm", function(
         as_tibble() %>%
         ggplot(., aes(position)) +
         geom_density(aes(fill = class, colour = class), alpha = 0.5) +
-        facet_grid(multiplet~iteration, scale = "free") +
+        facet_grid(multiplet ~ iteration, scale = "free") +
         scale_fill_manual(values = col64()) +
         scale_colour_manual(values = col64()) +
         theme_few() +

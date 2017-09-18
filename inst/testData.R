@@ -1,3 +1,5 @@
+#from package directory run with source('./inst/testData.R')
+
 library(sp.scRNAseqTesting)
 
 #expData
@@ -11,18 +13,18 @@ expCounts <- counts
 expErcc <- counts.ercc
 
 suffix <- ifelse(grepl('1000102901', colnames(counts)), "m", "s")
-colnames(expCounts) <- paste(suffix, colnames(counts), sep='.')
-colnames(expErcc) <- paste(suffix, colnames(counts.ercc), sep='.')
+colnames(expCounts) <- paste(suffix, colnames(counts), sep = '.')
+colnames(expErcc) <- paste(suffix, colnames(counts.ercc), sep = '.')
 
-save(expCounts, file='data/expCounts.rda', compress='bzip2')
-save(expErcc, file='data/expErcc.rda', compress='bzip2')
+save(expCounts, file = 'data/expCounts.rda', compress = 'bzip2')
+save(expErcc, file = 'data/expErcc.rda', compress = 'bzip2')
 
 ########unit test and vignettes data
 #minimize cells
-s.A1 <- syntheticData[ ,grepl("s.A1", colnames(syntheticData))][ ,1:85]
-s.B1 <- syntheticData[ ,grepl("s.B1", colnames(syntheticData))][ ,1:85]
-s.I1 <- syntheticData[ ,grepl("s.I1", colnames(syntheticData))][ ,1:85]
-s.J1 <- syntheticData[ ,grepl("s.J1", colnames(syntheticData))][ ,1:85]
+s.A1 <- syntheticData[, grepl("s.A1", colnames(syntheticData))][, 1:85]
+s.B1 <- syntheticData[, grepl("s.B1", colnames(syntheticData))][, 1:85]
+s.I1 <- syntheticData[, grepl("s.I1", colnames(syntheticData))][, 1:85]
+s.J1 <- syntheticData[, grepl("s.J1", colnames(syntheticData))][, 1:85]
 
 #add multuplets
 #note that the names A1B1 and C1D1 are kept although, in the synthetic data,
@@ -33,8 +35,8 @@ s.J1 <- syntheticData[ ,grepl("s.J1", colnames(syntheticData))][ ,1:85]
 #names ahead of time and setting the multiplet names to something else only
 #makes a correct result look incorrect.
 
-m.A1B1 <- syntheticData[ ,'m.B1A1']
-m.C1D1 <- syntheticData[ ,'m.J1I1']
+m.A1B1 <- syntheticData[, 'm.A1B1']
+m.C1D1 <- syntheticData[, 'm.I1J1']
 
 #make counts
 counts <- cbind(
@@ -49,9 +51,10 @@ counts <- cbind(
 #minimise genes
 .ntopMax <- function(data, n) {
     rv = apply(data, 1, max)
-    select = order(rv, decreasing=TRUE)[1:n]
+    select = order(rv, decreasing = TRUE)[1:n]
     return(select)
 }
+
 
 select <- .ntopMax(counts, 250)
 testCounts <- counts[select, ]
@@ -62,39 +65,48 @@ rownames(testCounts) <- sort(
             10
         ),
         1:11,
-        sep=""
+        sep = ""
     )[1:nrow(testCounts)]
 )
 
 #make testErcc
 s <- grepl("^s", colnames(expCounts))
 s2 <- grepl("^s", colnames(testCounts))
-set.seed(129)
-singletsE <- expErcc[,s]
-singletsE <- singletsE[,sample(
-    1:ncol(expErcc[,s]),
-    size=length(s2[s2 == TRUE]),
-    replace=TRUE
+singletsE <- expErcc[c(1, 2), s]
+singletsE <- singletsE[, sample(
+    1:ncol(expErcc[, s]),
+    size = length(s2[s2]),
+    replace = TRUE
 )]
 
-multipletsE <-expErcc[,!s]
-multipletsE <- multipletsE[,
-    sample(1:ncol(expErcc[,!s]),
-    size=length(s2[s2 == FALSE]),
-    replace=TRUE
-)]
+#multipletsE <- expErcc[, !s]
+#multipletsE <- multipletsE[,
+#    sample(1:ncol(expErcc[, !s]),
+#    size = length(s2[s2 == FALSE]),
+#    replace = TRUE
+#)]
 
-testErcc <- matrix(c(singletsE, multipletsE), ncol = ncol(testCounts))
+set.seed(2342536)
+idx <- sample(1:ncol(singletsE), size = ceiling(ncol(singletsE) * 0.8), replace = FALSE)
+m1 <- rowMeans(singletsE[, idx]) / 9
+set.seed(54254)
+idx <- sample(1:ncol(singletsE), size = ceiling(ncol(singletsE) * 0.8), replace = FALSE)
+m2 <- rowMeans(singletsE[, idx]) / 9
+
+multipletsE <- matrix(c(m1, m2), ncol = 2)
+colnames(multipletsE) <- c("m.A1B1", "m.C1D1")
+
+testErcc <- cbind(singletsE, multipletsE)
 
 #make test spUnsupervised and spSwarm
-cObjSng <- spCounts(testCounts[,s2], testErcc[,s2])
-cObjMul <- spCounts(testCounts[,!s2], testErcc[,!s2])
+cObjSng <- spCounts(testCounts[, s2], testErcc[, s2])
+cObjMul <- spCounts(testCounts[, !s2], testErcc[, !s2])
 testUns <- spUnsupervised(cObjSng, max = 250, max_iter = 1000)
 
 testSwa <- spSwarm(
     cObjMul,
     testUns,
-    distFun = bic,
+    distFun = "bic",
     maxiter = 100,
     swarmsize = 500,
     cores = 2
