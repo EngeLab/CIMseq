@@ -526,8 +526,9 @@ tsneGroupMeans <- function(data, classes) {
 #' @name erccPerClass
 #' @rdname erccPerClass
 #' @aliases erccPerClass
-#' @param data Singlet 2D tsne.
-#' @param classes A character vector indicating the class of each singlet.
+#' @param spCountsSng An spCounts object containing singlets.
+#' @param spCountsMul An spCounts object containing multiplets.
+#' @param spUnsupervised An spUnsupervised object.
 #' @return A matrix containing the mean value for each gene for each
 #'    classification group.
 #' @author Jason T. Serviss
