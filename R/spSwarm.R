@@ -14,7 +14,10 @@ NULL
 #' @aliases spSwarm
 #' @param spCounts an spCount object with multiplets.
 #' @param spUnsupervised an spCount object.
-#' @param distFun The distance function used to calculate the cost.
+#' @param distFun The distance function used to calculate the cost. Either the
+#'    name of a custom function in the local environment or one of the included
+#'    functions, i.e. \code{distToSlice, distToSliceNorm, distToSliceTop,
+#'    distToSliceEuclid, distToSlicePearson, bic}.
 #' @param maxiter pySwarm argument indicating maximum optimization iterations.
 #' @param swarmsize pySwarm argument indicating the number of swarm particals.
 #' @param cores The number of cores to be used while running spRSwarm.
@@ -65,7 +68,14 @@ setGeneric("spSwarm", function(
 setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     spCounts,
     spUnsupervised,
-    distFun = distToSlice,
+    distFun = c(
+        "distToSlice",
+        "distToSliceNorm",
+        "distToSliceTop",
+        "distToSliceEuclid",
+        "distToSlicePearson",
+        "bic"
+    ),
     maxiter = 10,
     swarmsize = 150,
     cores = 1,
@@ -75,6 +85,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     reportRate = NULL,
     ...
 ){
+    
+    distFun <- match.fun(distFun)
     
     #input and input checks
     counts <- getData(spCounts, "counts.cpm")
@@ -237,7 +249,6 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 # Various dist functions. Probably better to use match.arg and not export
 #(so as to avoid cluttering the namespace), but leaving it like this for now.
 
-#' @export
 distToSlice <- function(
     fractions,
     cellTypes,
@@ -252,7 +263,6 @@ distToSlice <- function(
     sum(abs(a - oneMultiplet))
 }
 
-#' @export
 distToSliceNorm <- function(
     fractions,
     cellTypes,
@@ -270,7 +280,6 @@ distToSliceNorm <- function(
     sum(abs((oneMultiplet - a) / (a+1)))
 }
 
-#' @export
 distToSliceTop <- function(
     fractions,
     cellTypes,
@@ -291,7 +300,6 @@ distToSliceTop <- function(
     sum(abs(a - oneMultiplet))
 }
 
-#' @export
 distToSliceEuclid <- function(
     fractions,
     cellTypes,
@@ -307,7 +315,6 @@ distToSliceEuclid <- function(
     sum((a - oneMultiplet)^2)
 }
 
-#' @export
 distToSlicePearson <- function(
     fractions,
     cellTypes,
@@ -323,7 +330,6 @@ distToSlicePearson <- function(
     1-(cor(a, oneMultiplet))
 }
 
-#' @export
 bic <- function(
     fractions,
     cellTypes,
