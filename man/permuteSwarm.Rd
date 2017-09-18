@@ -7,20 +7,40 @@
 \alias{permuteSwarm,spCounts-method}
 \title{permuteSwarm}
 \usage{
-permuteSwarm(spCounts, ...)
+permuteSwarm(spCountsSng, ...)
 
-\S4method{permuteSwarm}{spCounts}(spCounts, spCountsMul, spUnsupervised,
-  spSwarm, distFun = distToSlice, maxiter = 10, swarmsize = 150,
-  cores = 1, seed = 11, norm = TRUE, iter, ...)
+\S4method{permuteSwarm}{spCounts}(spCountsSng, spCountsMul, spUnsupervised,
+  spSwarm, distFun = c("distToSlice", "distToSliceNorm", "distToSliceTop",
+  "distToSliceEuclid", "distToSlicePearson", "bic"), maxiter = 10,
+  swarmsize = 150, cores = 1, seed = 11, norm = TRUE, iter, ...)
 }
 \arguments{
+\item{spCountsSng}{An spCounts object containing singlets.}
+
 \item{...}{additional arguments to pass on}
+
+\item{spCountsMul}{An spCounts object containing multiplets.}
+
+\item{spUnsupervised}{An spUnsupervised object.}
 
 \item{spSwarm}{An spSwarm object.}
 
-\item{edge.cutoff}{The minimum fraction to consider (?).}
+\item{distFun}{The distance function used to calculate the cost. Either the
+name of a custom function in the local environment or one of the included
+functions, i.e. \code{distToSlice, distToSliceNorm, distToSliceTop,
+distToSliceEuclid, distToSlicePearson, bic}.}
 
-\item{multiplet}{The name of the multiplet of interest.}
+\item{maxiter}{pySwarm argument indicating maximum optimization iterations.}
+
+\item{swarmsize}{pySwarm argument indicating the number of swarm particals.}
+
+\item{cores}{The number of cores to be used while running spRSwarm.}
+
+\item{seed}{The desired seed to set before running.}
+
+\item{norm}{Logical indicating if the sum of fractions should equal 1.}
+
+\item{iter}{The number of permutations to perform.}
 }
 \value{
 Edge names.

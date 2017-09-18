@@ -773,8 +773,12 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
 #'    name of a custom function in the local environment or one of the included
 #'    functions, i.e. \code{distToSlice, distToSliceNorm, distToSliceTop,
 #'    distToSliceEuclid, distToSlicePearson, bic}.
-#' @param edge.cutoff The minimum fraction to consider (?).
-#' @param multiplet The name of the multiplet of interest.
+#' @param maxiter pySwarm argument indicating maximum optimization iterations.
+#' @param swarmsize pySwarm argument indicating the number of swarm particals.
+#' @param cores The number of cores to be used while running spRSwarm.
+#' @param seed The desired seed to set before running.
+#' @param norm Logical indicating if the sum of fractions should equal 1.
+#' @param iter The number of permutations to perform.
 #' @param ... additional arguments to pass on
 #' @return Edge names.
 #' @author Jason T. Serviss
@@ -793,7 +797,7 @@ NULL
 #' @export
 
 setGeneric("permuteSwarm", function(
-    spCounts,
+    spCountsSng,
     ...
 ){
     standardGeneric("permuteSwarm")
@@ -807,7 +811,7 @@ setMethod("permuteSwarm", "spCounts", function(
     spCountsMul,
     spUnsupervised,
     spSwarm,
-    distFun = distFun = c(
+    distFun = c(
         "distToSlice",
         "distToSliceNorm",
         "distToSliceTop",

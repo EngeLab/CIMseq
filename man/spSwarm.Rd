@@ -23,8 +23,10 @@
 spSwarm(spCounts, spUnsupervised, ...)
 
 \S4method{spSwarm}{spCounts,spUnsupervised}(spCounts, spUnsupervised,
-  distFun = distToSlice, maxiter = 10, swarmsize = 150, cores = 1,
-  seed = 11, norm = TRUE, report = FALSE, reportRate = NULL, ...)
+  distFun = c("distToSlice", "distToSliceNorm", "distToSliceTop",
+  "distToSliceEuclid", "distToSlicePearson", "bic"), maxiter = 10,
+  swarmsize = 150, cores = 1, seed = 11, norm = TRUE, report = FALSE,
+  reportRate = NULL, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}
@@ -47,7 +49,10 @@ spSwarm(spCounts, spUnsupervised, ...)
 
 \item{spUnsupervised}{an spCount object.}
 
-\item{distFun}{The distance function used to calculate the cost.}
+\item{distFun}{The distance function used to calculate the cost. Either the
+name of a custom function in the local environment or one of the included
+functions, i.e. \code{distToSlice, distToSliceNorm, distToSliceTop,
+distToSliceEuclid, distToSlicePearson, bic}.}
 
 \item{maxiter}{pySwarm argument indicating maximum optimization iterations.}
 

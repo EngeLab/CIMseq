@@ -8,9 +8,11 @@
 erccPerClass(spCountsSng, spCountsMul, spUnsupervised)
 }
 \arguments{
-\item{data}{Singlet 2D tsne.}
+\item{spCountsSng}{An spCounts object containing singlets.}
 
-\item{classes}{A character vector indicating the class of each singlet.}
+\item{spCountsMul}{An spCounts object containing multiplets.}
+
+\item{spUnsupervised}{An spUnsupervised object.}
 }
 \value{
 A matrix containing the mean value for each gene for each
