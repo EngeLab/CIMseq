@@ -88,6 +88,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     ...
 ){
     
+    #put a check here to make sure all slots in the spUnsupervised object are filled.
+    
     distFun <- match.fun(distFun)
     
     #input and input checks
