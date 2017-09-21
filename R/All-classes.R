@@ -93,8 +93,8 @@ setMethod("tsne", "spUnsupervised", function(
 setGeneric("tsneMeans", function(
     object
 ){
-    standardGeneric("tsneMeans"))
-}
+    standardGeneric("tsneMeans")
+})
 
 #' @rdname spUnsupervised
 #' @export
