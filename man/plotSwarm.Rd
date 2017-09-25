@@ -52,8 +52,31 @@ Details.
 \examples{
 
 #use demo data
+s <- grepl("^s", colnames(testCounts))
+cObj <- spCounts(testCounts, testErcc, ifelse(s, "Singlet", "Multiplet"))
+uObj <- testUns
+sObj <- testSwa
 
-#run function
+# tsne plot
+plotSwarm(sObj, uObj, cObj, type = "tsne")
+
+#igraph plot
+plotSwarm(sObj, uObj, cObj, type = "igraph")
+
+#multiplet residuals plot
+plotSwarm(sObj, uObj, cObj, type = "multiplets")
+
+#edge residuals plot
+plotSwarm(sObj, uObj, cObj, type = "edges")
+
+#edge barplot
+plotSwarm(sObj, uObj, cObj, type = "edgeBar")
+
+#pvalue barplot
+plotSwarm(sObj, uObj, cObj, type = "pValueBar")
+
+#heatmap plot
+plotSwarm(sObj, uObj, cObj, type = "heat")
 
 }
 \author{

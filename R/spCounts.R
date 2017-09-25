@@ -86,8 +86,7 @@ setMethod("spCounts", "matrix", function(
 #' @name estimateCells
 #' @rdname estimateCells
 #' @aliases estimateCells
-#' @param spCountsSng A spCounts object with singlets.
-#' @param spCountsMul A spCounts object with multiplets.
+#' @param spCounts A spCounts object.
 #' @param ... additional arguments to pass on
 #' @return A data frame including the fraction of ercc reads and cell counts for
 #'    each sample.
@@ -103,8 +102,7 @@ NULL
 #' @export
 
 setGeneric("estimateCells", function(
-    spCountsSng,
-    spCountsMul,
+    spCounts,
     ...
 ){
     standardGeneric("estimateCells")
@@ -115,8 +113,7 @@ setGeneric("estimateCells", function(
 #' @importFrom stats median quantile
 #' @export
 setMethod("estimateCells", "spCounts", function(
-    spCountsSng,
-    spCountsMul,
+    spCounts,
     ...
 ){
     counts <- cbind(
