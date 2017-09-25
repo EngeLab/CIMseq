@@ -35,7 +35,7 @@ cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 
 #run function
-estimateCells(cObjSng, cObjMul)
+output <- estimateCells(cObjSng, cObjMul)
 
 }
 \author{

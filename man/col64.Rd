@@ -7,7 +7,8 @@
 Diverging color palette.
 }
 \examples{
-col64()
+
+cols <- col64()
 
 }
 \author{

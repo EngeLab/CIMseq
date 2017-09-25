@@ -10,7 +10,7 @@
 #' @examples
 #'
 #' l <- list(a=LETTERS[1:10], b=letters[1:5])
-#' namedListToTibble(l)
+#' output <- namedListToTibble(l)
 #'
 #' @export
 #' @importFrom tibble tibble

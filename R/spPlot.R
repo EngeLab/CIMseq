@@ -27,10 +27,12 @@ NULL
 #' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 #'
 #' #ERCC plot
-#' plotCounts(cObjSng, cObjMul, type = "ercc")
+#' p <- plotCounts(cObjSng, cObjMul, type = "ercc")
 #'
 #' #Markers plot
-#' plotCounts(cObjSng, cObjMul, types = "markers", markers = c("a1", "a10"))
+#' markers <- c("a1", "a10")
+#' p <- plotCounts(cObjSng, cObjMul, type = "markers", markers = markers)
+#'
 NULL
 
 #' @rdname plotCounts
@@ -72,7 +74,7 @@ setMethod("plotCounts", "spCounts", function(
             stop("Markers must be a character vector of length = 2.")
         }
         
-        genes <- unique(getData(x, "counts"))
+        genes <- unique(rownames(getData(x, "counts")))
         
         if(!all(markers %in% genes)) {
             stop("The specified markers are not in the counts matrix.")
@@ -241,14 +243,15 @@ setMethod("plotCounts", "spCounts", function(
 #'
 #' #use demo data
 #' s <- grepl("^s", colnames(testCounts))
-#' cObj <- spCounts(testCounts, testErcc, ifelse(s, "Singlet", "Multiplet"))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 #' uObj <- testUns
 #'
 #' #Clusters plot
-#' plotUnsupervised(uObj, cObj, type = "clusters")
+#' p <- plotUnsupervised(uObj, cObjSng, type = "clusters")
 #'
 #' #Markers plot
-#' plotUnsupervised(uObj, cObj, type = "markers", markers = c("a1", "a10"))
+#' markers <- c("a1", "a10")
+#' p <- plotUnsupervised(uObj, cObjSng, type = "markers", markers = markers)
 #'
 NULL
 
@@ -375,25 +378,28 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     tsne <- as.data.frame(getData(x, "tsne"))
     counts.log <- getData(y, "counts.log")
     
+    if(!all(markers %in% rownames(counts.log))) {
+        stop("Some of the markers entered were not found in the dataset.")
+    }
+    
     #on the next line you will need a check that the markers exist in the data
     markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
-    markExpress <- apply(markExpress, 2, function(x) {
-        (x-min(x))/(max(x)-min(x))
+    markExpressNorm <- apply(markExpress, 2, function(x) {
+        (x - min(x)) / (max(x) - min(x))
     })
     
-    names <- rownames(markExpress)
-    markExpress <- as.data.frame(markExpress, row.names=1:nrow(markExpress))
-    markExpress$sample <- names
-    
-    if(plotUncertainty) {
-        markExpress$uncertainty <- getData(x, "uncertainty")
-    } else {
-        markExpress$uncertainty <- 0.0001
-    }
-    df <- cbind(tsne, markExpress)
-    m <- melt(df, id.vars=c("V1", "V2", "sample", "uncertainty"))
-    
-    return(m)
+    markExpressNorm %>%
+        as_tibble() %>%
+        add_column(sample = rownames(markExpressNorm)) %>%
+        mutate(
+            uncertainty = ifelse(
+                plotUncertainty,
+                getData(x, "uncertainty"),
+                0.0001
+            )
+        ) %>%
+        add_column(V1 = pull(tsne, V1), V2 = pull(tsne, V2)) %>%
+        gather(variable, value, -V1, -V2, -sample, -uncertainty)
 }
 
 #plot markers plot
@@ -474,30 +480,31 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 #'
 #' #use demo data
 #' s <- grepl("^s", colnames(testCounts))
-#' cObj <- spCounts(testCounts, testErcc, ifelse(s, "Singlet", "Multiplet"))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 #' uObj <- testUns
 #' sObj <- testSwa
 #'
 #' # tsne plot
-#' plotSwarm(sObj, uObj, cObj, type = "tsne")
+#' p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "tsne")
 #'
 #' #igraph plot
-#' plotSwarm(sObj, uObj, cObj, type = "igraph")
+#' p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "igraph")
 #'
 #' #multiplet residuals plot
-#' plotSwarm(sObj, uObj, cObj, type = "multiplets")
+#' p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "multiplets")
 #'
 #' #edge residuals plot
-#' plotSwarm(sObj, uObj, cObj, type = "edges")
+#' p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "edges")
 #'
 #' #edge barplot
-#' plotSwarm(sObj, uObj, cObj, type = "edgeBar")
+#' p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "edgeBar")
 #'
 #' #pvalue barplot
-#' plotSwarm(sObj, uObj, cObj, type = "pValueBar")
+#' p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "pValueBar")
 #'
 #' #heatmap plot
-#' plotSwarm(sObj, uObj, cObj, type = "heat")
+#' p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "heat")
 #'
 NULL
 
@@ -523,6 +530,7 @@ setGeneric("plotSwarm", function(
 #' @importFrom reshape2 melt
 #' @importFrom ggrepel geom_label_repel
 #' @importFrom viridis scale_fill_viridis
+#' @importFrom readr parse_factor
 
 setMethod("plotSwarm", "spSwarm", function(
     x,
@@ -1404,7 +1412,8 @@ setMethod("plotSwarm", "spSwarm", function(
 #' @author Jason T. Serviss
 #' @keywords col64
 #' @examples
-#' col64()
+#'
+#'cols <- col64()
 #'
 #' @export
 NULL

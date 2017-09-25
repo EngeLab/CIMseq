@@ -13,7 +13,7 @@
 #' @usage testSwa
 #' @return spSwarm object.
 #' @examples
-#' testSwa
+#' data(testSwa)
 #'
 
 NULL

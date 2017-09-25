@@ -27,11 +27,11 @@ representation.
 }
 \examples{
 
-singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
-cObj <- spCounts(testCounts, testErcc)
-my.dist <- pearsonsDist(cObj)
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+my.dist <- pearsonsDist(cObjSng)
 tsne <- runTsne(my.dist, max_iter = 10)
-classes <- runMclust(tsne, 12, 11)
+classes <- runMclust(tsne, 7, 11)[[1]]
 meanGroupPos <- tsneGroupMeans(tsne, classes)
 
 }

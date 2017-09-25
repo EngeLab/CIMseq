@@ -29,13 +29,12 @@ representation.
 }
 \examples{
 
-\dontrun{
-singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
-select <- spTopMax(singlets, 10)
-my.dist <- pearsonsDist(singlets, select)
-tsne <- runTsne(my.dist, max_iter=10)
-class <- runMclust(tsne, 50, 11)
-}
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+select <- spTopMax(cObjSng, 10)
+my.dist <- pearsonsDist(cObjSng, select)
+tsne <- runTsne(my.dist, max_iter = 10)
+class <- runMclust(tsne, 6, 11)
 
 }
 \author{

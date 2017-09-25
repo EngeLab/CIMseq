@@ -43,10 +43,10 @@ NULL
 #' @examples
 #'
 #' #use demo data
-#'
-#'
-#' #run function
-#'
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+#' uObj <- testUns
+#' sObj <- spSwarm(cObjMul, uObj, distFun = "bic")
 #'
 NULL
 
@@ -89,6 +89,10 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 ){
     
     #put a check here to make sure all slots in the spUnsupervised object are filled.
+    
+    if(length(distFun) != 1) {
+        stop("Please provide a valid distFun argument.")
+    }
     
     distFun <- match.fun(distFun)
     
@@ -373,9 +377,7 @@ bic <- function(
 #' @examples
 #'
 #' #use demo data
-#'
-#'
-#' #run function
+#' output <- spSwarmPoisson(testSwa, 1/10.5)
 #'
 #'
 NULL
@@ -532,8 +534,9 @@ spSwarmPoisson <- function(
 #' @keywords calcResiduals
 #' @examples
 #'
-#' #use demo data
-#'
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+#' output <- calcResiduals(cObjMul, testUns, testSwa)
 #'
 #' #run function
 #'
@@ -608,11 +611,7 @@ calcResiduals <- function(
 #' @keywords getMultipletsForEdge
 #' @examples
 #'
-#' #use demo data
-#'
-#'
-#' #run function
-#'
+#' output <- getMultipletsForEdge(testSwa, 1/10.5, data.frame("A1", "B1"))
 #'
 NULL
 
@@ -700,11 +699,7 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
 #' @keywords getEdgesForMultiplet
 #' @examples
 #'
-#' #use demo data
-#'
-#'
-#' #run function
-#'
+#' output <- getEdgesForMultiplet(testSwa, 1/10.5, "m.A1B1")
 #'
 NULL
 

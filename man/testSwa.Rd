@@ -21,6 +21,6 @@ spSwarm object.
 spSwarm object.
 }
 \examples{
-testSwa
+data(testSwa)
 
 }

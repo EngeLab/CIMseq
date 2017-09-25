@@ -105,7 +105,7 @@ setMethod("spCounts", "matrix", function(
 #' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 #'
 #' #run function
-#' estimateCells(cObjSng, cObjMul)
+#' output <- estimateCells(cObjSng, cObjMul)
 #'
 NULL
 

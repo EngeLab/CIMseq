@@ -53,30 +53,31 @@ Details.
 
 #use demo data
 s <- grepl("^s", colnames(testCounts))
-cObj <- spCounts(testCounts, testErcc, ifelse(s, "Singlet", "Multiplet"))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 uObj <- testUns
 sObj <- testSwa
 
 # tsne plot
-plotSwarm(sObj, uObj, cObj, type = "tsne")
+p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "tsne")
 
 #igraph plot
-plotSwarm(sObj, uObj, cObj, type = "igraph")
+p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "igraph")
 
 #multiplet residuals plot
-plotSwarm(sObj, uObj, cObj, type = "multiplets")
+p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "multiplets")
 
 #edge residuals plot
-plotSwarm(sObj, uObj, cObj, type = "edges")
+p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "edges")
 
 #edge barplot
-plotSwarm(sObj, uObj, cObj, type = "edgeBar")
+p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "edgeBar")
 
 #pvalue barplot
-plotSwarm(sObj, uObj, cObj, type = "pValueBar")
+p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "pValueBar")
 
 #heatmap plot
-plotSwarm(sObj, uObj, cObj, type = "heat")
+p <- plotSwarm(sObj, uObj, cObjSng, cObjMul, type = "heat")
 
 }
 \author{

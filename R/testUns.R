@@ -15,7 +15,7 @@
 #' @usage testUns
 #' @return An spUnsupervised object.
 #' @examples
-#' testUns
+#' data(testUns)
 #'
 
 NULL

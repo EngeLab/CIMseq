@@ -30,9 +30,7 @@ Description
 \examples{
 
 #use demo data
-
-
-#run function
+output <- spSwarmPoisson(testSwa, 1/10.5)
 
 
 }

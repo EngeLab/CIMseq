@@ -5,7 +5,7 @@
 \alias{averageGroupExpression}
 \title{averageGroupExpression}
 \usage{
-averageGroupExpression(data, classes, weighted, uncertainty)
+averageGroupExpression(data, classes, weighted, uncertainty = NULL)
 }
 \arguments{
 \item{data}{Singlet expression matrix.}
@@ -32,17 +32,22 @@ group. Note that typically only singlets are input to this method.
 }
 \examples{
 
-\dontrun{
-singletIdx <- grepl("^s.*", colnames(testCounts))
-sngMatrix <- testCounts[ , singletIdx]
-sngErcc <- testErcc[ , singletIdx]
-cObj <- spCounts(sngMatrix, sngErcc)
-select <- spTopMax(cObj, 10)
-my.dist <- pearsonsDist(cObj, select)
-tsne <- runTsne(my.dist, max_iter=2000)
-class <- runMclust(tsne, 50, 11)
-averageExp <- averageGroupExpression(cObj, class)
-}
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+select <- spTopMax(cObjSng, 10)
+my.dist <- pearsonsDist(cObjSng, select)
+tsne <- runTsne(my.dist, max_iter = 2000)
+mclustOUT <- runMclust(tsne, 7, 11)
+class <- mclustOUT[[1]]
+uncertainty <- mclustOUT[[2]]
+
+#Weighted mean
+weighted <- TRUE
+averageExp <- averageGroupExpression(cObjSng, class, weighted, uncertainty)
+
+#Unweighted mean
+weighted <- FALSE
+averageExp <- averageGroupExpression(cObjSng, class, weighted)
 
 }
 \author{

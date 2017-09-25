@@ -39,14 +39,15 @@ Imports count and count.ercc data to a sp.scRNAseq object.
 
 #use demo data
 s <- grepl("^s", colnames(testCounts))
-cObj <- spCounts(testCounts, testErcc, ifelse(s, "Singlet", "Multiplet"))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 uObj <- testUns
 
 #Clusters plot
-plotUnsupervised(uObj, cObj, type = "clusters")
+p <- plotUnsupervised(uObj, cObjSng, type = "clusters")
 
 #Markers plot
-plotUnsupervised(uObj, cObj, type = "markers", markers = c("a1", "a10"))
+markers <- c("a1", "a10")
+p <- plotUnsupervised(uObj, cObjSng, type = "markers", markers = markers)
 
 }
 \author{

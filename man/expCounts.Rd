@@ -19,6 +19,6 @@ Matrix of counts.
 Fetal pancreas counts data.
 }
 \examples{
-expCounts
+data(expCounts)
 
 }

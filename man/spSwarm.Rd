@@ -85,10 +85,10 @@ Description
 \examples{
 
 #use demo data
-
-
-#run function
-
+s <- grepl("^s", colnames(testCounts))
+cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+uObj <- testUns
+sObj <- spSwarm(cObjMul, uObj, distFun = "bic")
 
 }
 \author{

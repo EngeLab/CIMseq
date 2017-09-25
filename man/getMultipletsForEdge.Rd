@@ -35,11 +35,7 @@ Description
 }
 \examples{
 
-#use demo data
-
-
-#run function
-
+output <- getMultipletsForEdge(testSwa, 1/10.5, data.frame("A1", "B1"))
 
 }
 \author{

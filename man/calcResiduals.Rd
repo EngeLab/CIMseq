@@ -37,8 +37,9 @@ based on the spSwarm results.
 }
 \examples{
 
-#use demo data
-
+s <- grepl("^s", colnames(testCounts))
+cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+output <- calcResiduals(cObjMul, testUns, testSwa)
 
 #run function
 

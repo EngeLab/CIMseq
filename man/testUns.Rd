@@ -23,6 +23,6 @@ An spUnsupervised object.
 spUnsupervised object.
 }
 \examples{
-testUns
+data(testUns)
 
 }

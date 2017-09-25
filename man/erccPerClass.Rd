@@ -23,8 +23,11 @@ Calculates median ercc reads per class.
 }
 \examples{
 
-#write something
-
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+uObj <- spUnsupervised(cObjSng, max_iter = 100, Gmax = 7)
+output <- erccPerClass(cObjSng, cObjMul, uObj)
 }
 \author{
 Jason T. Serviss

@@ -49,7 +49,12 @@ NULL
 #' @keywords spUnsupervised
 #' @examples
 #'
-#' #use demo data
+#' #use test data
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#'
+#' #run function
+#' uObj <- spUnsupervised(cObjSng, max_iter = 100, Gmax = 6)
 #'
 #' #run function
 #'
@@ -58,8 +63,12 @@ NULL
 #' @rdname spUnsupervised
 #' @export
 
-setGeneric("spUnsupervised", function(spCounts, ...
-){ standardGeneric("spUnsupervised") })
+setGeneric("spUnsupervised", function(
+    spCounts,
+    ...
+){
+    standardGeneric("spUnsupervised")
+})
 
 
 #' @rdname spUnsupervised
@@ -180,8 +189,9 @@ setMethod("spUnsupervised", "spCounts", function(
 #' @keywords spTopVar
 #' @examples
 #'
-#' cObj <- spCounts(testCounts, testErcc)
-#' selected <- spTopVar(cObj, 10)
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' selected <- spTopVar(cObjSng, 10)
 #'
 NULL
 
@@ -213,8 +223,9 @@ spTopVar <- function(spCounts, n) {
 #' @keywords spTopMax
 #' @examples
 #'
-#' cObj <- spCounts(testCounts, testErcc)
-#' selected <- spTopMax(cObj, 10)
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' selected <- spTopMax(cObjSng, 10)
 #'
 NULL
 
@@ -250,7 +261,10 @@ spTopMax <- function(spCounts, n) {
 #' @author Jason T. Serviss
 #' @keywords pearsonsDist
 #' @examples
-#' #write an example
+#'
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' my.dist <- pearsonsDist(cObjSng, 1:nrow(testCounts))
 #'
 NULL
 
@@ -301,12 +315,12 @@ pearsonsDist <- function(spCounts, select) {
 #' @keywords runTsne
 #' @examples
 #'
-#'\dontrun{
-#' singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
-#' select <- spTopMax(singlets, 10)
-#' my.dist <- pearsonsDist(singlets, select)
-#' tsne <- runTsne(my.dist, max_iter=10)
-#'}
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[ ,s], testErcc[, s])
+#' select <- spTopMax(cObjSng, 10)
+#' my.dist <- pearsonsDist(cObjSng, select)
+#' tsne <- runTsne(my.dist, max_iter = 10)
+#'
 #'
 NULL
 
@@ -364,13 +378,12 @@ runTsne <- function(
 #' @keywords runMclust
 #' @examples
 #'
-#'\dontrun{
-#' singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
-#' select <- spTopMax(singlets, 10)
-#' my.dist <- pearsonsDist(singlets, select)
-#' tsne <- runTsne(my.dist, max_iter=10)
-#' class <- runMclust(tsne, 50, 11)
-#'}
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' select <- spTopMax(cObjSng, 10)
+#' my.dist <- pearsonsDist(cObjSng, select)
+#' tsne <- runTsne(my.dist, max_iter = 10)
+#' class <- runMclust(tsne, 6, 11)
 #'
 NULL
 
@@ -422,17 +435,22 @@ runMclust <- function(
 #' @keywords averageGroupExpression
 #' @examples
 #'
-#'\dontrun{
-#' singletIdx <- grepl("^s.*", colnames(testCounts))
-#' sngMatrix <- testCounts[ , singletIdx]
-#' sngErcc <- testErcc[ , singletIdx]
-#' cObj <- spCounts(sngMatrix, sngErcc)
-#' select <- spTopMax(cObj, 10)
-#' my.dist <- pearsonsDist(cObj, select)
-#' tsne <- runTsne(my.dist, max_iter=2000)
-#' class <- runMclust(tsne, 50, 11)
-#' averageExp <- averageGroupExpression(cObj, class)
-#'}
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' select <- spTopMax(cObjSng, 10)
+#' my.dist <- pearsonsDist(cObjSng, select)
+#' tsne <- runTsne(my.dist, max_iter = 2000)
+#' mclustOUT <- runMclust(tsne, 7, 11)
+#' class <- mclustOUT[[1]]
+#' uncertainty <- mclustOUT[[2]]
+#'
+#' #Weighted mean
+#' weighted <- TRUE
+#' averageExp <- averageGroupExpression(cObjSng, class, weighted, uncertainty)
+#'
+#' #Unweighted mean
+#' weighted <- FALSE
+#' averageExp <- averageGroupExpression(cObjSng, class, weighted)
 #'
 NULL
 
@@ -443,7 +461,7 @@ averageGroupExpression <- function(
     data,
     classes,
     weighted,
-    uncertainty
+    uncertainty = NULL
 ){
     c <- unique(classes)
     exp <- getData(data, "counts.cpm")
@@ -487,11 +505,11 @@ averageGroupExpression <- function(
 #' @keywords tsneGroupMeans
 #' @examples
 #'
-#' singlets <- testCounts[ , grepl("^s.*", colnames(testCounts))]
-#' cObj <- spCounts(testCounts, testErcc)
-#' my.dist <- pearsonsDist(cObj)
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' my.dist <- pearsonsDist(cObjSng)
 #' tsne <- runTsne(my.dist, max_iter = 10)
-#' classes <- runMclust(tsne, 12, 11)
+#' classes <- runMclust(tsne, 7, 11)[[1]]
 #' meanGroupPos <- tsneGroupMeans(tsne, classes)
 #'
 NULL
@@ -534,8 +552,11 @@ tsneGroupMeans <- function(data, classes) {
 #' @keywords erccPerClass
 #' @examples
 #'
-#' #write something
-#'
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+#' uObj <- spUnsupervised(cObjSng, max_iter = 100, Gmax = 7)
+#' output <- erccPerClass(cObjSng, cObjMul, uObj)
 NULL
 
 #' @rdname erccPerClass

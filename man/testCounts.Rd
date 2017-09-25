@@ -19,6 +19,6 @@ Matrix of counts.
 Test counts data.
 }
 \examples{
-testCounts
+data(testCounts)
 
 }

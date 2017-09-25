@@ -39,10 +39,12 @@ cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 
 #ERCC plot
-plotCounts(cObjSng, cObjMul, type = "ercc")
+p <- plotCounts(cObjSng, cObjMul, type = "ercc")
 
 #Markers plot
-plotCounts(cObjSng, cObjMul, types = "markers", markers = c("a1", "a10"))
+markers <- c("a1", "a10")
+p <- plotCounts(cObjSng, cObjMul, type = "markers", markers = markers)
+
 }
 \author{
 Jason T. Serviss

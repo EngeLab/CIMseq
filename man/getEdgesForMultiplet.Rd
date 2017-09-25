@@ -31,11 +31,7 @@ Description
 }
 \examples{
 
-#use demo data
-
-
-#run function
-
+output <- getEdgesForMultiplet(testSwa, 1/10.5, "m.A1B1")
 
 }
 \author{

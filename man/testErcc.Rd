@@ -19,6 +19,6 @@ Matrix of ERCC counts.
 Test ercc.
 }
 \examples{
-testErcc
+data(testErcc)
 
 }

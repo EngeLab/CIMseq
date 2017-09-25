@@ -26,7 +26,10 @@ in the supplied unsupervised dimensionality reduction (t-SNE) data
 representation.
 }
 \examples{
-#write an example
+
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+my.dist <- pearsonsDist(cObjSng, 1:nrow(testCounts))
 
 }
 \author{

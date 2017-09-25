@@ -11,7 +11,7 @@
 #' @usage expCounts
 #' @return Matrix of counts.
 #' @examples
-#' expCounts
+#' data(expCounts)
 #'
 
 NULL
