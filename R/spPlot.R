@@ -989,16 +989,11 @@ setMethod("plotSwarm", "spSwarm", function(
         type,
         multiplets = {
             d <- .resPlotMultiplets(
-                x,
-                y,
-                z,
                 resid
             )
         },
         edges = {
             d <- .resPlotEdge(
-                x,
-                y,
                 z,
                 edge.cutoff,
                 min.num.edges,
@@ -1054,9 +1049,6 @@ setMethod("plotSwarm", "spSwarm", function(
 }
 
 .resPlotMultiplets <- function(
-    spCounts,
-    spUnsupervised,
-    spSwarm,
     resid,
     ...
 ){
@@ -1072,8 +1064,6 @@ setMethod("plotSwarm", "spSwarm", function(
 }
 
 .resPlotEdge <- function(
-    spCounts,
-    spUnsupervised,
     spSwarm,
     edge.cutoff,
     min.num.edges,
