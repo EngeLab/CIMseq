@@ -11,7 +11,8 @@ NULL
 #' @name plotCounts
 #' @rdname plotCounts
 #' @aliases plotCounts
-#' @param spCounts An spCounts object.
+#' @param x An spCounts object containing singlets.
+#' @param y An spCounts object containing multiplets.
 #' @param type Can be "ercc", "markers", or .......
 #' @param markers A character vector with 2 markers to plot.
 #' @param ... additional arguments to pass on.
@@ -22,21 +23,21 @@ NULL
 #'
 #' #use demo data
 #' s <- grepl("^s", colnames(testCounts))
-#' cObj <- spCounts(testCounts, testErcc, ifelse(s, "Singlet", "Multiplet"))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 #'
 #' #ERCC plot
-#' plotCounts(cObj, type = "ercc")
+#' plotCounts(cObjSng, cObjMul, type = "ercc")
 #'
 #' #Markers plot
-#' plotCounts(cObj, type = "markers", markers = c("a1", "a10"))
-#'
+#' plotCounts(cObjSng, cObjMul, types = "markers", markers = c("a1", "a10"))
 NULL
 
 #' @rdname plotCounts
 #' @export
 
 setGeneric("plotCounts", function(
-    spCounts,
+    x,
     ...
 ){
     standardGeneric("plotCounts")
@@ -51,7 +52,8 @@ setGeneric("plotCounts", function(
 #' @importFrom ggthemes theme_few scale_colour_economist
 
 setMethod("plotCounts", "spCounts", function(
-    spCounts,
+    x,
+    y,
     type,
     markers = NULL,
     ...
@@ -60,7 +62,7 @@ setMethod("plotCounts", "spCounts", function(
     #y should be an spCounts object with multuplets
     #check that type is valid
     if( type == "ercc" ) {
-        p <- .countsErccPlot(spCounts)
+        p <- .countsErccPlot(x, y)
         p
         return(p)
     }
@@ -70,13 +72,13 @@ setMethod("plotCounts", "spCounts", function(
             stop("Markers must be a character vector of length = 2.")
         }
         
-        genes <- unique(getData(spCounts, "counts"))
+        genes <- unique(getData(x, "counts"))
         
         if(!all(markers %in% genes)) {
             stop("The specified markers are not in the counts matrix.")
         }
         
-        p <- .countsMarkersPlot(spCounts, markers)
+        p <- .countsMarkersPlot(x, y, markers)
         p
         return(p)
     }
@@ -84,56 +86,58 @@ setMethod("plotCounts", "spCounts", function(
 
 #plot ercc plot
 .countsErccPlot <- function(
-    spCounts,
+    x,
+    y,
     ...
 ){
     #add function for ERCC fraction conversion
-    convertToERCC <- function(x, d) {
-        d %>%
+    convertToERCC <- function(z, y) {
+        estimateCells(x, y) %>%
+            select(sampleType, frac.ercc) %>%
             filter(sampleType == "Singlet") %>%
             .$frac.ercc %>%
             median %>%
             `*` (100) %>%
-            `/` (x)
+            `/` (z)
     }
     
-    p <- estimateCells(spCounts) %>%
+    p <- estimateCells(x, y) %>%
     ggplot(
         .,
         aes_string(
-            x='factor(sampleType, levels=c("Singlet", "Multiplet"))',
-            y='cellNumberMedian'
+            x = 'factor(sampleType, levels = c("Singlet", "Multiplet"))',
+            y = 'cellNumberMedian'
         )
-    )+
-    geom_jitter()+
+    ) +
+    geom_jitter() +
     labs(
-        x="Sample type",
-        y="Cell number",
-        title="Fraction ERCC in singlets/doublets"
-    )+
-    theme_few()+
+        x = "Sample type",
+        y = "Cell number",
+        title = "Fraction ERCC in singlets/doublets"
+    ) +
+    theme_few() +
     theme(
-        legend.position="top",
-        legend.title=element_blank(),
-        legend.text=element_text(size=15),
-        axis.title=element_text(size=17),
-        axis.text=element_text(size=13),
-        plot.title=element_text(
-            hjust=0.5,
-            family="Arial",
-            face="bold",
-            size=24,
-            margin=margin(b=15)
+        legend.position = "top",
+        legend.title = element_blank(),
+        legend.text = element_text(size=15),
+        axis.title = element_text(size=17),
+        axis.text = element_text(size=13),
+        plot.title = element_text(
+            hjust = 0.5,
+            family = "Arial",
+            face = "bold",
+            size = 24,
+            margin = margin(b = 15)
         )
-    )+
+    ) +
     guides(
-        colour=guide_legend(override.aes=list(size=5))
-    )+
+        colour = guide_legend(override.aes = list(size = 5))
+    ) +
     scale_y_continuous(
         sec.axis = sec_axis(
-            trans=~convertToERCC(., d),
-            name="% ERCC",
-            breaks=c(100, 50, 10, 5, 2.5, 1)
+            trans = ~ convertToERCC(., x),
+            name = "% ERCC",
+            breaks = c(100, 50, 10, 5, 2.5, 1)
         )
     )
     

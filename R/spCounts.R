@@ -24,16 +24,20 @@ NULL
 #' @keywords spCounts
 #' @examples
 #'
-#' #run function
-#' cObj <- spCounts(testCounts, testErcc, 'm.')
+#' s <- grepl("^s", colnames(testCounts))
+#' cObj <- spCounts(testCounts[, s], testErcc[, s])
 #'
 NULL
 
 #' @rdname spCounts
 #' @export
 
-setGeneric("spCounts", function(counts, ...
-){ standardGeneric("spCounts") })
+setGeneric("spCounts", function(
+    counts,
+    ...
+){
+    standardGeneric("spCounts")
+})
 
 #' @rdname spCounts
 #' @export
@@ -86,7 +90,8 @@ setMethod("spCounts", "matrix", function(
 #' @name estimateCells
 #' @rdname estimateCells
 #' @aliases estimateCells
-#' @param spCounts A spCounts object.
+#' @param spCountsSng A spCounts object with singlets.
+#' @param spCountsMul A spCounts object with multiplets.
 #' @param ... additional arguments to pass on
 #' @return A data frame including the fraction of ercc reads and cell counts for
 #'    each sample.
@@ -94,15 +99,21 @@ setMethod("spCounts", "matrix", function(
 #' @keywords spCounts
 #' @examples
 #'
-#' #run function
+#' #use test data
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 #'
+#' #run function
+#' estimateCells(cObjSng, cObjMul)
 #'
 NULL
 
 #' @export
 
 setGeneric("estimateCells", function(
-    spCounts,
+    spCountsSng,
+    spCountsMul,
     ...
 ){
     standardGeneric("estimateCells")
@@ -113,7 +124,8 @@ setGeneric("estimateCells", function(
 #' @importFrom stats median quantile
 #' @export
 setMethod("estimateCells", "spCounts", function(
-    spCounts,
+    spCountsSng,
+    spCountsMul,
     ...
 ){
     counts <- cbind(

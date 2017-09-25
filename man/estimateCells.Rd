@@ -29,8 +29,13 @@ in each sample.
 }
 \examples{
 
-#run function
+#use test data
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 
+#run function
+estimateCells(cObjSng, cObjMul)
 
 }
 \author{

@@ -35,14 +35,14 @@ Imports count and count.ercc data to a sp.scRNAseq object.
 
 #use demo data
 s <- grepl("^s", colnames(testCounts))
-cObj <- spCounts(testCounts, testErcc, ifelse(s, "Singlet", "Multiplet"))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 
 #ERCC plot
-plotCounts(cObj, type = "ercc")
+plotCounts(cObjSng, cObjMul, type = "ercc")
 
 #Markers plot
-plotCounts(cObj, type = "markers", markers = c("a1", "a10"))
-
+plotCounts(cObjSng, cObjMul, types = "markers", markers = c("a1", "a10"))
 }
 \author{
 Jason T. Serviss

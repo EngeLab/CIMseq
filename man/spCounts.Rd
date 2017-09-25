@@ -55,8 +55,8 @@ Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
 }
 \examples{
 
-#run function
-cObj <- spCounts(testCounts, testErcc, 'm.')
+s <- grepl("^s", colnames(testCounts))
+cObj <- spCounts(testCounts[, s], testErcc[, s])
 
 }
 \author{
