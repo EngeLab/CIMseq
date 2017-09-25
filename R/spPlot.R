@@ -1018,14 +1018,14 @@ setMethod("plotSwarm", "spSwarm", function(
     p <- ggplot(
         d,
         aes_string(x = 'multiplet', y = 'residuals')
-    )+
+    ) +
     geom_violin(
         color = "grey"
-    )+
+    ) +
     geom_segment(
         aes_string(
-            x = 'match(multiplet, levels(multiplet))-0.1',
-            xend = 'match(multiplet, levels(multiplet))+0.1',
+            x = 'match(multiplet, levels(multiplet)) - 0.1',
+            xend = 'match(multiplet, levels(multiplet)) + 0.1',
             y = 'residuals',
             yend = 'residuals'
         ),
@@ -1081,52 +1081,40 @@ setMethod("plotSwarm", "spSwarm", function(
     resid
 ){
     
-    edges <- spSwarmPoisson(
+    edges <- getMultipletsForEdge(
         spSwarm,
         edge.cutoff = edge.cutoff,
-        min.num.edges = min.num.edges,
-        min.pval = min.pval
-    )
+        edges = spSwarmPoisson(
+            spSwarm,
+            edge.cutoff = edge.cutoff,
+            min.num.edges = min.num.edges,
+            min.pval = min.pval
+        ) %>% filter(weight != 0)
+    ) %>%
+        mutate(connection = paste(from, to, sep = "-"))
     
-    edges$edge <- paste(edges$from, edges$to, sep="-")
-    
-    multiplets <- getMultipletsForEdge(
-        spSwarm,
-        edge.cutoff = edge.cutoff,
-        edges = edges[,1:2]
-    )
-    multiplets <- lapply(multiplets, function(o) {
-        if(!is.null(o)) {o}
-    })
-    
-    resSums <- sapply(multiplets, function(j)
-        if(length(j) != 1) {
-            rowSums(resid[,j])
+    nUM <- pull(distinct(edges, connection), connection)
+    resSums <- sapply(1:length(nUM), function(j) {
+            
+        muls <- filter(edges, connection == nUM[j]) %>%
+            pull(multiplet)
+            
+        if(length(muls) != 1) {
+            rowSums(resid[, colnames(resid) %in% muls])
         } else {
-            resid[,j]
+            resid[, colnames(resid) %in% muls]
         }
-    )
-    
-    
-    resSums2 <- melt(resSums)
-    
-    m <- merge(
-        resSums2,
-        edges,
-        by.x  = "Var2",
-        by.y  = "edge",
-        all.x = TRUE
-    )
-    
-    d <- data.frame(
-        residuals = m$value,
-        multiplet = m$Var2,
-        genes = m$Var1
-    )
-    
-    d <- d[order(d$multiplet, d$residuals, decreasing = TRUE), ]
-    
-    return(d)
+    }) %>%
+        as.data.frame() %>%
+        setNames(nUM) %>%
+        rownames_to_column() %>%
+        rename(genes = rowname) %>%
+        as_tibble() %>%
+        gather(multiplet, residuals, -genes) %>%
+        arrange(multiplet, desc(residuals)) %>%
+        mutate(multiplet = parse_factor(multiplet, unique(multiplet)))
+        
+    return(resSums)
 }
 
 ################################################################################
