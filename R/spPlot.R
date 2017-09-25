@@ -1052,15 +1052,13 @@ setMethod("plotSwarm", "spSwarm", function(
     resid,
     ...
 ){
-    
-    m <- melt(resid)
-    d <- data.frame(
-        residuals = m$value,
-        multiplet = m$Var2,
-        genes     = m$Var1
-    )
-    d <- d[order(d$multiplet, d$residuals, decreasing = TRUE), ]
-    return(d)
+    resid %>%
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    rename(genes = rowname) %>%
+    as_tibble() %>%
+    gather(multiplet, residuals, -genes) %>%
+    arrange(multiplet, desc(residuals))
 }
 
 .resPlotEdge <- function(
