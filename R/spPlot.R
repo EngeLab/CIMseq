@@ -988,9 +988,7 @@ setMethod("plotSwarm", "spSwarm", function(
     switch(
         type,
         multiplets = {
-            d <- .resPlotMultiplets(
-                resid
-            )
+            d <- .resPlotMultiplets(resid)
         },
         edges = {
             d <- .resPlotEdge(
@@ -1058,7 +1056,8 @@ setMethod("plotSwarm", "spSwarm", function(
     rename(genes = rowname) %>%
     as_tibble() %>%
     gather(multiplet, residuals, -genes) %>%
-    arrange(multiplet, desc(residuals))
+    arrange(multiplet, desc(residuals)) %>%
+    mutate(multiplet = parse_factor(multiplet, levels = unique(multiplet)))
 }
 
 .resPlotEdge <- function(
