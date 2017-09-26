@@ -1,174 +1,62 @@
 #context("spUnsupervised")
 
-##run test .ntopVar
-test_that("check that the .ntopVar function outputs the expected result", {
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[,s], testErcc[,s])
+cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
+
+##run test spTopVar
+test_that("check that spTopVar outputs the expected result", {
+    
+    ###TEST1####
+    #setup expected data
+    expected1 <- 191L
+    expected2 <- 25L
+    
+    #run function
+    output <- spTopVar(cObjSng, 10)
+    
+    #test
+    expect_identical(expected1, output[1])
+    expect_identical(expected2, output[length(output)])
+})
+
+##run test spTopMax
+test_that("check that spTopMax outputs the expected result", {
+    
+    ###TEST1####
+    #setup expected data
+    expected1 <- 1L
+    expected2 <- 107L
+    
+    #run function
+    output <- spTopMax(cObjSng, 10)
+    
+    #test
+    expect_identical(expected1, output[1])
+    expect_identical(expected2, output[length(output)])
+})
+
+##run test pearsonsDist
+test_that("check that pearsonsDist outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
-    data <- matrix(
-        c(
-            1,1,2,2,
-            2,2,3,3,
-            3,3,0,0,
-            0,0,0,0
-        ),
-        nrow=4,
-        ncol=4,
-        byrow=TRUE
-    )
+    select <- 1:5
 
     #setup expected data
-    expected <- as.integer(c(3, 1))
+    expectHead <- c(1, 2, 0, 1, 1, 1)
+    expectTail <- rep(0, 6)
     
     #run function
-    output <- .ntopVar(data, 2)
+    output <- pearsonsDist(cObjSng, select)
     
     #test
-    expect_identical(expected, output)
-    
+    expect_equivalent(expectHead, round(head(output)))
+    expect_equivalent(expectTail, round(tail(output)))
 })
 
-
-##run test .ntopMax
-test_that("check that the .ntopMax function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    data <- matrix(
-        c(
-            1,1,4,1,
-            2,2,3,3,
-            3,3,4,5,
-            0,0,0,0
-        ),
-        nrow=4,
-        ncol=4,
-        byrow=TRUE
-    )
-    
-    #setup expected data
-    expected <- as.integer(c(3, 1))
-    
-    #run function
-    output <- .ntopMax(data, 2)
-    
-    #test
-    expect_identical(expected, output)
-    
-})
-
-
-##run test .averageGroupExpression
-test_that("check that the .averageGroupExpression function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    sng <- matrix(
-        c(
-            1,10,2,20,
-            2,20,3,30,
-            3,30,0,0,
-            0,0,0,0
-        ),
-        nrow=4,
-        ncol=4,
-        byrow=TRUE
-    )
-    
-    classes <- rep(LETTERS[1:2], 2)
-    colnames(sng) <- classes
-
-    #setup expected data
-    expected <- matrix(
-        c(
-            1.5, 15,
-            2.5, 25,
-            1.5, 15,
-            0, 0
-        ),
-        byrow=TRUE,
-        nrow=4,
-        dimnames=list(
-            c(),
-            c(unique(classes))
-        )
-    )
-    
-    #run function
-    output <- .averageGroupExpression(classes, sng)
-    
-    #test
-    expect_identical(expected, output)
-    expect_false(any(is.na(output)))
-})
-
-##run test .tsneGroupMeans
-test_that("check that the .tsneGroupMeans function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    x <- matrix(
-        c(
-            1,2,2,3,3,0,0,0,
-            2,1,3,2,0,3,0,0
-        ),
-        nrow=8,
-        ncol=2,
-    )
-    
-    class <- rep(LETTERS[1:2], 4)
-    
-    #setup expected data
-    expected <- data.frame(
-        classification = c(LETTERS[1:2]),
-        meanX = c(1.5, 1.25),
-        meanY = c(1.25, 1.5)
-    )
-    
-    #run function
-    output <- .tsneGroupMeans(x, class)
-    
-    #test
-    expect_identical(expected, output)
-    
-})
-
-##run test .distFunc
-test_that("check that the .distFunc function outputs the expected result", {
-    
-    ###TEST1####
-    #prepare normal input data
-    x <- matrix(
-        c(
-            1,2,3,2,
-            2,3,4,3,
-            3,4,5,0,
-            0,0,0,0
-        ),
-        nrow=4,
-        ncol=4,
-        byrow=TRUE
-    )
-    
-    select <- c(1,2,3)
-    sampleType <- c(rep("Singlet", 3), "Multuplet")
-    
-    #setup expected data
-    expected <- as.dist(matrix(
-        rep(0,9),
-        nrow=3
-    ))
-    
-    #run function
-    output <- .distFunc(x, select, sampleType)
-    
-    #test
-    expect_equivalent(expected, output)
-    
-})
-
-##run test .runTsne
-test_that("check that the .runTsne function outputs the expected result", {
+##run test runTsne
+test_that("check that runTsne outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -177,29 +65,38 @@ test_that("check that the .runTsne function outputs the expected result", {
             0, 9, 19,
             1, 10, 20,
             2, 11, 21),
-        nrow=3
+            nrow = 3
     ))
     
-    k <- 2
-    plot.callback <- NULL
+    dims <- 2
+    theta <- 0
     initial_dims <- 3
     max_iter <- 5
     perplexity <- 0.1
     seed <- 11
+    is_distance <- TRUE
     
     #setup expected data
     #no expected at the moment for this function
     
     #run function
-    output <- .runTsne(my.dist, k, initial_dims, max_iter, perplexity, seed, theta=0)
+    output <- runTsne(
+        my.dist,
+        dims,
+        theta,
+        initial_dims,
+        max_iter,
+        perplexity,
+        seed,
+        is_distance
+    )
     
     #test
     expect_length(output, 6)
-    
 })
 
-##run test .runMclust
-test_that("check that the .runMclust function outputs the expected result", {
+##run test runMclust
+test_that("check that runMclust outputs the expected result", {
     
     ###TEST1####
     #prepare normal input data
@@ -224,11 +121,82 @@ test_that("check that the .runMclust function outputs the expected result", {
         "A1", "A1", "A1",
         "B1", "B1", "B1"
     )
+    exp_uncertainty <- rep(0, 6)
     
     #run function
-    output <- .runMclust(seed, my.tsne, G=Gmax)
+    output <- runMclust(my.tsne, Gmax, seed)
+    out_classes <- output[[1]]
+    out_uncertainty <- output[[2]]
     
     #test
-    expect_identical(output$classification, exp_classification)
+    expect_identical(out_classes, exp_classification)
+    expect_identical(out_uncertainty, exp_uncertainty)
     
 })
+
+##run test averageGroupExpression
+test_that("check that averageGroupExpression outputs the expected result", {
+    
+    ###TEST1####
+    #prepare normal input data
+    classes <- getData(testUns, "classification")
+
+    #setup expected data
+    expectedFirstRow <- c(4624, 598, 1505, 1920)
+    expectedLastRow <- c(3921, 827, 3327, 6222)
+
+    names(expectedFirstRow) <- unique(classes)
+    names(expectedLastRow) <- unique(classes)
+
+
+    #run function
+    output <- averageGroupExpression(cObjSng, classes, weighted=FALSE)
+    
+    #test
+    expect_identical(expectedFirstRow, round(output[1,]))
+    expect_identical(expectedLastRow, round(output[nrow(output),]))
+    expect_false(any(is.na(output)))
+})
+
+
+##run test tsneGroupMeans
+test_that("check that tsneGroupMeans outputs the expected result",{
+    
+    ###TEST1####
+    #prepare normal input data
+    classes <- getData(testUns, "classification")
+    tsne <- getData(testUns, "tsne")
+    
+    #setup expected data
+    expected1 <- c(-18, -6)
+    expected2 <- c(7, -52)
+    
+    #run function
+    output <- tsneGroupMeans(tsne, classes)
+    
+    #test
+    expect_identical(expected1, as.numeric(round(output[1, 2:3])))
+    expect_identical(expected2, as.numeric(round(output[nrow(output), 2:3])))
+})
+
+##run test erccPerClass
+test_that("check that erccPerClass outputs the expected result",{
+    
+    ###TEST1####
+    #setup expected data
+    expected1 <- tibble(
+        class = c("A1", "B1", "C1", "D1"),
+        medianFracErcc = rep(1, 4)
+    )
+    
+    #run function
+    output <- erccPerClass(cObjSng, cObjMul, testUns)
+    output$medianFracErcc <- round(output$medianFracErcc)
+    
+    #test
+    expect_identical(expected1, output)
+    expect_type(output$class, "character")
+    expect_type(output$medianFracErcc, "double")
+    expect_false(any(is.na(output$medianFracErcc)))
+})
+

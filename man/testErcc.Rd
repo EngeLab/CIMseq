@@ -3,23 +3,22 @@
 \docType{data}
 \name{testErcc}
 \alias{testErcc}
-\title{Simulated data used to demonstrate sp.scRNAseq package.}
+\title{Simulated ERCC data used to demonstrate sp.scRNAseq package.}
 \format{Matrix
 \describe{
-\item{rownames}{ERCC spike-in counts}
-\item{colnames}{Cells}
+    \item{rownames}{ERCC spike-in names.}
+    \item{colnames}{Samples. Singlets prefixed with "s" and multiplets "m".}
 }}
 \usage{
 testErcc
 }
 \value{
-matrix
+Matrix of ERCC counts.
 }
 \description{
 Test ercc.
 }
 \examples{
-testErcc
+data(testData)
 
 }
-

@@ -10,10 +10,10 @@ NULL
 #' @rdname spCounts
 #' @export
 .spCounts <- setClass("spCounts", representation(
-    counts="matrix",
-    counts.log="matrix",
-    counts.ercc="matrix",
-    sampleType="character"
+    counts = "matrix",
+    counts.log = "matrix",
+    counts.cpm = "matrix",
+    counts.ercc = "matrix"
 ))
 
 #############
@@ -23,15 +23,19 @@ NULL
 #############
 
 #' @rdname spCounts
-setGeneric("getData", function(object, ...
+setGeneric("getData", function(
+    object,
+    ...
 ){ standardGeneric("getData") })
 
 #' @rdname spCounts
 #' @export
-setMethod("getData", "spCounts", function(object, n=NULL)
-{
-    if(class(n)=="character"){
-        slot(object,n)
+setMethod("getData", "spCounts", function(
+    object,
+    n = NULL
+){
+    if(class(n) == "character"){
+        slot(object, n)
     }
 })
 
@@ -44,14 +48,12 @@ setMethod("getData", "spCounts", function(object, n=NULL)
 #' @rdname spUnsupervised
 #' @export
 .spUnsupervised <- setClass("spUnsupervised", representation(
-    counts="matrix",
-    counts.log="matrix",
-    sampleType="character",
-    tsne="matrix",
-    tsneMeans="data.frame",
-    groupMeans="matrix",
-    classification="character",
-    selectInd="numeric"
+    tsne = "matrix",
+    tsneMeans = "data.frame",
+    groupMeans = "matrix",
+    classification = "character",
+    uncertainty = "numeric",
+    selectInd = "numeric"
 ))
 
 #############
@@ -59,58 +61,107 @@ setMethod("getData", "spCounts", function(object, n=NULL)
 # Accessors #
 #           #
 #############
+#slot access is achieved with for ex. classification(uObj) <- newClassification
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("getData", "spUnsupervised", function(object, n=NULL)
-{
-    if(class(n)=="character"){
-        slot(object,n)
+setMethod("getData", "spUnsupervised", function(
+    object,
+    n = NULL
+){
+    if(class(n) == "character"){
+        slot(object, n)
     }
 })
 
 #' @rdname spUnsupervised
-setGeneric("counts", function(object
-) standardGeneric("counts"))
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("counts", "spUnsupervised", function(object)
-{
-    object@counts
+setGeneric("tsne", function(
+    object
+){
+    standardGeneric("tsne")
 })
 
 #' @rdname spUnsupervised
-setGeneric("counts.log", function(object
-) standardGeneric("counts.log"))
-
-#' @rdname spUnsupervised
 #' @export
-setMethod("counts.log", "spUnsupervised", function(object)
-{
-    object@counts.log
+setMethod("tsne", "spUnsupervised", function(
+    object
+){
+    object@tsne
 })
 
 #' @rdname spUnsupervised
-setGeneric("sampleType", function(object
-) standardGeneric("sampleType"))
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("sampleType", "spUnsupervised", function(object)
-{
-    object@sampleType
+setGeneric("tsneMeans", function(
+    object
+){
+    standardGeneric("tsneMeans")
 })
 
 #' @rdname spUnsupervised
-setGeneric("classification", function(object
-) standardGeneric("classification"))
+#' @export
+setMethod("tsneMeans", "spUnsupervised", function(
+    object
+){
+    object@tsneMeans
+})
+
+#' @rdname spUnsupervised
+setGeneric("groupMeans", function(
+    object
+){
+    standardGeneric("groupMeans")
+})
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("classification", "spUnsupervised", function(object)
-{
+setMethod("groupMeans", "spUnsupervised", function(
+    object
+){
+    object@groupMeans
+})
+
+#' @rdname spUnsupervised
+setGeneric("classification", function(
+    object
+){
+    standardGeneric("classification")
+})
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("classification", "spUnsupervised", function(
+    object
+){
     object@classification
+})
+
+#' @rdname spUnsupervised
+setGeneric("uncertainty", function(
+    object
+){
+    standardGeneric("uncertainty")
+})
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("uncertainty", "spUnsupervised", function(
+    object
+){
+    object@uncertainty
+})
+
+#' @rdname spUnsupervised
+setGeneric("selectInd", function(
+    object
+){
+    standardGeneric("selectInd")
+})
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("selectInd", "spUnsupervised", function(
+    object
+){
+    object@selectInd
 })
 
 ##############
@@ -118,57 +169,114 @@ setMethod("classification", "spUnsupervised", function(object)
 # Replacment #
 #            #
 ##############
+#https://www.bioconductor.org/help/course-materials/2013/CSAMA2013/friday/afternoon/S4-tutorial.pdf
 
 #' @rdname spUnsupervised
-setGeneric("counts<-", function(object, value
-) standardGeneric("counts<-"))
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("counts<-", "spUnsupervised", function(object, value)
-{
-    object@counts <- value
-    return(object)
-    
+setGeneric("tsne<-", function(
+    object,
+    value
+){
+    standardGeneric("tsne<-")
 })
 
 #' @rdname spUnsupervised
-setGeneric("counts.log<-", function(object, value
-) standardGeneric("counts.log<-"))
-
-#' @rdname spUnsupervised
 #' @export
-setMethod("counts.log<-", "spUnsupervised", function(object, value)
-{
-    object@counts.log <- value
-    return(object)
-    
+setMethod("tsne<-", "spUnsupervised", function(
+    object,
+    value
+){
+    object@tsne <- value
+    if (validObject(object)) return(object)
 })
 
 #' @rdname spUnsupervised
-setGeneric("sampleType<-", function(object, value
-) standardGeneric("sampleType<-"))
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("sampleType<-", "spUnsupervised", function(object, value)
-{
-    object@sampleType <- value
-    return(object)
-    
+setGeneric("tsneMeans<-", function(
+    object,
+    value
+){
+    standardGeneric("tsneMeans<-")
 })
 
 #' @rdname spUnsupervised
-setGeneric("classification<-", function(object, value
-) standardGeneric("classification<-"))
+#' @export
+setMethod("tsneMeans<-", "spUnsupervised", function(
+    object,
+    value
+){
+    object@tsneMeans <- value
+    if (validObject(object)) return(object)
+})
+
+#' @rdname spUnsupervised
+setGeneric("groupMeans<-", function(
+    object,
+    value
+){
+    standardGeneric("groupMeans<-")
+})
 
 #' @rdname spUnsupervised
 #' @export
-setMethod("classification<-", "spUnsupervised", function(object, value)
-{
+setMethod("groupMeans<-", "spUnsupervised", function(
+    object,
+    value
+){
+    object@groupMeans <- value
+    if (validObject(object)) return(object)
+})
+
+#' @rdname spUnsupervised
+setGeneric("classification<-", function(
+    object,
+    value
+){
+    standardGeneric("classification<-")
+})
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("classification<-", "spUnsupervised", function(
+    object,
+    value
+){
     object@classification <- value
-    return(object)
-    
+    if (validObject(object)) return(object)
+})
+
+#' @rdname spUnsupervised
+setGeneric("uncertainty<-", function(
+    object,
+    value
+){
+    standardGeneric("uncertainty<-")
+})
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("uncertainty<-", "spUnsupervised", function(
+    object,
+    value
+){
+    object@uncertainty <- value
+    if (validObject(object)) return(object)
+})
+
+#' @rdname spUnsupervised
+setGeneric("selectInd<-", function(
+    object,
+    value
+){
+    standardGeneric("selectInd<-")
+})
+
+#' @rdname spUnsupervised
+#' @export
+setMethod("selectInd<-", "spUnsupervised", function(
+    object,
+    value
+){
+    object@selectInd <- value
+    if (validObject(object)) return(object)
 })
 
 #####################
@@ -180,10 +288,11 @@ setMethod("classification<-", "spUnsupervised", function(object, value)
 #' @rdname spSwarm
 #' @export
 .spSwarm <- setClass("spSwarm", representation(
-    spSwarm="data.frame",
-    codedSwarm="data.frame",
-    spUnsupervised="spUnsupervised",
-    arguments="list"
+    spSwarm = "data.frame",
+    costs = "numeric",
+    convergence = "character",
+    stats = "list",
+    arguments = "list"
 ))
 
 #############
@@ -194,9 +303,11 @@ setMethod("classification<-", "spUnsupervised", function(object, value)
 
 #' @rdname spSwarm
 #' @export
-setMethod("getData", "spSwarm", function(object, n=NULL)
-{
-    if(class(n)=="character"){
-        slot(object,n)
+setMethod("getData", "spSwarm", function(
+    object,
+    n = NULL
+){
+    if(class(n) == "character"){
+        slot(object, n)
     }
 })

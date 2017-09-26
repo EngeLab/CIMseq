@@ -12,21 +12,26 @@ Imports:
     ggplot2,
     rgl,
     mclust,
-    optimx,
     Rtsne,
-    doMC,
-    foreach,
-    ggforce,
-    ggraph,
     ggthemes,
     igraph,
     methods,
-    plyr,
-    rPython,
+    dplyr,
     reshape2,
-    S4Vectors,
     viridis,
-    printr
+    printr,
+    pso,
+    ggrepel,
+    tibble,
+    purrr,
+    tidyr,
+    magrittr,
+    stringr,
+    S4Vectors,
+    ggforce,
+    ggraph,
+    readr,
+    rlang
 Suggests:
     knitr,
     rmarkdown,
@@ -37,10 +42,13 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: no
-Collate:
+Collate: 
     'sp.scRNAseq-package.R'
     'All-classes.R'
-    'expData.R'
+    'debugging.R'
+    'expCounts.R'
+    'expErcc.R'
+    'generalFunctions.R'
     'initialize-methods.R'
     'show-methods.R'
     'spCounts.R'
@@ -49,4 +57,6 @@ Collate:
     'spUnsupervised.R'
     'testCounts.R'
     'testErcc.R'
-RoxygenNote: 5.0.1
+    'testSwa.R'
+    'testUns.R'
+RoxygenNote: 6.0.1

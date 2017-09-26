@@ -1,17 +1,17 @@
 #' Test ercc.
 #'
-#' @title Simulated data used to demonstrate sp.scRNAseq package.
+#' @title Simulated ERCC data used to demonstrate sp.scRNAseq package.
 #' @docType data
 #' @name testErcc
 #' @format Matrix
 #' \describe{
-#' \item{rownames}{ERCC spike-in counts}
-#' \item{colnames}{Cells}
+#'     \item{rownames}{ERCC spike-in names.}
+#'     \item{colnames}{Samples. Singlets prefixed with "s" and multiplets "m".}
 #' }
 #' @usage testErcc
-#' @return matrix
+#' @return Matrix of ERCC counts.
 #' @examples
-#' testErcc
+#' data(testData)
 #'
 
 NULL
