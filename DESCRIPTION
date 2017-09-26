@@ -29,7 +29,9 @@ Imports:
     stringr,
     S4Vectors,
     ggforce,
-    ggraph
+    ggraph,
+    readr,
+    rlang
 Suggests:
     knitr,
     rmarkdown,

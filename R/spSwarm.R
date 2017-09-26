@@ -385,6 +385,7 @@ NULL
 #' @rdname spSwarmPoisson
 #' @importFrom stats ppois
 #' @importFrom dplyr filter pull rowwise do ungroup
+#' @importFrom rlang .data
 #' @export
 
 spSwarmPoisson <- function(
@@ -434,30 +435,26 @@ spSwarmPoisson <- function(
     ...
 ){
     ps <- function(edges, f, t, weight) {
-        edges %>%
-            filter(from %in% c(f, t) | to %in% c(f, t)) %>%
+        mean <- edges %>%
+            filter(.data$from %in% c(f, t) | .data$to %in% c(f, t)) %>%
             pull(weight) %>%
-            mean() %>%
-            ppois(weight, ., lower.tail = FALSE)
+            mean()
+        
+        ppois(weight, mean, lower.tail = FALSE) %>%
+            as_tibble() %>%
+            rename(pval = .data$value)
     }
     
-    out <- edges %>%
+    edges %>%
         rowwise() %>%
-        do(bind_cols(., tibble(pval = ps(edges, .$from, .$to, .$weight)))) %>%
+        do(
+            bind_cols(
+                .data,
+                ps(edges, .data$from, .data$to, .data$weight)
+            )
+        ) %>%
         ungroup %>%
-        filter(pval < min.pval & weight >= min.num.edges)
-        
-    #means <- sapply(1:nrow(edges), function(o) {
-    #    mean(subset(
-    #        edges,
-    #        from %in% c(edges[o, 1], edges[o, 2]) |
-    #        to   %in% c(edges[o, 1], edges[o, 2])
-    #    )$weight)
-    #})
-    
-    #edges$pval <- ppois(edges$weight, means, lower.tail=FALSE)
-    #out <- edges[edges$pval < min.pval & edges$weight >= min.num.edges, ]
-    return(out)
+        filter(.data$pval < min.pval & .data$weight >= min.num.edges)
 }
 
 .calculateWeight <- function(
@@ -626,6 +623,8 @@ setGeneric("getMultipletsForEdge", function(
 })
 
 #' @rdname getMultipletsForEdge
+#' @importFrom rlang .data
+#' @importFrom dplyr mutate select rename pull
 #' @export
 
 setMethod("getMultipletsForEdge", "spSwarm", function(
@@ -653,8 +652,8 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
     namedListToTibble(mulForEdges) %>%
         mutate(from = gsub("(.*)-.*", "\\1", names)) %>%
         mutate(to = gsub(".*-(.*)", "\\1", names)) %>%
-        select(variables, from, to, -names) %>%
-        rename(multiplet = variables)
+        select(.data$variables, .data$from, .data$to, -.data$names) %>%
+        rename(multiplet = .data$variables)
 
 })
 
@@ -705,9 +704,11 @@ NULL
 
 #' @rdname getEdgesForMultiplet
 #' @export
+#' @importFrom rlang .data
 #' @importFrom purrr map_dfr
 #' @importFrom tibble as_tibble add_column
 #' @importFrom dplyr select
+#' @importFrom stats setNames
 
 setGeneric("getEdgesForMultiplet", function(
     spSwarm,
@@ -744,14 +745,14 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
         t() %>%
         as_tibble() %>%
         setNames(c("from", "to")) %>%
-        add_column(multiplet = x) %>%
-        select(multiplet, from, to)
+        add_column("multiplet" = x) %>%
+        select(.data$multiplet, .data$from, .data$to)
         
     } else if(length(which(keep)) == 1) {
-        names(frac)[keep]
-        filter(s, to == names(frac)[keep] & from == names(frac)[keep]) %>%
-        add_column(multiplet = x) %>%
-        select(-weight, -pval)
+        n <- names(frac)[keep]
+        filter(s, .data$to == n & .data$from == n) %>%
+        add_column("multiplet" = x) %>%
+        select(-.data$weight, -.data$pval)
     }
 }
 

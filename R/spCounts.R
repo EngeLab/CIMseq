@@ -122,6 +122,7 @@ setGeneric("estimateCells", function(
 #' @rdname estimateCells
 #' @import tibble tibble
 #' @importFrom stats median quantile
+#' @importFrom rlang .data
 #' @export
 setMethod("estimateCells", "spCounts", function(
     spCountsSng,
@@ -159,25 +160,25 @@ setMethod("estimateCells", "spCounts", function(
     
     d$cellNumberMin <-
         d %>%
-            filter(sampleType == "Singlet") %>%
-            .$frac.ercc %>%
+            filter(.data$sampleType == "Singlet") %>%
+            pull(.data$frac.ercc) %>%
             quantile %>%
-            .[2] %>%
+            `[` (2) %>%
             `/` (d$frac.ercc)
     
     d$cellNumberMedian <-
         d %>%
-            filter(sampleType == "Singlet") %>%
-            .$frac.ercc %>%
+            filter(.data$sampleType == "Singlet") %>%
+            pull(.data$frac.ercc) %>%
             median %>%
             `/` (d$frac.ercc)
     
     d$cellNumberMax <-
         d %>%
-            filter(sampleType == "Singlet") %>%
-            .$frac.ercc %>%
+            filter(.data$sampleType == "Singlet") %>%
+            pull(.data$frac.ercc) %>%
             quantile %>%
-            .[4] %>%
+            `[` (4) %>%
             `/` (d$frac.ercc)
     
     return(d)

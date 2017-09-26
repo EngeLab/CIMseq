@@ -11,7 +11,7 @@
 #' @usage testCounts
 #' @return Matrix of counts.
 #' @examples
-#' data(testCounts)
+#' data(testData)
 #'
 
 NULL

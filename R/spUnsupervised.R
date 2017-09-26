@@ -525,8 +525,8 @@ tsneGroupMeans <- function(data, classes) {
     means <- d %>%
         group_by(classification) %>%
         summarise(
-            x = mean(x),
-            y = mean(y)
+            x = mean(.data$x),
+            y = mean(.data$y)
         ) %>%
         as.data.frame()
         
@@ -555,13 +555,14 @@ tsneGroupMeans <- function(data, classes) {
 #' s <- grepl("^s", colnames(testCounts))
 #' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 #' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#' uObj <- spUnsupervised(cObjSng, max_iter = 100, Gmax = 7)
+#' uObj <- testUns
 #' output <- erccPerClass(cObjSng, cObjMul, uObj)
 NULL
 
 #' @rdname erccPerClass
 #' @importFrom dplyr group_by summarise right_join
 #' @importFrom tibble tibble
+#' @importFrom rlang .data
 #' @export
 
 erccPerClass <- function(
@@ -574,13 +575,11 @@ erccPerClass <- function(
         class = getData(spUnsupervised, "classification"),
         sampleName = colnames(getData(spCountsSng, "counts"))
     )
-    d <- right_join(d, class, by = "sampleName")
     
-    median <- d %>%
+    d %>%
+        right_join(class, by = "sampleName") %>%
         group_by(class) %>%
-        summarise(medianFracErcc = median(frac.ercc))
-    
-    return(median)
+        summarise(medianFracErcc = median(.data$frac.ercc))
 }
 
 

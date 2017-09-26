@@ -163,15 +163,13 @@ test_that("check that .unsupMarkerPlotProcess outputs the expected result", {
     #test
     expect_equivalent(nrow(output), 340*2)
     expect_equivalent(ncol(output), 6)
-    expect_identical(
-        colnames(output),
-        c("V1", "V2", "sample", "uncertainty", "variable", "value")
-    )
+    cols <- c("sample", "uncertainty", "V1", "V2", "variable", "value")
+    expect_identical(colnames(output), cols)
     expect_type(output$V1, "double")
     expect_type(output$V2, "double")
     expect_type(output$sample, "character")
     expect_type(output$uncertainty, "double")
-    expect_type(output$variable, "integer")
+    expect_type(output$variable, "character")
     expect_type(output$value, "double")
 
 })

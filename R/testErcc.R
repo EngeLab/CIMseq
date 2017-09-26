@@ -11,7 +11,7 @@
 #' @usage testErcc
 #' @return Matrix of ERCC counts.
 #' @examples
-#' data(testErcc)
+#' data(testData)
 #'
 
 NULL

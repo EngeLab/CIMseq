@@ -93,19 +93,18 @@ setMethod("plotCounts", "spCounts", function(
     ...
 ){
     #add function for ERCC fraction conversion
-    convertToERCC <- function(z, y) {
+    convertToERCC <- function(ercc, x, y) {
         estimateCells(x, y) %>%
-            select(sampleType, frac.ercc) %>%
-            filter(sampleType == "Singlet") %>%
-            .$frac.ercc %>%
+            select(.data$sampleType, .data$frac.ercc) %>%
+            filter(.data$sampleType == "Singlet") %>%
+            pull(.data$frac.ercc) %>%
             median %>%
             `*` (100) %>%
-            `/` (z)
+            `/` (ercc)
     }
     
     p <- estimateCells(x, y) %>%
     ggplot(
-        .,
         aes_string(
             x = 'factor(sampleType, levels = c("Singlet", "Multiplet"))',
             y = 'cellNumberMedian'
@@ -137,7 +136,7 @@ setMethod("plotCounts", "spCounts", function(
     ) +
     scale_y_continuous(
         sec.axis = sec_axis(
-            trans = ~ convertToERCC(., x),
+            trans = ~ convertToERCC(., x, y),
             name = "% ERCC",
             breaks = c(100, 50, 10, 5, 2.5, 1)
         )
@@ -190,7 +189,7 @@ setMethod("plotCounts", "spCounts", function(
     colors <- col64()[7:9]
     
     p <- .countsMarkersPlotProcess(x, y, markers) %>%
-    ggplot(., aes_string(x='marker1', y='marker2', colour='sampleType'))+
+    ggplot(aes_string(x='marker1', y='marker2', colour='sampleType'))+
     geom_point(size=5, alpha=0.7)+
     labs(
         x=paste("log2( Normalized counts: ", markers[1], " )", sep=""),
@@ -398,8 +397,15 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
                 0.0001
             )
         ) %>%
-        add_column(V1 = pull(tsne, V1), V2 = pull(tsne, V2)) %>%
-        gather(variable, value, -V1, -V2, -sample, -uncertainty)
+        add_column(V1 = pull(tsne, .data$V1), V2 = pull(tsne, .data$V2)) %>%
+        gather(
+            "variable",
+            "value",
+            -.data$V1,
+            -.data$V2,
+            -.data$sample,
+            -.data$uncertainty
+        )
 }
 
 #plot markers plot
@@ -1087,11 +1093,16 @@ setMethod("plotSwarm", "spSwarm", function(
     resid %>%
     as.data.frame() %>%
     rownames_to_column() %>%
-    rename(genes = rowname) %>%
+    rename(genes = .data$rowname) %>%
     as_tibble() %>%
-    gather(multiplet, residuals, -genes) %>%
-    arrange(multiplet, desc(residuals)) %>%
-    mutate(multiplet = parse_factor(multiplet, levels = unique(multiplet)))
+    gather("multiplet", "residuals", -.data$genes) %>%
+    arrange(.data$multiplet, desc(.data$residuals)) %>%
+    mutate(
+        multiplet = parse_factor(
+            .data$multiplet,
+            levels = unique(.data$multiplet)
+        )
+    )
 }
 
 .resPlotEdge <- function(
@@ -1110,15 +1121,15 @@ setMethod("plotSwarm", "spSwarm", function(
             edge.cutoff = edge.cutoff,
             min.num.edges = min.num.edges,
             min.pval = min.pval
-        ) %>% filter(weight != 0)
+        ) %>% filter(.data$weight != 0)
     ) %>%
-        mutate(connection = paste(from, to, sep = "-"))
+        mutate(connection = paste(.data$from, .data$to, sep = "-"))
     
-    nUM <- pull(distinct(edges, connection), connection)
-    resSums <- sapply(1:length(nUM), function(j) {
+    nUM <- pull(distinct(edges, .data$connection), .data$connection)
+    sapply(1:length(nUM), function(j) {
             
-        muls <- filter(edges, connection == nUM[j]) %>%
-            pull(multiplet)
+        muls <- filter(edges, .data$connection == nUM[j]) %>%
+            pull(.data$multiplet)
             
         if(length(muls) != 1) {
             rowSums(resid[, colnames(resid) %in% muls])
@@ -1129,13 +1140,13 @@ setMethod("plotSwarm", "spSwarm", function(
         as.data.frame() %>%
         setNames(nUM) %>%
         rownames_to_column() %>%
-        rename(genes = rowname) %>%
+        rename(genes = .data$rowname) %>%
         as_tibble() %>%
-        gather(multiplet, residuals, -genes) %>%
-        arrange(multiplet, desc(residuals)) %>%
-        mutate(multiplet = parse_factor(multiplet, unique(multiplet)))
-        
-    return(resSums)
+        gather("multiplet", "residuals", -.data$genes) %>%
+        arrange(.data$multiplet, desc(.data$residuals)) %>%
+        mutate(
+            multiplet = parse_factor(.data$multiplet, unique(.data$multiplet))
+        )
 }
 
 ################################################################################
