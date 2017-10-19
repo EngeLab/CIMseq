@@ -143,6 +143,7 @@ setGeneric("estimateCells", function(
 #' @import tibble tibble
 #' @importFrom stats median quantile
 #' @importFrom rlang .data
+#' @importFrom dplyr pull
 #' @export
 setMethod("estimateCells", "spCounts", function(
     spCountsSng,

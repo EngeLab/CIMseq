@@ -48,7 +48,7 @@ setGeneric("plotCounts", function(
 #' @rdname plotCounts
 #' @export
 #' @import ggplot2
-#' @importFrom dplyr filter
+#' @importFrom dplyr filter pull
 #' @importFrom stringr %>%
 #' @importFrom stats median
 #' @importFrom ggthemes theme_few scale_colour_economist
@@ -278,6 +278,7 @@ setGeneric("plotUnsupervised", function(
 #' @importFrom ggthemes theme_few scale_colour_economist
 #' @importFrom reshape2 melt
 #' @importFrom viridis scale_color_viridis
+#' @importFrom dplyr pull
 
 setMethod("plotUnsupervised", "spUnsupervised", function(
     x,
@@ -545,6 +546,7 @@ setGeneric("plotSwarm", function(
 #' @importFrom ggrepel geom_label_repel
 #' @importFrom viridis scale_fill_viridis
 #' @importFrom readr parse_factor
+#' @importFrom dplyr pull
 
 setMethod("plotSwarm", "spSwarm", function(
     x,
