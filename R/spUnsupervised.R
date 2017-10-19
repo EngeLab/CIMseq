@@ -275,7 +275,7 @@ NULL
 pearsonsDist <- function(spCounts, select) {
     as.dist(
         1-cor(
-            2^getData(spCounts, "counts.log")[select, ],
+            getData(spCounts, "counts.log")[select, ],
             method = "p"
         )
     )
@@ -284,7 +284,7 @@ pearsonsDist <- function(spCounts, select) {
 #' runTsne
 #'
 #'
-#' Calculates the x and y coordinates of the mean of each classified group.
+#' Calculates the x and y coordinates of the mean of each classif	ied group.
 #'
 #'
 #' This method is typically only used in conjunction with plotting. It
