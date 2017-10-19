@@ -79,6 +79,26 @@ setMethod("spCounts", "matrix", function(
     x / n * 1000000 + 1
 }
 
+#.deconv <- function(counts, counts.ercc) {
+#    D <- rbind(counts, counts.ercc)
+#    sce_deconv<-newSCESet(countData=data.frame(D))
+#    sce_deconv<-calculateQCMetrics(sce_deconv,feature_controls=list(MySpikes=c(rep(FALSE, nrow(counts)), rep(TRUE, nrow(counts.ercc)))))
+#    setSpike(sce_deconv) <- "MySpikes"
+#    #spikes(sce_deconv)[1:5,1:5] #extracts matrix of spikes
+#
+#    clusters <- quickCluster(sce_deconv,get.spikes=FALSE,min.size=10)
+#    sce_deconv <- computeSumFactors(sce_deconv)
+#    summary(sizeFactors(sce_deconv))
+#
+#    sce_deconv <- computeSpikeFactors(sce_deconv,general.use=FALSE)
+#    summary(sizeFactors(sce_deconv))
+#
+#    sce_deconv<-normalize(sce_deconv)
+#
+#    as.data.frame(t(apply(D[grepl("ERCC_",rownames(D))==FALSE,],1,"/",sce_deconv@phenoData@data$size_factor)))
+#    #expr_deconv_ercc<-as.data.frame(t(apply(counts.ercc,1,"/",sce_deconv@phenoData@data$size_factor_MySpikes)))
+#}
+
 #' estimateCells
 #'
 #' Subtitle

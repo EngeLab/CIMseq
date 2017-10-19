@@ -103,6 +103,12 @@ setMethod("plotCounts", "spCounts", function(
             `/` (ercc)
     }
     
+    breaks <- c(
+            100,       50,        10,          5,         2.5,
+              1,      0.5,      0.25,      0.125,      0.0625,
+        0.03125, 0.015625, 0.0078125, 0.00390625, 0.001953125
+    )
+    
     p <- estimateCells(x, y) %>%
     ggplot(
         aes_string(
@@ -135,12 +141,14 @@ setMethod("plotCounts", "spCounts", function(
         colour = guide_legend(override.aes = list(size = 5))
     ) +
     scale_y_continuous(
+        expand = c(0, 0),
         sec.axis = sec_axis(
             trans = ~ convertToERCC(., x, y),
             name = "% ERCC",
-            breaks = c(100, 50, 10, 5, 2.5, 1)
+            breaks = breaks
         )
-    )
+    ) +
+    expand_limits(y = 0.05)
     
     return(p)
 }
