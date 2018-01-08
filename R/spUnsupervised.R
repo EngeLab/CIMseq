@@ -200,7 +200,7 @@ NULL
 #' @export
 
 spTopVar <- function(spCounts, n) {
-    rv = apply(getData(spCounts, "counts.cpm"), 1, var)
+  rv = apply(getData(spCounts, "counts.cpm"), 1, var) #use matrixStats::rowVars instead; much faster
     select = order(rv, decreasing = TRUE)[1:n]
     return(select)
 }
