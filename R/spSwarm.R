@@ -499,11 +499,7 @@ spSwarmPoisson <- function(
     if(length(pick) == 1) {
         out <- totcomb %in% paste(pick, pick, sep = "")
     } else {
-        out <- totcomb %in% apply(
-            t(combn(pick, 2)),
-            1,
-            paste,collapse = ""
-        )
+        out <- totcomb %in% apply(t(combn(pick, 2)), 1, paste,collapse = "")
     }
     return(out)
 }
