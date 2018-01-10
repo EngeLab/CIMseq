@@ -351,7 +351,7 @@ runTsne <- function(
         is_distance = is_distance
     )$Y
     
-    rownames(my.tsne) <- rownames(my.dist)
+    rownames(my.tsne) <- attr(my.dist, "Labels")
     return(my.tsne)
 }
 
