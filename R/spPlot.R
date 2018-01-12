@@ -315,10 +315,11 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     plotUncertainty,
     ...
 ){
-    tsne <- getData(x, "tsne")
-    classification <- getData(x, "classification")
-    
-    d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
+    d <- getData(x, "tsne") %>%
+    as.data.frame() %>%
+    rownames_to_column() %>%
+    as_tibble() %>%
+    add_column(classification = getData(x, "classification"))
     
     if(plotUncertainty) {
         d$uncertainty <- getData(x, "uncertainty")
