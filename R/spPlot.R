@@ -387,7 +387,8 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     counts.log <- getData(y, "counts.log")
     
     if(!all(markers %in% rownames(counts.log))) {
-        stop("Some of the markers entered were not found in the dataset.")
+      print("Some of the markers entered were not found in the dataset including: ")
+        stop(paste(!markers %in% rownames(counts.log), collapse = ", "))
     }
     
     #on the next line you will need a check that the markers exist in the data
