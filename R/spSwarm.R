@@ -275,7 +275,6 @@ distToSliceNorm <- function(
     fractions,
     cellTypes,
     oneMultiplet,
-    i,
     ...
 ){
     if(sum(fractions) == 0) {

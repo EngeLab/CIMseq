@@ -6,6 +6,130 @@ cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
 uObj <- testUns
 sObj <- testSwa
 
+##run test .makeSyntheticSlice
+test_that("check that .makeSyntheticSlice outputs the expected result", {
+  
+    ###TEST1####
+    #prepare normal input data
+    cellTypes <- matrix(rep(1, 40), ncol = 4)
+    fractions <- c(1, 0.5, 0.25, 0.1)
+    
+    #setup expected data
+    expected <- rep(1.85, 10)
+    
+    #run function
+    output <- .makeSyntheticSlice(cellTypes, fractions)
+    
+    #test
+    expect_identical(output, expected)
+})
+
+##run test .optim.fn
+test_that("check that .optim.fn outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  i <- 1
+  fractions <- rep(1, 4)
+  distFun <- distToSlice
+  cellTypes <- matrix(rep(1, 40), ncol = 4)
+  control <- list(maxit = 2, s = 10)
+  multiplets <- matrix(rep(1, 10), ncol = 1)
+  
+  
+  #setup expected data
+  expected <- rep(1, 4)
+  
+  #run function
+  output <- .optim.fn(i, fractions, distFun, cellTypes, control, multiplets)$par
+  
+  #test
+  expect_identical(output, expected)
+})
+
+##run test .runPyRSwarm
+test_that("check that .runPyRSwarm outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  cellTypes <- matrix(rep(1, 40), ncol = 4)
+  multiplets <- matrix(rep(1, 10), ncol = 1)
+  fractions <- rep(1, 4)
+  distFun <- distToSlice
+  maxiter <- 2
+  swarmsize <- 10
+  cores <- 1
+  seed <- 1134
+  norm <- TRUE
+  report <- FALSE
+  
+  #setup expected data
+  dat <- data.frame(0.25, 0.25, 0.25, 0.25)
+  colnames(dat) <- NULL
+  
+  expected <- list(
+    dat,
+    0,
+    "Maximal number of iterations reached.",
+    list()
+  )
+  
+  #run function
+  output <- .runPyRSwarm(
+    cellTypes,
+    multiplets,
+    fractions,
+    distFun,
+    maxiter,
+    swarmsize,
+    cores,
+    seed,
+    norm,
+    report
+  )
+  
+  #test
+  expect_identical(output, expected)
+})
+
+##run test distToSlice
+test_that("check that distToSlice outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  fractions <- rep(1, 4)
+  cellTypes <- matrix(rep(1, 40), ncol = 4)
+  oneMultiplet <- matrix(rep(1, 10), ncol = 1)
+  
+  #setup expected data
+  expected <- 0
+  
+  #run function
+  output <- distToSlice(fractions, cellTypes, oneMultiplet)
+  
+  #test
+  expect_identical(output, expected)
+})
+
+##run test distToSliceNorm
+test_that("check that distToSliceNorm outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  fractions <- rep(1, 4)
+  cellTypes <- matrix(rep(1, 40), ncol = 4)
+  oneMultiplet <- matrix(rep(1, 10), ncol = 1)
+  
+  #setup expected data
+  expected <- 0
+  
+  #run function
+  output <- distToSliceNorm(fractions, cellTypes, oneMultiplet)
+  
+  #test
+  expect_identical(output, expected)
+})
+
 ##run test getMultipletsForEdge
 test_that("check that getMultipletsForEdge outputs the expected result", {
     
