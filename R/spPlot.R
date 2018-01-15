@@ -741,8 +741,12 @@ setMethod("plotSwarm", "spSwarm", function(
     x,
     ...
 ){
-    tsne <- getData(x, "tsne")
-    classification <- getData(x, "classification")
+    tsne <- getData(x, "tsne") %>%
+    as.data.frame(stringsAsFactors = FALSE) %>%
+    rownames_to_column() %>%
+    as_tibble() %>%
+    add_column(classification = getData(x, "classification"))
+    classification <-
     
     d <- cbind(as.data.frame(
         tsne[ ,1:2]),
