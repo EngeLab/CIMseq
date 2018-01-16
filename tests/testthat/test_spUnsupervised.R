@@ -44,8 +44,8 @@ test_that("check that pearsonsDist outputs the expected result", {
     select <- 1:5
 
     #setup expected data
-    expectHead <- c(1, 2, 0, 1, 1, 1)
-    expectTail <- rep(0, 6)
+    expectHead <- c(1, 2, 0, 1, 0, 2)
+    expectTail <- c(0, 1, 0, 0, 0, 0)
     
     #run function
     output <- pearsonsDist(cObjSng, select)

@@ -111,17 +111,16 @@ test_that("check that .unsupClusterPlotProcess outputs the expected result", {
     
     #test
     expect_equivalent(nrow(output), 340)
-    expect_equivalent(ncol(output), 4)
+    expect_equivalent(ncol(output), 5)
     expect_identical(
         colnames(output),
-        c("V1", "V2", "classification", "uncertainty")
+        c("sample", "V1", "V2", "classification", "uncertainty")
     )
     expect_type(output, "list")
     expect_type(output$V1, "double")
     expect_type(output$V2, "double")
-    expect_type(output$classification, "integer")
+    expect_type(output$classification, "character")
     expect_type(output$uncertainty, "double")
-
 })
 
 ##run test .unsupClustersPlot

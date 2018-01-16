@@ -37,7 +37,7 @@ A matrix containing the mean value for each gene for each
    classification group.
 }
 \description{
-Calculates the x and y coordinates of the mean of each classified group.
+Calculates the x and y coordinates of the mean of each classif	ied group.
 }
 \details{
 This method is typically only used in conjunction with plotting. It

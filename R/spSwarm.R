@@ -275,7 +275,6 @@ distToSliceNorm <- function(
     fractions,
     cellTypes,
     oneMultiplet,
-    i,
     ...
 ){
     if(sum(fractions) == 0) {
@@ -462,33 +461,32 @@ spSwarmPoisson <- function(
     logic,
     ...
 ){
-    totcomb <- c(
-        paste(sort(colnames(mat)), sort(colnames(mat)), sep = ""),
-        apply(
-            t(combn(sort(colnames(mat)), 2)),
-            1,
-            paste,
-            collapse = ""
-        )
-    )
+  homo <- paste(sort(colnames(mat)), sort(colnames(mat)), sep = "-")
+  hetero <- apply(
+    apply(combn(colnames(mat), 2), 2, sort),
+    2,
+    paste,
+    collapse = "-"
+  )
+  totcomb <- c(homo, hetero)
     
-    com <- apply(logic, 1, .funx, totcomb)
-    rownames(com) <- totcomb
-    res <- apply(com, 1, sum)
-    xy <- rbind(
-        matrix(c(sort(colnames(mat)), sort(colnames(mat))), ncol = 2),
-        t(combn(sort(colnames(mat)), 2))
-    )
-    
-    edges <- data.frame(
-        from = xy[,1],
-        to = xy[,2],
-        weight = res,
-        stringsAsFactors = FALSE,
-        row.names = 1:nrow(xy)
-    )
-    
-    return(edges)
+  com <- apply(logic, 1, .funx, totcomb)
+  rownames(com) <- totcomb
+  res <- apply(com, 1, sum)
+  xy <- rbind(
+      matrix(c(sort(colnames(mat)), sort(colnames(mat))), ncol = 2),
+      t(combn(sort(colnames(mat)), 2))
+  )
+  
+  edges <- data.frame(
+      from = xy[,1],
+      to = xy[,2],
+      weight = res,
+      stringsAsFactors = FALSE,
+      row.names = 1:nrow(xy)
+  )
+  
+  return(edges)
 }
 
 .funx <- function(
@@ -500,9 +498,10 @@ spSwarmPoisson <- function(
         out <- totcomb %in% paste(pick, pick, sep = "")
     } else {
         out <- totcomb %in% apply(
-            t(combn(pick, 2)),
-            1,
-            paste,collapse = ""
+          apply(combn(pick, 2), 2, sort),
+          2,
+          paste,
+          collapse = "-"
         )
     }
     return(out)

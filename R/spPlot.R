@@ -48,7 +48,7 @@ setGeneric("plotCounts", function(
 #' @rdname plotCounts
 #' @export
 #' @import ggplot2
-#' @importFrom dplyr filter
+#' @importFrom dplyr filter pull
 #' @importFrom stringr %>%
 #' @importFrom stats median
 #' @importFrom ggthemes theme_few scale_colour_economist
@@ -103,6 +103,12 @@ setMethod("plotCounts", "spCounts", function(
             `/` (ercc)
     }
     
+    breaks <- c(
+            100,       50,        10,          5,         2.5,
+              1,      0.5,      0.25,      0.125,      0.0625,
+        0.03125, 0.015625, 0.0078125, 0.00390625, 0.001953125
+    )
+    
     p <- estimateCells(x, y) %>%
     ggplot(
         aes_string(
@@ -135,12 +141,14 @@ setMethod("plotCounts", "spCounts", function(
         colour = guide_legend(override.aes = list(size = 5))
     ) +
     scale_y_continuous(
+        expand = c(0, 0),
         sec.axis = sec_axis(
             trans = ~ convertToERCC(., x, y),
             name = "% ERCC",
-            breaks = c(100, 50, 10, 5, 2.5, 1)
+            breaks = breaks
         )
-    )
+    ) +
+    expand_limits(y = 0.05)
     
     return(p)
 }
@@ -270,6 +278,7 @@ setGeneric("plotUnsupervised", function(
 #' @importFrom ggthemes theme_few scale_colour_economist
 #' @importFrom reshape2 melt
 #' @importFrom viridis scale_color_viridis
+#' @importFrom dplyr pull
 
 setMethod("plotUnsupervised", "spUnsupervised", function(
     x,
@@ -306,10 +315,11 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     plotUncertainty,
     ...
 ){
-    tsne <- getData(x, "tsne")
-    classification <- getData(x, "classification")
-    
-    d <- cbind(as.data.frame(tsne[ ,1:2]), classification=classification)
+    d <- getData(x, "tsne") %>%
+    as.data.frame() %>%
+    rownames_to_column(var = "sample") %>%
+    as_tibble() %>%
+    add_column(classification = getData(x, "classification"))
     
     if(plotUncertainty) {
         d$uncertainty <- getData(x, "uncertainty")
@@ -378,7 +388,10 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     counts.log <- getData(y, "counts.log")
     
     if(!all(markers %in% rownames(counts.log))) {
-        stop("Some of the markers entered were not found in the dataset.")
+      notFound <- markers[!markers %in% rownames(counts.log)]
+      notFound <- paste(notFound, collapse = ", ")
+      message <- "These markers were not found in the dataset:"
+      stop(paste(message, notFound))
     }
     
     #on the next line you will need a check that the markers exist in the data
@@ -537,6 +550,7 @@ setGeneric("plotSwarm", function(
 #' @importFrom ggrepel geom_label_repel
 #' @importFrom viridis scale_fill_viridis
 #' @importFrom readr parse_factor
+#' @importFrom dplyr pull
 
 setMethod("plotSwarm", "spSwarm", function(
     x,
@@ -648,7 +662,6 @@ setMethod("plotSwarm", "spSwarm", function(
     #get data
     tsneMeans <- getData(y, "tsneMeans")
     d <- .swarmTsneProcess(y)
-    d <- d[order(d$classification), ]
     
     if(!is.null(markers)) {
         d$color <- .col.from.targets(markers, getData(z, "counts.log"))
@@ -724,20 +737,16 @@ setMethod("plotSwarm", "spSwarm", function(
 }
 
 .swarmTsneProcess <- function(
-    x,
+    y,
     ...
 ){
-    tsne <- getData(x, "tsne")
-    classification <- getData(x, "classification")
-    
-    d <- cbind(as.data.frame(
-        tsne[ ,1:2]),
-        classification = classification,
-        stringsAsFactors = FALSE
-    )
-    
-    colnames(d) <- c("x", "y", "classification")
-    return(d)
+    getData(y, "tsne") %>%
+    as.data.frame(stringsAsFactors = FALSE) %>%
+    rownames_to_column(var = "sample") %>%
+    as_tibble() %>%
+    add_column(classification = getData(y, "classification")) %>%
+    rename(x = V1, y = V2) %>%
+    arrange(classification)
 }
 
 .plotTsne <- function(
