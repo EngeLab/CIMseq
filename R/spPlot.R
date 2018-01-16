@@ -662,7 +662,6 @@ setMethod("plotSwarm", "spSwarm", function(
     #get data
     tsneMeans <- getData(y, "tsneMeans")
     d <- .swarmTsneProcess(y)
-    d <- d[order(d$classification), ]
     
     if(!is.null(markers)) {
         d$color <- .col.from.targets(markers, getData(z, "counts.log"))
@@ -738,24 +737,16 @@ setMethod("plotSwarm", "spSwarm", function(
 }
 
 .swarmTsneProcess <- function(
-    x,
+    y,
     ...
 ){
-    tsne <- getData(x, "tsne") %>%
+    getData(y, "tsne") %>%
     as.data.frame(stringsAsFactors = FALSE) %>%
-    rownames_to_column() %>%
+    rownames_to_column(var = "multiplet") %>%
     as_tibble() %>%
-    add_column(classification = getData(x, "classification"))
-    classification <-
-    
-    d <- cbind(as.data.frame(
-        tsne[ ,1:2]),
-        classification = classification,
-        stringsAsFactors = FALSE
-    )
-    
-    colnames(d) <- c("x", "y", "classification")
-    return(d)
+    add_column(classification = getData(y, "classification")) %>%
+    rename(x = V1, y = V2) %>%
+    arrange(classification)
 }
 
 .plotTsne <- function(
