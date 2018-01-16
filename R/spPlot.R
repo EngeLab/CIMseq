@@ -317,7 +317,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 ){
     d <- getData(x, "tsne") %>%
     as.data.frame() %>%
-    rownames_to_column() %>%
+    rownames_to_column(var = "sample") %>%
     as_tibble() %>%
     add_column(classification = getData(x, "classification"))
     
