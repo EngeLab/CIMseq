@@ -742,7 +742,7 @@ setMethod("plotSwarm", "spSwarm", function(
 ){
     getData(y, "tsne") %>%
     as.data.frame(stringsAsFactors = FALSE) %>%
-    rownames_to_column(var = "multiplet") %>%
+    rownames_to_column(var = "sample") %>%
     as_tibble() %>%
     add_column(classification = getData(y, "classification")) %>%
     rename(x = V1, y = V2) %>%
