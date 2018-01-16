@@ -6,7 +6,7 @@ Author: Jason T. Serviss
 Maintainer: Jason T Serviss <jason.serviss@ki.se>
 Description: What the package does (one paragraph).
 Depends:
-    R (>= 3.3.0)
+    R (>= 3.4.2)
 Imports:
     RColorBrewer,
     ggplot2,
