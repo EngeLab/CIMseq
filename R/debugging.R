@@ -21,11 +21,7 @@ NULL
 #' @keywords plotSwarmPosition
 #' @examples
 #'
-#' #use demo data
-#' data(expData)
-#'
-#' #run function
-#'
+#' #no test data where swarm was tracked with report arg.
 NULL
 
 #' @rdname plotSwarmPosition
