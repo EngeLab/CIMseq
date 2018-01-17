@@ -280,6 +280,21 @@ distToSliceNorm <- function(
     sum(abs((oneMultiplet - a) / (a+1)))
 }
 
+distToSliceMedian <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    ...
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    cellTypes <- cellTypes/mean(cellTypes)
+    a = .makeSyntheticSlice2(cellTypes, normFractions)
+    sum(abs(oneMultiplet - a))
+}
+
 distToSliceTop <- function(
     fractions,
     cellTypes,
@@ -385,6 +400,25 @@ bic10 <- function(
     k <- length(which(fractions > 0))
     
     (n * log(e)) + (k * log10(n))
+}
+
+bic10.2 <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    i,
+    ...
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a <- .makeSyntheticSlice(cellTypes, normFractions)
+    n <- length(fractions)
+    e <- sum(abs(a - oneMultiplet)^2) * 1/n
+    k <- length(which(fractions > 0))
+    
+    (n * log(e)) + ((k / n) * log10(n))
 }
 
 #' spSwarmPoisson
