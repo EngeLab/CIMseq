@@ -33,11 +33,7 @@ Plots the swarm position in a spSwarm object for each reported iteration
 }
 \examples{
 
-#use demo data
-data(expData)
-
-#run function
-
+#no test data where swarm was tracked with report arg.
 }
 \author{
 Jason T. Serviss
