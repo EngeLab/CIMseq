@@ -76,7 +76,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         "distToSliceTop",
         "distToSliceEuclid",
         "distToSlicePearson",
-        "bic"
+        "bic",
+        "bicLinear"
     ),
     maxiter = 10,
     swarmsize = 150,
@@ -350,6 +351,25 @@ bic <- function(
     normFractions <- fractions / sum(fractions)
     a <- .makeSyntheticSlice(cellTypes, normFractions)
     e <- sum(abs(a - oneMultiplet)^2) * 1/length(fractions)
+    n <- length(fractions)
+    k <- length(which(fractions > 0))
+    
+    (n * log(e)) + (k * log(n))
+}
+
+bicLinear <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    i,
+    ...
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a <- .makeSyntheticSlice(cellTypes, normFractions)
+    e <- sum(abs(a - oneMultiplet)) * 1/length(fractions)
     n <- length(fractions)
     k <- length(which(fractions > 0))
     
