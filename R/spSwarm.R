@@ -68,25 +68,17 @@ setGeneric("spSwarm", function(
 #' @export
 
 setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
-    spCounts,
-    spUnsupervised,
-    distFun = c(
-        "distToSlice",
-        "distToSliceNorm",
-        "distToSliceTop",
-        "distToSliceEuclid",
-        "distToSlicePearson",
-        "bic",
-        "bicLinear"
-    ),
-    maxiter = 10,
-    swarmsize = 150,
-    cores = 1,
-    seed = 11,
-    norm = TRUE,
-    report = FALSE,
-    reportRate = NULL,
-    ...
+  spCounts,
+  spUnsupervised,
+  distFun = "distToSlice",
+  maxiter = 10,
+  swarmsize = 150,
+  cores = 1,
+  seed = 11,
+  norm = TRUE,
+  report = FALSE,
+  reportRate = NULL,
+  ...
 ){
     
     #put a check here to make sure all slots in the spUnsupervised object are filled.
@@ -350,8 +342,8 @@ bic <- function(
     }
     normFractions <- fractions / sum(fractions)
     a <- .makeSyntheticSlice(cellTypes, normFractions)
-    e <- sum(abs(a - oneMultiplet)^2) * 1/length(fractions)
     n <- length(fractions)
+    e <- sum(abs(a - oneMultiplet)^2) * 1/n
     k <- length(which(fractions > 0))
     
     (n * log(e)) + (k * log(n))
@@ -374,6 +366,25 @@ bicLinear <- function(
     k <- length(which(fractions > 0))
     
     (n * log(e)) + (k * log(n))
+}
+
+bic10 <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    i,
+    ...
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a <- .makeSyntheticSlice(cellTypes, normFractions)
+    n <- length(fractions)
+    e <- sum(abs(a - oneMultiplet)^2) * 1/n
+    k <- length(which(fractions > 0))
+    
+    (n * log(e)) + (k * log10(n))
 }
 
 #' spSwarmPoisson

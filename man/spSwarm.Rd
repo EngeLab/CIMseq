@@ -23,10 +23,8 @@
 spSwarm(spCounts, spUnsupervised, ...)
 
 \S4method{spSwarm}{spCounts,spUnsupervised}(spCounts, spUnsupervised,
-  distFun = c("distToSlice", "distToSliceNorm", "distToSliceTop",
-  "distToSliceEuclid", "distToSlicePearson", "bic"), maxiter = 10,
-  swarmsize = 150, cores = 1, seed = 11, norm = TRUE, report = FALSE,
-  reportRate = NULL, ...)
+  distFun = "distToSlice", maxiter = 10, swarmsize = 150, cores = 1,
+  seed = 11, norm = TRUE, report = FALSE, reportRate = NULL, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}
