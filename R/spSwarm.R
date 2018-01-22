@@ -78,6 +78,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   norm = TRUE,
   report = FALSE,
   reportRate = NULL,
+  cellNumbers,
+  e,
   ...
 ){
     
@@ -118,6 +120,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         norm = norm,
         report = report,
         reportRate = reportRate,
+        cellNumbers,
+        e,
         ...
     )
     result <- tmp[[1]]
@@ -152,6 +156,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     norm,
     report,
     reportRate,
+    cellNumbers,
+    e,
     ...
 ){
     if(report) {
@@ -170,6 +176,10 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         stats <- list()
     }
     
+    #fix match for multiplet counts and cellNumbers and convert cellNumbers to a vector
+    matchIdx <- match(colnames(multiplets), pull(cellNumbers, sampleName))
+    cellNumbers <- pull(cellNumbers, cellNumberMedian)[matchIdx]
+    
     
     set.seed(seed)
     to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
@@ -184,6 +194,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
                 cellTypes,
                 control,
                 multiplets,
+                cellNumbers,
+                e,
                 ...
             ),
         mc.cores = cores
@@ -222,9 +234,13 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     cellTypes,
     control,
     multiplets,
+    cellNumbers,
+    e,
     ...
 ){
-    oneMultiplet <- multiplets[,i]
+    oneMultiplet <- multiplets[, i]
+    cellNumber <- cellNumbers[i]
+    
     psoptim(
         par = fractions,
         fn = distFun,
@@ -234,6 +250,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         upper = 1,
         control = control,
         i = i,
+        cellNumber = cellNumber,
+        e = e,
         ...
     )
 }
@@ -249,6 +267,32 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 
 # Various dist functions. Probably better to use match.arg and not export
 #(so as to avoid cluttering the namespace), but leaving it like this for now.
+
+.complexityPenilty <- function(k, e, cellNumber) {
+  n <- k / log(cellNumber)
+  u <- n * e
+  1 + u
+}
+
+dtsnCellNum <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    e,
+    cellNumber,
+    ...
+){
+  if(sum(fractions) == 0) {
+      return(999999999)
+  }
+  normFractions <- fractions / sum(fractions)
+  cellTypes <- cellTypes/mean(cellTypes)
+  a = .makeSyntheticSlice(cellTypes, normFractions)
+  a <- a/mean(a)
+  k <- length(which(normFractions > 0))
+  penalty <- .complexityPenilty(k, e, cellNumber)
+  sum(abs((oneMultiplet - a) / (a+1))) * penalty
+}
 
 distToSlice <- function(
     fractions,
