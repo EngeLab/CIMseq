@@ -791,7 +791,7 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
     ...
 ){
     s <- spSwarmPoisson(spSwarm, edge.cutoff = edge.cutoff)
-    frac <- getData(spSwarm, "spSwarm")[multiplet,]
+    frac <- getData(spSwarm, "spSwarm")[multiplet, ]
     map_dfr(multiplet, .edgeFunx, edge.cutoff, frac, s)
 })
 
@@ -804,7 +804,7 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
         sapply(1:ncol(combs), function(y) {
             bool1 <- s$from == combs[1, y] & s$to == combs[2, y]
             bool2 <- s$from == combs[2, y] & s$to == combs[1, y]
-            as.character(filter(s, bool1 | bool2)[, 1:2])
+            as.character(distinct(filter(s, bool1 | bool2)[, 1:2]))
         }) %>%
         t() %>%
         as_tibble() %>%
