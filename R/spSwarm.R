@@ -524,7 +524,7 @@ spSwarmPoisson <- function(
 
 .fractionCutoff <- function(mat, cutoff) {
     if(length(cutoff) == 1) {
-        return(mat > cutoff)
+        return(mat >= cutoff)
     } else {
         logic <- t(sapply(1:nrow(mat), function(j) {
             mat[j,] >= as.numeric(
