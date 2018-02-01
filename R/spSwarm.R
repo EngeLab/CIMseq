@@ -27,6 +27,8 @@ NULL
 #'   optimization should be included.
 #' @param reportRate If report is TRUE, the iteration interval that a report
 #'    should be generated.
+#' @param cellNumbers Tibble; Output from \code{estimateCells} function.
+#' @param e Numeric; The epsilon value for the .complexityPenilty unit.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per
@@ -287,7 +289,7 @@ dtsnCellNum <- function(
   }
   normFractions <- fractions / sum(fractions)
   cellTypes <- cellTypes/mean(cellTypes)
-  a = .makeSyntheticSlice(cellTypes, normFractions)
+  a <- .makeSyntheticSlice(cellTypes, normFractions)
   a <- a/mean(a)
   k <- length(which(normFractions > 0))
   penalty <- .complexityPenilty(k, e, cellNumber)
