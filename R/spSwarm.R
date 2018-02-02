@@ -46,9 +46,10 @@ NULL
 #'
 #' #use demo data
 #' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 #' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#' uObj <- testUns
-#' sObj <- spSwarm(cObjMul, uObj, distFun = "bic")
+#' cn <- estimateCells(cObjSng, cObjMul)
+#' sObj <- spSwarm(cObjMul, testUns, distFun = "dtsnCellNum", cellNumbers = cn, e = 0.0025)
 #'
 NULL
 
