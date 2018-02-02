@@ -126,8 +126,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         norm = norm,
         report = report,
         reportRate = reportRate,
-        cellNumbers,
-        e,
+        cellNumbers = cellNumbers,
+        e = e,
         ...
     )
     result <- tmp[[1]]
@@ -182,10 +182,10 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         stats <- list()
     }
     
-    #fix match for multiplet counts and cellNumbers and convert cellNumbers to a vector
-    matchIdx <- match(colnames(multiplets), pull(cellNumbers, sampleName))
-    cellNumbers <- pull(cellNumbers, cellNumberMedian)[matchIdx]
-    
+    if(!is.null(cellNumbers)) {
+      matchIdx <- match(colnames(multiplets), cellNumbers$sampleName)
+      cellNumbers <- cellNumbers$cellNumberMedian[matchIdx]
+    }
     
     set.seed(seed)
     to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
@@ -271,14 +271,15 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     return(colSums(t(cellTypes) * fractions))
 }
 
-# Various dist functions. Probably better to use match.arg and not export
-#(so as to avoid cluttering the namespace), but leaving it like this for now.
-
+#function which calculates the complexity penalty
 .complexityPenilty <- function(k, e, cellNumber) {
   n <- k / log(cellNumber)
   u <- n * e
   1 + u
 }
+
+# Various dist functions. Probably better to use match.arg and not export
+#(so as to avoid cluttering the namespace), but leaving it like this for now.
 
 dtsnCellNum <- function(
     fractions,
@@ -328,21 +329,6 @@ distToSliceNorm <- function(
     a = .makeSyntheticSlice(cellTypes, normFractions)
     a <- a/mean(a)
     sum(abs((oneMultiplet - a) / (a+1)))
-}
-
-distToSliceMedian <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    ...
-){
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    cellTypes <- cellTypes/mean(cellTypes)
-    a = .makeSyntheticSlice2(cellTypes, normFractions)
-    sum(abs(oneMultiplet - a))
 }
 
 distToSliceTop <- function(

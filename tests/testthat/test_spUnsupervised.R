@@ -168,8 +168,8 @@ test_that("check that tsneGroupMeans outputs the expected result",{
     tsne <- getData(testUns, "tsne")
     
     #setup expected data
-    expected1 <- c(-18, -6)
-    expected2 <- c(7, -52)
+    expected1 <- c(-42, 6)
+    expected2 <- c(-9, -43)
     
     #run function
     output <- tsneGroupMeans(tsne, classes)
@@ -184,7 +184,7 @@ test_that("check that erccPerClass outputs the expected result",{
     
     ###TEST1####
     #setup expected data
-    expected1 <- tibble(
+    expected1 <- tibble::tibble(
         class = c("A1", "B1", "C1", "D1"),
         medianFracErcc = rep(1, 4)
     )

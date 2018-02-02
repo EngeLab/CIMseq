@@ -25,7 +25,7 @@ spSwarm(spCounts, spUnsupervised, ...)
 \S4method{spSwarm}{spCounts,spUnsupervised}(spCounts, spUnsupervised,
   distFun = "distToSlice", maxiter = 10, swarmsize = 150, cores = 1,
   seed = 11, norm = TRUE, report = FALSE, reportRate = NULL,
-  cellNumbers, e, ...)
+  cellNumbers = NULL, e = NULL, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}
@@ -71,6 +71,10 @@ optimization should be included.}
 
 \item{reportRate}{If report is TRUE, the iteration interval that a report
 should be generated.}
+
+\item{cellNumbers}{Tibble; Output from \code{estimateCells} function.}
+
+\item{e}{Numeric; The epsilon value for the .complexityPenilty unit.}
 }
 \value{
 spSwarm output.
@@ -85,9 +89,10 @@ Description
 
 #use demo data
 s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-uObj <- testUns
-sObj <- spSwarm(cObjMul, uObj, distFun = "bic")
+cn <- estimateCells(cObjSng, cObjMul)
+sObj <- spSwarm(cObjMul, testUns, distFun = "dtsnCellNum", cellNumbers = cn, e = 0.0025)
 
 }
 \author{
