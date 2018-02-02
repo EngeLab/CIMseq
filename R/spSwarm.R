@@ -81,8 +81,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   norm = TRUE,
   report = FALSE,
   reportRate = NULL,
-  cellNumbers,
-  e,
+  cellNumbers = NULL,
+  e = NULL,
   ...
 ){
     
@@ -90,6 +90,9 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     if(length(distFun) != 1) {
         stop("Please provide a valid distFun argument.")
+    }
+    if(distFun == "dtsnCellNum" & (is.null(cellNumbers) | is.null(e))) {
+      stop("cellNumbers and e must be provided with dtsnCellNum distFun.")
     }
     
     distFun <- match.fun(distFun)
