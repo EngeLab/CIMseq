@@ -51,8 +51,6 @@ Collate:
     'sp.scRNAseq-package.R'
     'All-classes.R'
     'debugging.R'
-    'expCounts.R'
-    'expErcc.R'
     'generalFunctions.R'
     'initialize-methods.R'
     'show-methods.R'
