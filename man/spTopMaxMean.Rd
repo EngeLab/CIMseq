@@ -2,7 +2,11 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{spTopMaxMean}
 \alias{spTopMaxMean}
+\alias{spTopMaxMean}
 \title{spTopMaxMean}
+\usage{
+spTopMaxMean(spCounts, n)
+}
 \arguments{
 \item{spCounts}{An spCounts object.}
 

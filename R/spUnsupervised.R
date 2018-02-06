@@ -266,8 +266,7 @@ spTopMax <- function(spCounts, n) {
 #'
 NULL
 
-#' @rdname spTopVar
-#' @importFrom stats var
+#' @rdname spTopMaxMean
 #' @export
 
 spTopMaxMean <- function(spCounts, n) {

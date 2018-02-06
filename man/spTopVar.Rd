@@ -3,12 +3,9 @@
 \name{spTopVar}
 \alias{spTopVar}
 \alias{spTopVar}
-\alias{spTopMaxMean}
 \title{spTopVar}
 \usage{
 spTopVar(spCounts, n)
-
-spTopMaxMean(spCounts, n)
 }
 \arguments{
 \item{spCounts}{An spCounts object.}
