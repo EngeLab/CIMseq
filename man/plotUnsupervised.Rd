@@ -10,7 +10,7 @@
 plotUnsupervised(x, ...)
 
 \S4method{plotUnsupervised}{spUnsupervised}(x, y = NULL, type = "clusters",
-  markers = NULL, plotUncertainty = TRUE, ...)
+  markers = NULL, plotUncertainty = TRUE, colorScheme = "default", ...)
 }
 \arguments{
 \item{x}{An spUnsupervised object.}
@@ -25,6 +25,9 @@ plotUnsupervised(x, ...)
 
 \item{plotUncertainty}{Logical indicating if uncertainty should be
 represented as the point size in the plots.}
+
+\item{colorScheme}{Character, specify the color scheme for the markers plot.
+Accepted values are "default", "viridis" and "cividis".}
 }
 \value{
 The plotUnsupervised function returns an object of class spCounts.

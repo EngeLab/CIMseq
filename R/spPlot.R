@@ -242,6 +242,8 @@ setMethod("plotCounts", "spCounts", function(
 #' @param markers A character vector with markers to plot.
 #' @param plotUncertainty Logical indicating if uncertainty should be
 #'    represented as the point size in the plots.
+#' @param colorScheme Character, specify the color scheme for the markers plot.
+#'  Accepted values are "default", "viridis" and "cividis".
 #' @param ... additional arguments to pass on.
 #' @return The plotUnsupervised function returns an object of class spCounts.
 #' @author Jason T. Serviss
@@ -281,12 +283,13 @@ setGeneric("plotUnsupervised", function(
 #' @importFrom dplyr pull
 
 setMethod("plotUnsupervised", "spUnsupervised", function(
-    x,
-    y = NULL,
-    type = "clusters",
-    markers = NULL,
-    plotUncertainty = TRUE,
-    ...
+  x,
+  y = NULL,
+  type = "clusters",
+  markers = NULL,
+  plotUncertainty = TRUE,
+  colorScheme = "default",
+  ...
 ){
     #x should be a spUnsupervised object.
     #y should be null or an spCounts object containig singlets.
@@ -303,7 +306,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
         if(is.null(y)) {
             stop("This plot requires a spCounts object as the second argument.")
         }
-        p <- .unsupMarkersPlot(x, y, markers, plotUncertainty)
+        p <- .unsupMarkersPlot(x, y, markers, plotUncertainty, colorScheme)
         p
         return(p)
     }
@@ -384,89 +387,158 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     plotUncertainty,
     ...
 ){
-    tsne <- as.data.frame(getData(x, "tsne"))
-    counts.log <- getData(y, "counts.log")
-    
-    #chaeck that specified markers exist in data
-    if(!all(markers %in% rownames(counts.log))) {
-      notFound <- markers[!markers %in% rownames(counts.log)]
-      notFound <- paste(notFound, collapse = ", ")
-      message <- "These markers were not found in the dataset:"
-      stop(paste(message, notFound))
-    }
-    
-    markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
-    markExpressNorm <- apply(markExpress, 2, function(x) {
-        (x - min(x)) / (max(x) - min(x))
-    })
-    
-    markExpressNorm %>%
-        as_tibble() %>%
-        add_column(sample = rownames(markExpressNorm)) %>%
-        add_column(
-            uncertainty = if_else(
-                rep(plotUncertainty, nrow(markExpressNorm)),
-                getData(x, "uncertainty"),
-                0.0001
-            )
-        ) %>%
-        add_column(V1 = pull(tsne, .data$V1), V2 = pull(tsne, .data$V2)) %>%
-        gather(
-            "variable",
-            "value",
-            -.data$V1,
-            -.data$V2,
-            -.data$sample,
-            -.data$uncertainty
-        )
+  tsne <- as.data.frame(getData(x, "tsne"))
+  counts.log <- getData(y, "counts.log")
+  
+  #check that specified markers exist in data
+  if(!all(markers %in% rownames(counts.log))) {
+    notFound <- markers[!markers %in% rownames(counts.log)]
+    notFound <- paste(notFound, collapse = ", ")
+    message <- "These markers were not found in the dataset:"
+    stop(paste(message, notFound))
+  }
+  
+  #normalize the marker expression
+  markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
+  markExpressNorm <- apply(markExpress, 2, function(x) {
+    (x - min(x)) / (max(x) - min(x))
+  })
+  
+  #reformat and return
+  markExpressNorm %>%
+    as_tibble() %>%
+    add_column(
+      sample = rownames(markExpressNorm),
+      V1 = pull(tsne, .data$V1),
+      V2 = pull(tsne, .data$V2),
+      uncertainty = if_else(
+        rep(plotUncertainty, nrow(markExpressNorm)),
+        getData(x, "uncertainty"),
+        0.0001
+      )
+    ) %>%
+    gather(
+      "variable", "value",
+      -(.data$sample:.data$uncertainty)
+    )
 }
 
 #plot markers plot
 .unsupMarkersPlot <- function(
-    x,
-    y,
-    markers,
-    plotUncertainty,
-    ...
+  x,
+  y,
+  markers,
+  plotUncertainty,
+  colorScheme,
+  ...
 ){
     
-    m <- .unsupMarkerPlotProcess(x, y, markers, plotUncertainty)
+  m <- .unsupMarkerPlotProcess(x, y, markers, plotUncertainty)
+  
+  p <- ggplot(data = NULL) +
+    theme_few() +
+    labs(x = "x", y = "y", title = "Markers", color = "Expression") +
+    theme(
+      legend.position = "top",
+      legend.title = element_blank(),
+      legend.text = element_text(size = 15),
+      axis.title = element_text(size = 17),
+      axis.text = element_text(size = 15),
+      plot.title = element_text(
+        hjust = 0.5, family = "Arial", face = "bold",
+        size = 24, margin = margin(b = 15)
+      ),
+      strip.text.y = element_text(size = 15)
+    )
     
-    p <- ggplot(m, aes_string(x='V1', y='V2', colour='value'))+
-        facet_grid(variable~.)+
-        theme_few()+
-        scale_color_viridis()+
-        labs(
-            x="x",
-            y="y",
-            title="Markers",
-            color="Expression"
-        )+
-        theme(
-            legend.position="top",
-            legend.title=element_blank(),
-            legend.text=element_text(size=15),
-            axis.title=element_text(size=17),
-            axis.text=element_text(size=15),
-            plot.title=element_text(
-                hjust=0.5,
-                family="Arial",
-                face="bold",
-                size=24,
-                margin=margin(b=15)
-            ),
-            strip.text.y = element_text(size = 15)
-        )+
-        guides(
-            colour=guide_colourbar(barwidth=20)
-        )
-    
-    if(plotUncertainty) {
-        p <- p + geom_point(aes_string(size='uncertainty'))
-    } else {
-       p <- p + geom_point()
+    #add uncertainty
+    if(plotUncertainty & colorScheme != "default") {
+      p <- p + geom_point(
+      data = m,
+      aes_string(
+        x = 'V1', y = 'V2',
+        colour = 'value', size = 'uncertainty'
+      )) +
+      guides(colour = guide_colourbar(barwidth = 15))
+    } else if(!plotUncertainty & colorScheme != "default") {
+      p <- p + geom_point(
+      data = m,
+      aes_string(
+        x = 'V1', y = 'V2', colour = 'value'
+      )) +
+      guides(colour = guide_colourbar(barwidth = 15))
     }
-        return(p)
+    
+    #add colour scheme
+    if(colorScheme == "viridis") {
+      p <- p + scale_color_viridis() + facet_grid(variable ~ .)
+    } else if(colorScheme == "cividis") {
+      p <- p + scale_color_viridis(option = "E") + facet_grid(variable ~ .)
+    } else if(colorScheme == "default") {
+      p <- .handleDefaultColorScheme(p, m, markers, y, x, plotUncertainty)
+    }
+    
+    return(p)
+}
+
+#Function to handle the default color scheme. Due to the mapping of individual
+#colors onto a continuous scale and the associated problems of gettin the legend
+#setup in the desired manner it is quite hacky.
+
+.handleDefaultColorScheme <- function(
+  plot,
+  plotData,
+  markers,
+  spCountsSng,
+  spUnsupervised,
+  plotUncertainty
+){
+  #get the colors
+  cols <- .col.from.targets(markers, getData(spCountsSng, "counts"))
+  
+  #add colors to the plot data
+  plotData <- left_join(
+    plotData,
+    cols,
+    by = c("sample" = "sampleName", "variable" = "geneName")
+  )
+  
+  #setup a data frame with the legend data
+  legend <- cols %>%
+    group_by(geneName) %>%
+    summarize(col = hex[which(sumNormCounts == max(sumNormCounts))]) %>%
+    mutate(i = 1:n())
+  
+  #this creates an invisiable layer in order to make the legend
+  p <- p + geom_point(
+    data = legend,
+    aes_string(x = 'i', y = 'i', fill = 'col'),
+    alpha = 0, shape = 21, colour = "white"
+  ) +
+  scale_fill_manual(values = pull(legend, col), labels = pull(legend, geneName)) +
+  guides(fill = guide_legend(override.aes = list(alpha = 1, size = 3)))
+  
+  #this adds the data to the plot
+  if(plotUncertainty) {
+    p <- p + geom_point(
+      data = plotData,
+      aes_string(x = 'V1', y = 'V2', colour = 'hex', size = 'uncertainty'),
+      alpha = 0.75
+    ) +
+    scale_colour_identity() +
+    guides(colour = FALSE)
+  
+  } else {
+    p <- p + geom_point(
+      data = plotData,
+      aes_string(x = 'V1', y = 'V2', colour = 'hex'),
+      alpha = 0.75
+    ) +
+    scale_colour_identity() +
+    guides(colour = FALSE)
+    
+  }
+  return(p)
 }
 
 #' plotSwarm
@@ -922,90 +994,49 @@ setMethod("plotSwarm", "spSwarm", function(
     )
 }
 
+#targets: gene names
+#values: gene counts
+# @importFrom tibble rownames_to_column as_tibble add_column
+# @importFrom tidyr gather unnest spread
+# @importFrom dplyr group_by mutate ungroup if_else n pull
+# @importFrom purrr pmap pmap_chr
+# @importFrom grDevices col2rgb rgb
 .col.from.targets <- function(
-    targets,
-    values,
+  targets,
+  values,
     ...
 ){
-    
-    values <- values[rownames(values) %in% targets, ]
-    pal <- col64()
-    targets <- pal[1:length(targets)]
-    targets <- targets[1:(dim(values)[1])]
-    if(is.matrix(values)) {
-        
-        #normalize each genes values so that all genes aer on the same scale
-        v <- t(apply(values, 1, function(x) {(x - min(x)) / (max(x) - min(x))}))
-        
-        #calculates the fraction that each gene is expressed in a sample
-        #relative to all input genes expression
-        fractions <- apply(v, 2, function(x) {x / sum(x)})
-        
-        #this fixes the Nan problem, due to division with 0, but results in
-        #positive expression values for genes samples that had no expression...
-        #Do these end up being white in the end?
-        fractions[is.nan(fractions)] <- 1.0 / (dim(fractions)[1])
-        
-        #changes the color values from hex to rgb
-        targets.rgb <- col2rgb(targets)
-        
-        #runs a for loop with one iteration per sample
-        res <- vector("character", length=length(targets))
-        for(i in 1:ncol(values)) {
-            
-            #for each gene in the current sample, multiply the red, green, and
-            #blue values (corresponding to the current gene) with the normalized
-            #expression value for that gene. Subtract this from 255 to keep the
-            #color within the 0-255 range.
-            mytarget.rgb <- 255-t(
-                apply(
-                    targets.rgb,
-                    1,
-                    function(x) {
-                        (255-x) * v[,i]
-                    }
-                )
-            )
-            
-            #multiply the rgb color values for this gene by the fraction by
-            #which this gene is expressed compared to other target genes
-            mytarget.rgb <- rowSums(
-                t(
-                    apply(
-                        mytarget.rgb,
-                        1,
-                        function(x) {
-                            x * fractions[,i]
-                        }
-                    )
-                )
-            )
-            
-            #convert the rgb colors back to hex and output
-            res[i] <- rgb(
-                red=mytarget.rgb['red']/256,
-                green=mytarget.rgb['green']/256,
-                blue=mytarget.rgb['blue']/256
-            )
-        }
-        return(res)
-    } else {
-        v <- (values-min(values))/(max(values)-min(values))
-        #        fractions <- apply(v, 2, function(values) {values/sum(values)})
-        #        fractions[is.nan(fractions)] <- 1.0/(dim(fractions)[1])
-        targets.rgb <- col2rgb(targets)
-        res <- vector("character", length=length(targets))
-        for(i in 1:length(values)) {
-            mytarget.rgb <- 255-t(apply(targets.rgb, 1, function(values)
-            {(255-values) * v[i]}))
-            res[i] <- rgb(
-                red=mytarget.rgb[1]/256,
-                green=mytarget.rgb[2]/256,
-                blue=mytarget.rgb[3]/256
-            )
-        }
-        return(res)
-    }
+    values[rownames(values) %in% targets, ] %>%
+    as.data.frame() %>%
+    rownames_to_column(var = "geneName") %>%
+    as_tibble() %>%
+    gather(sampleName, count, -geneName) %>%
+    #normalize
+    group_by(geneName) %>%
+    mutate(normalized = (count - min(count)) / (max(count) - min(count))) %>%
+    ungroup() %>%
+    #calculate fraction
+    group_by(sampleName) %>%
+    mutate(fraction = count / sum(count)) %>%
+    mutate(fraction = if_else(is.nan(fraction), 1 / n(), fraction)) %>%
+    #setup initial hex colors
+    mutate(colint = col64()[1:n()]) %>%
+    ungroup() %>%
+    #convert to rgb and calculate new colors
+    mutate(rgb = pmap(list(colint, normalized, fraction), function(x, y, z) {
+      (255 - ((255 - col2rgb(x)) * y)) * z
+    })) %>%
+    unnest() %>%
+    add_column(col = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
+    group_by(sampleName, geneName, col) %>%
+    summarize(sumRGB = sum(rgb) / 256, sumNormCounts = sum(normalized)) %>%
+    ungroup() %>%
+    spread(col, sumRGB) %>%
+    #convert back to hex
+    mutate(hex = pmap_chr(list(r, g, b), function(x, y, z) {
+      rgb(red = x, green = y, blue = z)
+    })) %>%
+    select(-(b:r))
 }
 
 ################################################################################
