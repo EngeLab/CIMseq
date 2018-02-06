@@ -403,9 +403,9 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     markExpressNorm %>%
         as_tibble() %>%
         add_column(sample = rownames(markExpressNorm)) %>%
-        mutate(
-            uncertainty = ifelse(
-                plotUncertainty,
+        add_column(
+            uncertainty = if_else(
+                rep(plotUncertainty, nrow(markExpressNorm)),
                 getData(x, "uncertainty"),
                 0.0001
             )
