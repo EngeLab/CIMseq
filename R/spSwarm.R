@@ -27,6 +27,8 @@ NULL
 #'   optimization should be included.
 #' @param reportRate If report is TRUE, the iteration interval that a report
 #'    should be generated.
+#' @param cellNumbers Tibble; Output from \code{estimateCells} function.
+#' @param e Numeric; The epsilon value for the .complexityPenilty unit.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per
@@ -44,9 +46,10 @@ NULL
 #'
 #' #use demo data
 #' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 #' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#' uObj <- testUns
-#' sObj <- spSwarm(cObjMul, uObj, distFun = "bic")
+#' cn <- estimateCells(cObjSng, cObjMul)
+#' sObj <- spSwarm(cObjMul, testUns, distFun = "dtsnCellNum", cellNumbers = cn, e = 0.0025)
 #'
 NULL
 
@@ -78,6 +81,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   norm = TRUE,
   report = FALSE,
   reportRate = NULL,
+  cellNumbers = NULL,
+  e = NULL,
   ...
 ){
     
@@ -85,6 +90,9 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
     if(length(distFun) != 1) {
         stop("Please provide a valid distFun argument.")
+    }
+    if(distFun == "dtsnCellNum" & (is.null(cellNumbers) | is.null(e))) {
+      stop("cellNumbers and e must be provided with dtsnCellNum distFun.")
     }
     
     distFun <- match.fun(distFun)
@@ -118,6 +126,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         norm = norm,
         report = report,
         reportRate = reportRate,
+        cellNumbers = cellNumbers,
+        e = e,
         ...
     )
     result <- tmp[[1]]
@@ -152,6 +162,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     norm,
     report,
     reportRate,
+    cellNumbers,
+    e,
     ...
 ){
     if(report) {
@@ -170,6 +182,10 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         stats <- list()
     }
     
+    if(!is.null(cellNumbers)) {
+      matchIdx <- match(colnames(multiplets), cellNumbers$sampleName)
+      cellNumbers <- cellNumbers$cellNumberMedian[matchIdx]
+    }
     
     set.seed(seed)
     to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
@@ -184,6 +200,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
                 cellTypes,
                 control,
                 multiplets,
+                cellNumbers,
+                e,
                 ...
             ),
         mc.cores = cores
@@ -222,9 +240,13 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     cellTypes,
     control,
     multiplets,
+    cellNumbers,
+    e,
     ...
 ){
-    oneMultiplet <- multiplets[,i]
+    oneMultiplet <- multiplets[, i]
+    cellNumber <- cellNumbers[i]
+    
     psoptim(
         par = fractions,
         fn = distFun,
@@ -234,6 +256,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         upper = 1,
         control = control,
         i = i,
+        cellNumber = cellNumber,
+        e = e,
         ...
     )
 }
@@ -247,8 +271,35 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     return(colSums(t(cellTypes) * fractions))
 }
 
+#function which calculates the complexity penalty
+.complexityPenilty <- function(k, e, cellNumber) {
+  n <- k / log(cellNumber)
+  u <- n * e
+  1 + u
+}
+
 # Various dist functions. Probably better to use match.arg and not export
 #(so as to avoid cluttering the namespace), but leaving it like this for now.
+
+dtsnCellNum <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    e,
+    cellNumber,
+    ...
+){
+  if(sum(fractions) == 0) {
+      return(999999999)
+  }
+  normFractions <- fractions / sum(fractions)
+  cellTypes <- cellTypes/mean(cellTypes)
+  a <- .makeSyntheticSlice(cellTypes, normFractions)
+  a <- a/mean(a)
+  k <- length(which(normFractions > 0))
+  penalty <- .complexityPenilty(k, e, cellNumber)
+  sum(abs((oneMultiplet - a) / (a+1))) * penalty
+}
 
 distToSlice <- function(
     fractions,
@@ -278,21 +329,6 @@ distToSliceNorm <- function(
     a = .makeSyntheticSlice(cellTypes, normFractions)
     a <- a/mean(a)
     sum(abs((oneMultiplet - a) / (a+1)))
-}
-
-distToSliceMedian <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    ...
-){
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    cellTypes <- cellTypes/mean(cellTypes)
-    a = .makeSyntheticSlice2(cellTypes, normFractions)
-    sum(abs(oneMultiplet - a))
 }
 
 distToSliceTop <- function(
@@ -518,7 +554,7 @@ spSwarmPoisson <- function(
             )
         ) %>%
         ungroup %>%
-        filter(.data$pval < min.pval & .data$weight >= min.num.edges)
+        filter(.data$pval <= min.pval & .data$weight >= min.num.edges)
 }
 
 .calculateWeight <- function(

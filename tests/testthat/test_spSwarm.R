@@ -36,12 +36,11 @@ test_that("check that .optim.fn outputs the expected result", {
   control <- list(maxit = 2, s = 10)
   multiplets <- matrix(rep(1, 10), ncol = 1)
   
-  
   #setup expected data
   expected <- rep(1, 4)
   
   #run function
-  output <- .optim.fn(i, fractions, distFun, cellTypes, control, multiplets)$par
+  output <- .optim.fn(i, fractions, distFun, cellTypes, control, multiplets, cellNumbers = NULL, e = NULL)$par
   
   #test
   expect_identical(output, expected)
@@ -62,6 +61,8 @@ test_that("check that .runPyRSwarm outputs the expected result", {
   seed <- 1134
   norm <- TRUE
   report <- FALSE
+  cellNumbers <- NULL
+  e <- NULL
   
   #setup expected data
   dat <- data.frame(0.25, 0.25, 0.25, 0.25)
@@ -85,7 +86,9 @@ test_that("check that .runPyRSwarm outputs the expected result", {
     cores,
     seed,
     norm,
-    report
+    report,
+    cellNumbers,
+    e
   )
   
   #test
@@ -137,17 +140,17 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
     #setup expected data
     #A1 and B1 should have an edge
     #I1 and J1 should have an edge
-    expected1 <- tibble(
+    expected1 <- tibble::tibble(
         multiplet = "m.A1B1",
         from = "A1",
         to = "B1"
     )
-    expected2 <- tibble(
+    expected2 <- tibble::tibble(
         multiplet = "m.C1D1",
         from = "C1",
         to = "D1"
     )
-    expected3 <- tibble(
+    expected3 <- tibble::tibble(
         multiplet = c("m.A1B1", "m.C1D1"),
         from = c("A1", "C1"),
         to = c("B1", "D1")
@@ -183,7 +186,7 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
         )
     
     #setup expected data
-    expected <- tibble(
+    expected <- tibble::tibble(
         multiplet = rep(c("m.A1B1C1a", "m.A1B1C1b"), 3),
         from = c(rep("A1", 4), rep("B1", 2)),
         to = c(rep("B1", 2), rep(c("C1", "D1"), 2))
@@ -209,12 +212,12 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
     
     ###TEST1####
     #setup expected data
-    expected1 <- tibble(
+    expected1 <- tibble::tibble(
         multiplet = "m.A1B1",
         from = "A1",
         to = "B1"
     )
-    expected2 <- tibble(
+    expected2 <- tibble::tibble(
         multiplet = "m.C1D1",
         from = "C1",
         to = "D1"

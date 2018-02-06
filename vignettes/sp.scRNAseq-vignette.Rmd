@@ -160,7 +160,17 @@ Finally, the deconvolution of the multuplets take place in this stage. Again, th
 8. cores=1: This step is able to run in parallel by specifying the number of desired cores here.
 
 ```{r, eval = TRUE}
-sObj <- spSwarm(cObjMul, uObj, distFun = "distToSlice", swarmsize = 150, cores = 2, maxiter = 10)
+cellNrs <- estimateCells(cObjSng, cObjMul)
+sObj <- spSwarm(
+  cObjMul, 
+  uObj,
+  distFun = "dtsnCellNum",
+  swarmsize = 150,
+  cores = 2,
+  maxiter = 10,
+  cellNumbers = cellNrs,
+  e = 0.0025
+)
 ```
 
 ### spSwarm results
