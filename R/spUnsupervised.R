@@ -20,7 +20,7 @@ NULL
 #' @param Gmax A numeric vector of 1:Gmax passed as the "G" argument to Mclust.
 #' @param seed Sets the seed before running tSNE.
 #' @param type Decides if genes included are picked by their maximum expression
-#'  or maximum variance. Can be either "max", "var", "maxMin", or "manual". If
+#'  or maximum variance. Can be either "max", "var", "maxMean", or "manual". If
 #'  "manual" the genes argument must also be specified.
 #' @param max The max number of genes to include based either on maximum
 #'    expression or maximum variance which is decided by the "type" paramater.
@@ -93,7 +93,7 @@ setMethod("spUnsupervised", "spCounts", function(
     ...
 ){
     #filter genes to be included in analysis
-    select <- .featureSelection(spCounts, type, max)
+    select <- .featureSelection(spCounts, type, max, genes)
     
     #calculate distances
     my.dist <- pearsonsDist(spCounts, select)
@@ -133,7 +133,7 @@ setMethod("spUnsupervised", "spCounts", function(
     )
 })
 
-.featureSelection <- function(spCounts, type, max) {
+.featureSelection <- function(spCounts, type, max, genes) {
   if(type == "var") {
     select <- spTopVar(spCounts, max)
   }
@@ -142,8 +142,8 @@ setMethod("spUnsupervised", "spCounts", function(
     select <- spTopMax(spCounts, max)
   }
     
-  if(type == "maxMin") {
-    select <- spTopMaxMin(spCounts, max)
+  if(type == "maxMean") {
+    select <- spTopMaxMean(spCounts, max)
   }
     
   if(type == "manual" & is.character(genes) == TRUE) {

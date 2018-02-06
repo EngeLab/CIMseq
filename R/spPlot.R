@@ -387,6 +387,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     tsne <- as.data.frame(getData(x, "tsne"))
     counts.log <- getData(y, "counts.log")
     
+    #chaeck that specified markers exist in data
     if(!all(markers %in% rownames(counts.log))) {
       notFound <- markers[!markers %in% rownames(counts.log)]
       notFound <- paste(notFound, collapse = ", ")
@@ -394,7 +395,6 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
       stop(paste(message, notFound))
     }
     
-    #on the next line you will need a check that the markers exist in the data
     markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
     markExpressNorm <- apply(markExpress, 2, function(x) {
         (x - min(x)) / (max(x) - min(x))
@@ -462,9 +462,9 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
         )
     
     if(plotUncertainty) {
-        p <- p+geom_point(aes_string(size='uncertainty'))
+        p <- p + geom_point(aes_string(size='uncertainty'))
     } else {
-       p <- p+geom_point()
+       p <- p + geom_point()
     }
         return(p)
 }
