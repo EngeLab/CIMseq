@@ -284,7 +284,8 @@ setGeneric("plotUnsupervised", function(
 #' @importFrom tibble rownames_to_column as_tibble add_column
 #' @importFrom tidyr gather unnest spread
 #' @importFrom purrr pmap pmap_chr
-#' @importFrom grDevices col2rgb rgb
+#' @importFrom grDevices col2rgb rgb colorRampPalette
+#' @importFrom RColorBrewer brewer.pal
 
 setMethod("plotUnsupervised", "spUnsupervised", function(
   x,
@@ -478,8 +479,10 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
       p <- p + scale_color_viridis() + facet_grid(variable ~ .)
     } else if(colorScheme == "cividis") {
       p <- p + scale_color_viridis(option = "E") + facet_grid(variable ~ .)
-    } else if(colorScheme == "default") {
+    } else if(colorScheme == "default" & length(markers) > 1) {
       p <- .handleDefaultColorScheme(p, m, markers, y, x, plotUncertainty)
+    } else if(colorScheme == "default" & length(markers) == 1) {
+      
     }
     
     return(p)
@@ -497,21 +500,26 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
   spUnsupervised,
   plotUncertainty
 ){
-  #get the colors
-  cols <- .col.from.targets(markers, getData(spCountsSng, "counts"))
+  #get the colors and legend data
+  tmp <- .col.from.targets(
+    markers = markers,
+    values = getData(spCountsSng, "counts")
+  )
+  
+  legend <- tibble(
+    geneName = names(tmp[[1]]),
+    col = tmp[[1]],
+    i = 1:length(markers)
+  )
+  
+  cols <- tmp[[2]]
   
   #add colors to the plot data
   plotData <- left_join(
     plotData,
     cols,
-    by = c("sample" = "sampleName", "variable" = "geneName")
+    by = c("sample" = "sampleName")
   )
-  
-  #setup a data frame with the legend data
-  legend <- cols %>%
-    group_by(geneName) %>%
-    summarize(col = hex[which(sumNormCounts == max(sumNormCounts))]) %>%
-    mutate(i = 1:n())
   
   #this creates an invisiable layer in order to make the legend
   plot <- plot + geom_point(
@@ -524,22 +532,33 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
   
   #this adds the data to the plot
   if(plotUncertainty) {
-    plot <- plot + geom_point(
+    plot <- plot +
+    geom_point(
       data = plotData,
       aes_string(x = 'V1', y = 'V2', colour = 'hex', size = 'uncertainty'),
-      alpha = 0.75
+      alpha = 0.85
     ) +
     scale_colour_identity() +
-    guides(colour = FALSE)
+    guides(colour = FALSE) +
+    geom_point(
+      data = plotData,
+      aes_string(x = 'V1', y = 'V2', size = 'uncertainty'),
+      colour = "grey", shape = 21, stroke = 0.1
+    )
   
   } else {
     plot <- plot + geom_point(
       data = plotData,
       aes_string(x = 'V1', y = 'V2', colour = 'hex'),
-      alpha = 0.75
+      alpha = 0.85
     ) +
     scale_colour_identity() +
-    guides(colour = FALSE)
+    guides(colour = FALSE) +
+    geom_point(
+      data = plotData,
+      aes_string(x = 'V1', y = 'V2'),
+      colour = "grey", shape = 21, stroke = 0.1
+    )
     
   }
   return(plot)
@@ -548,11 +567,21 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 #targets: gene names
 #values: gene counts
 .col.from.targets <- function(
-  targets,
+  pal = NULL,
   values,
+  markers,
   ...
 ){
-  values[rownames(values) %in% targets, ] %>%
+  if(is.null(pal) & length(markers) <= 9) {
+    pal <- brewer.pal(9, "Set1")[1:length(markers)]
+  } else if(is.null(pal)) {
+    pal <- colorRampPalette(brewer.pal(9, "Set1"))(length(markers))
+  } else {
+    pal <- pal[1:length(markers)]
+  }
+  names(pal) <- markers
+  
+  colors <- values[rownames(values) %in% markers, ] %>%
   as.data.frame() %>%
   rownames_to_column(var = "geneName") %>%
   as_tibble() %>%
@@ -563,10 +592,10 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
   ungroup() %>%
   #calculate fraction
   group_by(sampleName) %>%
-  mutate(fraction = count / sum(count)) %>%
+  mutate(fraction = normalized / sum(normalized)) %>%
   mutate(fraction = if_else(is.nan(fraction), 1 / n(), fraction)) %>%
   #setup initial hex colors
-  mutate(colint = RColorBrewer::brewer.pal(9, "Set1")[1:n()]) %>%
+  mutate(colint = pal) %>%
   ungroup() %>%
   #convert to rgb and calculate new colors
   mutate(rgb = pmap(list(colint, normalized, fraction), function(x, y, z) {
@@ -574,8 +603,8 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
   })) %>%
   unnest() %>%
   add_column(col = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
-  group_by(sampleName, geneName, col) %>%
-  summarize(sumRGB = sum(rgb) / 256, sumNormCounts = sum(normalized)) %>%
+  group_by(sampleName, col) %>%
+  summarize(sumRGB = sum(rgb) / 256) %>%
   ungroup() %>%
   spread(col, sumRGB) %>%
   #convert back to hex
@@ -583,6 +612,8 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     rgb(red = x, green = y, blue = z)
   })) %>%
   select(-(b:r))
+  
+  return(list(pal, colors))
 }
 
 #' plotSwarm
