@@ -280,7 +280,11 @@ setGeneric("plotUnsupervised", function(
 #' @importFrom ggthemes theme_few scale_colour_economist
 #' @importFrom reshape2 melt
 #' @importFrom viridis scale_color_viridis
-#' @importFrom dplyr pull
+#' @importFrom dplyr pull group_by mutate ungroup if_else left_join summarize n "%>%"
+#' @importFrom tibble rownames_to_column as_tibble add_column
+#' @importFrom tidyr gather unnest spread
+#' @importFrom purrr pmap pmap_chr
+#' @importFrom grDevices col2rgb rgb
 
 setMethod("plotUnsupervised", "spUnsupervised", function(
   x,
@@ -539,6 +543,46 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     
   }
   return(p)
+}
+
+#targets: gene names
+#values: gene counts
+.col.from.targets <- function(
+  targets,
+  values,
+  ...
+){
+  values[rownames(values) %in% targets, ] %>%
+  as.data.frame() %>%
+  rownames_to_column(var = "geneName") %>%
+  as_tibble() %>%
+  gather(sampleName, count, -geneName) %>%
+  #normalize
+  group_by(geneName) %>%
+  mutate(normalized = (count - min(count)) / (max(count) - min(count))) %>%
+  ungroup() %>%
+  #calculate fraction
+  group_by(sampleName) %>%
+  mutate(fraction = count / sum(count)) %>%
+  mutate(fraction = if_else(is.nan(fraction), 1 / n(), fraction)) %>%
+  #setup initial hex colors
+  mutate(colint = col64()[1:n()]) %>%
+  ungroup() %>%
+  #convert to rgb and calculate new colors
+  mutate(rgb = pmap(list(colint, normalized, fraction), function(x, y, z) {
+    (255 - ((255 - col2rgb(x)) * y)) * z
+  })) %>%
+  unnest() %>%
+  add_column(col = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
+  group_by(sampleName, geneName, col) %>%
+  summarize(sumRGB = sum(rgb) / 256, sumNormCounts = sum(normalized)) %>%
+  ungroup() %>%
+  spread(col, sumRGB) %>%
+  #convert back to hex
+  mutate(hex = pmap_chr(list(r, g, b), function(x, y, z) {
+    rgb(red = x, green = y, blue = z)
+  })) %>%
+  select(-(b:r))
 }
 
 #' plotSwarm
@@ -992,51 +1036,6 @@ setMethod("plotSwarm", "spSwarm", function(
     labs(
         x = "FIX THIS"
     )
-}
-
-#targets: gene names
-#values: gene counts
-# @importFrom tibble rownames_to_column as_tibble add_column
-# @importFrom tidyr gather unnest spread
-# @importFrom dplyr group_by mutate ungroup if_else n pull
-# @importFrom purrr pmap pmap_chr
-# @importFrom grDevices col2rgb rgb
-.col.from.targets <- function(
-  targets,
-  values,
-    ...
-){
-    values[rownames(values) %in% targets, ] %>%
-    as.data.frame() %>%
-    rownames_to_column(var = "geneName") %>%
-    as_tibble() %>%
-    gather(sampleName, count, -geneName) %>%
-    #normalize
-    group_by(geneName) %>%
-    mutate(normalized = (count - min(count)) / (max(count) - min(count))) %>%
-    ungroup() %>%
-    #calculate fraction
-    group_by(sampleName) %>%
-    mutate(fraction = count / sum(count)) %>%
-    mutate(fraction = if_else(is.nan(fraction), 1 / n(), fraction)) %>%
-    #setup initial hex colors
-    mutate(colint = col64()[1:n()]) %>%
-    ungroup() %>%
-    #convert to rgb and calculate new colors
-    mutate(rgb = pmap(list(colint, normalized, fraction), function(x, y, z) {
-      (255 - ((255 - col2rgb(x)) * y)) * z
-    })) %>%
-    unnest() %>%
-    add_column(col = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
-    group_by(sampleName, geneName, col) %>%
-    summarize(sumRGB = sum(rgb) / 256, sumNormCounts = sum(normalized)) %>%
-    ungroup() %>%
-    spread(col, sumRGB) %>%
-    #convert back to hex
-    mutate(hex = pmap_chr(list(r, g, b), function(x, y, z) {
-      rgb(red = x, green = y, blue = z)
-    })) %>%
-    select(-(b:r))
 }
 
 ################################################################################
