@@ -143,7 +143,7 @@ plotUnsupervised(uObj, type = "clusters")
 The sp.scRNAseq unsupervised object also has an associated markers plot where the markers can be visualized overlayed with the unsupervised clustering results.
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-plotUnsupervised(uObj, cObjSng, type = "markers", markers = c("c1", "b1"))
+plotUnsupervised(uObj, cObjSng, type = "markers", markers = c("c1", "b1"), colorScheme = "viridis")
 ```
 
 ## spSwarm method

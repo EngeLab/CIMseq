@@ -514,7 +514,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     mutate(i = 1:n())
   
   #this creates an invisiable layer in order to make the legend
-  p <- p + geom_point(
+  plot <- plot + geom_point(
     data = legend,
     aes_string(x = 'i', y = 'i', fill = 'col'),
     alpha = 0, shape = 21, colour = "white"
@@ -524,7 +524,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
   
   #this adds the data to the plot
   if(plotUncertainty) {
-    p <- p + geom_point(
+    plot <- plot + geom_point(
       data = plotData,
       aes_string(x = 'V1', y = 'V2', colour = 'hex', size = 'uncertainty'),
       alpha = 0.75
@@ -533,7 +533,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     guides(colour = FALSE)
   
   } else {
-    p <- p + geom_point(
+    plot <- plot + geom_point(
       data = plotData,
       aes_string(x = 'V1', y = 'V2', colour = 'hex'),
       alpha = 0.75
@@ -542,7 +542,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     guides(colour = FALSE)
     
   }
-  return(p)
+  return(plot)
 }
 
 #targets: gene names
