@@ -566,7 +566,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
   mutate(fraction = count / sum(count)) %>%
   mutate(fraction = if_else(is.nan(fraction), 1 / n(), fraction)) %>%
   #setup initial hex colors
-  mutate(colint = col64()[1:n()]) %>%
+  mutate(colint = RColorBrewer::brewer.pal(9, "Set1")[1:n()]) %>%
   ungroup() %>%
   #convert to rgb and calculate new colors
   mutate(rgb = pmap(list(colint, normalized, fraction), function(x, y, z) {
