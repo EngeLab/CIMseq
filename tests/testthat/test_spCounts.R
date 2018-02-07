@@ -123,3 +123,9 @@ test_that("check that estimateCells outputs the expected result", {
   expect_type(output$cellNumberMax, "double")
 })
 
+test_that("check that estimateCells gives error with all 0 ercc", {
+  ercc <- getData(cObjSng, "counts.ercc")
+  ercc[ ,1] <- rep(0, nrow(ercc))
+  cObjSng@counts.ercc <- ercc
+  expect_warning(estimateCells(cObjSng, cObjMul))
+})
