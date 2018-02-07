@@ -1,0 +1,4 @@
+v0.0.1.2
+* Adding alternative color schemes for plotUnsupervised markers plot.
+* Adding warning for estimateCells when samples exist with ERCC counts that are all 0.
+  Prevents NaN.
