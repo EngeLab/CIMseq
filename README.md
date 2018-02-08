@@ -1,5 +1,5 @@
 Release
-<a href="https://travis-ci.org/jasonserviss/sp.scRNAseq"><img src="[![Build Status](https://travis-ci.com/jasonserviss/sp.scRNAseq.svg?token=8VXNvJpmRV9RpFtTcJYW&branch=master)](https://travis-ci.com/jasonserviss/sp.scRNAseq)"></a>
+<a href="https://travis-ci.org/jasonserviss/sp.scRNAseq"><img src="https://travis-ci.com/jasonserviss/sp.scRNAseq.svg?token=8VXNvJpmRV9RpFtTcJYW&branch=master)](https://travis-ci.com/jasonserviss/sp.scRNAseq)"></a>
 
 Devel
 <a href="https://travis-ci.org/jasonserviss/sp.scRNAseq"><img src="https://travis-ci.com/jasonserviss/sp.scRNAseq.svg?token=8VXNvJpmRV9RpFtTcJYW&branch=devel"></a>
