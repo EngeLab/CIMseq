@@ -572,6 +572,8 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
   markers,
   ...
 ){
+  markers <- sort(markers)
+  
   if(is.null(pal) & length(markers) <= 9) {
     pal <- brewer.pal(9, "Set1")[1:length(markers)]
   } else if(is.null(pal)) {
@@ -595,6 +597,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
   mutate(fraction = normalized / sum(normalized)) %>%
   mutate(fraction = if_else(is.nan(fraction), 1 / n(), fraction)) %>%
   #setup initial hex colors
+  arrange(geneName) %>%
   mutate(colint = pal) %>%
   ungroup() %>%
   #convert to rgb and calculate new colors
