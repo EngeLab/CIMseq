@@ -60,6 +60,8 @@ setMethod("plotCounts", "spCounts", function(
     markers = NULL,
     ...
 ){
+  
+  
     #x should be an spCounts object with singlets
     #y should be an spCounts object with multuplets
     #check that type is valid
@@ -74,10 +76,11 @@ setMethod("plotCounts", "spCounts", function(
             stop("Markers must be a character vector of length = 2.")
         }
         
-        genes <- unique(rownames(getData(x, "counts")))
-        
-        if(!all(markers %in% genes)) {
-            stop("The specified markers are not in the counts matrix.")
+        if(!all(markers %in% rownames(getData(x, "counts")))) {
+          notFound <- markers[!markers %in% rownames(getData(x, "counts"))]
+          notFound <- paste(notFound, collapse = ", ")
+          message <- "These markers were not found in the dataset:"
+          stop(paste(message, notFound))
         }
         
         p <- .countsMarkersPlot(x, y, markers)
@@ -87,144 +90,44 @@ setMethod("plotCounts", "spCounts", function(
 })
 
 #plot ercc plot
-.countsErccPlot <- function(
-    x,
-    y,
-    ...
-){
-    #add function for ERCC fraction conversion
-    convertToERCC <- function(ercc, x, y) {
-        estimateCells(x, y) %>%
-            select(.data$sampleType, .data$frac.ercc) %>%
-            filter(.data$sampleType == "Singlet") %>%
-            pull(.data$frac.ercc) %>%
-            median %>%
-            `*` (100) %>%
-            `/` (ercc)
-    }
-    
-    breaks <- c(
-            100,       50,        10,          5,         2.5,
-              1,      0.5,      0.25,      0.125,      0.0625,
-        0.03125, 0.015625, 0.0078125, 0.00390625, 0.001953125
-    )
-    
-    p <- estimateCells(x, y) %>%
-    ggplot(
-        aes_string(
-            x = 'factor(sampleType, levels = c("Singlet", "Multiplet"))',
-            y = 'cellNumberMedian'
-        )
-    ) +
-    geom_jitter() +
-    labs(
-        x = "Sample type",
-        y = "Cell number",
-        title = "Fraction ERCC in singlets/doublets"
-    ) +
-    theme_few() +
-    theme(
-        legend.position = "top",
-        legend.title = element_blank(),
-        legend.text = element_text(size=15),
-        axis.title = element_text(size=17),
-        axis.text = element_text(size=13),
-        plot.title = element_text(
-            hjust = 0.5,
-            family = "Arial",
-            face = "bold",
-            size = 24,
-            margin = margin(b = 15)
-        )
-    ) +
-    guides(
-        colour = guide_legend(override.aes = list(size = 5))
-    ) +
-    scale_y_continuous(
-        expand = c(0, 0),
-        sec.axis = sec_axis(
-            trans = ~ convertToERCC(., x, y),
-            name = "% ERCC",
-            breaks = breaks
-        )
-    ) +
-    expand_limits(y = 0.05)
-    
-    return(p)
+.countsErccPlot <- function(x, y) {
+  estimateCells(x, y) %>%
+  mutate(`Sample type` = parse_factor(sampleType, levels = c("Singlet", "Multiplet"))) %>%
+  mutate(`Cell number` = cellNumberMedian) %>%
+  ggplot(aes(x = `Sample type`, y = `Cell number`)) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    sec.axis = sec_axis(
+      trans = ~ convertToERCC(., x, y),
+        name = "% ERCC"
+      )
+  )
 }
 
-#get and process data for markers plot
-.countsMarkersPlotProcess <- function(
-    x,
-    y,
-    markers,
-    ...
-){
-    counts.log <- cbind(
-        getData(x, "counts.log"),
-        getData(y, "counts.log")
-    )
-    
-    groups <- c(
-        rep(
-            "Singlet",
-            ncol(getData(x, "counts.log"))
-        ),
-        rep(
-            "Multuplet",
-            ncol(getData(y, "counts.log"))
-        )
-    )
-    
-    d <- data.frame(
-        sampleType = groups,
-        marker1 = counts.log[markers[1], ],
-        marker2 = counts.log[markers[2], ]
-    )
-    return(d)
+#add function for ERCC fraction conversion
+convertToERCC <- function(ercc, x, y) {
+  estimateCells(x, y) %>%
+  select(.data$sampleType, .data$frac.ercc) %>%
+  filter(.data$sampleType == "Singlet") %>%
+  pull(.data$frac.ercc) %>%
+  median %>%
+  `*` (100) %>%
+  `/` (ercc)
 }
 
 #plot markers plot
-.countsMarkersPlot <- function(
-    x,
-    y,
-    markers,
-    ...
-){
-    
-    d <-
-    
-    colors <- col64()[7:9]
-    
-    p <- .countsMarkersPlotProcess(x, y, markers) %>%
-    ggplot(aes_string(x='marker1', y='marker2', colour='sampleType'))+
-    geom_point(size=5, alpha=0.7)+
-    labs(
-        x=paste("log2( Normalized counts: ", markers[1], " )", sep=""),
-        y=paste("log2( Normalized counts: ", markers[2], " )", sep=""),
-        title="Cell Identity Markers"
-    )+
-    scale_colour_manual(name="sampleType", values=colors)+
-    theme_few()+
-    theme(
-        legend.position="top",
-        legend.title=element_blank(),
-        legend.text=element_text(size=15),
-        axis.title=element_text(size=17),
-        axis.text=element_text(size=15),
-        plot.title=element_text(
-            hjust=0.5,
-            family="Arial",
-            face="bold",
-            size=24,
-            margin=margin(b=15)
-        )
-    )+
-    guides(
-        colour=guide_legend(override.aes=list(size=5))
-    )
-    
-    return(p)
+.countsMarkersPlot <- function(x, y, markers) {
+  s <- getData(x, "counts.log")
+  m <- getData(y, "counts.log")
+  cbind(s[rownames(s) %in% markers, ], m[rownames(m) %in% markers, ]) %>%
+  apply(., 1, function(x) {
+    (x - min(x)) / (max(x) - min(x))
+  }) %>%
+  matrix_to_tibble() %>%
+  setNames(c("Sample", "Marker 1", "Marker 2")) %>%
+  mutate(`Sample type` = c(rep("Singlet", ncol(s)), rep("Multiplet", ncol(m)))) %>%
+  mutate(`Sample type` = parse_factor(`Sample type`, levels = c("Singlet", "Multiplet"))) %>%
+  ggplot(aes(`Marker 1`, `Marker 2`, colour = `Sample type`))
 }
 
 #' plotUnsupervised
@@ -317,83 +220,23 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     }
 })
 
-#get and process data for clusters plot
-.unsupClusterPlotProcess <- function(
-    x,
-    plotUncertainty,
-    ...
-){
-    d <- getData(x, "tsne") %>%
-    as.data.frame() %>%
-    rownames_to_column(var = "sample") %>%
-    as_tibble() %>%
-    add_column(classification = getData(x, "classification"))
-    
-    if(plotUncertainty) {
-        d$uncertainty <- getData(x, "uncertainty")
-    } else {
-        d$uncertainty <- 3
-    }
-    
-    return(d)
-}
-
 #plot clusters plot
-.unsupClustersPlot <- function(
-    x,
-    plotUncertainty,
-    ...
-){
-    
-    d <- .unsupClusterPlotProcess(x, plotUncertainty)
-    colors <- col64()
-    
-    p <- ggplot(d, aes_string(x='V1', y='V2', colour='classification'))+
-    #geom_point(size=3, alpha=0.75)+
-    labs(
-        x="Dim 1",
-        y="Dim 2",
-        title="Clusters"
-    )+
-    scale_colour_manual(name="sampleType", values=colors)+
-    theme_few()+
-    theme(
-        legend.position="top",
-        legend.title=element_blank(),
-        legend.text=element_text(size=15),
-        axis.title=element_text(size=17),
-        axis.text=element_text(size=15),
-        plot.title=element_text(
-            hjust=0.5,
-            family="Arial",
-            face="bold",
-            size=24,
-            margin=margin(b=15)
-        )
-    )+
-    guides(
-        colour=guide_legend(override.aes=list(size=5))
-    )
-    
-    if(plotUncertainty) {
-        p <- p+geom_point(aes_string(size='uncertainty'), alpha=0.75)
-    } else {
-        p <- p+geom_point(size=3, alpha=0.75)
-    }
-    
-    return(p)
+.unsupClustersPlot <- function(x, y, markers) {
+  getData(x, "tsne") %>%
+  matrix_to_tibble(.) %>%
+  mutate(Classification = getData(x, "classification")) %>%
+  mutate(Uncertainty = getData(x, "uncertainty")) %>%
+  rename(`t-SNE dim 1` = V1, `t-SNE dim 2` = V2, sample = rowname) %>%
+  full_join(., .processMarkers(y, markers), by = "sample") %>%
+  ggplot(aes(x = `t-SNE dim 1`, y = `t-SNE dim 2`))
 }
 
 #get and process data for markers plot
-.unsupMarkerPlotProcess <- function(
-    x,
-    y,
-    markers,
-    plotUncertainty,
-    ...
-){
-  tsne <- as.data.frame(getData(x, "tsne"))
-  counts.log <- getData(y, "counts.log")
+.processMarkers <- function(y, markers) {
+  if(is.null(markers)) {
+    samples <- colnames(getData(y, "counts"))
+    return(tibble(sample = samples))
+  }
   
   #check that specified markers exist in data
   if(!all(markers %in% rownames(counts.log))) {
@@ -403,30 +246,22 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     stop(paste(message, notFound))
   }
   
+  counts.log <- getData(y, "counts.log")
+  
   #normalize the marker expression
   markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
   markExpressNorm <- apply(markExpress, 2, function(x) {
     (x - min(x)) / (max(x) - min(x))
   })
   
-  #reformat and return
+  #tidy markers
   markExpressNorm %>%
-    as_tibble() %>%
-    add_column(
-      sample = rownames(markExpressNorm),
-      V1 = pull(tsne, .data$V1),
-      V2 = pull(tsne, .data$V2),
-      uncertainty = if_else(
-        rep(plotUncertainty, nrow(markExpressNorm)),
-        getData(x, "uncertainty"),
-        0.0001
-      )
-    ) %>%
-    gather(
-      "variable", "value",
-      -(.data$sample:.data$uncertainty)
-    )
+  matrix_to_tibble(.) %>%
+  rename(sample = rowname)
 }
+
+
+
 
 #plot markers plot
 .unsupMarkersPlot <- function(
