@@ -35,3 +35,27 @@ namedListToTibble <- function(l) {
         )
     }
 }
+
+#' matrix_to_tibble
+#'
+#' Converts a matrix to a tibble without removing rownames.
+#'
+#' @name matrix_to_tibble
+#' @rdname matrix_to_tibble
+#' @author Jason T. Serviss
+#' @param data matrix; The matrix to be converted.
+#' @keywords matrix_to_tibble
+#' @examples
+#'
+#' m <- matrix(rnorm(20), ncol = 2, dimnames = list(letters[1:10], LETTERS[1:2]))
+#' output <- matrix_to_tibble(m)
+#'
+#' @export
+#' @importFrom tibble as_tibble rownames_to_column
+
+matrix_to_tibble <- function(data) {
+  data %>%
+  as.data.frame() %>%
+  rownames_to_column() %>%
+  as_tibble()
+}
