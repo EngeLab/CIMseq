@@ -162,7 +162,7 @@ test_that("check that .unsupMarkerPlotProcess outputs the expected result", {
     #test
     expect_equivalent(nrow(output), 340*2)
     expect_equivalent(ncol(output), 6)
-    cols <- c("sample", "uncertainty", "V1", "V2", "variable", "value")
+    cols <- c("sample", "V1", "V2", "uncertainty", "variable", "value")
     expect_identical(colnames(output), cols)
     expect_type(output$V1, "double")
     expect_type(output$V2, "double")
@@ -185,7 +185,8 @@ test_that("check that the .unsupMarkersPlot function outputs the expected result
         uObj,
         cObjSng,
         markers,
-        plotUncertainty=FALSE
+        plotUncertainty = FALSE,
+        colorScheme = "default"
     )
     
     #test
@@ -193,7 +194,13 @@ test_that("check that the .unsupMarkersPlot function outputs the expected result
     expect_identical(output$labels$y, "y")
     expect_identical(output$labels$title, "Markers")
     expect_identical(output$labels$colour, "Expression")
-    expect_silent(.unsupMarkersPlot(uObj,cObjSng,markers,plotUncertainty=FALSE))
+    expect_silent(.unsupMarkersPlot(
+      uObj,
+      cObjSng,
+      markers,
+      plotUncertainty = FALSE,
+      colorScheme = "default"
+    ))
     expect_false(is.null(output))
     
 })

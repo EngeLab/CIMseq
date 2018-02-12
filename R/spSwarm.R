@@ -27,6 +27,8 @@ NULL
 #'   optimization should be included.
 #' @param reportRate If report is TRUE, the iteration interval that a report
 #'    should be generated.
+#' @param cellNumbers Tibble; Output from \code{estimateCells} function.
+#' @param e Numeric; The epsilon value for the .complexityPenilty unit.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per
@@ -44,9 +46,10 @@ NULL
 #'
 #' #use demo data
 #' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 #' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#' uObj <- testUns
-#' sObj <- spSwarm(cObjMul, uObj, distFun = "bic")
+#' cn <- estimateCells(cObjSng, cObjMul)
+#' sObj <- spSwarm(cObjMul, testUns, distFun = "dtsnCellNum", cellNumbers = cn, e = 0.0025)
 #'
 NULL
 
@@ -68,30 +71,28 @@ setGeneric("spSwarm", function(
 #' @export
 
 setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
-    spCounts,
-    spUnsupervised,
-    distFun = c(
-        "distToSlice",
-        "distToSliceNorm",
-        "distToSliceTop",
-        "distToSliceEuclid",
-        "distToSlicePearson",
-        "bic"
-    ),
-    maxiter = 10,
-    swarmsize = 150,
-    cores = 1,
-    seed = 11,
-    norm = TRUE,
-    report = FALSE,
-    reportRate = NULL,
-    ...
+  spCounts,
+  spUnsupervised,
+  distFun = "distToSlice",
+  maxiter = 10,
+  swarmsize = 150,
+  cores = 1,
+  seed = 11,
+  norm = TRUE,
+  report = FALSE,
+  reportRate = NULL,
+  cellNumbers = NULL,
+  e = NULL,
+  ...
 ){
     
     #put a check here to make sure all slots in the spUnsupervised object are filled.
     
     if(length(distFun) != 1) {
         stop("Please provide a valid distFun argument.")
+    }
+    if(distFun == "dtsnCellNum" & (is.null(cellNumbers) | is.null(e))) {
+      stop("cellNumbers and e must be provided with dtsnCellNum distFun.")
     }
     
     distFun <- match.fun(distFun)
@@ -125,6 +126,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         norm = norm,
         report = report,
         reportRate = reportRate,
+        cellNumbers = cellNumbers,
+        e = e,
         ...
     )
     result <- tmp[[1]]
@@ -159,6 +162,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     norm,
     report,
     reportRate,
+    cellNumbers,
+    e,
     ...
 ){
     if(report) {
@@ -177,6 +182,10 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         stats <- list()
     }
     
+    if(!is.null(cellNumbers)) {
+      matchIdx <- match(colnames(multiplets), cellNumbers$sampleName)
+      cellNumbers <- cellNumbers$cellNumberMedian[matchIdx]
+    }
     
     set.seed(seed)
     to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
@@ -191,6 +200,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
                 cellTypes,
                 control,
                 multiplets,
+                cellNumbers,
+                e,
                 ...
             ),
         mc.cores = cores
@@ -229,9 +240,13 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     cellTypes,
     control,
     multiplets,
+    cellNumbers,
+    e,
     ...
 ){
-    oneMultiplet <- multiplets[,i]
+    oneMultiplet <- multiplets[, i]
+    cellNumber <- cellNumbers[i]
+    
     psoptim(
         par = fractions,
         fn = distFun,
@@ -241,6 +256,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
         upper = 1,
         control = control,
         i = i,
+        cellNumber = cellNumber,
+        e = e,
         ...
     )
 }
@@ -254,8 +271,35 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     return(colSums(t(cellTypes) * fractions))
 }
 
+#function which calculates the complexity penalty
+.complexityPenilty <- function(k, e, cellNumber) {
+  n <- k / log(cellNumber)
+  u <- n * e
+  1 + u
+}
+
 # Various dist functions. Probably better to use match.arg and not export
 #(so as to avoid cluttering the namespace), but leaving it like this for now.
+
+dtsnCellNum <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    e,
+    cellNumber,
+    ...
+){
+  if(sum(fractions) == 0) {
+      return(999999999)
+  }
+  normFractions <- fractions / sum(fractions)
+  cellTypes <- cellTypes/mean(cellTypes)
+  a <- .makeSyntheticSlice(cellTypes, normFractions)
+  a <- a/mean(a)
+  k <- length(which(normFractions > 0))
+  penalty <- .complexityPenilty(k, e, cellNumber)
+  sum(abs((oneMultiplet - a) / (a+1))) * penalty
+}
 
 distToSlice <- function(
     fractions,
@@ -349,11 +393,68 @@ bic <- function(
     }
     normFractions <- fractions / sum(fractions)
     a <- .makeSyntheticSlice(cellTypes, normFractions)
-    e <- sum(abs(a - oneMultiplet)^2) * 1/length(fractions)
+    n <- length(fractions)
+    e <- sum(abs(a - oneMultiplet)^2) * 1/n
+    k <- length(which(fractions > 0))
+    
+    (n * log(e)) + (k * log(n))
+}
+
+bicLinear <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    i,
+    ...
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a <- .makeSyntheticSlice(cellTypes, normFractions)
+    e <- sum(abs(a - oneMultiplet)) * 1/length(fractions)
     n <- length(fractions)
     k <- length(which(fractions > 0))
     
     (n * log(e)) + (k * log(n))
+}
+
+bic10 <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    i,
+    ...
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a <- .makeSyntheticSlice(cellTypes, normFractions)
+    n <- length(fractions)
+    e <- sum(abs(a - oneMultiplet)^2) * 1/n
+    k <- length(which(fractions > 0))
+    
+    (n * log(e)) + (k * log10(n))
+}
+
+bic10.2 <- function(
+    fractions,
+    cellTypes,
+    oneMultiplet,
+    i,
+    ...
+){
+    if(sum(fractions) == 0) {
+        return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    a <- .makeSyntheticSlice(cellTypes, normFractions)
+    n <- length(fractions)
+    e <- sum(abs(a - oneMultiplet)^2) * 1/n
+    k <- length(which(fractions > 0))
+    
+    (n * log(e)) + ((k / n) * log10(n))
 }
 
 #' spSwarmPoisson
@@ -453,7 +554,7 @@ spSwarmPoisson <- function(
             )
         ) %>%
         ungroup %>%
-        filter(.data$pval < min.pval & .data$weight >= min.num.edges)
+        filter(.data$pval <= min.pval & .data$weight >= min.num.edges)
 }
 
 .calculateWeight <- function(
@@ -726,7 +827,7 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
     ...
 ){
     s <- spSwarmPoisson(spSwarm, edge.cutoff = edge.cutoff)
-    frac <- getData(spSwarm, "spSwarm")[multiplet,]
+    frac <- getData(spSwarm, "spSwarm")[multiplet, ]
     map_dfr(multiplet, .edgeFunx, edge.cutoff, frac, s)
 })
 
@@ -739,7 +840,7 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
         sapply(1:ncol(combs), function(y) {
             bool1 <- s$from == combs[1, y] & s$to == combs[2, y]
             bool2 <- s$from == combs[2, y] & s$to == combs[1, y]
-            as.character(filter(s, bool1 | bool2)[, 1:2])
+            as.character(distinct(filter(s, bool1 | bool2)[, 1:2]))
         }) %>%
         t() %>%
         as_tibble() %>%
@@ -754,247 +855,3 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
         select(-.data$weight, -.data$pval)
     }
 }
-
-#' permuteSwarm
-#'
-#' Write something
-#'
-#' Description
-#'
-#' @name permuteSwarm
-#' @rdname permuteSwarm
-#' @aliases permuteSwarm
-#' @param spCountsSng An spCounts object containing singlets.
-#' @param spCountsMul An spCounts object containing multiplets.
-#' @param spUnsupervised An spUnsupervised object.
-#' @param spSwarm An spSwarm object.
-#' @param distFun The distance function used to calculate the cost. Either the
-#'    name of a custom function in the local environment or one of the included
-#'    functions, i.e. \code{distToSlice, distToSliceNorm, distToSliceTop,
-#'    distToSliceEuclid, distToSlicePearson, bic}.
-#' @param maxiter pySwarm argument indicating maximum optimization iterations.
-#' @param swarmsize pySwarm argument indicating the number of swarm particals.
-#' @param cores The number of cores to be used while running spRSwarm.
-#' @param seed The desired seed to set before running.
-#' @param norm Logical indicating if the sum of fractions should equal 1.
-#' @param iter The number of permutations to perform.
-#' @param ... additional arguments to pass on
-#' @return Edge names.
-#' @author Jason T. Serviss
-#' @keywords permuteSwarm
-#' @examples
-#'
-#' #use demo data
-#'
-#'
-#' #run function
-#'
-#'
-NULL
-
-#' @rdname permuteSwarm
-#' @export
-
-setGeneric("permuteSwarm", function(
-    spCountsSng,
-    ...
-){
-    standardGeneric("permuteSwarm")
-})
-
-#' @rdname permuteSwarm
-#' @export
-
-setMethod("permuteSwarm", "spCounts", function(
-    spCountsSng,
-    spCountsMul,
-    spUnsupervised,
-    spSwarm,
-    distFun = c(
-        "distToSlice",
-        "distToSliceNorm",
-        "distToSliceTop",
-        "distToSliceEuclid",
-        "distToSlicePearson",
-        "bic"
-    ),
-    maxiter = 10,
-    swarmsize = 150,
-    cores = 1,
-    seed = 11,
-    norm = TRUE,
-    iter,
-    ...
-){
-    distFun <- match.fun(distFun)
-
-    classes <- getData(spUnsupervised, "classification")
-    
-    permMatrix <- .makePermutations(classes, iter, seed)
-    permData <- .runPermutations(
-        permMatrix,
-        iter,
-        spCounts,
-        spCountsMul,
-        spUnsupervised,
-        classes,
-        distFun = distToSlice,
-        maxiter = maxiter,
-        swarmsize = swarmsize,
-        cores = cores,
-        seed = seed,
-        norm = norm
-    )
-    
-    return(list(.calculatePermP(permData, spSwarm, iter), permData))
-})
-
-.makePermutations <- function(classes, iter, seed){
-    set.seed(seed)
-    sapply(1:iter, function(j) {
-        classes[sample(1:length(classes), size=length(classes), replace=FALSE)]
-    })
-}
-
-.runPermutations <- function(
-    permMatrix,
-    iter,
-    spCountsSng,
-    spCountsMul,
-    spUnsupervised,
-    classes,
-    distFun = distToSlice,
-    maxiter = 10,
-    swarmsize = 150,
-    cores = 1,
-    seed = 11,
-    norm = TRUE
-){
-    
-    permData <- list()
-    
-    for(i in 1:iter) {
-        classification(spUnsupervised) <- permMatrix[,i]
-        groupMeans(spUnsupervised) <- averageGroupExpression(
-            spCountsSng,
-            permMatrix[,i],
-            weighted=FALSE
-        )
-        sObj <- spSwarm(
-            spCountsMul,
-            spUnsupervised,
-            distFun = distToSlice,
-            maxiter = maxiter,
-            swarmsize = swarmsize,
-            cores=cores,
-            seed=seed,
-            norm=norm
-        )
-        permData[[i]] <- sObj
-    }
-    
-    pEdges <- lapply(1:length(permData), function(j) {
-        mat <- getData(permData[[j]], "spSwarm")
-        logic <- .fractionCutoff(mat, 0)
-        .calculateWeight(mat, logic)$weight
-    })
-    
-    pEdges <- t(do.call(rbind,pEdges))
-    return(pEdges)
-}
-
-.calculatePermP <- function(pEdges, spSwarm, iter) {
-    rEdges <- spSwarmPoisson(spSwarm, edge.cutoff=0)
-    rEdges$pval <- NULL
-    
-    rownames(pEdges) <- paste(rEdges$from, rEdges$to, sep="-")
-    
-    pValues <- sapply(1:nrow(rEdges), function(g) {
-        if(rEdges[g, "weight"] == 0) {
-            NA
-        } else if(sum(pEdges[g,] >= rEdges[g, "weight"]) == 0) {
-            10^-log10(iter)
-        } else {
-            sum(pEdges[g,] >= rEdges[g, "weight"]) / iter
-        }
-    })
-    
-    rEdges$pValue <- pValues
-    return(rEdges)
-}
-
-#rows <- ncol(getData(spCountsMul, "counts"))
-#cols <- length(unique(classes))
-#dims <- iter
-#permData <- array(
-#    NA,
-#    dim=c(rows, cols, dims),
-#    dimnames=list(
-#        colnames(getData(spCountsMul, "counts")),
-#        sort(unique(classes)),
-#        1:iter
-#    )
-#)
-
-#mat <- getData(sObj, "spSwarm")
-#order <- as.matrix(mat[ , order(colnames(mat))])
-#permData[,,i] <- order
-
-
-
-#.calculatePermP <- function(permData, spSwarm, edgeAlpha) {
-#    swarm <- getData(spSwarm, "spSwarm")
-#    logic <- .fractionCutoff(swarm, 0)
-#    edges <- .calculateWeight(swarm, logic, 0, 1, 0)[,1:2]
-#
-#    #remove self connections for now
-#    edges <- edges[edges$from != edges$to, ]
-#
-#    p <- c()
-#    weight <- c()
-#
-#    #get null for each edge
-#    for(i in 1:nrow(edges)) {
-#        node1 <- edges[i, 1]
-#        node2 <- edges[i, 2]
-#        idx1 <- which(colnames(swarm) == node1)
-#        idx2 <- which(colnames(swarm) == node2)
-#
-#        swarm1 <- swarm[,idx1]
-#        swarm2 <- swarm[,idx2]
-#
-#        null1 <- permData[,idx1,]
-#        null2 <- permData[,idx2,]
-#
-#        l1 <- swarm1 > null1
-#        l2 <- swarm2 > null2
-#        l <- l1+l2
-#        l[l < 2] <- 0
-#        l[l == 2] <- 1
-#
-#        p <- c(p, sum(l)/(iter*nrow(swarm)))
-#
-#        #calculate edge weight
-#        l1 <- swarm1 < null1
-#        l2 <- swarm2 < null2
-#
-#        n1 <- rowSums(l1)
-#        n2 <- rowSums(l2)
-#        n1P <- ifelse(n1 == 0, 10^-log10(iter), n1/iter)
-#        n2P <- ifelse(n2 == 0, 10^-log10(iter), n2/iter)
-#        weight <- c(weight, length(
-#        intersect(
-#        which(n1P < edgeAlpha),
-#        which(n2P < edgeAlpha)
-#        )
-#        ))
-#    }
-#
-#    edges$p <- p
-#    edges$weight <- weight
-#    return(edges)
-#}
-
-
-
-

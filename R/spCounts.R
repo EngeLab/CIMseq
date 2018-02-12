@@ -150,57 +150,58 @@ setMethod("estimateCells", "spCounts", function(
     spCountsMul,
     ...
 ){
-    counts <- cbind(
-        getData(spCountsSng, "counts"),
-        getData(spCountsMul, "counts")
-    )
-    
-    counts.ercc <- cbind(
-        getData(spCountsSng, "counts.ercc"),
-        getData(spCountsMul, "counts.ercc")
-    )
-    
-    d <- tibble(
-        sampleName = c(
-            colnames(getData(spCountsSng, "counts")),
-            colnames(getData(spCountsMul, "counts"))
-        ),
-        sampleType = c(
-            rep(
-                "Singlet",
-                ncol(getData(spCountsSng, "counts"))
-            ),
-            rep(
-                "Multiplet",
-                ncol(getData(spCountsMul, "counts"))
-            )
-        ),
-        frac.ercc = colSums(counts.ercc) /
-            (colSums(counts.ercc) + colSums(counts))
-    )
-    
-    d$cellNumberMin <-
-        d %>%
-            filter(.data$sampleType == "Singlet") %>%
-            pull(.data$frac.ercc) %>%
-            quantile %>%
-            `[` (2) %>%
-            `/` (d$frac.ercc)
-    
-    d$cellNumberMedian <-
-        d %>%
-            filter(.data$sampleType == "Singlet") %>%
-            pull(.data$frac.ercc) %>%
-            median %>%
-            `/` (d$frac.ercc)
-    
-    d$cellNumberMax <-
-        d %>%
-            filter(.data$sampleType == "Singlet") %>%
-            pull(.data$frac.ercc) %>%
-            quantile %>%
-            `[` (4) %>%
-            `/` (d$frac.ercc)
-    
-    return(d)
+  
+  counts <- cbind(
+    getData(spCountsSng, "counts"),
+    getData(spCountsMul, "counts")
+  )
+  
+  counts.ercc <- cbind(
+    getData(spCountsSng, "counts.ercc"),
+    getData(spCountsMul, "counts.ercc")
+  )
+  
+  #check if any samples have ERCC are all 0
+  all0 <- apply(counts.ercc, 2, function(x) all(x == 0))
+  if(any(all0)) {
+    zeroIDs <- colnames(counts.ercc)[which(all0)]
+    warning(paste0("These samples ERCC reads are all 0's: ", all0))
+  }
+  
+  d <- tibble(
+    sampleName = c(
+      colnames(getData(spCountsSng, "counts")),
+      colnames(getData(spCountsMul, "counts"))
+    ),
+    sampleType = c(
+      rep("Singlet", ncol(getData(spCountsSng, "counts"))),
+      rep("Multiplet", ncol(getData(spCountsMul, "counts")))
+    ),
+    frac.ercc = colSums(counts.ercc) / (colSums(counts.ercc) + colSums(counts))
+  )
+  
+  d$cellNumberMin <-
+    d %>%
+      filter(.data$sampleType == "Singlet") %>%
+      pull(.data$frac.ercc) %>%
+      quantile %>%
+      `[` (2) %>%
+      `/` (d$frac.ercc)
+  
+  d$cellNumberMedian <-
+    d %>%
+      filter(.data$sampleType == "Singlet") %>%
+      pull(.data$frac.ercc) %>%
+      median %>%
+      `/` (d$frac.ercc)
+  
+  d$cellNumberMax <-
+    d %>%
+      filter(.data$sampleType == "Singlet") %>%
+      pull(.data$frac.ercc) %>%
+      quantile %>%
+      `[` (4) %>%
+      `/` (d$frac.ercc)
+  
+  return(d)
 })

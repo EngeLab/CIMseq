@@ -144,8 +144,8 @@ Reported from mclust.}
 \item{seed}{Sets the seed before running tSNE.}
 
 \item{type}{Decides if genes included are picked by their maximum expression
- or maximum variance. Can be either "max", "var", or "manual". If "manual"
-the genes argument must also be specified.}
+or maximum variance. Can be either "max", "var", "maxMean", or "manual". If
+"manual" the genes argument must also be specified.}
 
 \item{max}{The max number of genes to include based either on maximum
 expression or maximum variance which is decided by the "type" paramater.}

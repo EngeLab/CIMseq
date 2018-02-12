@@ -20,8 +20,8 @@ NULL
 #' @param Gmax A numeric vector of 1:Gmax passed as the "G" argument to Mclust.
 #' @param seed Sets the seed before running tSNE.
 #' @param type Decides if genes included are picked by their maximum expression
-#'  or maximum variance. Can be either "max", "var", or "manual". If "manual"
-#' the genes argument must also be specified.
+#'  or maximum variance. Can be either "max", "var", "maxMean", or "manual". If
+#'  "manual" the genes argument must also be specified.
 #' @param max The max number of genes to include based either on maximum
 #'    expression or maximum variance which is decided by the "type" paramater.
 #' @param genes If type = manual, genes to be included are specified here as a
@@ -93,29 +93,7 @@ setMethod("spUnsupervised", "spCounts", function(
     ...
 ){
     #filter genes to be included in analysis
-    if(type == "var") {
-        select <- spTopVar(spCounts, max)
-    }
-    
-    if(type == "max") {
-        select <- spTopMax(spCounts, max)
-    }
-    
-    if(type == "manual" & is.character(genes) == TRUE) {
-        select <- which(rownames(getData(spCounts, "counts.log")) %in% genes)
-    }
-    
-    if(type == "all") {
-        select <- which(
-            duplicated(
-                getData(spCounts, "counts.log")
-            ) |
-            duplicated(
-                getData(spCounts, "counts.log"),
-                fromLast=TRUE
-            ) == FALSE
-        )
-    }
+    select <- .featureSelection(spCounts, type, max, genes)
     
     #calculate distances
     my.dist <- pearsonsDist(spCounts, select)
@@ -155,6 +133,30 @@ setMethod("spUnsupervised", "spCounts", function(
     )
 })
 
+.featureSelection <- function(spCounts, type, max, genes) {
+  if(type == "var") {
+    select <- spTopVar(spCounts, max)
+  }
+  
+  if(type == "max") {
+    select <- spTopMax(spCounts, max)
+  }
+    
+  if(type == "maxMean") {
+    select <- spTopMaxMean(spCounts, max)
+  }
+    
+  if(type == "manual" & is.character(genes) == TRUE) {
+    select <- which(rownames(getData(spCounts, "counts.log")) %in% genes)
+  }
+    
+  if(type == "all") {
+    bool1 <- duplicated(getData(spCounts, "counts.log"))
+    bool2 <- duplicated(getData(spCounts, "counts.log"), fromLast = TRUE)
+    select <- which((bool1 | bool2) == FALSE)
+  }
+  return(select)
+}
 #checks for results from classification that will throw a downstream error.
 .classificationChecks <- function(class) {
     if(length(unique(class)) == 1) {
@@ -238,6 +240,39 @@ spTopMax <- function(spCounts, n) {
     rv <- apply(data, 1, max)
     select <- order(rv, decreasing = TRUE)[1:n]
     return(select)
+}
+
+#' spTopMaxMean
+#'
+#' Facilitates gene selection prior to unsupervised clustering.
+#'
+#' Returns the index for the n genes (rows) with the maximum
+#' max(gene) - mean(gene) values in the spCounts object. The expression matrix
+#' in the counts.cpm slot is used for the calculation.
+#'
+#' @name spTopMaxMean
+#' @rdname spTopMaxMean
+#' @aliases spTopMaxMean
+#' @param spCounts An spCounts object.
+#' @param n Number of genes to select.
+#' @return A numeric vector containing the indices of selected genes.
+#' @author Jason T. Serviss
+#' @keywords spTopMaxMean
+#' @examples
+#'
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' selected <- spTopMaxMean(cObjSng, 10)
+#'
+NULL
+
+#' @rdname spTopMaxMean
+#' @export
+
+spTopMaxMean <- function(spCounts, n) {
+  rv = apply(getData(spCounts, "counts.cpm"), 1, function(x) max(x) - mean(x))
+  select = order(rv, decreasing = TRUE)[1:n]
+  return(select)
 }
 
 #' pearsonsDist
