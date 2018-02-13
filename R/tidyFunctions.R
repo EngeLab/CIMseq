@@ -56,11 +56,30 @@ namedListToTibble <- function(l) {
 #' @export
 #' @importFrom tibble as_tibble rownames_to_column
 
-matrix_to_tibble <- function(data) {
+matrix_to_tibble <- function(data, rowname = "rowname") {
   data %>%
   as.data.frame() %>%
-  rownames_to_column() %>%
+  rownames_to_column(var = rowname) %>%
   as_tibble()
+}
+
+#' normalizeVec
+#'
+#' Normalizes a vector (x) using x - min(x) / max(x) - min(x).
+#'
+#' @name normalizeVec
+#' @rdname normalizeVec
+#' @author Jason T. Serviss
+#' @param vec numeric; A numeric vector.
+#' @keywords normalizeVec
+#' @examples
+#'
+#' normalizeVec(rnorm(100))
+#'
+#' @export
+
+normalizeVec <- function(vec) {
+  (vec - min(vec)) / (max(vec) - min(vec))
 }
 
 #' tidyUnsupervised

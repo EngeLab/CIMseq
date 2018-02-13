@@ -3,19 +3,19 @@ NULL
 
 #' plotCounts
 #'
-#' Subtitle
-#'
-#' Imports count and count.ercc data to a sp.scRNAseq object.
+#' Plot method for spCounts objects.
 #'
 #' @name plotCounts
 #' @rdname plotCounts
 #' @aliases plotCounts
-#' @param x An spCounts object containing singlets.
-#' @param y An spCounts object containing multiplets.
-#' @param type Can be "ercc", "markers", or .......
-#' @param markers A character vector with 2 markers to plot.
+#' @param spCountsSng spCounts; An spCounts object containing singlets.
+#' @param spCountsMul spCounts; An spCounts object containing multiplets.
+#' @param type character; Can be "ercc", "markers". Default is "ercc".
+#' @param markers character; A vector with the 2 markers to plot.
 #' @param ... additional arguments to pass on.
-#' @return The spPlot function returns an object of class spCounts.
+#' @return The ggplot2 object with the t-SNE results plotted on the x and y
+#'  axis. The plot can be modified by adding geoms, themes, etc. in the normal
+#'  manner with ggplot2. See examples or the plotting vignette for further help.
 #' @author Jason T. Serviss
 #' @keywords plotCounts
 #' @examples
@@ -26,19 +26,19 @@ NULL
 #' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 #'
 #' #ERCC plot
-#' p <- plotCounts(cObjSng, cObjMul, type = "ercc")
+#' p <- plotCounts(cObjSng, cObjMul) + geom_jitter()
 #'
 #' #Markers plot
 #' markers <- c("a1", "a10")
-#' p <- plotCounts(cObjSng, cObjMul, type = "markers", markers = markers)
-#'
+#' p <- plotCounts(cObjSng, cObjMul, type = "markers", markers = markers) +
+#' geom_point()
 NULL
 
 #' @rdname plotCounts
 #' @export
 
 setGeneric("plotCounts", function(
-    x,
+    spCountsSng,
     ...
 ){
     standardGeneric("plotCounts")
@@ -53,15 +53,12 @@ setGeneric("plotCounts", function(
 #' @importFrom ggthemes theme_few scale_colour_economist
 
 setMethod("plotCounts", "spCounts", function(
-    x,
-    y,
+    spCountsSng,
+    spCountsMul,
     type = "ercc",
     markers = NULL,
     ...
 ){
-  
-  #x should be an spCounts object with singlets
-  #y should be an spCounts object with multuplets
   if((!is.null(markers)) & length(markers) != 2) {
     stop("Markers must be a character vector of length = 2.")
   }
@@ -69,7 +66,7 @@ setMethod("plotCounts", "spCounts", function(
     stop("The type argument must be ercc or markers")
   }
   
-  pData <- plotCountsData(x, y, markers)
+  pData <- plotCountsData(spCountsSng, spCountsMul, markers)
   
   if(type == "ercc") {
     pData %>%
@@ -109,9 +106,7 @@ convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
 
 #' plotUnsupervised
 #'
-#' Subtitle
-#'
-#' Imports count and count.ercc data to a sp.scRNAseq object.
+#' Plot method for spUnsupervised objects.
 #'
 #' @name plotUnsupervised
 #' @rdname plotUnsupervised
@@ -135,11 +130,13 @@ convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
 #' uObj <- testUns
 #'
 #' #Clusters plot
-#' p <- plotUnsupervised(uObj, cObjSng, type = "clusters")
+#' p <- plotUnsupervised(uObj, cObjSng) +
+#' geom_point()
 #'
 #' #Markers plot
 #' markers <- c("a1", "a10")
-#' p <- plotUnsupervised(uObj, cObjSng, type = "markers", markers = markers)
+#' pal <- c("red", "blue")
+#' p <- plotUnsupervised(uObj, cObjSng, markers = markers, pal = pal)
 #'
 NULL
 

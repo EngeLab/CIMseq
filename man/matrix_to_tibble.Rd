@@ -4,7 +4,7 @@
 \alias{matrix_to_tibble}
 \title{matrix_to_tibble}
 \usage{
-matrix_to_tibble(data)
+matrix_to_tibble(data, rowname = "rowname")
 }
 \arguments{
 \item{data}{matrix; The matrix to be converted.}

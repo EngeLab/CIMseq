@@ -7,29 +7,29 @@
 \alias{plotCounts,spCounts-method}
 \title{plotCounts}
 \usage{
-plotCounts(x, ...)
+plotCounts(spCountsSng, ...)
 
-\S4method{plotCounts}{spCounts}(x, y, type = "ercc", markers = NULL, ...)
+\S4method{plotCounts}{spCounts}(spCountsSng, spCountsMul, type = "ercc",
+  markers = NULL, ...)
 }
 \arguments{
-\item{x}{An spCounts object containing singlets.}
+\item{spCountsSng}{spCounts; An spCounts object containing singlets.}
 
 \item{...}{additional arguments to pass on.}
 
-\item{y}{An spCounts object containing multiplets.}
+\item{spCountsMul}{spCounts; An spCounts object containing multiplets.}
 
-\item{type}{Can be "ercc", "markers", or .......}
+\item{type}{character; Can be "ercc", "markers". Default is "ercc".}
 
-\item{markers}{A character vector with 2 markers to plot.}
+\item{markers}{character; A vector with the 2 markers to plot.}
 }
 \value{
-The spPlot function returns an object of class spCounts.
+The ggplot2 object with the t-SNE results plotted on the x and y
+ axis. The plot can be modified by adding geoms, themes, etc. in the normal
+ manner with ggplot2. See examples or the plotting vignette for further help.
 }
 \description{
-Subtitle
-}
-\details{
-Imports count and count.ercc data to a sp.scRNAseq object.
+Plot method for spCounts objects.
 }
 \examples{
 
@@ -39,12 +39,12 @@ cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 
 #ERCC plot
-p <- plotCounts(cObjSng, cObjMul, type = "ercc")
+p <- plotCounts(cObjSng, cObjMul) + geom_jitter()
 
 #Markers plot
 markers <- c("a1", "a10")
-p <- plotCounts(cObjSng, cObjMul, type = "markers", markers = markers)
-
+p <- plotCounts(cObjSng, cObjMul, type = "markers", markers = markers) +
+geom_point()
 }
 \author{
 Jason T. Serviss

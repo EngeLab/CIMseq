@@ -12,8 +12,13 @@
 #' @author Jason T. Serviss
 #' @keywords plotCountsData
 #' @examples
-#' #
 #'
+#' #use demo data
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+#'
+#' plotCountsData(cObjSng, cObjMul)
 NULL
 
 #' @rdname plotCountsData
@@ -70,16 +75,17 @@ setMethod("plotCountsData", "spCounts", function(
   }
   
   #normalize the marker expression
-  #!!!!! THIS WILL ERROR IF length(markers) == 1 !!!!!!!!!!!!!!
   markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
-  markExpressNorm <- apply(markExpress, 2, function(x) {
-    (x - min(x)) / (max(x) - min(x))
-  })
+  
+  if(length(markers) == 1) {
+    markExpressNorm <- matrix(normalizeVec(markExpress), ncol = 1)
+  } else {
+    markExpressNorm <- apply(markExpress, 2, normalizeVec)
+  }
   
   #tidy markers
   markExpressNorm %>%
-  matrix_to_tibble(.) %>%
-  rename(Sample = rowname)
+  matrix_to_tibble(., rowname = "Sample")
 }
 
 #' plotUnsupervisedData
@@ -89,22 +95,27 @@ setMethod("plotCountsData", "spCounts", function(
 #' @name plotUnsupervisedData
 #' @rdname plotUnsupervisedData
 #' @aliases plotUnsupervisedData
-#' @param x An spUnsupervised object.
-#' @param y An spCounts object containing singlets.
+#' @param spUnsupervised spUnsupervised; An spUnsupervised object.
+#' @param spCountsSng spCounts; An spCounts object containing singlets.
 #' @param ... additional arguments to pass on.
 #' @return A tibble with columns:
 #' @author Jason T. Serviss
 #' @keywords plotUnsupervisedData
 #' @examples
-#' #
 #'
+#' #use demo data
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' uObj <- testUns
+#'
+#' plotUnsupervisedData(sObjSng, uObj)
 NULL
 
 #' @rdname plotUnsupervisedData
 #' @export
 
 setGeneric("plotUnsupervisedData", function(
-    x,
+    spUnsupervised,
     ...
 ){
     standardGeneric("plotUnsupervisedData")
@@ -121,24 +132,21 @@ setGeneric("plotUnsupervisedData", function(
 #' @importFrom readr parse_factor
 
 setMethod("plotUnsupervisedData", "spUnsupervised", function(
-  x,
-  y,
+  spUnsupervised,
+  spCountsSng,
   markers = NULL,
   pal = NULL,
   ...
 ){
-  
-  #check that if markers is ! NULL that pal is also ! NULL
-  
-  tidyUnsupervised(x) %>%
+  tidyUnsupervised(spUnsupervised) %>%
   #add colors
   full_join(
-    .col.from.targets(pal, getData(y, "counts"), markers),
+    .col.from.targets(pal, getData(spCountsSng, "counts"), markers),
     by = "Sample"
   ) %>%
   #add marker data
   full_join(
-    .processMarkers(getData(y, "counts.log"), markers),
+    .processMarkers(getData(spCountsSng, "counts.log"), markers),
     by = "Sample"
   )
 })
@@ -148,26 +156,24 @@ setMethod("plotUnsupervisedData", "spUnsupervised", function(
 #values: gene counts
 .col.from.targets <- function(
   pal,
-  values,
+  counts,
   markers,
   ...
 ){
   if(is.null(markers) | is.null(pal)) {
-    samples <- colnames(values)
+    samples <- colnames(counts)
     return(tibble(Sample = samples))
   }
   
   markers <- sort(markers)
   pal <- pal[1:length(markers)]
   
-  values[rownames(values) %in% markers, ] %>%
-  as.data.frame() %>%
-  rownames_to_column(var = "geneName") %>%
-  as_tibble() %>%
+  counts[rownames(counts) %in% markers, ] %>%
+  matrix_to_tibble(., "geneName") %>%
   gather(Sample, count, -geneName) %>%
   #normalize
   group_by(geneName) %>%
-  mutate(normalized = (count - min(count)) / (max(count) - min(count))) %>%
+  mutate(normalized = normalizeVec(count)) %>%
   ungroup() %>%
   #calculate fraction
   group_by(Sample) %>%

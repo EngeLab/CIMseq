@@ -55,6 +55,7 @@ Collate:
     'show-methods.R'
     'spCounts.R'
     'spPlot.R'
+    'spPlotData.R'
     'spSwarm.R'
     'spUnsupervised.R'
     'testCounts.R'

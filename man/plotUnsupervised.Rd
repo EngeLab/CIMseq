@@ -31,10 +31,7 @@ The ggplot2 object with the t-SNE results plotted on the x and y
 manner with ggplot2. See examples or the plotting vignette for further help.
 }
 \description{
-Subtitle
-}
-\details{
-Imports count and count.ercc data to a sp.scRNAseq object.
+Plot method for spUnsupervised objects.
 }
 \examples{
 
@@ -44,11 +41,13 @@ cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 uObj <- testUns
 
 #Clusters plot
-p <- plotUnsupervised(uObj, cObjSng, type = "clusters")
+p <- plotUnsupervised(uObj, cObjSng) +
+geom_point()
 
 #Markers plot
 markers <- c("a1", "a10")
-p <- plotUnsupervised(uObj, cObjSng, type = "markers", markers = markers)
+pal <- c("red", "blue")
+p <- plotUnsupervised(uObj, cObjSng, markers = markers, pal = pal)
 
 }
 \author{
