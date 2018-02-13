@@ -9,7 +9,7 @@
 \usage{
 plotCounts(x, ...)
 
-\S4method{plotCounts}{spCounts}(x, y, type, markers = NULL, ...)
+\S4method{plotCounts}{spCounts}(x, y, type = "ercc", markers = NULL, ...)
 }
 \arguments{
 \item{x}{An spCounts object containing singlets.}

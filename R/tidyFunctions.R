@@ -1,3 +1,6 @@
+#'@include All-classes.R
+NULL
+
 #' namedListToTibble
 #'
 #' Converts a named list to a long data frame.

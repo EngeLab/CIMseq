@@ -1,4 +1,3 @@
-
 #'@include All-classes.R
 NULL
 
@@ -56,57 +55,50 @@ setGeneric("plotCounts", function(
 setMethod("plotCounts", "spCounts", function(
     x,
     y,
-    type,
+    type = "ercc",
     markers = NULL,
     ...
 ){
   
+  #x should be an spCounts object with singlets
+  #y should be an spCounts object with multuplets
+  if((!is.null(markers)) & length(markers) != 2) {
+    stop("Markers must be a character vector of length = 2.")
+  }
+  if(!type %in% c("ercc", "markers")) {
+    stop("The type argument must be ercc or markers")
+  }
   
-    #x should be an spCounts object with singlets
-    #y should be an spCounts object with multuplets
-    #check that type is valid
-    if( type == "ercc" ) {
-        p <- .countsErccPlot(x, y)
-        p
-        return(p)
-    }
-    if( type == "markers" ) {
-        
-        if(length(markers) != 2) {
-            stop("Markers must be a character vector of length = 2.")
-        }
-        
-        if(!all(markers %in% rownames(getData(x, "counts")))) {
-          notFound <- markers[!markers %in% rownames(getData(x, "counts"))]
-          notFound <- paste(notFound, collapse = ", ")
-          message <- "These markers were not found in the dataset:"
-          stop(paste(message, notFound))
-        }
-        
-        p <- .countsMarkersPlot(x, y, markers)
-        p
-        return(p)
-    }
+  pData <- plotCountsData(x, y, markers)
+  
+  if(type == "ercc") {
+    pData %>%
+    ggplot(aes(x = `Sample type`, y = `Cell number`))
+  } else {
+    pData %>%
+    ggplot(aes_string(markers[1], markers[2], colour = "`Sample type`"))
+  }
 })
 
-#plot ercc plot
-.countsErccPlot <- function(x, y) {
-  estimateCells(x, y) %>%
-  mutate(`Sample type` = parse_factor(sampleType, levels = c("Singlet", "Multiplet"))) %>%
-  mutate(`Cell number` = cellNumberMedian) %>%
-  ggplot(aes(x = `Sample type`, y = `Cell number`)) +
-  scale_y_continuous(
-    expand = c(0, 0),
-    sec.axis = sec_axis(
-      trans = ~ convertToERCC(., x, y),
-        name = "% ERCC"
-      )
-  )
-}
+#' convertToERCC
+#'
+#' A function to facilitate calculation of the second axis of the plotCounts
+#' type "ercc" plot.
+#'
+#' @name convertToERCC
+#' @rdname convertToERCC
+#' @author Jason T. Serviss
+#' @param ercc The left axis values. Passes as ".".
+#' @param spCountsSng spCounts; An spCounts object with singlets.
+#' @param spCountsSng spCounts; An spCounts object with multiplets.
+#' @keywords convertToERCC
+#'
+#' @export
+#' @importFrom dplyr select filter pull
+#' @importFrom stats median
 
-#add function for ERCC fraction conversion
-convertToERCC <- function(ercc, x, y) {
-  estimateCells(x, y) %>%
+convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
+  estimateCells(spCountsSng, spCountsMul) %>%
   select(.data$sampleType, .data$frac.ercc) %>%
   filter(.data$sampleType == "Singlet") %>%
   pull(.data$frac.ercc) %>%
@@ -115,19 +107,89 @@ convertToERCC <- function(ercc, x, y) {
   `/` (ercc)
 }
 
-#plot markers plot
-.countsMarkersPlot <- function(x, y, markers) {
-  s <- getData(x, "counts.log")
-  m <- getData(y, "counts.log")
-  cbind(s[rownames(s) %in% markers, ], m[rownames(m) %in% markers, ]) %>%
-  apply(., 1, function(x) {
+
+#' plotCountsData
+#'
+#' Assembles all data for plotCounts plots.
+#'
+#' @name plotCountsData
+#' @rdname plotCountsData
+#' @aliases plotCountsData
+#' @param x An spUnsupervised object.
+#' @param y An spCounts object containing singlets.
+#' @param ... additional arguments to pass on.
+#' @return A tibble with columns:
+#' @author Jason T. Serviss
+#' @keywords plotCountsData
+#' @examples
+#' #
+#'
+NULL
+
+#' @rdname plotCountsData
+#' @export
+
+setGeneric("plotCountsData", function(
+  spCountsSng,
+  ...
+){
+  standardGeneric("plotCountsData")
+})
+
+#' @rdname plotCountsData
+#' @export
+#' @import ggplot2
+#' @importFrom dplyr "%>%" rename mutate select full_join
+#' @importFrom readr parse_factor
+
+setMethod("plotCountsData", "spCounts", function(
+  spCountsSng,
+  spCountsMul,
+  markers = NULL,
+  ...
+){
+  s <- getData(spCountsSng, "counts.log")
+  m <- getData(spCountsMul, "counts.log")
+  
+  .processMarkers(cbind(s, m), markers) %>%
+  full_join(
+    estimateCells(spCountsSng, spCountsMul),
+    by = c("Sample" = "sampleName")
+  ) %>%
+  mutate(`Sample type` = parse_factor(
+    sampleType,
+    levels = c("Singlet", "Multiplet")
+  )) %>%
+  rename(`Cell number` = cellNumberMedian) %>%
+  select(Sample, `Sample type`, frac.ercc, `Cell number`, 2:3)
+})
+
+#get and process data for markers plot
+.processMarkers <- function(counts.log, markers) {
+  
+  if(is.null(markers)) {
+    return(tibble(Sample = colnames(counts.log)))
+  }
+  
+  #check that specified markers exist in data
+  if(!all(markers %in% rownames(counts.log))) {
+    notFound <- markers[!markers %in% rownames(counts.log)]
+    notFound <- paste(notFound, collapse = ", ")
+    message <- "These markers were not found in the dataset:"
+    stop(paste(message, notFound))
+  }
+  
+  #normalize the marker expression
+  #!!!!! THIS WILL ERROR IF length(markers) == 1 !!!!!!!!!!!!!!
+  markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
+  markExpressNorm <- apply(markExpress, 2, function(x) {
     (x - min(x)) / (max(x) - min(x))
-  }) %>%
-  matrix_to_tibble() %>%
-  setNames(c("Sample", "Marker 1", "Marker 2")) %>%
-  mutate(`Sample type` = c(rep("Singlet", ncol(s)), rep("Multiplet", ncol(m)))) %>%
-  mutate(`Sample type` = parse_factor(`Sample type`, levels = c("Singlet", "Multiplet"))) %>%
-  ggplot(aes(`Marker 1`, `Marker 2`, colour = `Sample type`))
+  })
+  
+  #tidy markers
+  markExpressNorm %>%
+  matrix_to_tibble(.) %>%
+  rename(Sample = rowname)
 }
 
 #' plotUnsupervised
@@ -208,7 +270,7 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
 #' @param x An spUnsupervised object.
 #' @param y An spCounts object containing singlets.
 #' @param ... additional arguments to pass on.
-#' @return A tibble with columns: 
+#' @return A tibble with columns:
 #' @author Jason T. Serviss
 #' @keywords plotUnsupervisedData
 #' @examples
@@ -254,41 +316,10 @@ setMethod("plotUnsupervisedData", "spUnsupervised", function(
   ) %>%
   #add marker data
   full_join(
-    .processMarkers(y, markers),
+    .processMarkers(getData(y, "counts.log"), markers),
     by = "Sample"
   )
 })
-
-#get and process data for markers plot
-.processMarkers <- function(y, markers) {
-  
-  if(is.null(markers)) {
-    samples <- colnames(getData(y, "counts"))
-    return(tibble(Sample = samples))
-  }
-  
-  counts.log <- getData(y, "counts.log")
-  
-  #check that specified markers exist in data
-  if(!all(markers %in% rownames(counts.log))) {
-    notFound <- markers[!markers %in% rownames(counts.log)]
-    notFound <- paste(notFound, collapse = ", ")
-    message <- "These markers were not found in the dataset:"
-    stop(paste(message, notFound))
-  }
-  
-  #normalize the marker expression
-  #!!!!! THIS WILL ERROR IF length(markers) == 1 !!!!!!!!!!!!!!
-  markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
-  markExpressNorm <- apply(markExpress, 2, function(x) {
-    (x - min(x)) / (max(x) - min(x))
-  })
-  
-  #tidy markers
-  markExpressNorm %>%
-  matrix_to_tibble(.) %>%
-  rename(Sample = rowname)
-}
 
 #pal: a colour palette
 #targets: gene names

@@ -24,25 +24,56 @@ rm(packages)
 ```
 
 ```{r}
-counts <- merge(
-  countsRegev[rownames(countsRegev) %in% rownames(countsMgfp), ], 
-  countsMgfp, 
-  by = 0
-)
-geneNames <- counts[[1]]
-counts <- as.matrix(counts[, -1])
-rownames(counts) <- geneNames
-cObjSng <- spCounts(counts, matrix(NA, ncol= ncol(counts)))
+sng <- stringr::str_detect(colnames(countsMgfp), "^s")
+cObjSng <- spCounts(countsMgfp[, sng], countsMgfpERCC[, sng])
+cObjMul <- spCounts(countsMgfp[, !sng], countsMgfpERCC[, !sng])
 uObj <- spUnsupervised(cObjSng, type = "max", max = 2000)
 ```
 
 ## spCounts
 
-Plot markers
+Get the plotting data so you can make a custom plot.
 ```{r}
-
+plotCountsData(cObjSng, cObjMul) %>%
+  head()
+plotCountsData(cObjSng, cObjMul, markers = c("Lgr5", "Alpi")) %>%
+  head()
 ```
 
+Plot markers.
+```{r}
+plotCounts(cObjSng, cObjMul, type = "markers", markers = c("Lgr5", "Alpi")) +
+  geom_point()
+```
+
+Plot markers final.
+```{r}
+plotCounts(cObjSng, cObjMul, type = "markers", markers = c("Lgr5", "Alpi")) +
+  geom_point() +
+  scale_color_ptol() +
+  theme_few() +
+  theme(legend.position = "top") +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
+```
+
+Plot cell number.
+```{r}
+plotCounts(cObjSng, cObjMul) +
+  geom_jitter()
+
+plotCounts(cObjSng, cObjMul) +
+  geom_boxplot()
+```
+
+Add % ERCC on right axis.
+```{r}
+plotCounts(cObjSng, cObjMul) +
+  geom_jitter() +
+  scale_y_continuous(
+    expand = c(0, 0),
+    sec.axis = sec_axis(trans = ~ convertToERCC(., cObjSng, cObjMul), name = "% ERCC")
+  )
+```
 
 ## spUnsupervised
 
@@ -76,7 +107,21 @@ p + geom_point(aes(colour = Alpi)) + scale_colour_viridis()
 p + geom_point(aes(colour = Lgr5)) + scale_colour_viridis()
 ```
 
-Plot with multiple markers.
+Plot mean of multiple markers for the same cell type.
+```{r}
+#use the data instead
+plotUnsupervisedData(uObj, cObjSng, markers = c("Msi1", "Lgr5")) %>%
+  gather(gene, value, -(Sample:Uncertainty)) %>%
+  group_by(Sample) %>%
+  mutate(`mean(Msi1, Lgr5)` = mean(value)) %>%
+  select(`t-SNE dim 1`, `t-SNE dim 2`, `mean(Msi1, Lgr5)`) %>%
+  distinct() %>%
+  ggplot() +
+  geom_point(aes(`t-SNE dim 1`, `t-SNE dim 2`, colour = `mean(Msi1, Lgr5)`)) +
+  scale_colour_viridis()
+```
+
+Plot with multiple markers for different cell types.
 ```{r}
 markers <- c("Alpi", "Lgr5", "Muc2", "Lyz1")
 pal <- RColorBrewer::brewer.pal(length(markers), "Set1")
@@ -109,5 +154,6 @@ p + geom_point(aes(x = `t-SNE dim 1`, y = `t-SNE dim 2`), shape = 21, colour = "
   theme(legend.position = "top") +
   guides(colour = guide_legend(override.aes = list(size = 3)))
 ```
+
 
 ## spSwarm
