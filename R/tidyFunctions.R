@@ -59,3 +59,50 @@ matrix_to_tibble <- function(data) {
   rownames_to_column() %>%
   as_tibble()
 }
+
+#' tidyUnsupervised
+#'
+#' Tidy spUnsupervised objects.
+#'
+#' @name tidyUnsupervised
+#' @rdname tidyUnsupervised
+#' @author Jason T. Serviss
+#' @param spUnsupervised; spUnsupervised An spUnsupervised object.
+#' @keywords tidyUnsupervised
+#' @examples
+#'
+#' tidyUnsupervised(testUns)
+#'
+#' @export
+#' @importFrom dplyr mutate rename "%>%"
+
+tidyUnsupervised <- function(spUnsupervised) {
+  getData(spUnsupervised, "tsne") %>%
+  matrix_to_tibble(.) %>%
+  mutate(Classification = getData(spUnsupervised, "classification")) %>%
+  mutate(Uncertainty = getData(spUnsupervised, "uncertainty")) %>%
+  rename(`t-SNE dim 1` = V1, `t-SNE dim 2` = V2, Sample = rowname)
+}
+
+#' tidySwarm
+#'
+#' Tidy spSwarm objects.
+#'
+#' @name tidySwarm
+#' @rdname tidySwarm
+#' @author Jason T. Serviss
+#' @param spSwarm; spSwarm An spSwarm object.
+#' @keywords tidySwarm
+#' @examples
+#'
+#' tidySwarm(testSwa)
+#'
+#' @export
+#' @importFrom dplyr mutate "%>%"
+
+tidySwarm <- function(spSwarm) {
+  getData(spSwarm, "spSwarm") %>%
+  matrix_to_tibble(.) %>%
+  mutate(Costs = getData(spSwarm, "costs")) %>%
+  mutate(Convergence = getData(spSwarm, "convergence"))
+}
