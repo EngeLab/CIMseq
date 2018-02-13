@@ -139,16 +139,15 @@ convertToERCC <- function(ercc, x, y) {
 #' @name plotUnsupervised
 #' @rdname plotUnsupervised
 #' @aliases plotUnsupervised
-#' @param x An spUnsupervised object.
-#' @param y An spCounts object containing singlets.
-#' @param type Can be "clusters", "markers", or .......
-#' @param markers A character vector with markers to plot.
-#' @param plotUncertainty Logical indicating if uncertainty should be
-#'    represented as the point size in the plots.
-#' @param colorScheme Character, specify the color scheme for the markers plot.
-#'  Accepted values are "default", "viridis" and "cividis".
+#' @param spUnsupervised spUnsupervised; An spUnsupervised object.
+#' @param spCounts spCounts; An spCounts object containing singlets.
+#' @param type Not implemented.
+#' @param markers character; A vector with markers to be included plot.
+#' @param pal character; A palette of colors with length(pal) = length(markers).
 #' @param ... additional arguments to pass on.
-#' @return The plotUnsupervised function returns an object of class spCounts.
+#' @return The ggplot2 object with the t-SNE results plotted on the x and y
+#'  axis. The plot can be modified by adding geoms, themes, etc. in the normal
+#' manner with ggplot2. See examples or the plotting vignette for further help.
 #' @author Jason T. Serviss
 #' @keywords plotUnsupervised
 #' @examples
@@ -171,7 +170,7 @@ NULL
 #' @export
 
 setGeneric("plotUnsupervised", function(
-    x,
+    spUnsupervised,
     ...
 ){
     standardGeneric("plotUnsupervised")
@@ -180,63 +179,95 @@ setGeneric("plotUnsupervised", function(
 #' @rdname plotUnsupervised
 #' @export
 #' @import ggplot2
-#' @importFrom ggthemes theme_few scale_colour_economist
-#' @importFrom reshape2 melt
-#' @importFrom viridis scale_color_viridis
-#' @importFrom dplyr pull group_by mutate ungroup if_else left_join summarize n "%>%"
-#' @importFrom tibble rownames_to_column as_tibble add_column
-#' @importFrom tidyr gather unnest spread
-#' @importFrom purrr pmap pmap_chr
-#' @importFrom grDevices col2rgb rgb colorRampPalette
-#' @importFrom RColorBrewer brewer.pal
+#' @importFrom dplyr "%>%"
 
 setMethod("plotUnsupervised", "spUnsupervised", function(
-  x,
-  y = NULL,
+  spUnsupervised,
+  spCounts,
   type = "clusters",
   markers = NULL,
-  plotUncertainty = TRUE,
-  colorScheme = "default",
+  pal = NULL,
   ...
 ){
     #x should be a spUnsupervised object.
-    #y should be null or an spCounts object containig singlets.
+    #y should be an spCounts object containig singlets.
+    p <- plotUnsupervisedData(spUnsupervised, spCounts, markers, pal) %>%
+    ggplot(aes(x = `t-SNE dim 1`, y = `t-SNE dim 2`))
     
-    #check that type is valid
-    if( type == "" ) {stop("The type argument was not specified.")}
-    if( type == "clusters" ) {
-        p <- .unsupClustersPlot(x, plotUncertainty)
-        p
-        return(p)
-    }
-    if( type == "markers" ) {
-        #check that markers are valid
-        if(is.null(y)) {
-            stop("This plot requires a spCounts object as the second argument.")
-        }
-        p <- .unsupMarkersPlot(x, y, markers, plotUncertainty, colorScheme)
-        p
-        return(p)
-    }
+    p
+    return(p)
 })
 
-#plot clusters plot
-.unsupClustersPlot <- function(x, y, markers) {
-  getData(x, "tsne") %>%
-  matrix_to_tibble(.) %>%
-  mutate(Classification = getData(x, "classification")) %>%
-  mutate(Uncertainty = getData(x, "uncertainty")) %>%
-  rename(`t-SNE dim 1` = V1, `t-SNE dim 2` = V2, sample = rowname) %>%
-  full_join(., .processMarkers(y, markers), by = "sample") %>%
-  ggplot(aes(x = `t-SNE dim 1`, y = `t-SNE dim 2`))
-}
+#' plotUnsupervisedData
+#'
+#' Assembles all data for plotUnsupervised plots.
+#'
+#' @name plotUnsupervisedData
+#' @rdname plotUnsupervisedData
+#' @aliases plotUnsupervisedData
+#' @param x An spUnsupervised object.
+#' @param y An spCounts object containing singlets.
+#' @param ... additional arguments to pass on.
+#' @return A tibble with columns: 
+#' @author Jason T. Serviss
+#' @keywords plotUnsupervisedData
+#' @examples
+#' #
+#'
+NULL
+
+#' @rdname plotUnsupervisedData
+#' @export
+
+setGeneric("plotUnsupervisedData", function(
+    x,
+    ...
+){
+    standardGeneric("plotUnsupervisedData")
+})
+
+#' @rdname plotUnsupervisedData
+#' @export
+#' @import ggplot2
+#' @importFrom dplyr "%>%" rename group_by ungroup mutate arrange summarize select full_join
+#' @importFrom tibble tibble rownames_to_column as_tibble add_column
+#' @importFrom tidyr gather unnest spread
+#' @importFrom purrr pmap
+#' @importFrom grDevices col2rgb
+#' @importFrom readr parse_factor
+
+setMethod("plotUnsupervisedData", "spUnsupervised", function(
+  x,
+  y,
+  markers = NULL,
+  pal = NULL,
+  ...
+){
+  
+  #check that if markers is ! NULL that pal is also ! NULL
+  
+  tidyUnsupervised(x) %>%
+  #add colors
+  full_join(
+    .col.from.targets(pal, getData(y, "counts"), markers),
+    by = "Sample"
+  ) %>%
+  #add marker data
+  full_join(
+    .processMarkers(y, markers),
+    by = "Sample"
+  )
+})
 
 #get and process data for markers plot
 .processMarkers <- function(y, markers) {
+  
   if(is.null(markers)) {
     samples <- colnames(getData(y, "counts"))
-    return(tibble(sample = samples))
+    return(tibble(Sample = samples))
   }
+  
+  counts.log <- getData(y, "counts.log")
   
   #check that specified markers exist in data
   if(!all(markers %in% rownames(counts.log))) {
@@ -246,9 +277,8 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
     stop(paste(message, notFound))
   }
   
-  counts.log <- getData(y, "counts.log")
-  
   #normalize the marker expression
+  #!!!!! THIS WILL ERROR IF length(markers) == 1 !!!!!!!!!!!!!!
   markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
   markExpressNorm <- apply(markExpress, 2, function(x) {
     (x - min(x)) / (max(x) - min(x))
@@ -257,181 +287,41 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
   #tidy markers
   markExpressNorm %>%
   matrix_to_tibble(.) %>%
-  rename(sample = rowname)
+  rename(Sample = rowname)
 }
 
-
-
-
-#plot markers plot
-.unsupMarkersPlot <- function(
-  x,
-  y,
-  markers,
-  plotUncertainty,
-  colorScheme,
-  ...
-){
-    
-  m <- .unsupMarkerPlotProcess(x, y, markers, plotUncertainty)
-  
-  p <- ggplot(data = NULL) +
-    theme_few() +
-    labs(x = "x", y = "y", title = "Markers", color = "Expression") +
-    theme(
-      legend.position = "top",
-      legend.title = element_blank(),
-      legend.text = element_text(size = 15),
-      axis.title = element_text(size = 17),
-      axis.text = element_text(size = 15),
-      plot.title = element_text(
-        hjust = 0.5, family = "Arial", face = "bold",
-        size = 24, margin = margin(b = 15)
-      ),
-      strip.text.y = element_text(size = 15)
-    )
-    
-    #add uncertainty
-    if(plotUncertainty & colorScheme != "default") {
-      p <- p + geom_point(
-      data = m,
-      aes_string(
-        x = 'V1', y = 'V2',
-        colour = 'value', size = 'uncertainty'
-      )) +
-      guides(colour = guide_colourbar(barwidth = 15))
-    } else if(!plotUncertainty & colorScheme != "default") {
-      p <- p + geom_point(
-      data = m,
-      aes_string(
-        x = 'V1', y = 'V2', colour = 'value'
-      )) +
-      guides(colour = guide_colourbar(barwidth = 15))
-    }
-    
-    #add colour scheme
-    if(colorScheme == "viridis") {
-      p <- p + scale_color_viridis() + facet_grid(variable ~ .)
-    } else if(colorScheme == "cividis") {
-      p <- p + scale_color_viridis(option = "E") + facet_grid(variable ~ .)
-    } else if(colorScheme == "default" & length(markers) > 1) {
-      p <- .handleDefaultColorScheme(p, m, markers, y, x, plotUncertainty)
-    } else if(colorScheme == "default" & length(markers) == 1) {
-      
-    }
-    
-    return(p)
-}
-
-#Function to handle the default color scheme. Due to the mapping of individual
-#colors onto a continuous scale and the associated problems of gettin the legend
-#setup in the desired manner it is quite hacky.
-
-.handleDefaultColorScheme <- function(
-  plot,
-  plotData,
-  markers,
-  spCountsSng,
-  spUnsupervised,
-  plotUncertainty
-){
-  #get the colors and legend data
-  tmp <- .col.from.targets(
-    markers = markers,
-    values = getData(spCountsSng, "counts")
-  )
-  
-  legend <- tibble(
-    geneName = names(tmp[[1]]),
-    col = tmp[[1]],
-    i = 1:length(markers)
-  )
-  
-  cols <- tmp[[2]]
-  
-  #add colors to the plot data
-  plotData <- left_join(
-    plotData,
-    cols,
-    by = c("sample" = "sampleName")
-  )
-  
-  #this creates an invisiable layer in order to make the legend
-  plot <- plot + geom_point(
-    data = legend,
-    aes_string(x = 'i', y = 'i', fill = 'col'),
-    alpha = 0, shape = 21, colour = "white"
-  ) +
-  scale_fill_manual(values = pull(legend, col), labels = pull(legend, geneName)) +
-  guides(fill = guide_legend(override.aes = list(alpha = 1, size = 3)))
-  
-  #this adds the data to the plot
-  if(plotUncertainty) {
-    plot <- plot +
-    geom_point(
-      data = plotData,
-      aes_string(x = 'V1', y = 'V2', colour = 'hex', size = 'uncertainty'),
-      alpha = 0.85
-    ) +
-    scale_colour_identity() +
-    guides(colour = FALSE) +
-    geom_point(
-      data = plotData,
-      aes_string(x = 'V1', y = 'V2', size = 'uncertainty'),
-      colour = "grey", shape = 21, stroke = 0.1
-    )
-  
-  } else {
-    plot <- plot + geom_point(
-      data = plotData,
-      aes_string(x = 'V1', y = 'V2', colour = 'hex'),
-      alpha = 0.85
-    ) +
-    scale_colour_identity() +
-    guides(colour = FALSE) +
-    geom_point(
-      data = plotData,
-      aes_string(x = 'V1', y = 'V2'),
-      colour = "grey", shape = 21, stroke = 0.1
-    )
-    
-  }
-  return(plot)
-}
-
+#pal: a colour palette
 #targets: gene names
 #values: gene counts
 .col.from.targets <- function(
-  pal = NULL,
+  pal,
   values,
   markers,
   ...
 ){
-  markers <- sort(markers)
-  
-  if(is.null(pal) & length(markers) <= 9) {
-    pal <- brewer.pal(9, "Set1")[1:length(markers)]
-  } else if(is.null(pal)) {
-    pal <- colorRampPalette(brewer.pal(9, "Set1"))(length(markers))
-  } else {
-    pal <- pal[1:length(markers)]
+  if(is.null(markers) | is.null(pal)) {
+    samples <- colnames(values)
+    return(tibble(Sample = samples))
   }
-  names(pal) <- markers
   
-  colors <- values[rownames(values) %in% markers, ] %>%
+  markers <- sort(markers)
+  pal <- pal[1:length(markers)]
+  
+  values[rownames(values) %in% markers, ] %>%
   as.data.frame() %>%
   rownames_to_column(var = "geneName") %>%
   as_tibble() %>%
-  gather(sampleName, count, -geneName) %>%
+  gather(Sample, count, -geneName) %>%
   #normalize
   group_by(geneName) %>%
   mutate(normalized = (count - min(count)) / (max(count) - min(count))) %>%
   ungroup() %>%
   #calculate fraction
-  group_by(sampleName) %>%
+  group_by(Sample) %>%
   mutate(fraction = normalized / sum(normalized)) %>%
   mutate(fraction = if_else(is.nan(fraction), 1 / n(), fraction)) %>%
   #setup initial hex colors
+  group_by(Sample) %>%
   arrange(geneName) %>%
   mutate(colint = pal) %>%
   ungroup() %>%
@@ -441,17 +331,21 @@ setMethod("plotUnsupervised", "spUnsupervised", function(
   })) %>%
   unnest() %>%
   add_column(col = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
-  group_by(sampleName, col) %>%
+  group_by(Sample, col) %>%
   summarize(sumRGB = sum(rgb) / 256) %>%
   ungroup() %>%
   spread(col, sumRGB) %>%
   #convert back to hex
-  mutate(hex = pmap_chr(list(r, g, b), function(x, y, z) {
+  mutate(Colour = pmap_chr(list(r, g, b), function(x, y, z) {
     rgb(red = x, green = y, blue = z)
   })) %>%
-  select(-(b:r))
-  
-  return(list(pal, colors))
+  select(-(b:r)) %>%
+  #fix factor levels so ggplot legend will cooperate
+  #https://community.rstudio.com/t/drop-false-with-scale-fill-identity/5163/2
+  mutate(Colour = parse_factor(
+    Colour,
+    levels = unique(c(Colour, pal[!pal %in% Colour]))
+  ))
 }
 
 #' plotSwarm

@@ -51,7 +51,6 @@ Collate:
     'sp.scRNAseq-package.R'
     'All-classes.R'
     'debugging.R'
-    'generalFunctions.R'
     'initialize-methods.R'
     'show-methods.R'
     'spCounts.R'
@@ -62,4 +61,5 @@ Collate:
     'testErcc.R'
     'testSwa.R'
     'testUns.R'
+    'tidyFunctions.R'
 RoxygenNote: 6.0.1

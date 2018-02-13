@@ -7,30 +7,28 @@
 \alias{plotUnsupervised,spUnsupervised-method}
 \title{plotUnsupervised}
 \usage{
-plotUnsupervised(x, ...)
+plotUnsupervised(spUnsupervised, ...)
 
-\S4method{plotUnsupervised}{spUnsupervised}(x, y = NULL, type = "clusters",
-  markers = NULL, plotUncertainty = TRUE, colorScheme = "default", ...)
+\S4method{plotUnsupervised}{spUnsupervised}(spUnsupervised, spCounts,
+  type = "clusters", markers = NULL, pal = NULL, ...)
 }
 \arguments{
-\item{x}{An spUnsupervised object.}
+\item{spUnsupervised}{spUnsupervised; An spUnsupervised object.}
 
 \item{...}{additional arguments to pass on.}
 
-\item{y}{An spCounts object containing singlets.}
+\item{spCounts}{spCounts; An spCounts object containing singlets.}
 
-\item{type}{Can be "clusters", "markers", or .......}
+\item{type}{Not implemented.}
 
-\item{markers}{A character vector with markers to plot.}
+\item{markers}{character; A vector with markers to be included plot.}
 
-\item{plotUncertainty}{Logical indicating if uncertainty should be
-represented as the point size in the plots.}
-
-\item{colorScheme}{Character, specify the color scheme for the markers plot.
-Accepted values are "default", "viridis" and "cividis".}
+\item{pal}{character; A palette of colors with length(pal) = length(markers).}
 }
 \value{
-The plotUnsupervised function returns an object of class spCounts.
+The ggplot2 object with the t-SNE results plotted on the x and y
+ axis. The plot can be modified by adding geoms, themes, etc. in the normal
+manner with ggplot2. See examples or the plotting vignette for further help.
 }
 \description{
 Subtitle

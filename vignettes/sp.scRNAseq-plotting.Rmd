@@ -1,0 +1,113 @@
+---
+title: "Plotting"
+author: "Jason T. Serviss"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: yes
+    code_folding: hide
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, message = FALSE}
+packages <- c(
+    "sp.scRNAseq",
+    "sp.scRNAseqData",
+    "printr",
+    "ggthemes",
+    "tidyverse",
+    "viridis"
+)
+purrr::walk(packages, library, character.only = TRUE)
+rm(packages)
+```
+
+```{r}
+counts <- merge(
+  countsRegev[rownames(countsRegev) %in% rownames(countsMgfp), ], 
+  countsMgfp, 
+  by = 0
+)
+geneNames <- counts[[1]]
+counts <- as.matrix(counts[, -1])
+rownames(counts) <- geneNames
+cObjSng <- spCounts(counts, matrix(NA, ncol= ncol(counts)))
+uObj <- spUnsupervised(cObjSng, type = "max", max = 2000)
+```
+
+## spCounts
+
+Plot markers
+```{r}
+
+```
+
+
+## spUnsupervised
+
+Get the plotting data so you can make a custom plot.
+
+```{r}
+plotUnsupervisedData(uObj, cObjSng) %>% head()
+plotUnsupervisedData(uObj, cObjSng, markers = c("Lgr5", "Alpi")) %>% head()
+```
+
+Plot the clustering results.
+```{r}
+p <- plotUnsupervised(uObj, cObjSng)
+p + geom_point()
+```
+
+Plot the classifications.
+```{r}
+p + geom_point(aes(colour = Classification))
+```
+
+Plot classification with uncertainty.
+```{r}
+p + geom_point(aes(colour = Classification, size = Uncertainty), alpha = 0.75)
+```
+
+Plot gene expression.
+```{r}
+p <- plotUnsupervised(uObj, cObjSng, markers = c("Alpi", "Lgr5"))
+p + geom_point(aes(colour = Alpi)) + scale_colour_viridis()
+p + geom_point(aes(colour = Lgr5)) + scale_colour_viridis()
+```
+
+Plot with multiple markers.
+```{r}
+markers <- c("Alpi", "Lgr5", "Muc2", "Lyz1")
+pal <- RColorBrewer::brewer.pal(length(markers), "Set1")
+names(pal) <- markers
+pal <- pal[order(names(pal))]
+
+p <- plotUnsupervised(uObj, cObjSng, markers = markers, pal = pal)
+p + geom_point(aes(colour = Colour)) + 
+  scale_colour_identity(
+    "Markers", 
+    labels = names(pal),
+    breaks = pal, 
+    guide = "legend", 
+    drop = FALSE
+  )
+```
+
+Final marker plot.
+```{r}
+p + geom_point(aes(x = `t-SNE dim 1`, y = `t-SNE dim 2`), shape = 21, colour = "black") +
+  geom_point(aes(colour = Colour)) + 
+  scale_colour_identity(
+    "Markers", 
+    labels = names(pal),
+    breaks = pal, 
+    guide = "legend", 
+    drop = FALSE
+  ) +
+  theme_few() +
+  theme(legend.position = "top") +
+  guides(colour = guide_legend(override.aes = list(size = 3)))
+```
+
+## spSwarm
