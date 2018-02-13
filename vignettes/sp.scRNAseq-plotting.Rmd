@@ -75,6 +75,18 @@ plotCounts(cObjSng, cObjMul) +
   )
 ```
 
+Plot ERCC final
+```{r}
+plotCounts(cObjSng, cObjMul) +
+  geom_jitter() +
+  scale_y_continuous(
+    expand = c(0, 0),
+    breaks = 0:7,
+    sec.axis = sec_axis(trans = ~ convertToERCC(., cObjSng, cObjMul), name = "% ERCC")
+  ) +
+  theme_few()
+```
+
 ## spUnsupervised
 
 Get the plotting data so you can make a custom plot.
