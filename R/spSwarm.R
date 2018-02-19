@@ -490,7 +490,7 @@ NULL
 
 spSwarmPoisson <- function(
     spSwarm,
-    edge.cutoff,
+    edge.cutoff = 0,
     min.pval = 1,
     min.num.edges = 0,
     ...

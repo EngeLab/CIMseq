@@ -10,6 +10,15 @@ editor_options:
   chunk_output_type: console
 ---
 
+```{r, eval = FALSE, echo = FALSE}
+Use the countsSorted2 dataset here instead.
+Markers defined by ksTest
+HOS: ALDH1A2, BASP1, BGN, BHMT2, COL1A1, COL1A2, COL3A1, FOXR1, GTSF1, LUM
+HCT116: ADIRF, ANXA3, AREG, CBR1, CLDN7, DMKN, EPCAM, EREG, KRT19, KRTCAP3
+A375: HLA-DRA, IL13RA2, LOC441601, LOC728715, MAGEA4, MAGEA6, MT1E, OCIAD2, SOX10, XIST 
+```
+
+
 ```{r, message = FALSE}
 packages <- c(
     "sp.scRNAseq",
@@ -17,6 +26,8 @@ packages <- c(
     "printr",
     "ggthemes",
     "tidyverse",
+    "tidygraph",
+    "ggraph",
     "viridis"
 )
 purrr::walk(packages, library, character.only = TRUE)
@@ -24,148 +35,136 @@ rm(packages)
 ```
 
 ```{r}
-sng <- stringr::str_detect(colnames(countsMgfp), "^s")
-cObjSng <- spCounts(countsMgfp[, sng], countsMgfpERCC[, sng])
-cObjMul <- spCounts(countsMgfp[, !sng], countsMgfpERCC[, !sng])
+sng <- stringr::str_detect(colnames(countsSorted2), "^s")
+cObjSng <- spCounts(countsSorted2[, sng], countsSortedERCC2[, sng])
+cObjMul <- spCounts(countsSorted2[, !sng], countsSortedERCC2[, !sng])
 uObj <- spUnsupervised(cObjSng, type = "max", max = 2000)
+
+#rename classes
+positions <- str_extract(colnames(getData(cObjSng, "counts")), "...$")
+newClass <- case_when(
+  positions == "E03" ~ "A375", #what is this? sorting issue?
+  positions %in% paste0(sort(rep(LETTERS[1:8], 4)), c("01", "02", "03", "04")) ~ "HOS",
+  positions %in% paste0(sort(rep(LETTERS[1:8], 4)), c("05", "06", "07", "08")) ~ "HCT116",
+  positions %in% paste0(sort(rep(LETTERS[1:8], 4)), c("09", "10", "11", "12")) ~ "A375",
+  TRUE ~ "error"
+)
+corresp <- getData(uObj, "classification") %>%
+  tibble(oldClass = ., newClass = newClass) %>%
+  distinct()
+
+classification(uObj) <- newClass
+
+gm <- getData(uObj, "groupMeans")
+colnames(gm) <- pull(corresp, newClass)[match(colnames(gm), pull(corresp, oldClass))]
+groupMeans(uObj) <- gm
+
+tm <- getData(uObj, "tsneMeans")
+tm$classification <- pull(corresp, newClass)[match(tm$classification, pull(corresp, oldClass))]
+tsneMeans(uObj) <- tm
+
+sObj <- spSwarm(spCounts = cObjMul, spUnsupervised = uObj)
 ```
 
 ## spCounts
 
-Get the plotting data so you can make a custom plot.
-```{r}
-plotCountsData(cObjSng, cObjMul) %>%
-  head()
-plotCountsData(cObjSng, cObjMul, markers = c("Lgr5", "Alpi")) %>%
-  head()
-```
-
 Plot markers.
 ```{r}
-plotCounts(cObjSng, cObjMul, type = "markers", markers = c("Lgr5", "Alpi")) +
-  geom_point()
-```
-
-Plot markers final.
-```{r}
-plotCounts(cObjSng, cObjMul, type = "markers", markers = c("Lgr5", "Alpi")) +
-  geom_point() +
-  scale_color_ptol() +
-  theme_few() +
-  theme(legend.position = "top") +
-  guides(colour = guide_legend(override.aes = list(size = 3)))
+plotCountsMarkers(cObjSng, cObjMul, markers = c("ALDH1A2", "IL13RA2"))
 ```
 
 Plot cell number.
 ```{r}
-plotCounts(cObjSng, cObjMul) +
-  geom_jitter()
-
-plotCounts(cObjSng, cObjMul) +
-  geom_boxplot()
+plotCountsERCC(cObjSng, cObjMul)
 ```
 
-Add % ERCC on right axis.
+Get the plotting data so you can make a custom plot.
 ```{r}
-plotCounts(cObjSng, cObjMul) +
-  geom_jitter() +
-  scale_y_continuous(
-    expand = c(0, 0),
-    sec.axis = sec_axis(trans = ~ convertToERCC(., cObjSng, cObjMul), name = "% ERCC")
-  )
-```
+plotCountsMarkers(cObjSng, cObjMul, markers = c("ALDH1A2", "IL13RA2")) %>%
+  plotData() %>%
+  head()
 
-Plot ERCC final
-```{r}
-plotCounts(cObjSng, cObjMul) +
-  geom_jitter() +
-  scale_y_continuous(
-    expand = c(0, 0),
-    breaks = 0:7,
-    sec.axis = sec_axis(trans = ~ convertToERCC(., cObjSng, cObjMul), name = "% ERCC")
-  ) +
-  theme_few()
+plotCountsERCC(cObjSng, cObjMul) %>%
+  plotData() %>%
+  head()
 ```
 
 ## spUnsupervised
 
-Get the plotting data so you can make a custom plot.
-
-```{r}
-plotUnsupervisedData(uObj, cObjSng) %>% head()
-plotUnsupervisedData(uObj, cObjSng, markers = c("Lgr5", "Alpi")) %>% head()
-```
-
 Plot the clustering results.
 ```{r}
-p <- plotUnsupervised(uObj, cObjSng)
-p + geom_point()
+plotUnsupervisedClass(uObj, cObjSng)
 ```
 
-Plot the classifications.
+Plot markers in different cell types.
 ```{r}
-p + geom_point(aes(colour = Classification))
-```
-
-Plot classification with uncertainty.
-```{r}
-p + geom_point(aes(colour = Classification, size = Uncertainty), alpha = 0.75)
-```
-
-Plot gene expression.
-```{r}
-p <- plotUnsupervised(uObj, cObjSng, markers = c("Alpi", "Lgr5"))
-p + geom_point(aes(colour = Alpi)) + scale_colour_viridis()
-p + geom_point(aes(colour = Lgr5)) + scale_colour_viridis()
+plotUnsupervisedMarkers(uObj, cObjSng, markers = c("ALDH1A2", "ADIRF", "IL13RA2"))
 ```
 
 Plot mean of multiple markers for the same cell type.
-```{r}
+```{r, message = FALSE}
 #use the data instead
-plotUnsupervisedData(uObj, cObjSng, markers = c("Msi1", "Lgr5")) %>%
-  gather(gene, value, -(Sample:Uncertainty)) %>%
+plotUnsupervisedMarkers(uObj, cObjSng, markers = c("COL1A1", "COL1A2", "COL3A1")) %>%
+  plotData() %>%
+  gather(gene, value, -(Sample:Colour)) %>%
   group_by(Sample) %>%
-  mutate(`mean(Msi1, Lgr5)` = mean(value)) %>%
-  select(`t-SNE dim 1`, `t-SNE dim 2`, `mean(Msi1, Lgr5)`) %>%
+  mutate(`Mean(markers)` = mean(value)) %>%
+  select(`t-SNE dim 1`, `t-SNE dim 2`, `Mean(markers)`) %>%
   distinct() %>%
   ggplot() +
-  geom_point(aes(`t-SNE dim 1`, `t-SNE dim 2`, colour = `mean(Msi1, Lgr5)`)) +
-  scale_colour_viridis()
-```
-
-Plot with multiple markers for different cell types.
-```{r}
-markers <- c("Alpi", "Lgr5", "Muc2", "Lyz1")
-pal <- RColorBrewer::brewer.pal(length(markers), "Set1")
-names(pal) <- markers
-pal <- pal[order(names(pal))]
-
-p <- plotUnsupervised(uObj, cObjSng, markers = markers, pal = pal)
-p + geom_point(aes(colour = Colour)) + 
-  scale_colour_identity(
-    "Markers", 
-    labels = names(pal),
-    breaks = pal, 
-    guide = "legend", 
-    drop = FALSE
-  )
-```
-
-Final marker plot.
-```{r}
-p + geom_point(aes(x = `t-SNE dim 1`, y = `t-SNE dim 2`), shape = 21, colour = "black") +
-  geom_point(aes(colour = Colour)) + 
-  scale_colour_identity(
-    "Markers", 
-    labels = names(pal),
-    breaks = pal, 
-    guide = "legend", 
-    drop = FALSE
-  ) +
+  geom_point(aes(`t-SNE dim 1`, `t-SNE dim 2`, colour = `Mean(markers)`)) +
+  viridis::scale_colour_viridis(option = "E") +
   theme_few() +
-  theme(legend.position = "top") +
-  guides(colour = guide_legend(override.aes = list(size = 3)))
+  theme(legend.position = "top", legend.title.align = 0) +
+  guides(colour = guide_colourbar(title.position = "top")) 
 ```
 
+Get the plotting data so you can make a custom plot.
+
+```{r}
+plotUnsupervisedClass(uObj, cObjSng) %>% 
+  plotData() %>%
+  head()
+
+plotUnsupervisedMarkers(uObj, cObjSng, markers = c("ALDH1A2", "ADIRF", "IL13RA2")) %>% 
+  plotData %>%
+  head()
+```
 
 ## spSwarm
+
+### Graph-based plots
+
+```{r}
+plotSwarmGraph(sObj)
+```
+
+### Non-graph-based plots
+
+Edge bar graph.
+```{r}
+plotSwarmEdgeBar(sObj)
+```
+
+P-value bar graph.
+```{r}
+plotSwarmPbar(sObj)
+```
+
+Heatmap.
+```{r}
+plotSwarmHeat(sObj)
+```
+
+Get data to make a custom plot.
+```{r}
+plotSwarmGraph(sObj) %>%
+  plotData()
+
+plotSwarmEdgeBar(sObj) %>%
+  plotData() %>%
+  head()
+```
+
+### Residual plots
+

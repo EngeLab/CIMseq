@@ -311,3 +311,18 @@ setMethod("getData", "spSwarm", function(
       slot(object, n)
   }
 })
+
+#####################
+#                   #
+#      ggplot2      #
+#                   #
+#####################
+
+#' "gg" class
+#'
+#' @name gg-class
+#' @aliases gg
+#' @family gg
+#'
+#' @exportClass gg
+setOldClass("gg")

@@ -120,11 +120,38 @@ tidyUnsupervised <- function(spUnsupervised) {
 #' tidySwarm(testSwa)
 #'
 #' @export
-#' @importFrom dplyr mutate "%>%"
+#' @importFrom dplyr "%>%" full_join left_join
+#' @importFrom tibble tibble
 
 tidySwarm <- function(spSwarm) {
   getData(spSwarm, "spSwarm") %>%
-  matrix_to_tibble(.) %>%
+  matrix_to_tibble(., rowname = "Sample") %>%
   mutate(Costs = getData(spSwarm, "costs")) %>%
   mutate(Convergence = getData(spSwarm, "convergence"))
 }
+
+#spSwarmPoisson(spSwarm, edge.cutoff = 0) %>%
+#  full_join(
+#    getMultipletsForEdge(spSwarm, edge.cutoff = 0, edges = .),
+#    by = c("from", "to")
+#  ) %>%
+#  left_join(
+#    matrix_to_tibble(getData(spSwarm, "spSwarm"), rowname = "multiplet"),
+#    by = "multiplet"
+#  ) %>%
+#  full_join(
+#    tibble(
+#      multiplet = rownames(getData(spSwarm, "spSwarm")),
+#      cost = getData(spSwarm, "costs")
+#    ),
+#    by = "multiplet"
+#  ) %>%
+#  full_join(
+#    tibble(
+#      multiplet = rownames(getData(spSwarm, "spSwarm")),
+#      convergence = getData(spSwarm, "convergence")
+#    ),
+#    by = "multiplet"
+#  ) %>%
+#  nest(-(from:pval), .key = "Multiplet data")
+
