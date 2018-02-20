@@ -13,4 +13,5 @@ before_install:
   Rscript -e 'update.packages(ask = FALSE)'
 sudo: required
 apt_packages: libudunits2-dev
-
+after_success:
+    - Rscript -e 'covr::codecov()'
