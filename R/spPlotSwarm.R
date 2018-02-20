@@ -48,6 +48,7 @@ setGeneric("plotSwarmGraph", function(
 #' @importFrom igraph graph_from_data_frame
 #' @importFrom tidygraph as_tbl_graph activate
 #' @importFrom dplyr "%>%" select rename
+#' @importFrom rlang .data
 #' @importFrom tidyr unite
 
 setMethod("plotSwarmGraph", c("spSwarm", "spUnsupervised"), function(
@@ -58,16 +59,19 @@ setMethod("plotSwarmGraph", c("spSwarm", "spUnsupervised"), function(
   
   #move data to graph
   spSwarmPoisson(spSwarm, edge.cutoff = 0) %>%
-  unite(connection, from, to, sep = "-", remove = FALSE) %>%
-  select(from, to, connection, weight, pval) %>%
+  unite('connection', .data$from, .data$to, sep = "-", remove = FALSE) %>%
+  select(.data$from, .data$to, .data$connection, .data$weight, .data$pval) %>%
   graph_from_data_frame(directed = FALSE) %>%
   as_tbl_graph() %>% #better if this could be done directly; avoids importing igraph
   activate(nodes) %>%
-  rename(Class = name) %>%
+  rename('Class' = .data$name) %>%
   #remove edges with 0 weight and coerce to factor
   activate(edges) %>%
-  filter(weight > 0) %>%
-  mutate(weight = parse_factor(weight, levels = unique(weight))) %>%
+  filter(.data$weight > 0) %>%
+  mutate('weight' = parse_factor(
+    .data$weight,
+    levels = unique(.data$weight)
+  )) %>%
   #plot base plot with custom layout according to tsne
   ggraph(
     layout = 'manual',
@@ -79,20 +83,22 @@ setMethod("plotSwarmGraph", c("spSwarm", "spUnsupervised"), function(
   #plot edges
   geom_edge_link(
     edge_colour = "black",
-    aes(edge_width = weight),
+    aes_string(edge_width = 'weight'),
     edge_alpha = 0.3,
     lineend = "round"
   ) +
   # add all cells
   geom_node_point(
     data = tidyUnsupervised(spUnsupervised),
-    aes(x = `t-SNE dim 1`, y = `t-SNE dim 2`, colour = Classification),
+    aes_string(
+      x = '`t-SNE dim 1`', y = '`t-SNE dim 2`', colour = 'Classification'
+    ),
     alpha = 0.3
   ) +
   #add mean point for each class
   geom_node_point(
     data = getData(spUnsupervised, "tsneMeans"),
-    aes(colour = classification),
+    aes_string(colour = 'classification'),
     size = 5
   ) +
   #change the color scale

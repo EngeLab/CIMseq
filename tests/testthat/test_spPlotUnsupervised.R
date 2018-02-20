@@ -40,4 +40,11 @@ test_that("check that plotUnsupervisedMarkers outputs the expected result", {
   #test
   expect_type(output, "list")
   expect_is(output, c("gg", "ggplot"))
+  
+  #run function
+  output <- plotUnsupervisedMarkers(uObj, cObjSng, markers = c("a1", "a10"))
+  
+  #test
+  expect_type(output, "list")
+  expect_is(output, c("gg", "ggplot"))
 })

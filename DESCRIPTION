@@ -30,12 +30,13 @@ Imports:
     tidygraph,
     readr,
     rlang
-Suggests:
+Suggests: 
     knitr,
     rmarkdown,
     testthat,
     BiocStyle,
-    printr
+    printr,
+    covr
 VignetteBuilder: knitr
 License: GPL-3
 Encoding: UTF-8

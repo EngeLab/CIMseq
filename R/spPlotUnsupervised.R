@@ -102,8 +102,8 @@ setMethod("plotUnsupervisedClass", c("spUnsupervised", "spCounts"), function(
   ...
 ){
     plotUnsupervisedData(spUnsupervised, spCountsSng) %>%
-    ggplot(aes(x = `t-SNE dim 1`, y = `t-SNE dim 2`)) +
-    geom_point(aes(colour = Classification, size = Uncertainty), alpha = 0.7) + #generally the uncertainty size is too large, since uncertainty is always between 0-1, we should be able to scale this better
+    ggplot(aes_string(x = '`t-SNE dim 1`', y = '`t-SNE dim 2`')) +
+    geom_point(aes_string(colour = 'Classification', size = 'Uncertainty'), alpha = 0.7) + #generally the uncertainty size is too large, since uncertainty is always between 0-1, we should be able to scale this better
     scale_colour_manual(values = col40())+
     theme_few() +
     theme(legend.position = "top") +
@@ -172,7 +172,7 @@ setMethod("plotUnsupervisedMarkers", c("spUnsupervised", "spCounts"), function(
   pal <- pal[order(names(pal))]
   
   p <- plotUnsupervisedData(spUnsupervised, spCountsSng, markers, pal) %>%
-  ggplot(aes_string(x = "`t-SNE dim 1`", y = "`t-SNE dim 2`")) +
+  ggplot(aes_string(x = '`t-SNE dim 1`', y = '`t-SNE dim 2`')) +
   theme_few() +
   theme(legend.position = "top")
   
@@ -181,7 +181,7 @@ setMethod("plotUnsupervisedMarkers", c("spUnsupervised", "spCounts"), function(
     scale_colour_viridis(option = "E")
   } else {
     p + geom_point(colour = "black", shape = 21) +
-    geom_point(aes(colour = Colour), alpha = .85) +
+    geom_point(aes_string(colour = 'Colour'), alpha = .85) +
     scale_colour_identity(
       "Markers", labels = names(pal), breaks = pal,
       guide = "legend", drop = FALSE

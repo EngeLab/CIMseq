@@ -30,6 +30,7 @@ NULL
 #' @rdname plotCountsData
 #' @import ggplot2
 #' @importFrom dplyr "%>%" rename mutate select full_join
+#' @importFrom rlang .data
 #' @importFrom readr parse_factor
 
 plotCountsData <- function(
@@ -47,15 +48,15 @@ plotCountsData <- function(
     by = c("Sample" = "sampleName")
   ) %>%
   mutate(sampleType = parse_factor(
-    sampleType,
+    .data$sampleType,
     levels = c("Singlet", "Multiplet")
   )) %>%
   rename(
-    `Cell number` = cellNumberMedian,
-    `Sample type` = sampleType,
-    `Fraction ERCC` = frac.ercc
+    `Cell number` = .data$cellNumberMedian,
+    `Sample type` = .data$sampleType,
+    `Fraction ERCC` = .data$frac.ercc
   ) %>%
-  select(-cellNumberMin, -cellNumberMax)
+  select(-.data$cellNumberMin, -.data$cellNumberMax)
 }
 
 #' plotCountsERCC

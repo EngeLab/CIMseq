@@ -92,13 +92,16 @@ normalizeVec <- function(vec) {
 #'
 #' @export
 #' @importFrom dplyr mutate rename "%>%"
+#' @importFrom rlang .data
 
 tidyUnsupervised <- function(spUnsupervised) {
   getData(spUnsupervised, "tsne") %>%
   matrix_to_tibble(.) %>%
-  mutate(Classification = getData(spUnsupervised, "classification")) %>%
-  mutate(Uncertainty = getData(spUnsupervised, "uncertainty")) %>%
-  rename(`t-SNE dim 1` = V1, `t-SNE dim 2` = V2, Sample = rowname)
+  mutate('Classification' = getData(spUnsupervised, "classification")) %>%
+  mutate('Uncertainty' = getData(spUnsupervised, "uncertainty")) %>%
+  rename(
+    `t-SNE dim 1` = .data$V1, `t-SNE dim 2` = .data$V2, Sample = .data$rowname
+  )
 }
 
 #' tidySwarm
@@ -121,8 +124,8 @@ tidyUnsupervised <- function(spUnsupervised) {
 tidySwarm <- function(spSwarm) {
   getData(spSwarm, "spSwarm") %>%
   matrix_to_tibble(., rowname = "Sample") %>%
-  mutate(Costs = getData(spSwarm, "costs")) %>%
-  mutate(Convergence = getData(spSwarm, "convergence"))
+  mutate('Costs' = getData(spSwarm, "costs")) %>%
+  mutate('Convergence' = getData(spSwarm, "convergence"))
 }
 
 #spSwarmPoisson(spSwarm, edge.cutoff = 0) %>%

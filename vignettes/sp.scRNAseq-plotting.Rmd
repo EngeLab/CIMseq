@@ -38,7 +38,7 @@ rm(packages)
 ```
 
 ```{r}
-sng <- stringr::str_detect(colnames(countsSorted2), "^s")
+sng <- str_detect(colnames(countsSorted2), "^s")
 cObjSng <- spCounts(countsSorted2[, sng], countsSortedERCC2[, sng])
 cObjMul <- spCounts(countsSorted2[, !sng], countsSortedERCC2[, !sng])
 uObj <- spUnsupervised(cObjSng, type = "max", max = 2000)

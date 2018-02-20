@@ -120,7 +120,7 @@ coloursFromTargets <- function(
   
   counts[rownames(counts) %in% markers, ] %>%
   matrix_to_tibble(., 'geneName') %>%
-  gather('Sample', 'count', -'geneName') %>%
+  gather('Sample', 'count', -.data$geneName) %>%
   #normalize
   group_by(.data$geneName) %>%
   mutate('normalized' = normalizeVec(.data$count)) %>%
