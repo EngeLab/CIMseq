@@ -205,7 +205,7 @@ setMethod("plotSwarmEdgeBar", "spSwarm", function(
     show.legend = FALSE
   ) +
   geom_label(
-    aes_string(x = 'to', y = 'weight + 5', label = 'round(pval, digits = 2)'),
+  aes_string(x = 'to', y = 'weight + 5', label = 'round(pval, digits = 2)'), #the y axis should be dynamically adjusted
     label.size = 0,
   ) +
   facet_grid(from ~ to, scales = "free_x") +

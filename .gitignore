@@ -3,3 +3,4 @@ inst/doc
 *.history
 .Rhistory
 .DS_Store
+/revdep/.cache.rds
