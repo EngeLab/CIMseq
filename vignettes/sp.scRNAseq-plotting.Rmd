@@ -14,18 +14,17 @@ vignette: >
 ---
 
 ```{r, eval = FALSE, echo = FALSE}
-Use the countsSorted2 dataset here instead.
 Markers defined by ksTest
-HOS: ALDH1A2, BASP1, BGN, BHMT2, COL1A1, COL1A2, COL3A1, FOXR1, GTSF1, LUM
-HCT116: ADIRF, ANXA3, AREG, CBR1, CLDN7, DMKN, EPCAM, EREG, KRT19, KRTCAP3
-A375: HLA-DRA, IL13RA2, LOC441601, LOC728715, MAGEA4, MAGEA6, MT1E, OCIAD2, SOX10, XIST 
+A1: b1, h1, m4, r9
+B1: q1
+C1: b3, e10, g10, f7
+D1: t2
 ```
 
 
 ```{r, message = FALSE}
 packages <- c(
     "sp.scRNAseq",
-    "sp.scRNAseqData",
     "printr",
     "ggthemes",
     "tidyverse",
@@ -38,42 +37,18 @@ rm(packages)
 ```
 
 ```{r}
-sng <- str_detect(colnames(countsSorted2), "^s")
-cObjSng <- spCounts(countsSorted2[, sng], countsSortedERCC2[, sng])
-cObjMul <- spCounts(countsSorted2[, !sng], countsSortedERCC2[, !sng])
-uObj <- spUnsupervised(cObjSng, type = "max", max = 2000)
-
-#rename classes
-positions <- str_extract(colnames(getData(cObjSng, "counts")), "...$")
-newClass <- case_when(
-  positions == "E03" ~ "A375", #what is this? sorting issue?
-  positions %in% paste0(sort(rep(LETTERS[1:8], 4)), c("01", "02", "03", "04")) ~ "HOS",
-  positions %in% paste0(sort(rep(LETTERS[1:8], 4)), c("05", "06", "07", "08")) ~ "HCT116",
-  positions %in% paste0(sort(rep(LETTERS[1:8], 4)), c("09", "10", "11", "12")) ~ "A375",
-  TRUE ~ "error"
-)
-corresp <- getData(uObj, "classification") %>%
-  tibble(oldClass = ., newClass = newClass) %>%
-  distinct()
-
-classification(uObj) <- newClass
-
-gm <- getData(uObj, "groupMeans")
-colnames(gm) <- pull(corresp, newClass)[match(colnames(gm), pull(corresp, oldClass))]
-groupMeans(uObj) <- gm
-
-tm <- getData(uObj, "tsneMeans")
-tm$classification <- pull(corresp, newClass)[match(tm$classification, pull(corresp, oldClass))]
-tsneMeans(uObj) <- tm
-
-sObj <- spSwarm(spCounts = cObjMul, spUnsupervised = uObj)
+s <- grepl("^s", colnames(testCounts))
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+uObj <- testUns
+sObj <- testSwa
 ```
 
 ## spCounts
 
 Plot markers.
 ```{r}
-plotCountsMarkers(cObjSng, cObjMul, markers = c("ALDH1A2", "IL13RA2"))
+plotCountsMarkers(cObjSng, cObjMul, markers = c("s2", "j4"))
 ```
 
 Plot cell number.
@@ -83,7 +58,7 @@ plotCountsERCC(cObjSng, cObjMul)
 
 Get the plotting data so you can make a custom plot.
 ```{r}
-plotCountsMarkers(cObjSng, cObjMul, markers = c("ALDH1A2", "IL13RA2")) %>%
+plotCountsMarkers(cObjSng, cObjMul, markers = c("s2", "j4")) %>%
   plotData() %>%
   head()
 
@@ -101,13 +76,13 @@ plotUnsupervisedClass(uObj, cObjSng)
 
 Plot markers in different cell types.
 ```{r}
-plotUnsupervisedMarkers(uObj, cObjSng, markers = c("ALDH1A2", "ADIRF", "IL13RA2"))
+plotUnsupervisedMarkers(uObj, cObjSng, markers = c("b1", "q1", "b3", "t2"))
 ```
 
 Plot mean of multiple markers for the same cell type.
 ```{r, message = FALSE}
 #use the data instead
-plotUnsupervisedMarkers(uObj, cObjSng, markers = c("COL1A1", "COL1A2", "COL3A1")) %>%
+plotUnsupervisedMarkers(uObj, cObjSng, markers = c("b1", "h1", "m4", "r9")) %>%
   plotData() %>%
   gather(gene, value, -(Sample:Colour)) %>%
   group_by(Sample) %>%
@@ -129,7 +104,7 @@ plotUnsupervisedClass(uObj, cObjSng) %>%
   plotData() %>%
   head()
 
-plotUnsupervisedMarkers(uObj, cObjSng, markers = c("ALDH1A2", "ADIRF", "IL13RA2")) %>% 
+plotUnsupervisedMarkers(uObj, cObjSng, markers = c("b1", "q1", "b3", "t2")) %>% 
   plotData %>%
   head()
 ```
