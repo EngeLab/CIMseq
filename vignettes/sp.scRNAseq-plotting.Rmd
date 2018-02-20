@@ -24,13 +24,8 @@ D1: t2
 
 ```{r, message = FALSE}
 packages <- c(
-    "sp.scRNAseq",
-    "printr",
-    "ggthemes",
-    "tidyverse",
-    "tidygraph",
-    "ggraph",
-    "viridis"
+  "sp.scRNAseq", "printr", "ggthemes", "dplyr", 
+  "tidyr", "ggplot2", "viridis"
 )
 purrr::walk(packages, library, character.only = TRUE)
 rm(packages)
