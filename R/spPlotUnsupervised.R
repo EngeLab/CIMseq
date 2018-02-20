@@ -10,6 +10,9 @@ NULL
 #' @aliases plotUnsupervisedData
 #' @param spUnsupervised spUnsupervised; An spUnsupervised object.
 #' @param spCountsSng spCounts; An spCounts object containing singlets.
+#' @param markers character; A vector with the markers to plot. Must be present
+#'  in rownames of counts.
+#' @param pal character; The colour palette to use.
 #' @param ... additional arguments to pass on.
 #' @return A tibble with columns:
 #' @author Jason T. Serviss
@@ -134,8 +137,7 @@ setMethod("plotUnsupervisedClass", c("spUnsupervised", "spCounts"), function(
 #' uObj <- testUns
 #'
 #' #Plot
-#' pal <- c("red", "blue")
-#' p <- plotUnsupervised(uObj, cObjSng, markers = "a10", pal = pal)
+#' p <- plotUnsupervisedMarkers(uObj, cObjSng, markers = "a10")
 NULL
 
 #' @rdname plotUnsupervisedMarkers
@@ -154,6 +156,7 @@ setGeneric("plotUnsupervisedMarkers", function(
 #' @import ggplot2
 #' @importFrom dplyr "%>%"
 #' @importFrom ggthemes theme_few
+#' @importFrom viridis scale_colour_viridis
 
 #Note to self: This ideally would also work to some degree if users use their own
 # methods to perform DR and classification. POtentially it is sufficient in its

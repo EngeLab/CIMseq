@@ -8,6 +8,9 @@ matrix_to_tibble(data, rowname = "rowname")
 }
 \arguments{
 \item{data}{matrix; The matrix to be converted.}
+
+\item{rowname}{character; Length 1 vector indicating the colname that
+rownames should have upon tibble conversion.}
 }
 \description{
 Converts a matrix to a tibble without removing rownames.

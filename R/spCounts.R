@@ -41,6 +41,7 @@ setGeneric("spCounts", function(
 
 #' @rdname spCounts
 #' @export
+
 setMethod("spCounts", "matrix", function(
     counts,
     counts.ercc,

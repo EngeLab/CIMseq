@@ -63,7 +63,7 @@ setMethod("plotData", "gg", function(
 #' @author Jason T. Serviss
 #' @param ercc The left axis values. Passes as ".".
 #' @param spCountsSng spCounts; An spCounts object with singlets.
-#' @param spCountsSng spCounts; An spCounts object with multiplets.
+#' @param spCountsMul spCounts; An spCounts object with multiplets.
 #' @keywords convertToERCC
 #'
 #' @export
@@ -91,15 +91,17 @@ convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
 #' @param counts matrix; A matrix containing counts.
 #' @param markers character; The markers to evaluate. Must be present in
 #'  rownames(counts).
+#' @param ... additional arguments to pass on.
 #' @keywords coloursFromTargets
 NULL
 
 #' @rdname coloursFromTargets
 #' @importFrom dplyr "%>%" group_by ungroup mutate arrange summarize select
+#' @importFrom rlang .data
 #' @importFrom tibble tibble add_column
 #' @importFrom tidyr gather unnest spread
-#' @importFrom purrr pmap
-#' @importFrom grDevices col2rgb
+#' @importFrom purrr pmap pmap_chr
+#' @importFrom grDevices col2rgb rgb
 #' @importFrom readr parse_factor
 
 coloursFromTargets <- function(
@@ -110,48 +112,53 @@ coloursFromTargets <- function(
 ){
   
   if(is.null(markers) | is.null(pal) | length(markers) == 1) {
-    return(tibble(Sample = colnames(counts)))
+    return(tibble('Sample' = colnames(counts)))
   }
 
   markers <- sort(markers)
   pal <- pal[1:length(markers)]
   
   counts[rownames(counts) %in% markers, ] %>%
-  matrix_to_tibble(., "geneName") %>%
-  gather(Sample, count, -geneName) %>%
+  matrix_to_tibble(., 'geneName') %>%
+  gather('Sample', 'count', -'geneName') %>%
   #normalize
-  group_by(geneName) %>%
-  mutate(normalized = normalizeVec(count)) %>%
+  group_by(.data$geneName) %>%
+  mutate('normalized' = normalizeVec(.data$count)) %>%
   ungroup() %>%
   #calculate fraction
-  group_by(Sample) %>%
-  mutate(fraction = normalized / sum(normalized)) %>%
-  mutate(fraction = if_else(is.nan(fraction), 1 / n(), fraction)) %>%
+  group_by(.data$Sample) %>%
+  mutate('fraction' = .data$normalized / sum(.data$normalized)) %>%
+  mutate('fraction' = if_else(is.nan(.data$fraction), 1 / n(), .data$fraction)) %>%
   #setup initial hex colors
-  group_by(Sample) %>%
-  arrange(geneName) %>%
-  mutate(colint = pal) %>%
+  arrange(.data$geneName) %>%
+  mutate('colint' = pal) %>%
   ungroup() %>%
   #convert to rgb and calculate new colors
-  mutate(rgb = pmap(list(colint, normalized, fraction), function(x, y, z) {
-    (255 - ((255 - col2rgb(x)) * y)) * z
-  })) %>%
+  mutate('rgb' = pmap(
+    list(.data$colint, .data$normalized, .data$fraction),
+    function(x, y, z) {
+      (255 - ((255 - col2rgb(x)) * y)) * z
+    }
+  )) %>%
   unnest() %>%
-  add_column(col = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
-  group_by(Sample, col) %>%
-  summarize(sumRGB = sum(rgb) / 256) %>%
+  add_column('col' = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
+  group_by(.data$Sample, .data$col) %>%
+  summarize('sumRGB' = sum(.data$rgb) / 256) %>%
   ungroup() %>%
-  spread(col, sumRGB) %>%
+  spread('col', 'sumRGB') %>%
   #convert back to hex
-  mutate(Colour = pmap_chr(list(r, g, b), function(x, y, z) {
+  mutate('Colour' = pmap_chr(
+    list(.data$r, .data$g, .data$b),
+    function(x, y, z) {
     rgb(red = x, green = y, blue = z)
-  })) %>%
-  select(-(b:r)) %>%
+    }
+  )) %>%
+  select(-(.data$b:.data$r)) %>%
   #fix factor levels so ggplot legend will cooperate
   #https://community.rstudio.com/t/drop-false-with-scale-fill-identity/5163/2
-  mutate(Colour = parse_factor(
-    Colour,
-    levels = unique(c(Colour, pal[!pal %in% Colour]))
+  mutate('Colour' = parse_factor(
+    .data$Colour,
+    levels = unique(c(.data$Colour, pal[!pal %in% .data$Colour]))
   ))
 }
 

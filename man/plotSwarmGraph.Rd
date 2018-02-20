@@ -4,15 +4,17 @@
 \name{plotSwarmGraph}
 \alias{plotSwarmGraph}
 \alias{plotSwarmGraph}
-\alias{plotSwarmGraph,spSwarm-method}
+\alias{plotSwarmGraph,spSwarm,spUnsupervised-method}
 \title{plotSwarmGraph}
 \usage{
-plotSwarmGraph(spSwarm, ...)
+plotSwarmGraph(spSwarm, spUnsupervised, ...)
 
-\S4method{plotSwarmGraph}{spSwarm}(spSwarm, ...)
+\S4method{plotSwarmGraph}{spSwarm,spUnsupervised}(spSwarm, spUnsupervised, ...)
 }
 \arguments{
 \item{spSwarm}{spSwarm; An spSwarm object.}
+
+\item{spUnsupervised}{spUnsupervised; An spUnsupervised object.}
 
 \item{...}{additional arguments to pass on.}
 }
@@ -35,7 +37,7 @@ uObj <- testUns
 sObj <- testSwa
 
 #plot
-p <- plotSwarmGraph(sObj)
+p <- plotSwarmGraph(sObj, uObj)
 }
 \author{
 Jason T. Serviss

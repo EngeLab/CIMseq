@@ -40,8 +40,7 @@ cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 uObj <- testUns
 
 #Plot
-pal <- c("red", "blue")
-p <- plotUnsupervised(uObj, cObjSng, markers = "a10", pal = pal)
+p <- plotUnsupervisedMarkers(uObj, cObjSng, markers = "a10")
 }
 \author{
 Jason T. Serviss

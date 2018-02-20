@@ -13,35 +13,29 @@ Description: What the package does (one paragraph).
 Depends:
     R (>= 3.4.2)
 Imports:
-    RColorBrewer,
     ggplot2,
-    rgl,
     mclust,
     Rtsne,
     ggthemes,
     igraph,
     methods,
     dplyr,
-    reshape2,
     viridis,
-    printr,
     pso,
-    ggrepel,
     tibble,
     purrr,
     tidyr,
-    magrittr,
-    stringr,
     S4Vectors,
-    ggforce,
     ggraph,
+    tidygraph,
     readr,
     rlang
 Suggests:
     knitr,
     rmarkdown,
     testthat,
-    BiocStyle
+    BiocStyle,
+    printr
 VignetteBuilder: knitr
 License: GPL-3
 Encoding: UTF-8

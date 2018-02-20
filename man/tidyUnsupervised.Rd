@@ -7,7 +7,7 @@
 tidyUnsupervised(spUnsupervised)
 }
 \arguments{
-\item{spUnsupervised;}{spUnsupervised An spUnsupervised object.}
+\item{spUnsupervised}{spUnsupervised; An spUnsupervised object.}
 }
 \description{
 Tidy spUnsupervised objects.

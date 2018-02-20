@@ -1,13 +1,16 @@
 ---
-title: "Plotting"
-author: "Jason T. Serviss"
-date: "`r Sys.Date()`"
+title: "sp.scRNAseq Plotting Vignette"
+author: "Jason T. Serviss and Martin Enge"
+date: '`r Sys.Date()`'
 output:
-  html_document:
-    toc: yes
-    code_folding: hide
-editor_options: 
-  chunk_output_type: console
+    html_document:
+        theme: flatly
+        toc: yes
+vignette: >
+    %\VignetteIndexEntry{ClusterSignificance Vignette} 
+    %\VignetteEngine{knitr::rmarkdown} 
+    %\usepackage[utf8]{inputenc}
+    %\SweaveUTF8
 ---
 
 ```{r, eval = FALSE, echo = FALSE}
@@ -136,7 +139,7 @@ plotUnsupervisedMarkers(uObj, cObjSng, markers = c("ALDH1A2", "ADIRF", "IL13RA2"
 ### Graph-based plots
 
 ```{r}
-plotSwarmGraph(sObj)
+plotSwarmGraph(sObj, uObj)
 ```
 
 ### Non-graph-based plots
@@ -158,7 +161,7 @@ plotSwarmHeat(sObj)
 
 Get data to make a custom plot.
 ```{r}
-plotSwarmGraph(sObj) %>%
+plotSwarmGraph(sObj, uObj) %>%
   plotData()
 
 plotSwarmEdgeBar(sObj) %>%

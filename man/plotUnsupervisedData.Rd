@@ -13,6 +13,11 @@ plotUnsupervisedData(spUnsupervised, spCountsSng, markers = NULL,
 
 \item{spCountsSng}{spCounts; An spCounts object containing singlets.}
 
+\item{markers}{character; A vector with the markers to plot. Must be present
+in rownames of counts.}
+
+\item{pal}{character; The colour palette to use.}
+
 \item{...}{additional arguments to pass on.}
 }
 \value{

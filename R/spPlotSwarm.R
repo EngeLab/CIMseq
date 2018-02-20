@@ -11,6 +11,7 @@ NULL
 #' @rdname plotSwarmGraph
 #' @aliases plotSwarmGraph
 #' @param spSwarm spSwarm; An spSwarm object.
+#' @param spUnsupervised spUnsupervised; An spUnsupervised object.
 #' @param ... additional arguments to pass on.
 #' @return The spPlot function returns an object of class spCounts.
 #' @author Jason T. Serviss
@@ -25,15 +26,16 @@ NULL
 #' sObj <- testSwa
 #'
 #' #plot
-#' p <- plotSwarmGraph(sObj)
+#' p <- plotSwarmGraph(sObj, uObj)
 NULL
 
 #' @rdname plotSwarmGraph
 #' @export
 
 setGeneric("plotSwarmGraph", function(
-    spSwarm,
-    ...
+  spSwarm,
+  spUnsupervised,
+  ...
 ){
     standardGeneric("plotSwarmGraph")
 })
@@ -48,9 +50,10 @@ setGeneric("plotSwarmGraph", function(
 #' @importFrom dplyr "%>%" select rename
 #' @importFrom tidyr unite
 
-setMethod("plotSwarmGraph", "spSwarm", function(
-    spSwarm,
-    ...
+setMethod("plotSwarmGraph", c("spSwarm", "spUnsupervised"), function(
+  spSwarm,
+  spUnsupervised,
+  ...
 ){
   
   #move data to graph
@@ -70,7 +73,7 @@ setMethod("plotSwarmGraph", "spSwarm", function(
     layout = 'manual',
     node.positions = create_layout(
       ., 'manual',
-      node.positions = getData(uObj, "tsneMeans")
+      node.positions = getData(spUnsupervised, "tsneMeans")
     )
   ) +
   #plot edges
@@ -82,13 +85,13 @@ setMethod("plotSwarmGraph", "spSwarm", function(
   ) +
   # add all cells
   geom_node_point(
-    data = tidyUnsupervised(uObj),
+    data = tidyUnsupervised(spUnsupervised),
     aes(x = `t-SNE dim 1`, y = `t-SNE dim 2`, colour = Classification),
     alpha = 0.3
   ) +
   #add mean point for each class
   geom_node_point(
-    data = getData(uObj, "tsneMeans"),
+    data = getData(spUnsupervised, "tsneMeans"),
     aes(colour = classification),
     size = 5
   ) +

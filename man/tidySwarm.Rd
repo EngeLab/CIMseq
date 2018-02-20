@@ -7,7 +7,7 @@
 tidySwarm(spSwarm)
 }
 \arguments{
-\item{spSwarm;}{spSwarm An spSwarm object.}
+\item{spSwarm}{spSwarm; An spSwarm object.}
 }
 \description{
 Tidy spSwarm objects.

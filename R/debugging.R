@@ -37,11 +37,10 @@ setGeneric("plotSwarmPosition", function(
 #' @rdname plotSwarmPosition
 #' @export
 #' @import ggplot2
-#' @importFrom dplyr filter mutate bind_rows
+#' @importFrom dplyr "%>%" filter mutate bind_rows
 #' @importFrom tibble as_tibble
 #' @importFrom tidyr gather
 #' @importFrom ggthemes theme_few
-#' @importFrom magrittr %>%
 #' @importFrom readr parse_factor
 #' @importFrom rlang .data
 

@@ -141,17 +141,17 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
     #A1 and B1 should have an edge
     #I1 and J1 should have an edge
     expected1 <- tibble::tibble(
-        multiplet = "m.A1B1",
+        multiplet = "m.A1B1.341",
         from = "A1",
         to = "B1"
     )
     expected2 <- tibble::tibble(
-        multiplet = "m.C1D1",
+        multiplet = "m.C1D1.342",
         from = "C1",
         to = "D1"
     )
     expected3 <- tibble::tibble(
-        multiplet = c("m.A1B1", "m.C1D1"),
+        multiplet = c("m.A1B1.341", "m.C1D1.342"),
         from = c("A1", "C1"),
         to = c("B1", "D1")
     )
@@ -160,12 +160,7 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
     output1 <- getMultipletsForEdge(sObj, 1/4, data.frame("A1", "B1"))
     output2 <- getMultipletsForEdge(sObj, 1/4, data.frame("C1", "D1"))
     output3 <- getMultipletsForEdge(
-        sObj,
-        1/4,
-        data.frame(
-            c("A1", "C1"),
-            c("B1", "D1")
-        )
+      sObj, 1/4, data.frame(c("A1", "C1"), c("B1", "D1"))
     )
     
     #test

@@ -9,8 +9,10 @@ NULL
 #' @name plotCountsData
 #' @rdname plotCountsData
 #' @aliases plotCountsData
-#' @param x An spUnsupervised object.
-#' @param y An spCounts object containing singlets.
+#' @param spCountsSng spCounts; An spCounts object containing singlets.
+#' @param spCountsMul spCounts; An spCounts object containing multiplets.
+#' @param markers character; A vector with the 2 markers to plot. Must be
+#'  present in rownames of counts.
 #' @param ... additional arguments to pass on.
 #' @return A tibble with columns:
 #' @author Jason T. Serviss

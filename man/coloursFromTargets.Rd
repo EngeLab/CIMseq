@@ -14,6 +14,8 @@ coloursFromTargets(pal, counts, markers, ...)
 
 \item{markers}{character; The markers to evaluate. Must be present in
 rownames(counts).}
+
+\item{...}{additional arguments to pass on.}
 }
 \description{
 Diverging color palette with 40 colors.

@@ -485,6 +485,7 @@ NULL
 #' @rdname spSwarmPoisson
 #' @importFrom stats ppois
 #' @importFrom dplyr filter pull rowwise do ungroup
+#' @importFrom utils combn
 #' @importFrom rlang .data
 #' @export
 
@@ -809,6 +810,7 @@ NULL
 #' @importFrom tibble as_tibble add_column
 #' @importFrom dplyr select
 #' @importFrom stats setNames
+#' @importFrom utils combn
 
 setGeneric("getEdgesForMultiplet", function(
     spSwarm,

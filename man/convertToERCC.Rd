@@ -11,7 +11,7 @@ convertToERCC(ercc, spCountsSng, spCountsMul)
 
 \item{spCountsSng}{spCounts; An spCounts object with singlets.}
 
-\item{spCountsSng}{spCounts; An spCounts object with multiplets.}
+\item{spCountsMul}{spCounts; An spCounts object with multiplets.}
 }
 \description{
 A function to facilitate calculation of the second axis of the plotCounts

@@ -8,11 +8,14 @@
 plotCountsData(spCountsSng, spCountsMul, markers = NULL, ...)
 }
 \arguments{
+\item{spCountsSng}{spCounts; An spCounts object containing singlets.}
+
+\item{spCountsMul}{spCounts; An spCounts object containing multiplets.}
+
+\item{markers}{character; A vector with the 2 markers to plot. Must be
+present in rownames of counts.}
+
 \item{...}{additional arguments to pass on.}
-
-\item{x}{An spUnsupervised object.}
-
-\item{y}{An spCounts object containing singlets.}
 }
 \value{
 A tibble with columns:

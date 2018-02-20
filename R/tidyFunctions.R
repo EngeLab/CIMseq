@@ -25,17 +25,10 @@ namedListToTibble <- function(l) {
     if (!is.null(names(l[[1]]))) {
         ni <- gsub(".*\\.(.*)$", "\\1", names(unlist(l)))
         n <- rep(names(l), lengths(l))
-        tibble::tibble(
-            names = n,
-            inner.names = ni,
-            variables = unname(unlist(l))
-        )
+        tibble(names = n, inner.names = ni, variables = unname(unlist(l)))
     } else {
         n <- rep(names(l), lengths(l))
-        tibble::tibble(
-            names = n,
-            variables = unname(unlist(l))
-        )
+        tibble(names = n, variables = unname(unlist(l)))
     }
 }
 
@@ -47,6 +40,8 @@ namedListToTibble <- function(l) {
 #' @rdname matrix_to_tibble
 #' @author Jason T. Serviss
 #' @param data matrix; The matrix to be converted.
+#' @param rowname character; Length 1 vector indicating the colname that
+#'  rownames should have upon tibble conversion.
 #' @keywords matrix_to_tibble
 #' @examples
 #'
@@ -89,7 +84,7 @@ normalizeVec <- function(vec) {
 #' @name tidyUnsupervised
 #' @rdname tidyUnsupervised
 #' @author Jason T. Serviss
-#' @param spUnsupervised; spUnsupervised An spUnsupervised object.
+#' @param spUnsupervised spUnsupervised; An spUnsupervised object.
 #' @keywords tidyUnsupervised
 #' @examples
 #'
@@ -113,7 +108,7 @@ tidyUnsupervised <- function(spUnsupervised) {
 #' @name tidySwarm
 #' @rdname tidySwarm
 #' @author Jason T. Serviss
-#' @param spSwarm; spSwarm An spSwarm object.
+#' @param spSwarm spSwarm; An spSwarm object.
 #' @keywords tidySwarm
 #' @examples
 #'

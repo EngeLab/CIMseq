@@ -83,38 +83,25 @@ test_that("check that estimateCells outputs the expected result", {
   expected3 <- tibble::tibble(
     frac.ercc = 0,
     cellNumberMin = 2,
-    cellNumberMedian = 2,
-    cellNumberMax = 2
+    cellNumberMedian = 3,
+    cellNumberMax = 3
   )
   
   #run function
   output <- estimateCells(cObjSng, cObjMul)
+  firstRow <- output %>%
+    dplyr::slice(1) %>%
+    dplyr::select(frac.ercc:cellNumberMax) %>%
+    round()
+  lastRow <- output %>%
+    dplyr::slice(nrow(output)) %>%
+    dplyr::select(frac.ercc:cellNumberMax) %>%
+    round()
   
   #test
-  expect_identical(expected1, output %>% dplyr::select(`sampleType`))
-  expect_identical(
-    expected2, round(
-      output %>%
-        dplyr::slice(1:1) %>%
-        dplyr::select(c(
-          `frac.ercc`,
-          `cellNumberMin`,
-          `cellNumberMedian`,
-          `cellNumberMax`
-        ))
-    )
-  )
-  expect_identical(expected3, round(
-    output %>%
-      dplyr::slice(nrow(output)) %>%
-      dplyr::select(c(
-        `frac.ercc`,
-        `cellNumberMin`,
-        `cellNumberMedian`,
-        `cellNumberMax`
-      ))
-    )
-  )
+  expect_identical(expected1, dplyr::select(output, `sampleType`))
+  expect_identical(expected2, firstRow)
+  expect_identical(expected3, lastRow)
   expect_type(output$sampleName, "character")
   expect_type(output$sampleType, "character")
   expect_type(output$frac.ercc, "double")

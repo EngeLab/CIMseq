@@ -1,6 +1,7 @@
 #from package directory run with source('./inst/rawData/testData.R')
 
 library(sp.scRNAseqTesting)
+library(sp.scRNAseqData)
 
 ########unit test and vignettes data
 #minimize cells
@@ -42,22 +43,15 @@ counts <- cbind(
 select <- .ntopMax(counts, 250)
 testCounts <- counts[select, ]
 rownames(testCounts) <- sort(
-  paste(
-    rep(
-      letters,
-      10
-    ),
-    1:11,
-    sep = ""
-  )[1:nrow(testCounts)]
+  paste(rep(letters, 10), 1:11, sep = "")[1:nrow(testCounts)]
 )
 
 #make testErcc
-s <- grepl("^s", colnames(expCounts))
+s <- grepl("^s", colnames(countsFp))
 s2 <- grepl("^s", colnames(testCounts))
-singletsE <- expErcc[c(1, 2), s]
+singletsE <- countsErccFp[c(1, 2), s]
 singletsE <- singletsE[, sample(
-  1:ncol(expErcc[, s]),
+  1:ncol(countsErccFp[, s]),
   size = length(s2[s2]),
   replace = TRUE
 )]
@@ -72,7 +66,11 @@ m2 <- rowMeans(singletsE[, idx]) / 9
 multipletsE <- matrix(c(m1, m2), ncol = 2)
 colnames(multipletsE) <- c("m.A1B1", "m.C1D1")
 
-testErcc <- cbind(singletsE, multipletsE)
+testErcc <- as.matrix(cbind(singletsE, multipletsE))
+
+#rename samples with unique name
+colnames(testCounts) <- paste(colnames(testCounts), 1:ncol(testCounts), sep = ".")
+colnames(testErcc) <- paste(colnames(testErcc), 1:ncol(testErcc), sep = ".")
 
 #make test spUnsupervised and spSwarm
 cObjSng <- spCounts(testCounts[, s2], testErcc[, s2])
