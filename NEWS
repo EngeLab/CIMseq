@@ -1,3 +1,18 @@
+v0.0.1.3
+* Plots reworked to have more managable code and facilitate users gaining access to plot data to make custom plots.
+* Added plotting vignette to describe plotting features.
+* tidy functions added for spUnsupervised and spSwarm objects.
+* Several new input checks.
+* Added codecov functionality.
+* Added structure for revdep, although this is not presently functional.
+* Updated travis to build with release and devel.
+* Default edge.cutoff value for spSwarmPoission now 0.
+* Dataset docs for test dataset now in one file.
+* Test data samples now have unique names (colnames).
+* Added matrix_to_tibble and normalizeVec functions, mostly for internal use.
+* README now generated via README.Rmd
+* Unit tests updated accordingly, although there is still some work to be done here.
+
 v0.0.1.2
 * Adding alternative color schemes for plotUnsupervised markers plot.
 * Adding warning for estimateCells when samples exist with ERCC counts that are all 0.
