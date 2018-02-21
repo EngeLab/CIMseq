@@ -23,7 +23,7 @@
 spSwarm(spCounts, spUnsupervised, ...)
 
 \S4method{spSwarm}{spCounts,spUnsupervised}(spCounts, spUnsupervised,
-  distFun = "distToSlice", maxiter = 10, swarmsize = 150, cores = 1,
+  distFun = "distToSliceNorm", maxiter = 10, swarmsize = 150, cores = 1,
   seed = 11, norm = TRUE, report = FALSE, reportRate = NULL,
   cellNumbers = NULL, e = NULL, ...)
 }

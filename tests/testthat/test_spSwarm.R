@@ -6,6 +6,31 @@ cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
 uObj <- testUns
 sObj <- testSwa
 
+##run test spSwarm
+test_that("check that spSwarm outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  cellTypes <- matrix(rep(1, 40), ncol = 4)
+  fractions <- c(1, 0.5, 0.25, 0.1)
+  cn <- tibble::tibble(
+    sampleName = colnames(testCounts[, !s]),
+    cellNumberMedian = rep(1, length(which(!s)))
+  )
+  #setup expected data
+  expected <- rep(1.85, 10)
+  
+  #run function
+  output <- .makeSyntheticSlice(cellTypes, fractions)
+  
+  
+  #test
+  expect_silent(spSwarm(cObjSng, uObj, swarmsize = 10, maxiter = 2)) #this should be improved
+  expect_silent(spSwarm(cObjSng, uObj, swarmsize = 10, maxiter = 2, cellNumbers = cn)) #this should be improved
+  expect_message(spSwarm(cObjSng, uObj, swarmsize = 10, maxiter = 2, report = TRUE, reportRate = 1)) #this should be improved
+  expect_error(spSwarm(cObjSng, uObj, distFun = "dtsnCellNum"))
+})
+
 ##run test .makeSyntheticSlice
 test_that("check that .makeSyntheticSlice outputs the expected result", {
   

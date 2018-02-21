@@ -242,39 +242,6 @@ spTopMax <- function(spCounts, n) {
     return(select)
 }
 
-#' spTopMaxMean
-#'
-#' Facilitates gene selection prior to unsupervised clustering.
-#'
-#' Returns the index for the n genes (rows) with the maximum
-#' max(gene) - mean(gene) values in the spCounts object. The expression matrix
-#' in the counts.cpm slot is used for the calculation.
-#'
-#' @name spTopMaxMean
-#' @rdname spTopMaxMean
-#' @aliases spTopMaxMean
-#' @param spCounts An spCounts object.
-#' @param n Number of genes to select.
-#' @return A numeric vector containing the indices of selected genes.
-#' @author Jason T. Serviss
-#' @keywords spTopMaxMean
-#' @examples
-#'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' selected <- spTopMaxMean(cObjSng, 10)
-#'
-NULL
-
-#' @rdname spTopMaxMean
-#' @export
-
-spTopMaxMean <- function(spCounts, n) {
-  rv = apply(getData(spCounts, "counts.cpm"), 1, function(x) max(x) - mean(x))
-  select = order(rv, decreasing = TRUE)[1:n]
-  return(select)
-}
-
 #' pearsonsDist
 #'
 #'

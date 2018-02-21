@@ -6,28 +6,23 @@ NULL
 #' @importFrom utils head
 #' @export
 setMethod("show", "spCounts", function(
-    object
+  object
 ){
-    .showCounts(object)
+  .showCounts(object)
 })
 
 #internal show function
 .showCounts <- function(
     object
 ){
-    names <- slotNames(object)
-    cat("Class:","spCounts\n")
-    cat("Contains: \n")
-    for(i in 1:length(names)){
-        cat(paste(i,". ", names[i], "\n",sep=""))
-        mat <- slot(object, names[i])
-
-        if(class(mat) == "matrix") {
-            .showMatrix(mat)
-        } else {
-            .showBasics(mat)
-        }
-    }
+  names <- slotNames(object)
+  cat("Class:","spCounts\n")
+  cat("Contains: \n")
+  for(i in 1:length(names)){
+    cat(paste(i,". ", names[i], "\n",sep=""))
+    mat <- slot(object, names[i])
+    if(class(mat) == "matrix") .showMatrix(mat)
+  }
 }
 
 #' @rdname spUnsupervised
@@ -35,31 +30,29 @@ setMethod("show", "spCounts", function(
 #' @importFrom utils head
 #' @export
 setMethod("show", "spUnsupervised", function(
-    object
+  object
 ){
-    .showUnsupervised(object)
+  .showUnsupervised(object)
 })
 
 #internal show function
 .showUnsupervised <- function(
-    object
+  object
 ){
-    names <- slotNames(object)
-    cat("Class:","spUnsupervised\n")
-    cat("Contains: \n")
-    for(i in 1:length(names)){
-        
-        cat(paste(i, ". ", names[i], "\n",sep=""))
-        mat <- slot(object, names[i])
-        
-        if(class(mat) == "matrix" | class(mat) == "data.frame") {
-            .showMatrix(mat)
-        } else if(class(mat) == "list") {
-            .showList(mat)
-        } else {
-            .showBasics(mat)
-        }
+  names <- slotNames(object)
+  cat("Class:","spUnsupervised\n")
+  cat("Contains: \n")
+  for(i in 1:length(names)){
+    
+    cat(paste(i, ". ", names[i], "\n",sep=""))
+    mat <- slot(object, names[i])
+    
+    if(class(mat) == "matrix" | class(mat) == "data.frame") {
+      .showMatrix(mat)
+    } else {
+      .showBasics(mat)
     }
+  }
 }
 
 #' @rdname spSwarm
@@ -88,8 +81,6 @@ setMethod("show", "spSwarm", function(
             .showMatrix(mat)
         } else if(class(mat) == "list") {
             .showList(mat)
-        } else if(class(mat) == "spCounts" | class(mat) == "spUnsupervised") {
-            show(mat)
         } else {
             .showBasics(mat)
         }

@@ -4,6 +4,15 @@ s <- grepl("^s", colnames(testCounts))
 cObjSng <- spCounts(testCounts[,s], testErcc[,s])
 cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
 
+##run test spUnsupervised
+#test_that("check that spUnsupervised outputs the expected result", {
+  #g <- rownames(testCounts)
+  #expect_output(spUnsupervised(cObjSng, max_iter = 2), ".*fitting.*")
+  #expect_output(spUnsupervised(cObjSng, type = "var"), ".*fitting.*")
+  #expect_output(spUnsupervised(cObjSng, type = "manual", genes = g, max_iter = 2), ".*fitting.*")
+  #expect_output(spUnsupervised(cObjSng, type = "all", max_iter = 2), ".*fitting.*")
+#})
+
 ##run test spTopVar
 test_that("check that spTopVar outputs the expected result", {
     

@@ -73,7 +73,7 @@ setGeneric("spSwarm", function(
 setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   spCounts,
   spUnsupervised,
-  distFun = "distToSlice",
+  distFun = "distToSliceNorm",
   maxiter = 10,
   swarmsize = 150,
   cores = 1,
@@ -86,11 +86,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   ...
 ){
     
-    #put a check here to make sure all slots in the spUnsupervised object are filled.
-    
-    if(length(distFun) != 1) {
-        stop("Please provide a valid distFun argument.")
-    }
+    #put a check here to make sure all slots in the spUnsupervised object are filled. This should actually be regulated by the class definition BUT you should probably double check that it works as expected via unit tests.
+
     if(distFun == "dtsnCellNum" & (is.null(cellNumbers) | is.null(e))) {
       stop("cellNumbers and e must be provided with dtsnCellNum distFun.")
     }
