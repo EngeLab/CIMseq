@@ -4,6 +4,8 @@ language: r
 r: 
   - release
   - devel
+r_packages:
+  - devtools
 package: cache
 bioc_required: true
 r_build_args: "--no-manual --no-resave-data"
@@ -16,4 +18,4 @@ before_install:
 sudo: required
 apt_packages: libudunits2-dev
 after_success:
-    - Rscript -e 'covr::codecov()'
+    - Rscript -e 'covr::codecov(type = 'all')'
