@@ -5,9 +5,7 @@ r:
   - release
   - devel
 package: cache
-r_packages:
-  - covr
-bioc_required: false
+bioc_required: true
 r_build_args: "--no-manual --no-resave-data"
 r_check_args: "--no-manual --timings"
 -os:
