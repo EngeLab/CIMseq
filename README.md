@@ -8,7 +8,7 @@ Devel build:
 <a href="https://travis-ci.org/jasonserviss/sp.scRNAseq"><img src="https://travis-ci.com/jasonserviss/sp.scRNAseq.svg?token=8VXNvJpmRV9RpFtTcJYW&branch=devel"></a>
 
 Test coverage: [![Coverage
-status](https://codecov.io/gh/jasonserviss/sp.scRNAseq/branch/master/graph/badge.svg)](https://codecov.io/github/jasonserviss/sp.scRNAseq?branch=master)
+status](https://codecov.io/gh/jasonserviss/sp.scRNAseq/branch/master/graph/badge.svg?token=vVxKKSzhGt)](https://codecov.io/gh/jasonserviss/sp.scRNAseq)
 
 Advances in single-cell biology has enabled us to investigate isolated
 single cells at an unprecedented scale and resolution. However, cells in
