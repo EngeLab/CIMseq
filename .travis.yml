@@ -18,4 +18,4 @@ before_install:
 sudo: required
 apt_packages: libudunits2-dev
 after_success:
-    - Rscript -e 'covr::codecov(token = 'aec4300e-45cb-4373-9b0a-02df5f3561db')'
+    - Rscript -e 'covr::codecov(token = "aec4300e-45cb-4373-9b0a-02df5f3561db")'
