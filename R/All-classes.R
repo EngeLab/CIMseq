@@ -186,6 +186,7 @@ setMethod("tsne<-", "spUnsupervised", function(
   value
 ){
   object@tsne <- value
+  if (validObject(object)) return(object)
 })
 
 #' @rdname spUnsupervised
@@ -203,6 +204,7 @@ setMethod("tsneMeans<-", "spUnsupervised", function(
   value
 ){
   object@tsneMeans <- value
+  if (validObject(object)) return(object)
 })
 
 #' @rdname spUnsupervised
@@ -220,6 +222,7 @@ setMethod("groupMeans<-", "spUnsupervised", function(
   value
 ){
   object@groupMeans <- value
+  if (validObject(object)) return(object)
 })
 
 #' @rdname spUnsupervised
@@ -237,6 +240,7 @@ setMethod("classification<-", "spUnsupervised", function(
   value
 ){
   object@classification <- value
+  if (validObject(object)) return(object)
 })
 
 #' @rdname spUnsupervised
@@ -254,6 +258,7 @@ setMethod("uncertainty<-", "spUnsupervised", function(
   value
 ){
   object@uncertainty <- value
+  if (validObject(object)) return(object)
 })
 
 #' @rdname spUnsupervised
@@ -271,6 +276,7 @@ setMethod("selectInd<-", "spUnsupervised", function(
   value
 ){
   object@selectInd <- value
+  if (validObject(object)) return(object)
 })
 
 #####################

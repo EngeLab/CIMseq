@@ -18,5 +18,18 @@ test_that("check that replacement outputs the expected result", {
   expect_error(classification(uObj) <- 1)
   expect_error(uncertainty(uObj) <- "a")
   expect_error(selectInd(uObj) <- "a")
+  
+  tsne(uObj) <- tsne(uObj)
+  expect_is(uObj, "spUnsupervised")
+  tsneMeans(uObj) <- tsneMeans(uObj)
+  expect_is(uObj, "spUnsupervised")
+  groupMeans(uObj) <- groupMeans(uObj)
+  expect_is(uObj, "spUnsupervised")
+  classification(uObj) <- classification(uObj)
+  expect_is(uObj, "spUnsupervised")
+  uncertainty(uObj) <- uncertainty(uObj)
+  expect_is(uObj, "spUnsupervised")
+  selectInd(uObj) <- selectInd(uObj)
+  expect_is(uObj, "spUnsupervised")
 })
 
