@@ -49,7 +49,7 @@ setMethod("plotData", "gg", function(
   if(any(grepl("ggraph", class(plot[[1]])))) {
     attr(plot[[1]], "graph")
   } else {
-    as_tibble(plot[[1]])
+    as_tibble(plot[[1]]) #have a look at ggplot::fortify -> broom package
   }
 })
 
