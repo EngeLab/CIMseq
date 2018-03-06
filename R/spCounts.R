@@ -164,7 +164,7 @@ setMethod("estimateCells", "spCounts", function(
   
   #check if any samples have ERCC are all 0
   all0 <- apply(counts.ercc, 2, function(x) all(x == 0))
-  if(any(all0)) {
+  if(any(all0, na.rm = TRUE)) {
     zeroIDs <- colnames(counts.ercc)[which(all0)]
     warning(paste0("These samples ERCC reads are all 0's: ", all0))
   }
@@ -185,7 +185,7 @@ setMethod("estimateCells", "spCounts", function(
     d %>%
       filter(.data$sampleType == "Singlet") %>%
       pull(.data$frac.ercc) %>%
-      quantile %>%
+      quantile(., na.rm = TRUE) %>%
       `[` (2) %>%
       `/` (d$frac.ercc)
   
@@ -193,14 +193,14 @@ setMethod("estimateCells", "spCounts", function(
     d %>%
       filter(.data$sampleType == "Singlet") %>%
       pull(.data$frac.ercc) %>%
-      median %>%
+      median(., na.rm = TRUE) %>%
       `/` (d$frac.ercc)
   
   d$cellNumberMax <-
     d %>%
       filter(.data$sampleType == "Singlet") %>%
       pull(.data$frac.ercc) %>%
-      quantile %>%
+      quantile(., na.rm = TRUE) %>%
       `[` (4) %>%
       `/` (d$frac.ercc)
   
