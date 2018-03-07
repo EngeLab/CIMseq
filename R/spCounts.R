@@ -166,7 +166,10 @@ setMethod("estimateCells", "spCounts", function(
   all0 <- apply(counts.ercc, 2, function(x) all(x == 0))
   if(any(all0, na.rm = TRUE)) {
     zeroIDs <- colnames(counts.ercc)[which(all0)]
-    warning(paste0("These samples ERCC reads are all 0's: ", all0))
+    warning(paste0(
+      "These samples ERCC reads are all 0's: ",
+      paste(zeroIDs, collapse = ", ")
+    ))
   }
   
   d <- tibble(
