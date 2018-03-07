@@ -113,6 +113,8 @@ setMethod("spCounts", "matrix", function(
 #' @aliases estimateCells
 #' @param spCountsSng A spCounts object with singlets.
 #' @param spCountsMul A spCounts object with multiplets.
+#' @param warning logical; Indicates if a warning should be issued when all ERCC
+#'  counts for a sample are equal to 0.
 #' @param ... additional arguments to pass on
 #' @return A data frame including the fraction of ercc reads and cell counts for
 #'    each sample.
@@ -133,11 +135,11 @@ NULL
 #' @export
 
 setGeneric("estimateCells", function(
-    spCountsSng,
-    spCountsMul,
-    ...
+  spCountsSng,
+  spCountsMul,
+  ...
 ){
-    standardGeneric("estimateCells")
+  standardGeneric("estimateCells")
 })
 
 #' @rdname estimateCells
@@ -147,9 +149,10 @@ setGeneric("estimateCells", function(
 #' @importFrom dplyr pull
 #' @export
 setMethod("estimateCells", "spCounts", function(
-    spCountsSng,
-    spCountsMul,
-    ...
+  spCountsSng,
+  spCountsMul,
+  warning = TRUE,
+  ...
 ){
   
   counts <- cbind(
@@ -164,7 +167,7 @@ setMethod("estimateCells", "spCounts", function(
   
   #check if any samples have ERCC are all 0
   all0 <- apply(counts.ercc, 2, function(x) all(x == 0))
-  if(any(all0, na.rm = TRUE)) {
+  if(any(all0, na.rm = TRUE) & warning) {
     zeroIDs <- colnames(counts.ercc)[which(all0)]
     warning(paste0(
       "These samples ERCC reads are all 0's: ",

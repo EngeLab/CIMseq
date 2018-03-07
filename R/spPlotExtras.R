@@ -71,7 +71,7 @@ setMethod("plotData", "gg", function(
 #' @importFrom stats median
 
 convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
-  estimateCells(spCountsSng, spCountsMul) %>%
+  estimateCells(spCountsSng, spCountsMul, warning = FALSE) %>%
   select(.data$sampleType, .data$frac.ercc) %>%
   filter(.data$sampleType == "Singlet") %>%
   pull(.data$frac.ercc) %>%
