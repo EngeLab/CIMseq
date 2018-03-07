@@ -1,3 +1,6 @@
+v0.0.1.5
+* Issue #45: NAs in ERCC problem with convertToERCC function
+
 v0.0.1.4
 * Issue #41: NAs in ERCC problem with estimateCells function
 * Fixing badges

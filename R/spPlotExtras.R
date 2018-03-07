@@ -75,7 +75,7 @@ convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
   select(.data$sampleType, .data$frac.ercc) %>%
   filter(.data$sampleType == "Singlet") %>%
   pull(.data$frac.ercc) %>%
-  median %>%
+  median(., na.rm = TRUE) %>%
   `*` (100) %>%
   `/` (ercc)
 }
