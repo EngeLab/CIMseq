@@ -114,7 +114,8 @@ setMethod("spCounts", "matrix", function(
 #' @param spCountsSng A spCounts object with singlets.
 #' @param spCountsMul A spCounts object with multiplets.
 #' @param warning logical; Indicates if a warning should be issued when all ERCC
-#'  counts for a sample are equal to 0.
+#'  counts for a sample are equal to 0. If this warning is issued it can be
+#'  satisfactorily resolved by setting the ERCC reads for these samples to NA.
 #' @param ... additional arguments to pass on
 #' @return A data frame including the fraction of ercc reads and cell counts for
 #'    each sample.
@@ -170,6 +171,7 @@ setMethod("estimateCells", "spCounts", function(
   if(any(all0, na.rm = TRUE) & warning) {
     zeroIDs <- colnames(counts.ercc)[which(all0)]
     warning(paste0(
+      "Results will not be accurate."
       "These samples ERCC reads are all 0's: ",
       paste(zeroIDs, collapse = ", ")
     ))
