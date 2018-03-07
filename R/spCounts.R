@@ -171,7 +171,7 @@ setMethod("estimateCells", "spCounts", function(
   if(any(all0, na.rm = TRUE) & warning) {
     zeroIDs <- colnames(counts.ercc)[which(all0)]
     warning(paste0(
-      "Results will not be accurate."
+      "Results will not be accurate. ",
       "These samples ERCC reads are all 0's: ",
       paste(zeroIDs, collapse = ", ")
     ))
