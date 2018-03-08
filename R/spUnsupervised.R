@@ -198,13 +198,13 @@ setMethod("spUnsupervised", "spCounts", function(
 NULL
 
 #' @rdname spTopVar
-#' @importFrom stats var
+#' @importFrom matrixStats rowVars
 #' @export
 
 spTopVar <- function(spCounts, n) {
-  rv = apply(getData(spCounts, "counts.cpm"), 1, var) #use matrixStats::rowVars instead; much faster
-    select = order(rv, decreasing = TRUE)[1:n]
-    return(select)
+  rv <- matrixStats::rowVars(getData(spCounts, "counts.cpm"))
+  select <- order(rv, decreasing = TRUE)[1:n]
+  return(select)
 }
 
 #' spTopMax
@@ -232,12 +232,13 @@ spTopVar <- function(spCounts, n) {
 NULL
 
 #' @rdname spTopMax
+#' @importFrom matrixStats rowMaxs
 #' @export
 
 spTopMax <- function(spCounts, n) {
     data <- getData(spCounts, "counts.cpm")
     n <- min(n, dim(data)[1])
-    rv <- apply(data, 1, max)
+    rv <- matrixStats::rowMaxs(data)
     select <- order(rv, decreasing = TRUE)[1:n]
     return(select)
 }
@@ -276,7 +277,7 @@ NULL
 
 pearsonsDist <- function(spCounts, select) {
     as.dist(
-        1-cor(
+        1 - cor(
             getData(spCounts, "counts.log")[select, ],
             method = "p"
         )
