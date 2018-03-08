@@ -4,26 +4,6 @@ s <- grepl("^s", colnames(testCounts))
 cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 
-##run test
-test_that("check that the .norm.log.counts function outputs the expected result", {
-
-  #prepare normal input data
-  input <- matrix(c(0, 1, 1, 0), nrow = 2, ncol = 2)
-
-  #setup expected data
-  expected <- matrix(
-    c(0, log2(1000001), log2(1000001), 0),
-    nrow = 2,
-    ncol = 2
-  )
-
-  #run function
-  output <- .norm.log.counts(input)
-
-  #test
-  expect_true(all.equal(expected, output))
-})
-
 test_that("check that the .norm.counts function outputs the expected result", {
     
   ###TEST1####
