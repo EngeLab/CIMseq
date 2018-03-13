@@ -168,6 +168,11 @@ setMethod("plotUnsupervisedMarkers", c("spUnsupervised", "spCounts"), function(
   pal = col40(),
   ...
 ){
+  
+  if(is.null(markers)) {
+    stop("At least one marker must be provided in the markers argument.")
+  }
+  
   names(pal) <- markers
   pal <- pal[order(names(pal))]
   
