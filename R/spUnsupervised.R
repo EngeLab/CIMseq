@@ -56,7 +56,6 @@ NULL
 #' #run function
 #' uObj <- spUnsupervised(cObjSng, max_iter = 100, Gmax = 6)
 #'
-#' #run function
 #'
 NULL
 
@@ -64,10 +63,10 @@ NULL
 #' @export
 
 setGeneric("spUnsupervised", function(
-    spCounts,
-    ...
+  spCounts,
+  ...
 ){
-    standardGeneric("spUnsupervised")
+  standardGeneric("spUnsupervised")
 })
 
 
@@ -78,59 +77,52 @@ setGeneric("spUnsupervised", function(
 #' @importFrom stats as.dist
 
 setMethod("spUnsupervised", "spCounts", function(
-    spCounts,
-    theta = 0,
-    k = 2,
-    max_iter = 2000,
-    perplexity = 10,
-    initial_dims = 50,
-    Gmax = 50,
-    seed = 11,
-    type = "max",
-    max = 2000,
-    genes = NULL,
-    weighted = TRUE,
-    ...
+  spCounts,
+  theta = 0,
+  k = 2,
+  max_iter = 2000,
+  perplexity = 10,
+  initial_dims = 50,
+  Gmax = 50,
+  seed = 11,
+  type = "max",
+  max = 2000,
+  genes = NULL,
+  weighted = TRUE,
+  ...
 ){
-    #filter genes to be included in analysis
-    select <- .featureSelection(spCounts, type, max, genes)
-    
-    #calculate distances
-    my.dist <- pearsonsDist(spCounts, select)
-    
-    #run tSNE
-    tsne <- runTsne(
-        my.dist,
-        k,
-        theta,
-        initial_dims,
-        max_iter,
-        perplexity,
-        seed
-    )
-    
-    #run Mclust
-    tmp <- runMclust(tsne, Gmax, seed)
-    class <- tmp[[1]]
-    uncertainty <- tmp[[2]]
-    
-    #check for classification problems
-    .classificationChecks(class)
-    
-    #create object
-    new("spUnsupervised",
-        tsne = tsne,
-        tsneMeans = tsneGroupMeans(tsne, class),
-        groupMeans = averageGroupExpression(
-            spCounts,
-            class,
-            weighted,
-            uncertainty
-        ),
-        classification = class,
-        uncertainty = uncertainty,
-        selectInd = select
-    )
+  #filter genes to be included in analysis
+  select <- .featureSelection(spCounts, type, max, genes)
+  
+  #calculate distances
+  my.dist <- pearsonsDist(spCounts, select)
+  
+  #run tSNE
+  tsne <- runTsne(
+    my.dist, k, theta, initial_dims,
+    max_iter, perplexity, seed
+  )
+  
+  #run Mclust
+  tmp <- runMclust(tsne, Gmax, seed)
+  class <- tmp[[1]]
+  uncertainty <- tmp[[2]]
+  
+  #check for classification problems
+  .classificationChecks(class)
+  
+  #create object
+  new("spUnsupervised",
+    tsne = tsne,
+    tsneMeans = tsneGroupMeans(tsne, class),
+    groupMeans = averageGroupExpression(
+      spCounts, class,
+      weighted, uncertainty
+    ),
+    classification = class,
+    uncertainty = uncertainty,
+    selectInd = select
+  )
 })
 
 .featureSelection <- function(spCounts, type, max, genes) {
@@ -159,16 +151,16 @@ setMethod("spUnsupervised", "spCounts", function(
 }
 #checks for results from classification that will throw a downstream error.
 .classificationChecks <- function(class) {
-    if(length(unique(class)) == 1) {
-        stop("Only one group could be classified.
-        Please adjust the tSNE-related arguments and
-        try again or manually supply group classifications.")
-    }
-    
-    if(any(table(class) == 1)) {
-        stop("One/more cells have been classified as an individual cell type. 
-        You probably need to adjust the Gmax argument and run again.")
-    }
+  if(length(unique(class)) == 1) {
+    stop("Only one group could be classified.
+    Please adjust the tSNE-related arguments and
+    try again or manually supply group classifications.")
+  }
+  
+  if(any(table(class) == 1)) {
+    stop("One/more cells have been classified as an individual cell type.
+    You probably need to adjust the Gmax argument and run again.")
+  }
 }
 
 
@@ -236,11 +228,11 @@ NULL
 #' @export
 
 spTopMax <- function(spCounts, n) {
-    data <- getData(spCounts, "counts.cpm")
-    n <- min(n, dim(data)[1])
-    rv <- matrixStats::rowMaxs(data)
-    select <- order(rv, decreasing = TRUE)[1:n]
-    return(select)
+  data <- getData(spCounts, "counts.cpm")
+  n <- min(n, dim(data)[1])
+  rv <- matrixStats::rowMaxs(data)
+  select <- order(rv, decreasing = TRUE)[1:n]
+  return(select)
 }
 
 #' pearsonsDist
@@ -276,12 +268,12 @@ NULL
 #' @export
 
 pearsonsDist <- function(spCounts, select) {
-    as.dist(
-        1 - cor(
-            getData(spCounts, "counts.log")[select, ],
-            method = "p"
-        )
+  as.dist(
+    1 - cor(
+      getData(spCounts, "counts.log")[select, ],
+      method = "p"
     )
+  )
 }
 
 #' runTsne
@@ -332,30 +324,25 @@ NULL
 #' @export
 
 runTsne <- function(
-    my.dist,
-    dims = 2,
-    theta = 0,
-    initial_dims = 50,
-    max_iter = 2000,
-    perplexity = 10,
-    seed = 11,
-    is_distance = TRUE,
-    ...
+  my.dist,
+  dims = 2,
+  theta = 0,
+  initial_dims = 50,
+  max_iter = 2000,
+  perplexity = 10,
+  seed = 11,
+  is_distance = TRUE,
+  ...
 ){
-    set.seed(seed)
-    
-    my.tsne <- Rtsne(
-        my.dist,
-        dims = dims,
-        initial_dims = initial_dims,
-        max_iter = max_iter,
-        perplexity = perplexity,
-        theta = theta,
-        is_distance = is_distance
-    )$Y
-    
-    rownames(my.tsne) <- attr(my.dist, "Labels")
-    return(my.tsne)
+  set.seed(seed)
+  
+  my.tsne <- Rtsne(
+    my.dist, dims = dims, initial_dims = initial_dims, max_iter = max_iter,
+    perplexity = perplexity, theta = theta, is_distance = is_distance
+  )$Y
+  
+  rownames(my.tsne) <- attr(my.dist, "Labels")
+  return(my.tsne)
 }
 
 #' runMclust
@@ -395,24 +382,24 @@ NULL
 #' @export
 
 runMclust <- function(
-    my.tsne,
-    Gmax = 50,
-    seed = 11
+  my.tsne,
+  Gmax = 50,
+  seed = 11
 ){
-    set.seed(seed)
-    mod1 <- Mclust(my.tsne, G = 1:Gmax)
-    
-    #rename classification classes
-    x <- unique(mod1$classification)
-    n <- ceiling(length(x)/26)
-    names <- unlist(lapply(1:n, function(u)
-        paste(LETTERS, u, sep = ""))
-    )[1:length(x)]
-    mod1$classification <- names[match(mod1$classification, x)]
-    
-    classification <- mod1$classification
-    uncertainty <- mod1$uncertainty
-    return(list(classification, uncertainty))
+  set.seed(seed)
+  mod1 <- Mclust(my.tsne, G = 1:Gmax)
+  
+  #rename classification classes
+  x <- unique(mod1$classification)
+  n <- ceiling(length(x)/26)
+  names <- unlist(lapply(1:n, function(u)
+    paste(LETTERS, u, sep = ""))
+  )[1:length(x)]
+  mod1$classification <- names[match(mod1$classification, x)]
+  
+  classification <- mod1$classification
+  uncertainty <- mod1$uncertainty
+  return(list(classification, uncertainty))
 }
 
 #' averageGroupExpression
@@ -461,29 +448,29 @@ NULL
 #' @export
 
 averageGroupExpression <- function(
-    data,
-    classes,
-    weighted,
-    uncertainty = NULL
+  data,
+  classes,
+  weighted,
+  uncertainty = NULL
 ){
-    c <- unique(classes)
-    exp <- getData(data, "counts.cpm")
-    
-    if(weighted) {
-        u <- 1 - uncertainty
-        w <- t(t(exp) * u)
-        means <- lapply(c, function(x) {
-            rowSums(w[, classes == x]) / sum(u[classes == x])
-        })
-    } else {
-        means <- lapply(c, function(x) {
-            rowMeans(exp[, classes == x])
-        })
-    }
-    
-    means <- as.matrix(as.data.frame(means))
-    colnames(means) <- c
-    return(means)
+  c <- unique(classes)
+  exp <- getData(data, "counts.cpm")
+  
+  if(weighted) {
+    u <- 1 - uncertainty
+    w <- t(t(exp) * u)
+    means <- lapply(c, function(x) {
+      rowSums(w[, classes == x]) / sum(u[classes == x])
+    })
+  } else {
+    means <- lapply(c, function(x) {
+      rowMeans(exp[, classes == x])
+    })
+  }
+  
+  means <- as.matrix(as.data.frame(means))
+  colnames(means) <- c
+  return(means)
 }
 
 #' tsneGroupMeans
@@ -522,18 +509,16 @@ NULL
 #' @export
 
 tsneGroupMeans <- function(data, classes) {
-    d <- data.frame(data[ ,1], data[ ,2], classes)
-    colnames(d) <- c("x", "y", "classification")
-    
-    means <- d %>%
-        group_by(classification) %>%
-        summarise(
-            x = mean(.data$x),
-            y = mean(.data$y)
-        ) %>%
-        as.data.frame()
-        
-    return(means)
+  d <- data.frame(data[ ,1], data[ ,2], classes)
+  colnames(d) <- c("x", "y", "classification")
+  
+  d %>%
+  group_by(classification) %>%
+  summarise(
+    x = mean(.data$x),
+    y = mean(.data$y)
+  ) %>%
+  as.data.frame()
 }
 
 #' erccPerClass
@@ -569,20 +554,19 @@ NULL
 #' @export
 
 erccPerClass <- function(
-    spCountsSng,
-    spCountsMul,
-    spUnsupervised
+  spCountsSng,
+  spCountsMul,
+  spUnsupervised
 ){
-    d <- estimateCells(spCountsSng, spCountsMul)
-    class <- tibble(
-        class = getData(spUnsupervised, "classification"),
-        sampleName = colnames(getData(spCountsSng, "counts"))
-    )
-    
-    d %>%
-        right_join(class, by = "sampleName") %>%
-        group_by(class) %>%
-        summarise(medianFracErcc = median(.data$frac.ercc))
+  class <- tibble(
+    class = getData(spUnsupervised, "classification"),
+    sampleName = colnames(getData(spCountsSng, "counts"))
+  )
+  
+  estimateCells(spCountsSng, spCountsMul) %>%
+  right_join(class, by = "sampleName") %>%
+  group_by(class) %>%
+  summarise(medianFracErcc = median(.data$frac.ercc, na.rm = TRUE))
 }
 
 
