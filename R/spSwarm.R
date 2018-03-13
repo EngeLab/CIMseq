@@ -49,7 +49,10 @@ NULL
 #' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 #' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 #' cn <- estimateCells(cObjSng, cObjMul)
-#' sObj <- spSwarm(cObjMul, testUns, distFun = "dtsnCellNum", cellNumbers = cn, e = 0.0025)
+#' sObj <- spSwarm(
+#'  cObjMul, testUns, distFun = "dtsnCellNum",
+#'  cellNumbers = cn, e = 0.0025
+#' )
 #'
 NULL
 
@@ -57,11 +60,11 @@ NULL
 #' @export
 
 setGeneric("spSwarm", function(
-    spCounts,
-    spUnsupervised,
-    ...
+  spCounts,
+  spUnsupervised,
+  ...
 ){
-    standardGeneric("spSwarm")
+  standardGeneric("spSwarm")
 })
 
 
@@ -113,33 +116,24 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   )
     
   ##run pySwarm
-  tmp <- .runPyRSwarm(
-    cellTypes = cellTypes,
-    multiplets = multiplets,
-    fractions = fractions,
-    distFun = distFun,
-    maxiter = maxiter,
-    swarmsize = swarmsize,
-    cores = cores,
-    seed = seed,
-    norm = norm,
-    report = report,
-    reportRate = reportRate,
-    cellNumbers = cellNumbers,
-    e = e,
-    ...
+  fullRes <- .runPyRSwarm(
+    cellTypes = cellTypes,   multiplets = multiplets,
+    fractions = fractions,   distFun = distFun,
+    maxiter = maxiter,       swarmsize = swarmsize,
+    cores = cores,           seed = seed,
+    norm = norm,             report = report,
+    reportRate = reportRate, cellNumbers = cellNumbers,
+    e = e,                   ...
   )
-  result <- tmp[[1]]
-  cost <- tmp[[2]]
-  convergence <- tmp[[3]]
-  stats <- tmp[[4]]
+  result <- fullRes[[1]]
+  cost <- fullRes[[2]]
+  convergence <- fullRes[[3]]
+  stats <- fullRes[[4]]
     
   #create object
   new("spSwarm",
-    spSwarm = result,
-    costs = cost,
-    convergence = convergence,
-    stats = stats,
+    spSwarm = result, costs = cost,
+    convergence = convergence, stats = stats,
     arguments = list(maxiter = maxiter, swarmsize = swarmsize)
   )
 })
