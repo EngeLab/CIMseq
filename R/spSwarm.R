@@ -452,7 +452,9 @@ NULL
 
 #' @rdname spSwarmPoisson
 #' @importFrom stats ppois
-#' @importFrom dplyr filter pull rowwise do ungroup
+#' @importFrom dplyr filter pull rowwise do ungroup full_join select
+#' @importFrom tibble rownames_to_column as_tibble
+#' @importFrom tidyr separate
 #' @importFrom utils combn
 #' @importFrom rlang .data
 #' @export
@@ -537,7 +539,7 @@ spSwarmPoisson <- function(
   totcomb %>%
   as_tibble %>%
   separate(value, c("from", "to"), sep = "-", remove = FALSE) %>%
-  full_join(res) %>%
+  full_join(res, by = "value") %>%
   select(-value) %>%
   as.data.frame(stringsAsFactors = FALSE)
 }
