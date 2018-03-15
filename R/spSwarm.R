@@ -29,6 +29,8 @@ NULL
 #'    should be generated.
 #' @param cellNumbers Tibble; Output from \code{estimateCells} function.
 #' @param e Numeric; The epsilon value for the .complexityPenilty unit.
+#' @param selectInd Numeric; Gene indexes to select for swarm optimization. If
+#'  NULL the selectInd slot from the spUnsupervised object is used.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per
@@ -86,6 +88,7 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   reportRate = NULL,
   cellNumbers = NULL,
   e = NULL,
+  selectInd = NULL,
   ...
 ){
     
@@ -518,28 +521,25 @@ spSwarmPoisson <- function(
 ){
   homo <- paste(sort(colnames(mat)), sort(colnames(mat)), sep = "-")
   hetero <- apply(
-    apply(combn(colnames(mat), 2), 2, sort),
-    2, paste, collapse = "-"
-  )
+    combn(colnames(mat), 2), 2, function(x) {
+      paste(sort(x), collapse = "-")
+  })
   totcomb <- c(homo, hetero)
     
   com <- apply(logic, 1, .funx, totcomb)
   rownames(com) <- totcomb
-  res <- apply(com, 1, sum)
-  xy <- rbind(
-    matrix(c(sort(colnames(mat)), sort(colnames(mat))), ncol = 2),
-    t(combn(sort(colnames(mat)), 2))
-  )
   
-  edges <- data.frame(
-    from = xy[,1],
-    to = xy[,2],
-    weight = res,
-    stringsAsFactors = FALSE,
-    row.names = 1:nrow(xy)
-  )
+  res <- apply(com, 1, sum) %>%
+  as.data.frame(stringsAsFactors = FALSE) %>%
+  rownames_to_column(var = "value") %>%
+  setNames(c("value", "weight"))
   
-  return(edges)
+  totcomb %>%
+  as_tibble %>%
+  separate(value, c("from", "to"), sep = "-", remove = FALSE) %>%
+  full_join(res) %>%
+  select(-value) %>%
+  as.data.frame(stringsAsFactors = FALSE)
 }
 
 .funx <- function(
@@ -548,14 +548,14 @@ spSwarmPoisson <- function(
 ){
   pick <- names(row)[which(row)]
   if(length(pick) == 1) {
-    out <- totcomb %in% paste(pick, pick, sep = "")
+    totcomb %in% paste(pick, pick, sep = "-")
   } else {
-    out <- totcomb %in% apply(
-      apply(combn(pick, 2), 2, sort),
-      2, paste, collapse = "-"
-    )
+    picked <- apply(
+      combn(pick, 2), 2, function(x) {
+        paste(sort(x), collapse = "-")
+    })
+    totcomb %in% picked
   }
-  return(out)
 }
 
 #' calcResiduals
@@ -811,10 +811,12 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
 #' @name calculateCost
 #' @rdname calculateCost
 #' @aliases calculateCost
-#' @param multiplet A numeric vector of the multiplet's counts per million.
+#' @param spCountsMul An spCounts object containing multiplets.
 #' @param spUnsupervised An spUnsupervised object.
 #' @param fractions The fractions to calculate the cost with.
 #' @param distFun The distance function to use for the cost calculation.
+#' @param e Argument to dtsnCellNum distance function.
+#' @param cellNumbers Argument to dtsnCellNum distance function.
 #' @param ... additional arguments to pass on
 #' @return The cost.
 #' @author Jason T. Serviss

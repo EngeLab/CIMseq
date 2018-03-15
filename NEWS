@@ -1,5 +1,6 @@
 v.0.0.1.7
 * adding calculateCost function (may remove later)
+* fixed apparent bug in spSwarmPoisson .calculateWeight unit
 
 v0.0.1.6
 * Issue #46: Improved performance by using matrixStats package for spUnsupervised
