@@ -1,5 +1,6 @@
 v.0.0.1.8
 * spSwarm now reports fractions < 1/10 as 0
+* Added countsPerClass function.
 
 v.0.0.1.7
 * adding calculateCost function (may remove later)

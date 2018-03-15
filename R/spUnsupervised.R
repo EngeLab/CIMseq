@@ -534,7 +534,7 @@ tsneGroupMeans <- function(data, classes) {
 #' @param spCountsSng An spCounts object containing singlets.
 #' @param spCountsMul An spCounts object containing multiplets.
 #' @param spUnsupervised An spUnsupervised object.
-#' @return A matrix containing the mean value for each gene for each
+#' @return A matrix containing the median value for each gene for each
 #'    classification group.
 #' @author Jason T. Serviss
 #' @keywords erccPerClass
@@ -569,7 +569,52 @@ erccPerClass <- function(
   summarise(medianFracErcc = median(.data$frac.ercc, na.rm = TRUE))
 }
 
+#' countsPerClass
+#'
+#'
+#' Calculates median counts per class.
+#'
+#'
+#'
+#' @name countsPerClass
+#' @rdname countsPerClass
+#' @aliases countsPerClass
+#' @param spCountsSng An spCounts object containing singlets.
+#' @param spCountsMul An spCounts object containing multiplets.
+#' @param spUnsupervised An spUnsupervised object.
+#' @return A matrix containing the median value for each gene for each
+#'    classification group.
+#' @author Jason T. Serviss
+#' @keywords countsPerClass
+#' @examples
+#'
+#' s <- grepl("^s", colnames(testCounts))
+#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+#' uObj <- testUns
+#' output <- countsPerClass(cObjSng, cObjMul, uObj)
+NULL
 
+#' @rdname countsPerClass
+#' @importFrom dplyr group_by summarise right_join
+#' @importFrom tibble tibble
+#' @importFrom rlang .data
+#' @export
+
+countsPerClass <- function(
+  spCountsSng,
+  spUnsupervised
+){
+  counts <- getData(spCountsSng, "counts")
+  tibble(
+    class = getData(spUnsupervised, "classification"),
+    sampleName = colnames(getData(spCountsSng, "counts"))
+  ) %>%
+  group_by(class) %>%
+  summarize(
+    medianCounts = median(colSums(counts[, colnames(counts) %in% sampleName]))
+  )
+}
 
 
 
