@@ -203,7 +203,11 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   if(norm) {
     output <- output * 1/rowSums(output)
   }
-    
+  #the consequences of the line below cause connections in multiplets comprised
+  #of 10 cells to be impossible to detect
+  output[output < 1/10] <- 0
+  
+  #return results
   colnames(output) <- colnames(cellTypes)
   rownames(output) <- colnames(multiplets)
   return(list(output, cost, convergence, stats))
