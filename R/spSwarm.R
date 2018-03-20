@@ -203,9 +203,6 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   if(norm) {
     output <- output * 1/rowSums(output)
   }
-  #the consequences of the line below cause connections in multiplets comprised
-  #of 10 cells to be impossible to detect
-  output[output < 1/10] <- 0
   
   #return results
   colnames(output) <- colnames(cellTypes)
@@ -244,8 +241,8 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 }
 
 #function which calculates the complexity penalty
-.complexityPenilty <- function(k, e, cellNumber) {
-  n <- k / log(cellNumber)
+.complexityPenilty <- function(k, e, cellNumber, ...) {
+  n <- k / log(round(cellNumber) + 0.1)
   u <- n * e
   1 + u
 }
@@ -265,12 +262,12 @@ dtsnCellNum <- function(
       return(999999999)
   }
   normFractions <- fractions / sum(fractions)
-  cellTypes <- cellTypes/mean(cellTypes)
+  cellTypes <- cellTypes / mean(cellTypes)
   a <- .makeSyntheticSlice(cellTypes, normFractions)
-  a <- a/mean(a)
+  a <- a / mean(a)
   k <- length(which(normFractions > 0))
   penalty <- .complexityPenilty(k, e, cellNumber)
-  sum(abs((oneMultiplet - a) / (a+1))) * penalty
+  sum(abs((oneMultiplet - a) / (a + 1))) * penalty
 }
 
 distToSlice <- function(
@@ -605,34 +602,46 @@ calcResiduals <- function(
   spSwarm,
   clusters = NULL,
   edge.cutoff = NULL,
-  distFun = function(frac, multiplets){(abs(multiplets - frac) / (frac + 1))},
+  distFun = function(
+    fractions, cellTypes, oneMultiplet, e, cellNumber, ...
+  ){
+    if(sum(fractions) == 0) {
+      return(999999999)
+    }
+    normFractions <- fractions / sum(fractions)
+    cellTypes <- cellTypes/mean(cellTypes)
+    a <- .makeSyntheticSlice(cellTypes, normFractions)
+    a <- a/mean(a)
+    k <- length(which(normFractions > 0))
+    penalty <- .complexityPenilty(k, e, cellNumber)
+    abs((oneMultiplet - a) / (a+1)) * penalty
+  },
   ...
 ){
   #spCounts should only include multiplets
   
-  frac <- getData(spSwarm, "spSwarm")
   groupMeans <- getData(spUnsupervised, "groupMeans")
   selectInd <- getData(spUnsupervised, "selectInd")
+  frac <- getData(spSwarm, "spSwarm")
   counts <- getData(spCounts, "counts.cpm")
   
   cellTypes <- groupMeans[selectInd, ]
   multiplets <- counts[selectInd, ]
-  multiplets <- multiplets/mean(multiplets)
   
-  a <- sapply(1:nrow(frac), function(j)
-    .makeSyntheticSlice(cellTypes, as.numeric(frac[j,]))
-  )
-  colnames(a) <- rownames(frac)
-  a <- a/mean(a)
+  if(all(c("e", "cellNumber") %in% names(list(...)))) {
+    e <- list(...)[['e']]
+    cellNumber <- list(...)[['cellNumber']]
+    cellNumber <- cellNumber[match(colnames(multiplets), cellNumber$sampleName), "cellNumberMedian"][[1]]
+  }
   
-  diff <- sapply(1:ncol(a), function(x)
-    distFun(a[,x],multiplets[,x])
-  )
+  diff <- sapply(1:ncol(multiplets), function(x) {
+    distFun(as.numeric(frac[x, ]), cellTypes, multiplets[, x], e = e, cellNumber = cellNumber[x])
+  })
 
   colnames(diff) <- rownames(frac)
   
   if(!is.null(clusters) & !is.null(edge.cutoff)) {
-    diff <- diff[ ,
+    diff <- diff[,
       getMultipletsForEdge(spSwarm, edge.cutoff, clusters[1], clusters[2])
     ]
   }
@@ -691,7 +700,7 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
   
   mulForEdges <- lapply(1:nrow(edges), function(j) {
     cols <- c(pull(edges, 1)[j], pull(edges, 2)[j])
-      
+    
     if(identical(cols[1], cols[2])) {
       .self(j, cols, edges, spSwarm, edge.cutoff)
     } else {
@@ -798,7 +807,7 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
     setNames(c("from", "to")) %>%
     add_column("multiplet" = x) %>%
     select(.data$multiplet, .data$from, .data$to)
-      
+    
   } else if(length(which(keep)) == 1) {
     n <- names(frac)[keep]
     filter(s, .data$to == n & .data$from == n) %>%
