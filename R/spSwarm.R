@@ -584,12 +584,9 @@ spSwarmPoisson <- function(
 #' @keywords calcResiduals
 #' @examples
 #'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#' output <- calcResiduals(cObjMul, testUns, testSwa)
-#'
-#' #run function
-#'
+#' #s <- grepl("^s", colnames(testCounts))
+#' #cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+#' #output <- calcResiduals(cObjMul, testUns, testSwa)
 #'
 NULL
 
