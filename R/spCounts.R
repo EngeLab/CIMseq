@@ -67,7 +67,7 @@ setMethod("spCounts", "matrix", function(
 }
 
 .norm.counts <- function(counts) {
-    t(t(counts) / colSums(counts) * 10^6 + 1)
+  t(t(counts) / colSums(counts) * 10^6 + 1)
 }
 
 #.deconv <- function(counts, counts.ercc) {

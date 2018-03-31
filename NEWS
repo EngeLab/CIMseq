@@ -1,3 +1,6 @@
+v.0.0.1.90
+* Change in spSwarmPoisson that causes the edges to only be calculated for uniquely named cell types (unsure if this is a great idea or not but doing it for now).
+
 v.0.0.1.9
 * Fixed bug in complexityPenalty where multiplets with a cell number < 1 gave negative residuals
 * Updated calcResiduals to work with dtsnCellNum although it is not tested with other distance functions

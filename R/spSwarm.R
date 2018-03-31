@@ -95,8 +95,9 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   #put a check here to make sure all slots in the spUnsupervised object are
   #filled. This should actually be regulated by the class definition BUT you
   #should probably double check that it works as expected via unit tests.
-
-  if(distFun == "dtsnCellNum" & (is.null(cellNumbers) | is.null(e))) {
+  bool1 <- any(c("e", "cellNumbers") %in% names(as.list(args(distFun))))
+  bool2 <- (is.null(cellNumbers) | is.null(e))
+  if(bool1 & bool2) {
     stop("cellNumbers and e must be provided with dtsnCellNum distFun.")
   }
     
@@ -523,11 +524,10 @@ spSwarmPoisson <- function(
   ...
 ){
   homo <- paste(sort(colnames(mat)), sort(colnames(mat)), sep = "-")
-  hetero <- apply(
-    combn(colnames(mat), 2), 2, function(x) {
+  hetero <- apply(combn(colnames(mat), 2), 2, function(x) {
       paste(sort(x), collapse = "-")
   })
-  totcomb <- c(homo, hetero)
+  totcomb <- unique(c(homo, hetero))
     
   com <- apply(logic, 1, .funx, totcomb)
   rownames(com) <- totcomb
@@ -606,12 +606,12 @@ calcResiduals <- function(
       return(999999999)
     }
     normFractions <- fractions / sum(fractions)
-    cellTypes <- cellTypes/mean(cellTypes)
+    cellTypes <- cellTypes / mean(cellTypes)
     a <- .makeSyntheticSlice(cellTypes, normFractions)
     a <- a/mean(a)
     k <- length(which(normFractions > 0))
     penalty <- .complexityPenilty(k, e, cellNumber)
-    abs((oneMultiplet - a) / (a+1)) * penalty
+    abs((oneMultiplet - a) / (a + 1)) * penalty
   },
   ...
 ){
