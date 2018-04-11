@@ -40,7 +40,7 @@ plotUnsupervisedData <-  function(
   tidyUnsupervised(spUnsupervised) %>%
   #add colors
   full_join(
-    coloursFromTargets(pal, getData(spCountsSng, "counts"), markers),
+    coloursFromTargets(pal, getData(spCountsSng, "counts.cpm"), markers),
     by = "Sample"
   ) %>%
   #add marker data
