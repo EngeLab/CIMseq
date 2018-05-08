@@ -1,4 +1,4 @@
-#context("spCounts")
+context("spCounts")
 
 s <- grepl("^s", colnames(testCounts))
 cObjSng <- spCounts(testCounts[, s], testErcc[, s])

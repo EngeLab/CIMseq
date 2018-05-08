@@ -1,8 +1,6 @@
 #'@include All-classes.R
 NULL
 
-# Helper functions to classify count data into clusters
-
 #' spSwarm
 #'
 #' Subtitle
@@ -251,6 +249,22 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 # Various dist functions. Probably better to use match.arg and not export
 #(so as to avoid cluttering the namespace), but leaving it like this for now.
 
+#' dtsnCellNum
+#'
+#' Cost function for optimization.
+#'
+#' @name dtsnCellNum
+#' @rdname dtsnCellNum
+#' @author Jason T. Serviss
+#' @param fractions numeric; Fractions to adjust.
+#' @param cellTypes matrix; Mean cell type gene expression.
+#' @param oneMultiplet numeric; Gene expression values for multiplet.
+#' @param e numeric; epsilon
+#' @param cellNumber matrix? Estimated number of cells per multiplet.
+#' @param ... Additional arguments to pass.
+#'
+#' @export
+
 dtsnCellNum <- function(
   fractions,
   cellTypes,
@@ -454,7 +468,7 @@ NULL
 
 #' @rdname spSwarmPoisson
 #' @importFrom stats ppois
-#' @importFrom dplyr filter pull rowwise do ungroup full_join select
+#' @importFrom dplyr filter pull rowwise do ungroup full_join select bind_cols
 #' @importFrom tibble rownames_to_column as_tibble
 #' @importFrom tidyr separate
 #' @importFrom utils combn
@@ -538,11 +552,11 @@ spSwarmPoisson <- function(
   setNames(c("value", "weight"))
   
   totcomb %>%
-  as_tibble %>%
-  separate(value, c("from", "to"), sep = "-", remove = FALSE) %>%
-  full_join(res, by = "value") %>%
-  select(-value) %>%
-  as.data.frame(stringsAsFactors = FALSE)
+    as_tibble %>%
+    separate(value, c("from", "to"), sep = "-", remove = FALSE) %>%
+    full_join(res, by = "value") %>%
+    select(-value) %>%
+    as.data.frame(stringsAsFactors = FALSE)
 }
 
 .funx <- function(
@@ -582,16 +596,12 @@ spSwarmPoisson <- function(
 #' @return spSwarm connection strengths and p-values.
 #' @author Jason T. Serviss
 #' @keywords calcResiduals
-#' @examples
-#'
-#' #s <- grepl("^s", colnames(testCounts))
-#' #cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#' #output <- calcResiduals(cObjMul, testUns, testSwa)
 #'
 NULL
 
 #' @rdname calcResiduals
 #' @export
+
 
 calcResiduals <- function(
   spCounts,
@@ -599,20 +609,7 @@ calcResiduals <- function(
   spSwarm,
   clusters = NULL,
   edge.cutoff = NULL,
-  distFun = function(
-    fractions, cellTypes, oneMultiplet, e, cellNumber, ...
-  ){
-    if(sum(fractions) == 0) {
-      return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    cellTypes <- cellTypes / mean(cellTypes)
-    a <- .makeSyntheticSlice(cellTypes, normFractions)
-    a <- a/mean(a)
-    k <- length(which(normFractions > 0))
-    penalty <- .complexityPenilty(k, e, cellNumber)
-    abs((oneMultiplet - a) / (a + 1)) * penalty
-  },
+  distFun = .dtsnCellNum,
   ...
 ){
   #spCounts should only include multiplets
@@ -643,6 +640,21 @@ calcResiduals <- function(
     ]
   }
   return(diff)
+}
+
+.dtsnCellNum <- function(
+ fractions, cellTypes, oneMultiplet, e, cellNumber, ...
+){
+  if(sum(fractions) == 0) {
+    return(999999999)
+  }
+  normFractions <- fractions / sum(fractions)
+  cellTypes <- cellTypes / mean(cellTypes)
+  a <- .makeSyntheticSlice(cellTypes, normFractions)
+  a <- a/mean(a)
+  k <- length(which(normFractions > 0))
+  penalty <- .complexityPenilty(k, e, cellNumber)
+  abs((oneMultiplet - a) / (a + 1)) * penalty
 }
 
 #' getMultipletsForEdge
@@ -841,6 +853,7 @@ NULL
 
 #' @rdname calculateCost
 #' @export
+#' @importFrom purrr map_dbl
 
 calculateCost <- function(
   spCountsMul,

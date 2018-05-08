@@ -95,8 +95,8 @@ setMethod("plotSwarmPosition", "spSwarm", function(
         ggplot(aes(position)) +
             geom_density(aes(fill = class, colour = class), alpha = 0.5) +
             facet_grid(multiplet ~ iteration, scale = "free") +
-            scale_fill_manual(values = col64()) +
-            scale_colour_manual(values = col64()) +
+            scale_fill_manual(values = col40()) +
+            scale_colour_manual(values = col40()) +
             theme_few() +
             theme(
                 legend.position = "top",

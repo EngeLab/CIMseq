@@ -96,7 +96,7 @@ convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
 NULL
 
 #' @rdname coloursFromTargets
-#' @importFrom dplyr "%>%" group_by ungroup mutate arrange summarize select
+#' @importFrom dplyr "%>%" group_by ungroup mutate arrange summarize select if_else n
 #' @importFrom rlang .data
 #' @importFrom tibble tibble add_column
 #' @importFrom tidyr gather unnest spread
@@ -150,7 +150,7 @@ coloursFromTargets <- function(
   mutate('Colour' = pmap_chr(
     list(.data$r, .data$g, .data$b),
     function(x, y, z) {
-    rgb(red = x, green = y, blue = z)
+      rgb(red = x, green = y, blue = z)
     }
   )) %>%
   select(-(.data$b:.data$r)) %>%

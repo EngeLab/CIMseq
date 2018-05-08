@@ -6,13 +6,7 @@
 \title{calcResiduals}
 \usage{
 calcResiduals(spCounts, spUnsupervised, spSwarm, clusters = NULL,
-  edge.cutoff = NULL, distFun = function(fractions, cellTypes, oneMultiplet,
-  e, cellNumber, ...) {     if (sum(fractions) == 0) {         return(999999999)
-      }     normFractions <- fractions/sum(fractions)     cellTypes <-
-  cellTypes/mean(cellTypes)     a <- .makeSyntheticSlice(cellTypes,
-  normFractions)     a <- a/mean(a)     k <- length(which(normFractions > 0))   
-   penalty <- .complexityPenilty(k, e, cellNumber)     abs((oneMultiplet - a)/(a
-  + 1)) * penalty }, ...)
+  edge.cutoff = NULL, distFun = .dtsnCellNum, ...)
 }
 \arguments{
 \item{spCounts}{An spCounts object with multiplets.}
@@ -39,13 +33,6 @@ Subtitle
 \details{
 Calculates the residuals for each gene and multiplet after deconvolution
 based on the spSwarm results.
-}
-\examples{
-
-#s <- grepl("^s", colnames(testCounts))
-#cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#output <- calcResiduals(cObjMul, testUns, testSwa)
-
 }
 \author{
 Jason T. Serviss

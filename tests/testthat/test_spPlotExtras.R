@@ -1,4 +1,4 @@
-#context("spPlotExtras")
+context("spPlotExtras")
 
 s <- grepl("^s", colnames(testCounts))
 cObjSng <- spCounts(testCounts[, s], testErcc[, s])

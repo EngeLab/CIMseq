@@ -11,8 +11,6 @@ countsPerClass(spCountsSng, spUnsupervised)
 \item{spCountsSng}{An spCounts object containing singlets.}
 
 \item{spUnsupervised}{An spUnsupervised object.}
-
-\item{spCountsMul}{An spCounts object containing multiplets.}
 }
 \value{
 A matrix containing the median value for each gene for each
@@ -25,9 +23,8 @@ Calculates median counts per class.
 
 s <- grepl("^s", colnames(testCounts))
 cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 uObj <- testUns
-output <- countsPerClass(cObjSng, cObjMul, uObj)
+output <- countsPerClass(cObjSng, uObj)
 }
 \author{
 Jason T. Serviss

@@ -134,10 +134,6 @@ setMethod("spUnsupervised", "spCounts", function(
     select <- spTopMax(spCounts, max)
   }
     
-  if(type == "maxMean") {
-    select <- spTopMaxMean(spCounts, max)
-  }
-    
   if(type == "manual" & is.character(genes) == TRUE) {
     select <- which(rownames(getData(spCounts, "counts.log")) %in% genes)
   }
@@ -505,7 +501,7 @@ averageGroupExpression <- function(
 NULL
 
 #' @rdname tsneGroupMeans
-#' @import dplyr
+#' @importFrom dplyr "%>%" group_by summarise
 #' @export
 
 tsneGroupMeans <- function(data, classes) {
@@ -580,7 +576,6 @@ erccPerClass <- function(
 #' @rdname countsPerClass
 #' @aliases countsPerClass
 #' @param spCountsSng An spCounts object containing singlets.
-#' @param spCountsMul An spCounts object containing multiplets.
 #' @param spUnsupervised An spUnsupervised object.
 #' @return A matrix containing the median value for each gene for each
 #'    classification group.
@@ -590,9 +585,8 @@ erccPerClass <- function(
 #'
 #' s <- grepl("^s", colnames(testCounts))
 #' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 #' uObj <- testUns
-#' output <- countsPerClass(cObjSng, cObjMul, uObj)
+#' output <- countsPerClass(cObjSng, uObj)
 NULL
 
 #' @rdname countsPerClass

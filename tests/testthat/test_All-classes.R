@@ -1,4 +1,4 @@
-#context("All-classes")
+context("All-classes")
 
 uObj <- testUns
 

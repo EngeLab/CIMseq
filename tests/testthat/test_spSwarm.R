@@ -1,10 +1,33 @@
-#context("spSwarm")
+context("spSwarm")
 
 s <- grepl("^s", colnames(testCounts))
 cObjSng <- spCounts(testCounts[,s], testErcc[,s])
 cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
 uObj <- testUns
 sObj <- testSwa
+
+.makeSyntheticSlice <- function(
+cellTypes,
+fractions
+){
+  return(colSums(t(cellTypes) * fractions))
+}
+
+distToSliceNorm <- function(
+fractions,
+cellTypes,
+oneMultiplet,
+...
+){
+  if(sum(fractions) == 0) {
+    return(999999999)
+  }
+  normFractions <- fractions / sum(fractions)
+  cellTypes <- cellTypes/mean(cellTypes)
+  a = .makeSyntheticSlice(cellTypes, normFractions)
+  a <- a/mean(a)
+  sum(abs((oneMultiplet - a) / (a+1)))
+}
 
 ##run test spSwarm
 test_that("check that spSwarm outputs the expected result", {
