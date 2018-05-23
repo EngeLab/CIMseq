@@ -10,14 +10,13 @@ NULL
 #' @name spSwarm
 #' @rdname spSwarm
 #' @aliases spSwarm
-#' @param spCounts an spCount object with multiplets.
+#' @param spCountsSng an spCount object with singlets.
+#' @param spCountsMul an spCount object with multiplets.
 #' @param spUnsupervised an spCount object.
-#' @param distFun The distance function used to calculate the cost. Either the
-#'    name of a custom function in the local environment or one of the included
-#'    functions, i.e. \code{distToSlice, distToSliceNorm, distToSliceTop,
-#'    distToSliceEuclid, distToSlicePearson, bic}.
 #' @param maxiter pySwarm argument indicating maximum optimization iterations.
 #' @param swarmsize pySwarm argument indicating the number of swarm particals.
+#' @param nSyntheticMultiplets Numeric value indicating the number of synthetic
+#'  multiplets to generate during deconvolution.
 #' @param cores The number of cores to be used while running spRSwarm.
 #' @param seed The desired seed to set before running.
 #' @param norm Logical indicating if the sum of fractions should equal 1.
@@ -25,8 +24,6 @@ NULL
 #'   optimization should be included.
 #' @param reportRate If report is TRUE, the iteration interval that a report
 #'    should be generated.
-#' @param cellNumbers Tibble; Output from \code{estimateCells} function.
-#' @param e Numeric; The epsilon value for the .complexityPenilty unit.
 #' @param selectInd Numeric; Gene indexes to select for swarm optimization. If
 #'  NULL the selectInd slot from the spUnsupervised object is used.
 #' @param spSwarm The spSwarm results.
@@ -74,89 +71,39 @@ setGeneric("spSwarm", function(
 #' @export
 
 setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
-  spCounts,
-  spUnsupervised,
-  distFun = "distToSliceNorm",
-  maxiter = 10,
-  swarmsize = 150,
-  cores = 1,
-  seed = 11,
-  norm = TRUE,
-  report = FALSE,
-  reportRate = NULL,
-  cellNumbers = NULL,
-  e = NULL,
-  selectInd = NULL,
+  spCountsSng, spCountsMul, spUnsupervised,
+  maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200,
+  cores = 1, seed = 11, norm = TRUE,
+  report = FALSE, reportRate = NULL, selectInd = NULL,
   ...
 ){
     
   #put a check here to make sure all slots in the spUnsupervised object are
   #filled. This should actually be regulated by the class definition BUT you
   #should probably double check that it works as expected via unit tests.
-  bool1 <- any(c("e", "cellNumbers") %in% names(as.list(args(distFun))))
-  bool2 <- (is.null(cellNumbers) | is.null(e))
-  if(bool1 & bool2) {
-    stop("cellNumbers and e must be provided with dtsnCellNum distFun.")
-  }
-    
-  distFun <- match.fun(distFun)
     
   #input and input checks
-  counts <- getData(spCounts, "counts.cpm")
+  sngCPM <- getData(spCountsSng, "counts.cpm")
+  mulCPM <- getData(spCountsSng, "counts.cpm")
     
   #calculate fractions
-  groupMeans <- getData(spUnsupervised, "groupMeans")
-  fractions <- rep(1.0/(dim(groupMeans)[2]), (dim(groupMeans)[2]))
+  classes <- getData(uObj, "classification")
+  fractions <- rep(1.0 / length(unique(classes)), length(unique(classes)))
     
   #subset top genes for use with optimization
   selectInd <- getData(spUnsupervised, "selectInd")
-  cellTypes <- groupMeans[selectInd, ]
   multiplets <- matrix(
-    counts[selectInd, ],
-    ncol = ncol(counts),
-    dimnames = list(1:length(selectInd), colnames(counts))
+    mulCPM[selectInd, ],
+    ncol = ncol(mulCPM),
+    dimnames = list(1:length(selectInd), colnames(mulCPM))
   )
-    
-  ##run pySwarm
-  fullRes <- .runPyRSwarm(
-    cellTypes = cellTypes,   multiplets = multiplets,
-    fractions = fractions,   distFun = distFun,
-    maxiter = maxiter,       swarmsize = swarmsize,
-    cores = cores,           seed = seed,
-    norm = norm,             report = report,
-    reportRate = reportRate, cellNumbers = cellNumbers,
-    e = e,                   ...
+  singlets <- matrix(
+    sngCPM[selectInd, ],
+    ncol = ncol(sngCPM),
+    dimnames = list(1:length(selectInd), colnames(sngCPM))
   )
-  result <- fullRes[[1]]
-  cost <- fullRes[[2]]
-  convergence <- fullRes[[3]]
-  stats <- fullRes[[4]]
-    
-  #create object
-  new("spSwarm",
-    spSwarm = result, costs = cost,
-    convergence = convergence, stats = stats,
-    arguments = list(maxiter = maxiter, swarmsize = swarmsize)
-  )
-})
-
-##run optimization
-.runPyRSwarm <- function(
-  cellTypes,
-  multiplets,
-  fractions,
-  distFun,
-  maxiter,
-  swarmsize,
-  cores,
-  seed,
-  norm,
-  report,
-  reportRate,
-  cellNumbers,
-  e,
-  ...
-){
+  
+  #setup args for optimization
   if(report) {
     control <- list(
       maxit = maxiter, s = swarmsize, trace = 1,
@@ -166,26 +113,24 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     control <- list(maxit = maxiter, s = swarmsize)
     stats <- list()
   }
-    
-  if(!is.null(cellNumbers)) {
-    matchIdx <- match(colnames(multiplets), cellNumbers$sampleName)
-    cellNumbers <- cellNumbers$cellNumberMedian[matchIdx]
-  }
-    
+  
+  #run optimization
   set.seed(seed)
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
-    
+  
   tmp <- mclapply(
     1:to, function(i)
-      .optim.fn(
-        i, fractions, distFun, cellTypes, control,
-        multiplets, cellNumbers, e, ...
+      optim.fun(
+        i, fractions = fractions, multiplets = multiplets,
+        cpm = singlets, classes = classes, seed = seed,
+        n = nSyntheticMultiplets, control = control,
+        ...
       ),
     mc.cores = cores
   )
-    
-  #compile results
-  output <- data.frame(t(sapply(tmp, function(j) j[[1]])))
+  
+  #process optimization results
+  result <- data.frame(t(sapply(tmp, function(j) j[[1]])))
   cost <- sapply(tmp, function(j) j[[2]])
   counts <- t(sapply(tmp, function(j) j[[3]]))
   convergence <- sapply(tmp, function(j) j[[4]])
@@ -200,245 +145,90 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
 
   #normalize swarm output
   if(norm) {
-    output <- output * 1/rowSums(output)
+    result <- result * 1/rowSums(result)
   }
   
-  #return results
-  colnames(output) <- colnames(cellTypes)
-  rownames(output) <- colnames(multiplets)
-  return(list(output, cost, convergence, stats))
-}
+  colnames(result) <- unique(classes)
+  rownames(result) <- colnames(multiplets)
+  
+  #create object
+  new("spSwarm",
+    spSwarm = result, costs = cost,
+    convergence = convergence, stats = stats,
+    arguments = list(maxiter = maxiter, swarmsize = swarmsize)
+  )
+})
 
-.optim.fn <- function(
-  i,
-  fractions,
-  distFun,
-  cellTypes,
-  control,
-  multiplets,
-  cellNumbers,
-  e,
-  ...
+optim.fun <- function(
+  i, fractions, multiplets, cpm, classes,
+  seed, n, control, ...
 ){
   oneMultiplet <- multiplets[, i]
-  cellNumber <- cellNumbers[i]
-  
   psoptim(
-    par = fractions, fn = distFun, cellTypes = cellTypes,
-    oneMultiplet = oneMultiplet, lower = 0, upper = 1, control = control,
-    i = i, cellNumber = cellNumber, e = e, ...
+    par = fractions, fn = cost.fn, oneMultiplet = oneMultiplet, cpm = cpm,
+    classes = classes, seed = seed, n = n,
+    lower = 0, upper = 1, control = control, ...
   )
 }
 
-#calculates the sum for each gene after each cell type has been multiplied by
-#fractions
-.makeSyntheticSlice <- function(
-  cellTypes,
-  fractions
-){
-  return(colSums(t(cellTypes) * fractions))
+#deconvolution functions
+cost.fn <- function(
+  adjustment, oneMultiplet, cpm, classes,
+  seed, n, ...
+) {
+  generateSyntheticMultiplets(
+    cpm = cpm, classes = classes, adjustment = adjustment,
+    seed = seed, n = n
+  ) %>%
+  calculateCost(oneMultiplet = oneMultiplet, syntheticMultiplets = .)
 }
 
-#function which calculates the complexity penalty
-.complexityPenilty <- function(k, e, cellNumber, ...) {
-  n <- k / log(round(cellNumber) + 0.1)
-  u <- n * e
-  1 + u
-}
-
-# Various dist functions. Probably better to use match.arg and not export
-#(so as to avoid cluttering the namespace), but leaving it like this for now.
-
-#' dtsnCellNum
-#'
-#' Cost function for optimization.
-#'
-#' @name dtsnCellNum
-#' @rdname dtsnCellNum
-#' @author Jason T. Serviss
-#' @param fractions numeric; Fractions to adjust.
-#' @param cellTypes matrix; Mean cell type gene expression.
-#' @param oneMultiplet numeric; Gene expression values for multiplet.
-#' @param e numeric; epsilon
-#' @param cellNumber matrix? Estimated number of cells per multiplet.
-#' @param ... Additional arguments to pass.
-#'
-#' @export
-
-dtsnCellNum <- function(
-  fractions,
-  cellTypes,
-  oneMultiplet,
-  e,
-  cellNumber,
-  ...
+generateSyntheticMultiplets <- function(
+  cpm, classes, adjustment,
+  seed, nSyntheticMultiplets, ...
 ){
-  if(sum(fractions) == 0) {
-      return(999999999)
+  .norm.counts <- function(counts) {
+    t(t(counts) / matrixStats::colSums2(counts) * 10^6 + 1)
   }
-  normFractions <- fractions / sum(fractions)
-  cellTypes <- cellTypes / mean(cellTypes)
-  a <- .makeSyntheticSlice(cellTypes, normFractions)
-  a <- a / mean(a)
-  k <- length(which(normFractions > 0))
-  penalty <- .complexityPenilty(k, e, cellNumber)
-  sum(abs((oneMultiplet - a) / (a + 1))) * penalty
+  
+  synthetic.mul <- map(1:n, function(y) {
+    syntheticMultipletsFromCounts(
+      cpm = cpm, classes = classes, adjustment = adjustment, seed = seed + y)
+  }) %>%
+  do.call(cbind, .) %>%
+  .norm.counts()
 }
 
-distToSlice <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    ...
+syntheticMultipletsFromCounts <- function(
+  cpm, classes, adjustment,
+  seed, ...
 ){
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    a = .makeSyntheticSlice(cellTypes, normFractions)
-    sum(abs(a - oneMultiplet))
+  set.seed(seed)
+  
+  #select one cell from the pool for each cell type
+  exCounts <- cpm[, purrr::map_int(unique(classes), ~sample(which(classes == .x), 1))]
+  
+  #adjust the counts by multiplying with the corresponding values adjustment
+  adjusted <- round(t(t(exCounts) * adjustment))
+  
+  #calculate the sum of counts for each gene
+  rs <- matrixStats::rowSums2(adjusted)
+  
+  #Sample from the poisson distribution for each gene with lambda = rs
+  matrix(
+    rpois(n = length(rs), lambda = rs),
+    dimnames = list(rownames(exCounts), "multiplet")
+  )
 }
 
-distToSliceNorm <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    ...
-){
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    cellTypes <- cellTypes/mean(cellTypes)
-    a = .makeSyntheticSlice(cellTypes, normFractions)
-    a <- a/mean(a)
-    sum(abs((oneMultiplet - a) / (a+1)))
-}
-
-distToSliceTop <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    i,
-    ...
-){
-    if("cells" %in% names(list(...))) {
-        l <- list(...)
-        cells <- ceiling(l[['cells']][i])
-    }
-    cat(fractions, "\n")
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    fractions[fractions < sort(fractions, decreasing=TRUE)[cells]] <- 0
-    a = .makeSyntheticSlice(cellTypes, fractions)
-    sum(abs(a - oneMultiplet))
-}
-
-distToSliceEuclid <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    i,
-    ...
-){
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    a = .makeSyntheticSlice(cellTypes, normFractions)
-    sum((a - oneMultiplet)^2)
-}
-
-distToSlicePearson <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    i,
-    ...
-){
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    a = .makeSyntheticSlice(cellTypes, normFractions)
-    1-(cor(a, oneMultiplet))
-}
-
-bic <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    i,
-    ...
-){
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    a <- .makeSyntheticSlice(cellTypes, normFractions)
-    n <- length(fractions)
-    e <- sum(abs(a - oneMultiplet)^2) * 1/n
-    k <- length(which(fractions > 0))
-    
-    (n * log(e)) + (k * log(n))
-}
-
-bicLinear <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    i,
-    ...
-){
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    a <- .makeSyntheticSlice(cellTypes, normFractions)
-    e <- sum(abs(a - oneMultiplet)) * 1/length(fractions)
-    n <- length(fractions)
-    k <- length(which(fractions > 0))
-    
-    (n * log(e)) + (k * log(n))
-}
-
-bic10 <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    i,
-    ...
-){
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    a <- .makeSyntheticSlice(cellTypes, normFractions)
-    n <- length(fractions)
-    e <- sum(abs(a - oneMultiplet)^2) * 1/n
-    k <- length(which(fractions > 0))
-    
-    (n * log(e)) + (k * log10(n))
-}
-
-bic10.2 <- function(
-    fractions,
-    cellTypes,
-    oneMultiplet,
-    i,
-    ...
-){
-    if(sum(fractions) == 0) {
-        return(999999999)
-    }
-    normFractions <- fractions / sum(fractions)
-    a <- .makeSyntheticSlice(cellTypes, normFractions)
-    n <- length(fractions)
-    e <- sum(abs(a - oneMultiplet)^2) * 1/n
-    k <- length(which(fractions > 0))
-    
-    (n * log(e)) + ((k / n) * log10(n))
+#oneMultiplet should be the vector of gene expression values for the current multiplet
+#syntheticMultiplets should be a matrix with synthetic multiplet values
+calculateCost <- function(oneMultiplet, syntheticMultiplets) {
+  dpois(round(oneMultiplet), lambda = syntheticMultiplets) %>%
+    matrixStats::rowMeans2() %>%
+    log10() %>%
+    sum() %>%
+    `-` (.)
 }
 
 #' spSwarmPoisson
