@@ -26,6 +26,7 @@ NULL
 #'    should be generated.
 #' @param selectInd Numeric; Gene indexes to select for swarm optimization. If
 #'  NULL the selectInd slot from the spUnsupervised object is used.
+#' @param vectorize Argument to \link[pso]{psoptim}.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per
@@ -42,14 +43,6 @@ NULL
 #' @examples
 #'
 #' #use demo data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#' cn <- estimateCells(cObjSng, cObjMul)
-#' sObj <- spSwarm(
-#'  cObjMul, testUns, distFun = "dtsnCellNum",
-#'  cellNumbers = cn, e = 0.0025
-#' )
 #'
 NULL
 
@@ -57,7 +50,8 @@ NULL
 #' @export
 
 setGeneric("spSwarm", function(
-  spCounts,
+  spCountsSng,
+  spCountsMul,
   spUnsupervised,
   ...
 ){
@@ -67,14 +61,17 @@ setGeneric("spSwarm", function(
 
 #' @importFrom parallel mclapply
 #' @importFrom pso psoptim
+#' @importFrom matrixStats rowSums2 rowMeans2
+#' @importFrom dplyr "%>%"
+#' @importFrom purrr map map_int
 #' @rdname spSwarm
 #' @export
 
-setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
+setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   spCountsSng, spCountsMul, spUnsupervised,
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200,
   cores = 1, seed = 11, norm = TRUE,
-  report = FALSE, reportRate = NULL, selectInd = NULL,
+  report = FALSE, reportRate = NULL, selectInd = NULL, vectorize = FALSE,
   ...
 ){
     
@@ -84,10 +81,10 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     
   #input and input checks
   sngCPM <- getData(spCountsSng, "counts.cpm")
-  mulCPM <- getData(spCountsSng, "counts.cpm")
+  mulCPM <- getData(spCountsMul, "counts.cpm")
     
   #calculate fractions
-  classes <- getData(uObj, "classification")
+  classes <- getData(spUnsupervised, "classification")
   fractions <- rep(1.0 / length(unique(classes)), length(unique(classes)))
     
   #subset top genes for use with optimization
@@ -109,8 +106,9 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
       maxit = maxiter, s = swarmsize, trace = 1,
       REPORT = reportRate, trace.stats = TRUE
     )
+    stats <- list()
   } else {
-    control <- list(maxit = maxiter, s = swarmsize)
+    control <- list(maxit = maxiter, s = swarmsize, vectorize = vectorize)
     stats <- list()
   }
   
@@ -118,22 +116,36 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
   set.seed(seed)
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
   
-  tmp <- mclapply(
-    1:to, function(i)
+  opt.out <- parallel::mclapply(
+    X = 1:to, FUN = function(i) {
       optim.fun(
         i, fractions = fractions, multiplets = multiplets,
-        cpm = singlets, classes = classes, seed = seed,
-        n = nSyntheticMultiplets, control = control,
-        ...
-      ),
-    mc.cores = cores
-  )
+        singlets = singlets, classes = classes, seed = seed,
+        n = nSyntheticMultiplets, control = control, ...
+      )
+  }, mc.cores = cores)
   
   #process optimization results
-  result <- data.frame(t(sapply(tmp, function(j) j[[1]])))
-  cost <- sapply(tmp, function(j) j[[2]])
-  counts <- t(sapply(tmp, function(j) j[[3]]))
-  convergence <- sapply(tmp, function(j) j[[4]])
+  result <- .processResults(
+    opt.out, report, norm, stats,
+    unique(classes), colnames(multiplets)
+  )
+  
+  #create object
+  new("spSwarm",
+    spSwarm = result[[1]], costs = result[[2]],
+    convergence = result[[3]], stats = result[[4]],
+    arguments = list(maxiter = maxiter, swarmsize = swarmsize)
+  )
+})
+
+.processResults <- function(result, report, norm, stats, cn, rn) {
+  
+  #extract swarm output
+  par <- data.frame(t(sapply(result, function(j) j[[1]])))
+  cost <- sapply(result, function(j) j[[2]])
+  counts <- t(sapply(result, function(j) j[[3]]))
+  convergence <- sapply(result, function(j) j[[4]])
   convergenceKey <- c(
     "Maximal number of function evaluations reached." = 1,
     "Maximal number of iterations reached." = 2,
@@ -141,75 +153,77 @@ setMethod("spSwarm", c("spCounts", "spUnsupervised"), function(
     "Maximal number of iterations without improvement reached." = 4
   )
   convergence <- names(convergenceKey)[match(convergence, convergenceKey)]
-  if(report) stats <- lapply(tmp, function(x) x[[6]])
+  if(report) stats <- lapply(result, function(x) x[[6]])
 
   #normalize swarm output
-  if(norm) {
-    result <- result * 1/rowSums(result)
-  }
+  if(norm) {par <- par * 1/rowSums(par)}
+  colnames(par) <- cn
+  rownames(par) <- rn
   
-  colnames(result) <- unique(classes)
-  rownames(result) <- colnames(multiplets)
-  
-  #create object
-  new("spSwarm",
-    spSwarm = result, costs = cost,
-    convergence = convergence, stats = stats,
-    arguments = list(maxiter = maxiter, swarmsize = swarmsize)
-  )
-})
+  return(list(par, cost, convergence, stats))
+}
 
 optim.fun <- function(
-  i, fractions, multiplets, cpm, classes,
+  i, fractions, multiplets, singlets, classes,
   seed, n, control, ...
 ){
   oneMultiplet <- multiplets[, i]
-  psoptim(
-    par = fractions, fn = cost.fn, oneMultiplet = oneMultiplet, cpm = cpm,
-    classes = classes, seed = seed, n = n,
+  
+  pso::psoptim(
+    par = fractions, fn = cost.fn, oneMultiplet = oneMultiplet,
+    singlets = singlets, classes = classes, seed = seed, n = n,
     lower = 0, upper = 1, control = control, ...
   )
 }
 
 #deconvolution functions
 cost.fn <- function(
-  adjustment, oneMultiplet, cpm, classes,
-  seed, n, ...
+  fractions, oneMultiplet, singlets,
+  classes, seed, n, ...
 ) {
-  generateSyntheticMultiplets(
-    cpm = cpm, classes = classes, adjustment = adjustment,
+  
+  if(sum(fractions) == 0) {
+    return(999999999)
+  }
+  fractions <- fractions / sum(fractions)
+  
+  cost <- generateSyntheticMultiplets(
+    singlets = singlets, classes = classes, fractions = fractions,
     seed = seed, n = n
   ) %>%
-  calculateCost(oneMultiplet = oneMultiplet, syntheticMultiplets = .)
+  costCalculation(oneMultiplet = oneMultiplet, syntheticMultiplets = .)
 }
 
 generateSyntheticMultiplets <- function(
-  cpm, classes, adjustment,
-  seed, nSyntheticMultiplets, ...
+  singlets, classes, fractions,
+  seed, n, ...
 ){
   .norm.counts <- function(counts) {
     t(t(counts) / matrixStats::colSums2(counts) * 10^6 + 1)
   }
   
-  synthetic.mul <- map(1:n, function(y) {
+  purrr::map(1:n, function(y) {
     syntheticMultipletsFromCounts(
-      cpm = cpm, classes = classes, adjustment = adjustment, seed = seed + y)
+      singlets = singlets, classes = classes,
+      fractions = fractions, seed = seed + y
+    )
   }) %>%
   do.call(cbind, .) %>%
   .norm.counts()
 }
 
 syntheticMultipletsFromCounts <- function(
-  cpm, classes, adjustment,
+  singlets, classes, fractions,
   seed, ...
 ){
   set.seed(seed)
   
   #select one cell from the pool for each cell type
-  exCounts <- cpm[, purrr::map_int(unique(classes), ~sample(which(classes == .x), 1))]
+  idx <- purrr::map_int(unique(classes), ~sample(which(classes == .x), 1))
+  exCounts <- singlets[, idx]
   
   #adjust the counts by multiplying with the corresponding values adjustment
-  adjusted <- round(t(t(exCounts) * adjustment))
+  adjusted <- round(exCounts %*% diag(fractions))
   
   #calculate the sum of counts for each gene
   rs <- matrixStats::rowSums2(adjusted)
@@ -223,7 +237,7 @@ syntheticMultipletsFromCounts <- function(
 
 #oneMultiplet should be the vector of gene expression values for the current multiplet
 #syntheticMultiplets should be a matrix with synthetic multiplet values
-calculateCost <- function(oneMultiplet, syntheticMultiplets) {
+costCalculation <- function(oneMultiplet, syntheticMultiplets) {
   dpois(round(oneMultiplet), lambda = syntheticMultiplets) %>%
     matrixStats::rowMeans2() %>%
     log10() %>%

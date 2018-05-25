@@ -6,179 +6,146 @@ cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
 uObj <- testUns
 sObj <- testSwa
 
-.makeSyntheticSlice <- function(
-cellTypes,
-fractions
-){
-  return(colSums(t(cellTypes) * fractions))
-}
-
-distToSliceNorm <- function(
-fractions,
-cellTypes,
-oneMultiplet,
-...
-){
-  if(sum(fractions) == 0) {
-    return(999999999)
-  }
-  normFractions <- fractions / sum(fractions)
-  cellTypes <- cellTypes/mean(cellTypes)
-  a = .makeSyntheticSlice(cellTypes, normFractions)
-  a <- a/mean(a)
-  sum(abs((oneMultiplet - a) / (a+1)))
-}
-
-##run test spSwarm
-test_that("check that spSwarm outputs the expected result", {
+##run test syntheticMultipletsFromCounts
+test_that("check that syntheticMultipletsFromCounts outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
-  cellTypes <- matrix(rep(1, 40), ncol = 4)
-  fractions <- c(1, 0.5, 0.25, 0.1)
-  cn <- tibble::tibble(
-    sampleName = colnames(testCounts[, !s]),
-    cellNumberMedian = rep(1, length(which(!s)))
-  )
+  singlets <- getData(cObjSng, "counts.cpm")
+  classes <- getData(uObj, "classification")
+  fractions <- rep(1, length(unique(classes)))
+  seed <- 923
+  
   #setup expected data
-  expected <- rep(1.85, 10)
+  nr <- 250L
+  nc <- 1L
+  first <- 5458L
+  last <- 18599L
   
   #run function
-  output <- .makeSyntheticSlice(cellTypes, fractions)
-  
+  output <- syntheticMultipletsFromCounts(singlets, classes, fractions, seed)
   
   #test
-  expect_silent(spSwarm(cObjSng, uObj, swarmsize = 10, maxiter = 2)) #this should be improved
-  expect_silent(spSwarm(cObjSng, uObj, swarmsize = 10, maxiter = 2, cellNumbers = cn)) #this should be improved
-  expect_message(spSwarm(cObjSng, uObj, swarmsize = 10, maxiter = 2, report = TRUE, reportRate = 1)) #this should be improved
-  expect_error(spSwarm(cObjSng, uObj, distFun = "dtsnCellNum"))
+  expect_is(output, "matrix")
+  expect_silent(syntheticMultipletsFromCounts(singlets, classes, fractions, seed))
+  expect_identical(ncol(output), nc)
+  expect_identical(nrow(output), nr)
+  expect_identical(output[[1]], first)
+  expect_identical(output[[250]], last)
+  expect_error(syntheticMultipletsFromCounts(classes, fractions, seed))
+  expect_error(syntheticMultipletsFromCounts(singlets, fractions, seed))
+  expect_error(syntheticMultipletsFromCounts(singlets, classes, seed))
+  expect_error(syntheticMultipletsFromCounts(singlets, classes, fractions))
 })
 
-##run test .makeSyntheticSlice
-test_that("check that .makeSyntheticSlice outputs the expected result", {
+##run test costCalculation
+test_that("check that costCalculation outputs the expected result", {
   
     ###TEST1####
     #prepare normal input data
-    cellTypes <- matrix(rep(1, 40), ncol = 4)
-    fractions <- c(1, 0.5, 0.25, 0.1)
+    oneMultiplet <- getData(cObjMul, "counts.cpm")[, 1]
+    singlets <- getData(cObjSng, "counts.cpm")
+    classes <- getData(uObj, "classification")
+    seed <- 923
+    fractions.wrong <- rep(1, length(unique(classes)))
+    fractions.right <- c(0.5, 0.5, 0, 0)
+    
+    syntheticMultiplets.wrong <- generateSyntheticMultiplets(
+      singlets, classes, fractions.wrong, seed, 100
+    )
+    
+    syntheticMultiplets.right <- generateSyntheticMultiplets(
+      singlets, classes, fractions.right, seed, 100
+    )
     
     #setup expected data
-    expected <- rep(1.85, 10)
+    expected <- 1639.734
     
     #run function
-    output <- .makeSyntheticSlice(cellTypes, fractions)
+    output.wrong <- costCalculation(oneMultiplet, syntheticMultiplets.wrong)
+    output.right <- costCalculation(oneMultiplet, syntheticMultiplets.right)
     
     #test
-    expect_identical(output, expected)
+    expect_is(output.wrong, "numeric")
+    expect_is(output.right, "numeric")
+    expect_true(length(output.right) == 1)
+    expect_true(length(output.wrong) == 1)
+    expect_silent(costCalculation(oneMultiplet, syntheticMultiplets.wrong))
+    expect_error(costCalculation(syntheticMultiplets.wrong))
+    expect_error(costCalculation(oneMultiplet))
+    expect_true(output.right < output.wrong)
+    expect_true(all.equal(output.right, expected, tolerance = 1e-3))
 })
 
-##run test .optim.fn
-test_that("check that .optim.fn outputs the expected result", {
+##run test generateSyntheticMultiplets
+test_that("check that generateSyntheticMultiplets outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
-  i <- 1
-  fractions <- rep(1, 4)
-  distFun <- distToSlice
-  cellTypes <- matrix(rep(1, 40), ncol = 4)
-  control <- list(maxit = 2, s = 10)
-  multiplets <- matrix(rep(1, 10), ncol = 1)
+  singlets <- getData(cObjSng, "counts.cpm")
+  classes <- getData(uObj, "classification")
+  seed <- 923
+  fractions <- c(0.5, 0.5, 0, 0)
   
   #setup expected data
-  expected <- rep(1, 4)
+  nc <- 100
+  nr <- 250
   
   #run function
-  output <- .optim.fn(i, fractions, distFun, cellTypes, control, multiplets, cellNumbers = NULL, e = NULL)$par
-  
-  #test
-  expect_identical(output, expected)
-})
-
-##run test .runPyRSwarm
-test_that("check that .runPyRSwarm outputs the expected result", {
-  
-  ###TEST1####
-  #prepare normal input data
-  cellTypes <- matrix(rep(1, 40), ncol = 4)
-  multiplets <- matrix(rep(1, 10), ncol = 1)
-  fractions <- rep(1, 4)
-  distFun <- distToSlice
-  maxiter <- 2
-  swarmsize <- 10
-  cores <- 1
-  seed <- 1134
-  norm <- TRUE
-  report <- FALSE
-  cellNumbers <- NULL
-  e <- NULL
-  
-  #setup expected data
-  dat <- data.frame(0.25, 0.25, 0.25, 0.25)
-  colnames(dat) <- NULL
-  
-  expected <- list(
-    dat,
-    0,
-    "Maximal number of iterations reached.",
-    list()
-  )
-  
-  #run function
-  output <- .runPyRSwarm(
-    cellTypes,
-    multiplets,
-    fractions,
-    distFun,
-    maxiter,
-    swarmsize,
-    cores,
-    seed,
-    norm,
-    report,
-    cellNumbers,
-    e
+  output <- generateSyntheticMultiplets(
+    singlets, classes, fractions, seed, 100
   )
   
   #test
-  expect_identical(output, expected)
+  expect_is(output, "matrix")
+  expect_silent(generateSyntheticMultiplets(
+    singlets, classes, fractions, seed, 100
+  ))
+  expect_error(generateSyntheticMultiplets(
+    classes, fractions, seed, 100
+  ))
+  expect_error(generateSyntheticMultiplets(
+    singlets, fractions, seed, 100
+  ))
+  expect_error(generateSyntheticMultiplets(
+    singlets, classes, seed, 100
+  ))
+  expect_error(generateSyntheticMultiplets(
+    singlets, classes, fractions, 100
+  ))
+  expect_error(generateSyntheticMultiplets(
+    singlets, classes, fractions, seed
+  ))
+  expect_true(ncol(output) == nc)
+  expect_true(nrow(output) == nr)
 })
 
-##run test distToSlice
-test_that("check that distToSlice outputs the expected result", {
+##run test cost.fn
+test_that("check that cost.fn outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
-  fractions <- rep(1, 4)
-  cellTypes <- matrix(rep(1, 40), ncol = 4)
-  oneMultiplet <- matrix(rep(1, 10), ncol = 1)
+  oneMultiplet <- getData(cObjMul, "counts.cpm")[, 1]
+  singlets <- getData(cObjSng, "counts.cpm")
+  classes <- getData(uObj, "classification")
+  seed <- 923
+  fractions <- c(0.5, 0.5, 0, 0)
+  
+  syntheticMultiplets <- generateSyntheticMultiplets(
+    singlets, classes, fractions, seed, 100
+  )
   
   #setup expected data
-  expected <- 0
+  expected <- 1639.734
+  expected.sumFrac0 <- 999999999
   
   #run function
-  output <- distToSlice(fractions, cellTypes, oneMultiplet)
+  output.1 <- cost.fn(fractions, oneMultiplet, singlets, classes, seed, 100)
+  output.2 <- cost.fn(rep(0, length(unique(classes))), oneMultiplet, singlets, classes, seed, 100)
   
   #test
-  expect_identical(output, expected)
-})
-
-##run test distToSliceNorm
-test_that("check that distToSliceNorm outputs the expected result", {
-  
-  ###TEST1####
-  #prepare normal input data
-  fractions <- rep(1, 4)
-  cellTypes <- matrix(rep(1, 40), ncol = 4)
-  oneMultiplet <- matrix(rep(1, 10), ncol = 1)
-  
-  #setup expected data
-  expected <- 0
-  
-  #run function
-  output <- distToSliceNorm(fractions, cellTypes, oneMultiplet)
-  
-  #test
-  expect_identical(output, expected)
+  expect_true(all.equal(output.1, expected, tolerance = 1e-3))
+  expect_identical(expected.sumFrac0, output.2)
 })
 
 ##run test getMultipletsForEdge
