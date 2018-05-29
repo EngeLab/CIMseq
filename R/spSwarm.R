@@ -225,10 +225,10 @@ syntheticMultipletsFromCounts <- function(
   exCounts <- singlets[, idx]
   
   #adjust the counts by multiplying with the corresponding values adjustment
-  adjusted <- round(exCounts %*% diag(fractions))
+  adjusted <- exCounts %*% diag(fractions) ##rounding here means and number < 10 will become 0
   
   #calculate the sum of counts for each gene
-  rs <- matrixStats::rowSums2(adjusted)
+  rs <- round(matrixStats::rowSums2(adjusted))
   
   #Sample from the poisson distribution for each gene with lambda = rs
   matrix(
