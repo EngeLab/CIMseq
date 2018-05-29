@@ -18,7 +18,7 @@ RUN Rscript -e "install.packages(c('devtools','knitr','rmarkdown','shiny','RCurl
 
 RUN Rscript -e "source('https://cdn.rawgit.com/road2stat/liftrlib/aa132a2d/install_cran.R');install_cran(c('mclust/5.4', 'Rtsne/0.13', 'pso/1.0.3', 'matrixStats/0.53.1', 'ggthemes/3.5.0', 'igraph/1.2.1', 'viridis/0.5.1', 'ggraph/1.0.1', 'tidygraph/1.1.0', 'testthat/2.0.0', 'print2/0.1', 'covr/3.1.0'))"
 
-RUN Rscript -e "source("https://bioconductor.org/biocLite.R"); biocLite("S4Vectors"); biocLite("BiocStyle")"
+RUN Rscript -e "source('http://bioconductor.org/biocLite.R');biocLite(c('S4Vectors', 'BiocStyle'))"
 
 # Clone and install remote R packages
 RUN mkdir /home/Github
