@@ -13,31 +13,31 @@ Description: What the package does (one paragraph).
 Depends:
     R (>= 3.4.2)
 Imports:
-    ggplot2,
-    mclust,
-    Rtsne,
-    ggthemes,
-    igraph,
     methods,
-    dplyr,
-    viridis,
-    pso,
-    tibble,
-    purrr,
-    tidyr,
-    S4Vectors,
-    ggraph,
-    tidygraph,
-    readr,
-    rlang,
-    matrixStats
+    mclust (>= 5.4),
+    Rtsne (>= 0.13),
+    pso (>= 1.0.3),
+    S4Vectors (>= 0.18.2),
+    readr (>= 1.1.1),
+    rlang (>= 0.2.0),
+    matrixStats (>= 0.53.1),
+    dplyr (>= 0.7.5),
+    tibble (>= 1.4.2),
+    purrr (>= 0.2.4),
+    tidyr (>= 0.8.1),
+    ggplot2 (>= 2.2.1),
+    ggthemes (>= 3.5.0),
+    igraph (>= 1.2.1),
+    viridis (>= 0.5.1),
+    ggraph (>= 1.0.1),
+    tidygraph (>= 1.1.0)
 Suggests: 
-    knitr,
-    rmarkdown,
-    testthat,
-    BiocStyle,
-    printr,
-    covr
+    knitr (>= 1.20),
+    rmarkdown (>= 1.9),
+    testthat (>= 2.0.0),
+    BiocStyle (>= 2.8.1),
+    printr (>= 0.1),
+    covr (>= 3.1.0)
 VignetteBuilder: knitr
 License: GPL-3
 Encoding: UTF-8
