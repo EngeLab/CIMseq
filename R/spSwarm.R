@@ -88,16 +88,18 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   fractions <- rep(1.0 / length(unique(classes)), length(unique(classes)))
     
   #subset top genes for use with optimization
-  selectInd <- getData(spUnsupervised, "selectInd")
+  #sholud also check user input selectInd
+  if(is.null(selectInd)) selectInd <- getData(spUnsupervised, "selectInd")
+  
   multiplets <- matrix(
     mulCPM[selectInd, ],
     ncol = ncol(mulCPM),
-    dimnames = list(1:length(selectInd), colnames(mulCPM))
+    dimnames = list(NULL, colnames(mulCPM))
   )
   singlets <- matrix(
     sngCPM[selectInd, ],
     ncol = ncol(sngCPM),
-    dimnames = list(1:length(selectInd), colnames(sngCPM))
+    dimnames = list(NULL, colnames(sngCPM))
   )
   
   #setup args for optimization
@@ -242,7 +244,8 @@ costCalculation <- function(oneMultiplet, syntheticMultiplets) {
     matrixStats::rowMeans2() %>%
     log10() %>%
     sum() %>%
-    `-` (.)
+    `-` (.) %>%
+    ifelse(is.infinite(.), 999999999, .)
 }
 
 #' spSwarmPoisson
