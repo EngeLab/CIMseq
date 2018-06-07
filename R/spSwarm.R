@@ -114,17 +114,18 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   }
   
   #run optimization
-  set.seed(seed)
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
   
+  set.seed(seed)
   opt.out <- parallel::mclapply(
     X = 1:to, FUN = function(i) {
       optim.fun(
         i, fractions = fractions, multiplets = multiplets,
-        singlets = singlets, classes = classes, seed = seed,
+        singlets = singlets, classes = classes,
         n = nSyntheticMultiplets, control = control, ...
       )
   }, mc.cores = cores)
+  print(opt.out)
   
   #process optimization results
   result <- .processResults(

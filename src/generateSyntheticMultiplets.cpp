@@ -407,6 +407,13 @@ double calculateCostC(
     Eigen::Map<Eigen::VectorXd> fractions,
     int n
 ){
+  
+  if(fractions.sum() == 0) {
+    return 999999999;
+  }
+  
+  Eigen::VectorXd f = fractions.array() / fractions.sum();
+    
   //arma::arma_rng::set_seed_random();
   NumericMatrix syntheticMultiplets(singlets.n_rows, n);
   int n0 = n - 1;
@@ -435,7 +442,7 @@ double calculateCostC(
     );
     
     //adjust according to fractions
-    Eigen::MatrixXd adjusted = eigenMat * fractions.asDiagonal();
+    Eigen::MatrixXd adjusted = eigenMat * f.asDiagonal();
     
     //rowSums
     Eigen::VectorXd rs = adjusted.rowwise().sum().array().round();
