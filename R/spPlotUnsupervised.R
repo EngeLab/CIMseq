@@ -104,7 +104,7 @@ setMethod("plotUnsupervisedClass", c("spUnsupervised", "spCounts"), function(
     plotUnsupervisedData(spUnsupervised, spCountsSng) %>%
     ggplot(aes_string(x = '`t-SNE dim 1`', y = '`t-SNE dim 2`')) +
     geom_point(aes_string(colour = 'Classification', size = 'Uncertainty'), alpha = 0.7) + #generally the uncertainty size is too large, since uncertainty is always between 0-1, we should be able to scale this better
-    scale_colour_manual(values = col40())+
+    scale_colour_manual(values = col40()) +
     theme_few() +
     theme(legend.position = "top") +
     guides(colour = guide_legend(override.aes = list(size = 3)))

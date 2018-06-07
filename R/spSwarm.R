@@ -58,7 +58,6 @@ setGeneric("spSwarm", function(
   standardGeneric("spSwarm")
 })
 
-
 #' @importFrom parallel mclapply
 #' @importFrom pso psoptim
 #' @importFrom matrixStats rowSums2 rowMeans2
@@ -171,9 +170,15 @@ optim.fun <- function(
 ){
   oneMultiplet <- multiplets[, i]
   
+  #pso::psoptim(
+  #  par = fractions, fn = cost.fn, oneMultiplet = oneMultiplet,
+  #  singlets = singlets, classes = classes, seed = seed, n = n,
+  #  lower = 0, upper = 1, control = control, ...
+  #)
+  
   pso::psoptim(
-    par = fractions, fn = cost.fn, oneMultiplet = oneMultiplet,
-    singlets = singlets, classes = classes, seed = seed, n = n,
+    par = fractions, fn = calculateCostC, oneMultiplet = oneMultiplet,
+    singlets = singlets, classes = classes, n = n,
     lower = 0, upper = 1, control = control, ...
   )
 }
@@ -191,9 +196,11 @@ cost.fn <- function(
   
   cost <- generateSyntheticMultiplets(
     singlets = singlets, classes = classes, fractions = fractions,
-    seed = seed, n = n
+    n = n, seed = seed
   ) %>%
   costCalculation(oneMultiplet = oneMultiplet, syntheticMultiplets = .)
+  
+  return(cost)
 }
 
 generateSyntheticMultiplets <- function(
@@ -243,9 +250,9 @@ costCalculation <- function(oneMultiplet, syntheticMultiplets) {
   dpois(round(oneMultiplet), lambda = syntheticMultiplets) %>%
     matrixStats::rowMeans2() %>%
     log10() %>%
+    ifelse(is.infinite(.) & . < 0, -323.0052, .) %>%
     sum() %>%
-    `-` (.) %>%
-    ifelse(is.infinite(.), 999999999, .)
+    `-` (.)
 }
 
 #' spSwarmPoisson
