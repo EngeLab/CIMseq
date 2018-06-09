@@ -1,6 +1,7 @@
 inst/doc
-
+.Rproj
 *.history
 .Rhistory
 .DS_Store
 /revdep/.cache.rds
+.Rproj.user

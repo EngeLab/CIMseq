@@ -1,2 +1,4 @@
 ^codecov\.yml$
 ^revdep$
+^.*\.Rproj$
+^\.Rproj\.user$

@@ -58,7 +58,6 @@ setGeneric("spSwarm", function(
   standardGeneric("spSwarm")
 })
 
-
 #' @importFrom parallel mclapply
 #' @importFrom pso psoptim
 #' @importFrom matrixStats rowSums2 rowMeans2
@@ -115,17 +114,18 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   }
   
   #run optimization
-  set.seed(seed)
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
   
+  set.seed(seed)
   opt.out <- parallel::mclapply(
     X = 1:to, FUN = function(i) {
       optim.fun(
         i, fractions = fractions, multiplets = multiplets,
-        singlets = singlets, classes = classes, seed = seed,
+        singlets = singlets, classes = classes,
         n = nSyntheticMultiplets, control = control, ...
       )
   }, mc.cores = cores)
+  print(opt.out)
   
   #process optimization results
   result <- .processResults(
@@ -171,9 +171,15 @@ optim.fun <- function(
 ){
   oneMultiplet <- multiplets[, i]
   
+  #pso::psoptim(
+  #  par = fractions, fn = cost.fn, oneMultiplet = oneMultiplet,
+  #  singlets = singlets, classes = classes, seed = seed, n = n,
+  #  lower = 0, upper = 1, control = control, ...
+  #)
+  
   pso::psoptim(
-    par = fractions, fn = cost.fn, oneMultiplet = oneMultiplet,
-    singlets = singlets, classes = classes, seed = seed, n = n,
+    par = fractions, fn = calculateCostC, oneMultiplet = oneMultiplet,
+    singlets = singlets, classes = classes, n = n,
     lower = 0, upper = 1, control = control, ...
   )
 }
@@ -191,9 +197,11 @@ cost.fn <- function(
   
   cost <- generateSyntheticMultiplets(
     singlets = singlets, classes = classes, fractions = fractions,
-    seed = seed, n = n
+    n = n, seed = seed
   ) %>%
   costCalculation(oneMultiplet = oneMultiplet, syntheticMultiplets = .)
+  
+  return(cost)
 }
 
 generateSyntheticMultiplets <- function(
@@ -243,9 +251,9 @@ costCalculation <- function(oneMultiplet, syntheticMultiplets) {
   dpois(round(oneMultiplet), lambda = syntheticMultiplets) %>%
     matrixStats::rowMeans2() %>%
     log10() %>%
+    ifelse(is.infinite(.) & . < 0, -323.0052, .) %>%
     sum() %>%
-    `-` (.) %>%
-    ifelse(is.infinite(.), 999999999, .)
+    `-` (.)
 }
 
 #' spSwarmPoisson

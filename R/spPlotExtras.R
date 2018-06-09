@@ -65,9 +65,8 @@ setMethod("plotData", "gg", function(
 #' @param spCountsSng spCounts; An spCounts object with singlets.
 #' @param spCountsMul spCounts; An spCounts object with multiplets.
 #' @keywords convertToERCC
-#'
 #' @export
-#' @importFrom dplyr select filter pull
+#' @importFrom dplyr select filter pull "%>%"
 #' @importFrom stats median
 
 convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
