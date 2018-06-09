@@ -14,10 +14,6 @@
 #'
 #' @import methods
 #' @import ggplot2
-#' @useDynLib sp.scRNAseq
-#' @import Rcpp RcppArmadillo RcppEigen
-#' @importFrom Rcpp evalCpp
-#' @exportPattern "^[[:alpha:]]+"
 NULL
 
 ## quiets concerns of R CMD check re: the .'s that appear in pipelines

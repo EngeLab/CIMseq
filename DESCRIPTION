@@ -10,7 +10,6 @@ Author: Jason T. Serviss [aut, cre],
   Martin Enge [aut]
 Maintainer: Jason T Serviss <jason.serviss@ki.se>
 Description: What the package does (one paragraph).
-LinkingTo: Rcpp, RcppArmadillo, RcppEigen
 Depends:
     R (>= 3.4.2)
 Imports:
@@ -32,9 +31,6 @@ Imports:
     viridis (>= 0.5.1),
     ggraph (>= 1.0.1),
     tidygraph (>= 1.1.0),
-    Rcpp (>= 0.12.17),
-    RcppArmadillo (>= 0.8.500.0),
-    RcppEigen (>= 0.3.3.4.0)
 Suggests: 
     knitr (>= 1.20),
     rmarkdown (>= 1.9),

@@ -170,19 +170,12 @@ optim.fun <- function(
   seed, n, control, ...
 ){
   oneMultiplet <- multiplets[, i]
-  set.seed(seed + i)
   pso::psoptim(
-    par = fractions, fn = calculateCostC, oneMultiplet = oneMultiplet,
-    singlets = singlets, classes = classes, n = n,
+    par = fractions, fn = cost.fn, oneMultiplet = oneMultiplet,
+    singlets = singlets, classes = classes, seed = seed, n = n,
     lower = 0, upper = 1, control = control, ...
   )
 }
-
-#pso::psoptim(
-#  par = fractions, fn = cost.fn, oneMultiplet = oneMultiplet,
-#  singlets = singlets, classes = classes, seed = seed, n = n,
-#  lower = 0, upper = 1, control = control, ...
-#)
 
 #deconvolution functions
 cost.fn <- function(
