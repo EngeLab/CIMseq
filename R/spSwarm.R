@@ -122,7 +122,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
       optim.fun(
         i, fractions = fractions, multiplets = multiplets,
         singlets = singlets, classes = classes,
-        n = nSyntheticMultiplets, control = control, ...
+        n = nSyntheticMultiplets, control = control, seed = seed, ...
       )
   }, mc.cores = cores)
   print(opt.out)

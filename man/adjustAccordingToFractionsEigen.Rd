@@ -4,7 +4,7 @@
 \alias{adjustAccordingToFractionsEigen}
 \title{adjustAccordingToFractionsEigen}
 \usage{
-adjustAccordingToFractionsEigen(fractions, singlets)
+adjustAccordingToFractionsEigen(fractions, subMat)
 }
 \arguments{
 \item{fractions}{Numeric; a numeric vector with length equal to 

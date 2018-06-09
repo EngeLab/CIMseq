@@ -8,9 +8,27 @@
 
 using namespace Rcpp;
 
-// FUNCTIONS TO GENERATE SYNTHETIC MULTIPLETS
+////////////////////////////////////////////////////////////////////////////////
+//          EIGEN FUNCTIONS TO GENERATE SYNTHETIC MULTIPLETS                  //
+////////////////////////////////////////////////////////////////////////////////
 
-//' sampleSinglets
+//' normalizeFractionsEigen
+//' 
+//' Takes a numeric vector and scales to [0, 1] by dividing with its sum.
+//'
+//' @param fractions Numeric; a numeric vector.
+//' @author Jason T. Serviss
+//' @export
+// [[Rcpp::export]]
+
+Eigen::VectorXd normalizeFractionsEigen(
+    const Eigen::VectorXd fractions
+){
+  Eigen::VectorXd normFractions = fractions.array() / fractions.sum();
+  return normFractions;
+}
+
+//' sampleSingletsEigen
 //' 
 //' This function takes a character vector of classes/cell with the same order
 //' as the cells in the counts matrix. It returns one random index per unique
@@ -22,19 +40,21 @@ using namespace Rcpp;
 //' @export
 // [[Rcpp::export]]
 
-IntegerVector sampleSinglets(
+Eigen::VectorXi sampleSingletsEigen(
     CharacterVector classes
 ){
   CharacterVector uClasses = unique(classes).sort();
-  IntegerVector idxToSubset(uClasses.size());
+  Eigen::VectorXi idxToSubset(uClasses.size());
+  
   //get indices for each cell type
   for (int y = 0; y < uClasses.size(); y++) {
     IntegerVector idxs;
     for (int j = 0; j < classes.size(); j++) {
       if(classes[j] == uClasses[y]) {idxs.push_back(j);}
     }
+    
     //sample with length 1
-    idxToSubset[y] = sample(idxs, 1)[0];
+    idxToSubset(y) = sample(idxs, 1)[0];
   }
   return idxToSubset;
 }
@@ -52,15 +72,29 @@ IntegerVector sampleSinglets(
 //' @export
 // [[Rcpp::export]]
 
-Eigen::Map<Eigen::MatrixXd> subsetSingletsEigen(
-    const arma::mat& singlets,
-    Rcpp::NumericVector idxToSubset
+Eigen::MatrixXd subsetSingletsEigen(
+  Eigen::MatrixXd singlets,
+  Eigen::VectorXi idxToSubset
 ){
-  arma::uvec v = Rcpp::as<arma::uvec>(idxToSubset);
-  arma::mat subMat = singlets.cols(v);
-  Eigen::Map<Eigen::MatrixXd> eigenMat = Eigen::Map<Eigen::MatrixXd>(
-    subMat.memptr(), subMat.n_rows, subMat.n_cols
-  );
+  //Currently subsetting matrix by columns is not implemented in Eigen.
+  //Functionality for this is in the devel version. As soon as it is implemented
+  //change to that. Until them we convert to Armadillo, subset and reconvert to
+  //Eigen
+  
+  //lots of conversions of idxToSubset to get right type for subsetting (painful)
+  Eigen::VectorXd eigenD = idxToSubset.cast<double>();
+  arma::vec armaVec = arma::vec(eigenD.data(), eigenD.size(), false, false);
+  arma::uvec armaIdx = arma::conv_to<arma::uvec>::from(armaVec);
+  
+  //setup output
+  arma::mat singletsArma = arma::mat(singlets.data(), singlets.rows(), singlets.cols(), false, false);
+  
+  //subset
+  arma::mat subMat = singletsArma.cols(armaIdx);
+  
+  //convert back to Eigen
+  Eigen::MatrixXd eigenMat = Eigen::Map<Eigen::MatrixXd>(subMat.memptr(), subMat.n_rows, subMat.n_cols);
+  
   return eigenMat;
 }
 
@@ -80,11 +114,12 @@ Eigen::Map<Eigen::MatrixXd> subsetSingletsEigen(
 //' @export
 // [[Rcpp::export]]
 
-SEXP adjustAccordingToFractionsEigen(
-  Eigen::Map<Eigen::VectorXd> fractions,
-  const Eigen::Map<Eigen::MatrixXd> singlets
+Eigen::MatrixXd adjustAccordingToFractionsEigen(
+    const Eigen::VectorXd fractions,
+    const Eigen::MatrixXd subMat
 ){
-  return Rcpp::wrap(singlets * fractions.asDiagonal());
+  Eigen::MatrixXd adjusted = subMat * fractions.asDiagonal();
+  return adjusted;
 }
 
 //' multipletSumsEigen
@@ -101,13 +136,14 @@ SEXP adjustAccordingToFractionsEigen(
 //' @export
 // [[Rcpp::export]]
 
-SEXP multipletSumsEigen(
-  Eigen::MatrixXd singlets
+Eigen::VectorXd multipletSumsEigen(
+    const Eigen::MatrixXd singlets
 ){
-  return Rcpp::wrap(singlets.rowwise().sum().array().round());
+  Eigen::VectorXd sums = singlets.rowwise().sum().array().round();
+  return sums;
 }
 
-//' poissonSample
+//' poissonSampleEigen
 //' 
 //' This function takes the rowSums calculated by the 
 //' \link{\code{multipletSumsArma}}.or \link{\code{multipletSumsEigen}} 
@@ -119,29 +155,18 @@ SEXP multipletSumsEigen(
 //' @export
 // [[Rcpp::export]]
 
-NumericVector poissonSample(
-    arma::mat rsRcpp
+Eigen::Map<Eigen::VectorXd> poissonSampleEigen(
+    const Eigen::VectorXd rsRcpp
 ){
-  NumericVector poissonSamp(rsRcpp.n_rows);
-  for(int y = 0; y < rsRcpp.n_rows; y++) {
+  NumericVector poissonSamp(rsRcpp.rows());
+  for(int y = 0; y < rsRcpp.rows(); y++) {
     poissonSamp[y] = Rcpp::rpois(1, rsRcpp(y))[0];
   }
-  return poissonSamp;
+  Eigen::Map<Eigen::VectorXd> rcppPS = Rcpp::as<Eigen::Map<Eigen::VectorXd> >(poissonSamp);
+  return rcppPS;
 }
 
-//the funciton below is faster but the input will need to be converted
-std::vector<double> poissonSample5(
-    std::vector<double> rsRcpp
-){
-  std::vector<double> poissonSamp;
-  poissonSamp.reserve(rsRcpp.size());
-  for(int y = 0; y < rsRcpp.size(); y++) {
-    poissonSamp[y] = Rcpp::rpois(1, rsRcpp[y])[0];
-  }
-  return poissonSamp;
-}
-
-//' cpmC
+//' cpmEigen
 //' 
 //' Takes a numeric matrix of counts and calculates counts per million.
 //'
@@ -150,12 +175,13 @@ std::vector<double> poissonSample5(
 //' @export
 // [[Rcpp::export]]
 
-SEXP cpmC(
-    const Eigen::Map<Eigen::MatrixXd> counts
+Eigen::MatrixXd cpmEigen(
+    const Eigen::MatrixXd counts
 ){
   Eigen::VectorXd colsums = counts.colwise().sum();
   Eigen::MatrixXd dCounts = counts.transpose().array().colwise() / colsums.array();
-  return wrap((dCounts.transpose().array() * 1000000) + 1);
+  Eigen::MatrixXd cpm = (dCounts.transpose().array() * 1000000) + 1;
+  return cpm;
 }
 
 //' generateSyntheticMultipletsEigen
@@ -175,62 +201,52 @@ SEXP cpmC(
 //' @export
 // [[Rcpp::export]]
 
-NumericMatrix generateSyntheticMultipletsEigen(
-  const arma::mat& singlets,
-  CharacterVector classes,
-  Eigen::Map<Eigen::VectorXd> fractions,
-  int n
+Eigen::MatrixXd generateSyntheticMultipletsEigen(
+    Eigen::MatrixXd singlets,
+    CharacterVector classes,
+    Eigen::VectorXd fractions,
+    int n
 ){
-  //arma::arma_rng::set_seed_random();
-  NumericMatrix syntheticMultiplets(singlets.n_rows, n);
+  
+  //normalize fractions
+  Eigen::VectorXd f = normalizeFractionsEigen(fractions);
+  
+  //setup output variables
+  Eigen::MatrixXd syntheticMultiplets(singlets.rows(), n);
+  
+  //setup iterator
   int n0 = n - 1;
   
+  //generate synthetic multiplets
   for (int o = 0; o <= n0; o++) {
     
     //get indices for each cell type and sample for subsequent singlet matrix subsetting
-    CharacterVector uClasses = unique(classes).sort();
-    IntegerVector idxToSubset;
-    //get indices for each cell type
-    for (int y = 0; y < uClasses.size(); y++) {
-      IntegerVector idxs;
-      for (int j = 0; j < classes.size(); j++) {
-        if(classes[j] == uClasses[y]) {idxs.push_back(j);}
-      }
-      //sample with length 1
-      //int samp = sample(idxs, 1)[0];
-      idxToSubset.push_back(sample(idxs, 1)[0]);
-    }
+    Eigen::VectorXi idxToSubset = sampleSingletsEigen(classes);
     
     //subset singlets matrix
-    arma::uvec v = Rcpp::as<arma::uvec>(idxToSubset);
-    arma::mat subMat = singlets.cols(v);
-    Eigen::MatrixXd eigenMat = Eigen::Map<Eigen::MatrixXd>(
-      subMat.memptr(), subMat.n_rows, subMat.n_cols
-    );
+    Eigen::MatrixXd subMat = subsetSingletsEigen(singlets, idxToSubset);
     
     //adjust according to fractions
-    Eigen::MatrixXd adjusted = eigenMat * fractions.asDiagonal();
+    Eigen::MatrixXd adjusted = adjustAccordingToFractionsEigen(f, subMat);
     
     //rowSums
-    Eigen::VectorXd rs = adjusted.rowwise().sum().array().round();
+    Eigen::VectorXd rs = multipletSumsEigen(adjusted);
     
     //poisson sample
-    NumericVector ps(rs.rows());
-    for(int y = 0; y < rs.rows(); y++) {
-      ps[y] = Rcpp::rpois(1, rs(y))[0];
-    }
+    Eigen::Map<Eigen::VectorXd> ps = poissonSampleEigen(rs);
     
-    syntheticMultiplets(_, o) = ps;
+    //add to output
+    syntheticMultiplets.col(o) = ps;
+    
   }
   
-  //calculate cpm
-  Eigen::Map<Eigen::MatrixXd> sm_eigen = as<Eigen::Map<Eigen::MatrixXd> >(syntheticMultiplets);
-  Eigen::VectorXd colsums = sm_eigen.colwise().sum();
-  Eigen::MatrixXd dCounts = sm_eigen.transpose().array().colwise() / colsums.array();
-  return wrap((dCounts.transpose().array() * 1000000) + 1);
+  //calculate cpm and return
+  return cpmEigen(syntheticMultiplets);
 }
 
-// FUNCTIONS TO CALCULATE COST
+////////////////////////////////////////////////////////////////////////////////
+//                        FUNCTIONS TO CALCULATE COST EIGEN                   //
+////////////////////////////////////////////////////////////////////////////////
 
 //' calculateCostDensity
 //' 
@@ -246,9 +262,9 @@ NumericMatrix generateSyntheticMultipletsEigen(
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
-SEXP calculateCostDensity(
-    Eigen::Map<Eigen::VectorXi> oneMultiplet,
-    const Eigen::Map<Eigen::MatrixXd> syntheticMultiplets
+Eigen::MatrixXd calculateCostDensity(
+    Eigen::Map<Eigen::VectorXd> oneMultiplet,
+    const Eigen::MatrixXd syntheticMultiplets
 ){
   int nr = syntheticMultiplets.rows();
   int nc = syntheticMultiplets.cols();
@@ -261,7 +277,7 @@ SEXP calculateCostDensity(
     }
   }
   
-  return Rcpp::wrap(densities);
+  return densities;
 }
 
 //' calculateLogRowMeans
@@ -274,11 +290,11 @@ SEXP calculateCostDensity(
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
-SEXP calculateLogRowMeans(
-    const Eigen::Map<Eigen::MatrixXd> densities
+Eigen::VectorXd calculateLogRowMeans(
+    const Eigen::MatrixXd densities
 ){
   Eigen::VectorXd means = densities.rowwise().mean().array().log10();
-  return wrap(means);
+  return means;
 }
 
 //' fixNegInf
@@ -292,8 +308,8 @@ SEXP calculateLogRowMeans(
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
-SEXP fixNegInf(
-    Eigen::VectorXd means
+Eigen::VectorXd fixNegInf(
+    const Eigen::VectorXd means
 ){
   int ms = means.size();
   Eigen::VectorXd noInfMeans(ms);
@@ -307,7 +323,7 @@ SEXP fixNegInf(
       noInfMeans(k) = means(k);
     }
   }
-  return wrap(noInfMeans);
+  return noInfMeans;
 }
 
 //' costNegSum
@@ -320,11 +336,11 @@ SEXP fixNegInf(
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
-SEXP costNegSum(
+double costNegSum(
     Eigen::VectorXd means
 ){
   double cost = means.sum() *  -1;
-  return wrap(cost);
+  return cost;
 }
 
 //' calculateCostEigen
@@ -342,43 +358,22 @@ SEXP costNegSum(
 //' @export
 // [[Rcpp::export]]
 
-SEXP calculateCostEigen(
-    Eigen::Map<Eigen::VectorXi> oneMultiplet,
-    const Eigen::Map<Eigen::MatrixXd> syntheticMultiplets
+double calculateCostEigen(
+    const Eigen::Map<Eigen::VectorXd> oneMultiplet,
+    const Eigen::MatrixXd syntheticMultiplets
 ){
   
   //calculate densities
-  int nr = syntheticMultiplets.rows();
-  int nc = syntheticMultiplets.cols();
-  Eigen::MatrixXd ds(nr, nc);
-  oneMultiplet = oneMultiplet.array().round();
-  
-  for(int i = 0; i < nr; i++) {
-    for(int j = 0; j < nc; j++) {
-      ds(i, j) = R::dpois(oneMultiplet[i], syntheticMultiplets(i, j), false);
-    }
-  }
+  Eigen::MatrixXd ds = calculateCostDensity(oneMultiplet, syntheticMultiplets);
   
   //calculate log10 row means
-  Eigen::VectorXd means = ds.rowwise().mean().array().log10();
+  Eigen::VectorXd means = calculateLogRowMeans(ds);
   
   //Replace -Inf with -323.0052
-  Eigen::VectorXd noInfMeans(nr);
-  Eigen::Array<bool, 1, Eigen::Dynamic> infBool;
-  infBool = means.array().isInf();
+  Eigen::VectorXd noInfMeans = fixNegInf(means);
   
-  for(int k = 0; k < nr; k++) {
-    if(infBool(k)) {
-      noInfMeans(k) = -323.0052;
-    } else {
-      noInfMeans(k) = means(k);
-    }
-  }
-  
-  //calculate negative sum
-  double cost = noInfMeans.sum() * -1;
-  
-  return wrap(cost);
+  //calculate negative sum and return
+  return costNegSum(noInfMeans);
 }
 
 // WRAPPER FUNCTION FOR SYNTHETIC MULTIPLET GENERATION AND COST CALCULATION
@@ -401,97 +396,55 @@ SEXP calculateCostEigen(
 // [[Rcpp::export]]
 
 double calculateCostC(
-    Eigen::Map<Eigen::VectorXd> oneMultiplet,
-    const arma::mat& singlets,
-    CharacterVector classes,
-    Eigen::Map<Eigen::VectorXd> fractions,
-    int n
+    const Eigen::Map<Eigen::VectorXd> oneMultiplet,
+    const Eigen::Map<Eigen::MatrixXd> singlets,
+    const CharacterVector classes,
+    const Eigen::VectorXd fractions,
+    const int n
 ){
   
+  //check all 0 fractions
   if(fractions.sum() == 0) {
     return 999999999;
   }
   
-  Eigen::VectorXd f = fractions.array() / fractions.sum();
-    
-  //arma::arma_rng::set_seed_random();
-  NumericMatrix syntheticMultiplets(singlets.n_rows, n);
+  //normalize fractions
+  Eigen::VectorXd f = normalizeFractionsEigen(fractions);
+  
+  //setup output variables
+  Eigen::MatrixXd syntheticMultiplets(singlets.rows(), n);
+  
+  //setup iterator
   int n0 = n - 1;
   
+  //generate synthetic multiplets
   for (int o = 0; o <= n0; o++) {
     
     //get indices for each cell type and sample for subsequent singlet matrix subsetting
-    CharacterVector uClasses = unique(classes).sort();
-    IntegerVector idxToSubset;
-    //get indices for each cell type
-    for (int y = 0; y < uClasses.size(); y++) {
-      IntegerVector idxs;
-      for (int j = 0; j < classes.size(); j++) {
-        if(classes[j] == uClasses[y]) {idxs.push_back(j);}
-      }
-      //sample with length 1
-      //int samp = sample(idxs, 1)[0];
-      idxToSubset.push_back(sample(idxs, 1)[0]);
-    }
-    
+    Eigen::VectorXi idxToSubset = sampleSingletsEigen(classes);
+
     //subset singlets matrix
-    arma::uvec v = Rcpp::as<arma::uvec>(idxToSubset);
-    arma::mat subMat = singlets.cols(v);
-    Eigen::MatrixXd eigenMat = Eigen::Map<Eigen::MatrixXd>(
-      subMat.memptr(), subMat.n_rows, subMat.n_cols
-    );
+    Eigen::MatrixXd subMat = subsetSingletsEigen(singlets, idxToSubset);
     
     //adjust according to fractions
-    Eigen::MatrixXd adjusted = eigenMat * f.asDiagonal();
+    Eigen::MatrixXd adjusted = adjustAccordingToFractionsEigen(f, subMat);
     
     //rowSums
-    Eigen::VectorXd rs = adjusted.rowwise().sum().array().round();
-    
+    Eigen::VectorXd rs = multipletSumsEigen(adjusted);
+
     //poisson sample
-    NumericVector ps(rs.rows());
-    for(int y = 0; y < rs.rows(); y++) {
-      ps[y] = Rcpp::rpois(1, rs(y))[0];
-    }
+    Eigen::Map<Eigen::VectorXd> ps = poissonSampleEigen(rs);
+
+    //add to output
+    syntheticMultiplets.col(o) = ps;
     
-    syntheticMultiplets(_, o) = ps;
   }
   
-  //calculate cpm
-  Eigen::Map<Eigen::MatrixXd> sm_eigen = as<Eigen::Map<Eigen::MatrixXd> >(syntheticMultiplets);
-  Eigen::VectorXd colsums = sm_eigen.colwise().sum();
-  Eigen::MatrixXd dCounts = sm_eigen.transpose().array().colwise() / colsums.array();
-  Eigen::MatrixXd normSyntheticMultipliet = (dCounts.transpose().array() * 1000000) + 1;
+  //calculate cpm and return
+  Eigen::MatrixXd cpmSyntheticMultiplets = cpmEigen(syntheticMultiplets);
   
   //calculate cost
-  //calculate densities
-  int nr = normSyntheticMultipliet.rows();
-  int nc = normSyntheticMultipliet.cols();
-  Eigen::MatrixXd ds(nr, nc);
-  oneMultiplet = oneMultiplet.array().round();
+  double cost = calculateCostEigen(oneMultiplet, cpmSyntheticMultiplets);
   
-  for(int i = 0; i < nr; i++) {
-    for(int j = 0; j < nc; j++) {
-      ds(i, j) = R::dpois(oneMultiplet[i], normSyntheticMultipliet(i, j), false);
-    }
-  }
-  
-  //calculate log10 row means
-  Eigen::VectorXd means = ds.rowwise().mean().array().log10();
-  
-  //Replace -Inf with -323.0052
-  Eigen::VectorXd noInfMeans(nr);
-  Eigen::Array<bool, 1, Eigen::Dynamic> infBool;
-  infBool = means.array().isInf();
-  
-  for(int k = 0; k < nr; k++) {
-    if(infBool(k)) {
-      noInfMeans(k) = -323.0052;
-    } else {
-      noInfMeans(k) = means(k);
-    }
-  }
-  
-  //calculate negative sum
-  double cost = noInfMeans.sum() * -1;
   return cost;
 }

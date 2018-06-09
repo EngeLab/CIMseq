@@ -8,7 +8,7 @@ sObj <- testSwa
 
 
 #Function to check if all elements in a vector are identical
-zero_range <- function(x, tol = .Machine$double.eps ^ 0.5) {
+has_zero_range <- function(x, tol = .Machine$double.eps ^ 0.5) {
   if (length(x) == 1) return(TRUE)
   x <- range(x) / mean(x)
   isTRUE(all.equal(x[1], x[2], tolerance = tol))
@@ -114,8 +114,38 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
 #                                                                              #
 ################################################################################
 
-##run test sampleSinglets
-test_that("check that sampleSinglets outputs the expected result", {
+context("generateSyntheticMultiplets")
+
+#Function to check if all elements in a vector are identical
+has_zero_range <- function(x, tol = .Machine$double.eps ^ 0.5) {
+  if (length(x) == 1) return(TRUE)
+  x <- range(x) / mean(x)
+  isTRUE(all.equal(x[1], x[2], tolerance = tol))
+}
+
+################################################################################
+##          EIGEN FUNCTIONS TO GENERATE SYNTHETIC MULTIPLETS                  ##
+################################################################################
+
+##run test normalizeFractionsEigen
+test_that("check that normalizeFractionsEigen outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  fractions <- c(0.1, 0.2)
+  
+  #setup expected data
+  expected <- fractions / sum(fractions)
+  
+  #run function
+  output <- normalizeFractionsEigen(fractions)
+  
+  #test
+  expect_equal(output, expected)
+})
+
+##run test sampleSingletsEigen
+test_that("check that sampleSingletsEigen outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -127,7 +157,7 @@ test_that("check that sampleSinglets outputs the expected result", {
   c <- c(4, 5)
   
   #run function
-  output <- sampleSinglets(classes)
+  output <- sampleSingletsEigen(classes)
   
   #test
   expect_true(length(output) == 3)
@@ -142,6 +172,7 @@ test_that("check that subsetSingletsEigen outputs the expected result", {
   ###TEST1####
   #prepare normal input data
   singlets <- matrix(rep(1:10, each = 10), ncol = 10)
+  storage.mode(singlets) <- "numeric"
   idx <- c(0, 7)
   
   #setup expected data
@@ -193,8 +224,8 @@ test_that("check that multipletSumsEigen outputs the expected result", {
   expect_identical(output, expected)
 })
 
-##run test poissonSample
-test_that("check that poissonSample outputs the expected result", {
+##run test poissonSampleEigen
+test_that("check that poissonSampleEigen outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -205,14 +236,14 @@ test_that("check that poissonSample outputs the expected result", {
   expected <- rpois(length(rs), rs)
   
   #run function
-  output <- poissonSample(matrix(rs, ncol = 1))
+  output <- poissonSampleEigen(matrix(rs, ncol = 1))
   
   #test
   expect_true(all.equal(mean(output), mean(expected), tolerance = 100))
 })
 
-##run test cpmC
-test_that("check that cpmC outputs the expected result", {
+##run test cpmEigen
+test_that("check that cpmEigen outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -222,30 +253,35 @@ test_that("check that cpmC outputs the expected result", {
   expected <- t(t(counts) / colSums(counts) * 10^6 + 1)
   
   #run function
-  output <- cpmC(counts)
+  output <- cpmEigen(counts)
   
   #test
   expect_equal(output, expected)
   expect_error(cpmC(matrix(1:10, ncol = 2)))
 })
 
-##run test generateSyntheticMultipletsEigen
+#run test generateSyntheticMultipletsEigen
 test_that("check that generateSyntheticMultipletsEigen outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
-  singlets <- matrix(rep(1:10, each = 10), ncol = 10)
+  singlets <- matrix(rep(1:10, each = 10) + 0.1, ncol = 10)
   fractions <- c(0.5, 1)
   classes <- rep(LETTERS[1:2], each = 5)
   
   #run function
-  output <- generateSyntheticMultipletsEigen(singlets, classes, fractions, 100)
+  output <- generateSyntheticMultipletsEigen(singlets, classes, fractions, 5)
   
   #test
   expect_silent(generateSyntheticMultipletsEigen(singlets, classes, fractions, 1))
   expect_silent(generateSyntheticMultipletsEigen(singlets, classes, fractions, 2))
-  expect_false(zero_range(output[1, ]))
+  #print(head(output))
+  expect_false(has_zero_range(output[1, ]))
 })
+
+################################################################################
+##                        FUNCTIONS TO CALCULATE COST EIGEN                   ##
+################################################################################
 
 ##run test calculateCostDensity
 test_that("check that calculateCostDensity outputs the expected result", {
@@ -254,12 +290,13 @@ test_that("check that calculateCostDensity outputs the expected result", {
   #prepare normal input data
   set.seed(3289)
   oneMultiplet <- as.integer(runif(10, 1, 10))
-  syntheticMultiplets <- matrix(runif(20, 1, 10), ncol = 2)
+  syntheticMultiplets <- matrix(runif(20, 1, 10) + 0.1, ncol = 2)
   
   #setup expected data
   expected <- dpois(oneMultiplet, syntheticMultiplets)
   
   #run function
+  storage.mode(oneMultiplet) <- "numeric"
   output <- calculateCostDensity(oneMultiplet, syntheticMultiplets)
   
   #test
@@ -317,4 +354,39 @@ test_that("check that costNegSum outputs the expected result", {
   
   #test
   expect_true(all.equal(output, expected))
+})
+
+##run test calculateCostEigen
+test_that("check that calculateCostEigen outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  syntheticMultiplets <- matrix(rep(1:10, each = 10) + 0.1, ncol = 10)
+  oneMultiplet <- rowMeans(syntheticMultiplets[, 1:2])
+  
+  #run function
+  output <- calculateCostEigen(oneMultiplet, syntheticMultiplets)
+  
+  #test
+  expect_true(length(output) == 1)
+  expect_silent(calculateCostEigen(oneMultiplet, syntheticMultiplets))
+})
+
+#run test calculateCostC
+test_that("check that calculateCostC outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  singlets <- matrix(rep(1:10, each = 10) + 0.1, ncol = 10)
+  oneMultiplet <- rowMeans(singlets[, 1:2])
+  classes <- rep(LETTERS[1:2], 5)
+  fractions <- c(0, 0)
+  n <- 10
+  
+  #run function
+  output <- calculateCostC(oneMultiplet, singlets, classes, fractions, n)
+  
+  #test
+  expect_silent(calculateCostC(oneMultiplet, singlets, classes, fractions, n))
+  expect_equal(output, 999999999)
 })
