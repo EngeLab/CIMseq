@@ -15,7 +15,6 @@
 #' @import methods
 #' @import ggplot2
 #' @useDynLib sp.scRNAseq
-#' @import Rcpp RcppArmadillo RcppEigen
 #' @importFrom Rcpp evalCpp
 #' @exportPattern "^[[:alpha:]]+"
 NULL
