@@ -1,8 +1,8 @@
-#context("spPlotUnsupervised")
+context("spPlotUnsupervised")
 
 s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[ ,s], testErcc[ ,s])
-cObjMul <- spCounts(testCounts[ ,!s], testErcc[ ,!s])
+cObjSng <- spCounts(testCounts[, s], testErcc[, s])
+cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 uObj <- testUns
 sObj <- testSwa
 

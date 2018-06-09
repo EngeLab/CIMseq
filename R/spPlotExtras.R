@@ -49,7 +49,7 @@ setMethod("plotData", "gg", function(
   if(any(grepl("ggraph", class(plot[[1]])))) {
     attr(plot[[1]], "graph")
   } else {
-    as_tibble(plot[[1]])
+    as_tibble(plot[[1]]) #have a look at ggplot::fortify -> broom package
   }
 })
 
@@ -65,17 +65,16 @@ setMethod("plotData", "gg", function(
 #' @param spCountsSng spCounts; An spCounts object with singlets.
 #' @param spCountsMul spCounts; An spCounts object with multiplets.
 #' @keywords convertToERCC
-#'
 #' @export
-#' @importFrom dplyr select filter pull
+#' @importFrom dplyr select filter pull "%>%"
 #' @importFrom stats median
 
 convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
-  estimateCells(spCountsSng, spCountsMul) %>%
+  estimateCells(spCountsSng, spCountsMul, warning = FALSE) %>%
   select(.data$sampleType, .data$frac.ercc) %>%
   filter(.data$sampleType == "Singlet") %>%
   pull(.data$frac.ercc) %>%
-  median %>%
+  median(., na.rm = TRUE) %>%
   `*` (100) %>%
   `/` (ercc)
 }
@@ -96,7 +95,7 @@ convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
 NULL
 
 #' @rdname coloursFromTargets
-#' @importFrom dplyr "%>%" group_by ungroup mutate arrange summarize select
+#' @importFrom dplyr "%>%" group_by ungroup mutate arrange summarize select if_else n
 #' @importFrom rlang .data
 #' @importFrom tibble tibble add_column
 #' @importFrom tidyr gather unnest spread
@@ -150,7 +149,7 @@ coloursFromTargets <- function(
   mutate('Colour' = pmap_chr(
     list(.data$r, .data$g, .data$b),
     function(x, y, z) {
-    rgb(red = x, green = y, blue = z)
+      rgb(red = x, green = y, blue = z)
     }
   )) %>%
   select(-(.data$b:.data$r)) %>%

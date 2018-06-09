@@ -174,7 +174,6 @@ cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 #run function
 uObj <- spUnsupervised(cObjSng, max_iter = 100, Gmax = 6)
 
-#run function
 
 }
 \author{

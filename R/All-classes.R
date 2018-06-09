@@ -164,11 +164,11 @@ setMethod("selectInd", "spUnsupervised", function(
   object@selectInd
 })
 
-##############
-#            #
-# Replacment #
-#            #
-##############
+###############
+#             #
+# Replacement #
+#             #
+###############
 #https://www.bioconductor.org/help/course-materials/2013/CSAMA2013/friday/afternoon/S4-tutorial.pdf
 
 #' @rdname spUnsupervised

@@ -48,10 +48,11 @@ setMethod("spCounts", "matrix", function(
     ...
 ){
     .inputCheckCounts(counts, counts.ercc)
+    cpm <- .norm.counts(counts)
     new("spCounts",
         counts = counts,
-        counts.log = .norm.log.counts(counts),
-        counts.cpm = .norm.counts(counts),
+        counts.log = log2(cpm),
+        counts.cpm = cpm,
         counts.ercc = counts.ercc
     )
 })
@@ -65,19 +66,8 @@ setMethod("spCounts", "matrix", function(
     }
 }
 
-.norm.log.counts <- function(counts) {
-    norm.fact <- colSums(counts)
-    counts.norm <- t(apply(counts, 1, .norm, n = norm.fact))
-    counts.log <- log2(counts.norm)
-}
-
 .norm.counts <- function(counts) {
-    norm.fact <- colSums(counts)
-    counts.cpm <- t(apply(counts, 1, .norm, n = norm.fact))
-}
-
-.norm <- function(x, n) {
-    x / n * 1000000 + 1
+  t(t(counts) / colSums(counts) * 10^6 + 1)
 }
 
 #.deconv <- function(counts, counts.ercc) {
@@ -113,6 +103,9 @@ setMethod("spCounts", "matrix", function(
 #' @aliases estimateCells
 #' @param spCountsSng A spCounts object with singlets.
 #' @param spCountsMul A spCounts object with multiplets.
+#' @param warning logical; Indicates if a warning should be issued when all ERCC
+#'  counts for a sample are equal to 0. If this warning is issued it can be
+#'  satisfactorily resolved by setting the ERCC reads for these samples to NA.
 #' @param ... additional arguments to pass on
 #' @return A data frame including the fraction of ercc reads and cell counts for
 #'    each sample.
@@ -133,11 +126,11 @@ NULL
 #' @export
 
 setGeneric("estimateCells", function(
-    spCountsSng,
-    spCountsMul,
-    ...
+  spCountsSng,
+  spCountsMul,
+  ...
 ){
-    standardGeneric("estimateCells")
+  standardGeneric("estimateCells")
 })
 
 #' @rdname estimateCells
@@ -147,9 +140,10 @@ setGeneric("estimateCells", function(
 #' @importFrom dplyr pull
 #' @export
 setMethod("estimateCells", "spCounts", function(
-    spCountsSng,
-    spCountsMul,
-    ...
+  spCountsSng,
+  spCountsMul,
+  warning = TRUE,
+  ...
 ){
   
   counts <- cbind(
@@ -164,9 +158,13 @@ setMethod("estimateCells", "spCounts", function(
   
   #check if any samples have ERCC are all 0
   all0 <- apply(counts.ercc, 2, function(x) all(x == 0))
-  if(any(all0)) {
+  if(any(all0, na.rm = TRUE) & warning) {
     zeroIDs <- colnames(counts.ercc)[which(all0)]
-    warning(paste0("These samples ERCC reads are all 0's: ", all0))
+    warning(paste0(
+      "Results will not be accurate. ",
+      "These samples ERCC reads are all 0's: ",
+      paste(zeroIDs, collapse = ", ")
+    ))
   }
   
   d <- tibble(
@@ -185,7 +183,7 @@ setMethod("estimateCells", "spCounts", function(
     d %>%
       filter(.data$sampleType == "Singlet") %>%
       pull(.data$frac.ercc) %>%
-      quantile %>%
+      quantile(., na.rm = TRUE) %>%
       `[` (2) %>%
       `/` (d$frac.ercc)
   
@@ -193,14 +191,14 @@ setMethod("estimateCells", "spCounts", function(
     d %>%
       filter(.data$sampleType == "Singlet") %>%
       pull(.data$frac.ercc) %>%
-      median %>%
+      median(., na.rm = TRUE) %>%
       `/` (d$frac.ercc)
   
   d$cellNumberMax <-
     d %>%
       filter(.data$sampleType == "Singlet") %>%
       pull(.data$frac.ercc) %>%
-      quantile %>%
+      quantile(., na.rm = TRUE) %>%
       `[` (4) %>%
       `/` (d$frac.ercc)
   

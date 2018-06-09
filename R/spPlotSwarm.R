@@ -290,6 +290,7 @@ setGeneric("plotSwarmHeat", function(
 #' @rdname plotSwarmHeat
 #' @export
 #' @import ggplot2
+#' @importFrom dplyr desc
 
 setMethod("plotSwarmHeat", "spSwarm", function(
     spSwarm,
@@ -419,46 +420,44 @@ setMethod("plotSwarmHeat", "spSwarm", function(
 }
 
 .resPlotEdge <- function(
-    spSwarm,
-    edge.cutoff,
-    min.num.edges,
-    min.pval,
-    resid
+  spSwarm,
+  edge.cutoff,
+  min.num.edges,
+  min.pval,
+  resid
 ){
   
-    edges <- getMultipletsForEdge(
-        spSwarm,
-        edge.cutoff = edge.cutoff,
-        edges = spSwarmPoisson(
-            spSwarm,
-            edge.cutoff = edge.cutoff,
-            min.num.edges = min.num.edges,
-            min.pval = min.pval
-        ) %>% filter(.data$weight != 0)
-    ) %>%
-        mutate(connection = paste(.data$from, .data$to, sep = "-"))
+  edges <- getMultipletsForEdge(
+    spSwarm,
+    edge.cutoff = edge.cutoff,
+    edges = spSwarmPoisson(
+      spSwarm, edge.cutoff = edge.cutoff, min.num.edges = min.num.edges,
+      min.pval = min.pval
+    ) %>% filter(.data$weight != 0)
+  ) %>%
+    mutate(connection = paste(.data$from, .data$to, sep = "-"))
     
-    nUM <- pull(distinct(edges, .data$connection), .data$connection)
-    sapply(1:length(nUM), function(j) {
+  nUM <- pull(distinct(edges, .data$connection), .data$connection)
+  sapply(1:length(nUM), function(j) {
       
-        muls <- filter(edges, .data$connection == nUM[j]) %>%
-            pull(.data$multiplet)
+      muls <- filter(edges, .data$connection == nUM[j]) %>%
+        pull(.data$multiplet)
             
         if(length(muls) != 1) {
-            rowSums(resid[, colnames(resid) %in% muls])
+          rowSums(resid[, colnames(resid) %in% muls])
         } else {
-            resid[, colnames(resid) %in% muls]
+          resid[, colnames(resid) %in% muls]
         }
-    }) %>%
-        as.data.frame() %>%
-        setNames(nUM) %>%
-        rownames_to_column() %>%
-        rename(genes = .data$rowname) %>%
-        as_tibble() %>%
-        gather("multiplet", "residuals", -.data$genes) %>%
-        arrange(.data$multiplet, desc(.data$residuals)) %>%
-        mutate(
-            multiplet = parse_factor(.data$multiplet, unique(.data$multiplet))
-        )
+  }) %>%
+    as.data.frame() %>%
+    setNames(nUM) %>%
+    rownames_to_column() %>%
+    rename(genes = .data$rowname) %>%
+    as_tibble() %>%
+    gather("multiplet", "residuals", -.data$genes) %>%
+    arrange(.data$multiplet, desc(.data$residuals)) %>%
+    mutate(
+      multiplet = parse_factor(.data$multiplet, unique(.data$multiplet))
+    )
 }
 
