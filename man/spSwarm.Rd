@@ -24,9 +24,8 @@ spSwarm(spCountsSng, spCountsMul, spUnsupervised, ...)
 
 \S4method{spSwarm}{spCounts,spCounts,spUnsupervised}(spCountsSng, spCountsMul,
   spUnsupervised, maxiter = 10, swarmsize = 150,
-  nSyntheticMultiplets = 200, cores = 1, seed = 11, norm = TRUE,
-  report = FALSE, reportRate = NULL, selectInd = NULL,
-  vectorize = FALSE, ...)
+  nSyntheticMultiplets = 200, seed = 11, norm = TRUE, report = FALSE,
+  reportRate = NULL, selectInd = NULL, vectorize = FALSE, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}
@@ -60,8 +59,6 @@ multiplet.}
 
 \item{nSyntheticMultiplets}{Numeric value indicating the number of synthetic
 multiplets to generate during deconvolution.}
-
-\item{cores}{The number of cores to be used while running spRSwarm.}
 
 \item{seed}{The desired seed to set before running.}
 

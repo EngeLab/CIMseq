@@ -17,7 +17,6 @@ NULL
 #' @param swarmsize pySwarm argument indicating the number of swarm particals.
 #' @param nSyntheticMultiplets Numeric value indicating the number of synthetic
 #'  multiplets to generate during deconvolution.
-#' @param cores The number of cores to be used while running spRSwarm.
 #' @param seed The desired seed to set before running.
 #' @param norm Logical indicating if the sum of fractions should equal 1.
 #' @param report Logical indicating if additional reporting from the
@@ -58,7 +57,7 @@ setGeneric("spSwarm", function(
   standardGeneric("spSwarm")
 })
 
-#' @importFrom parallel mclapply
+#' @importFrom future.apply future_lapply
 #' @importFrom pso psoptim
 #' @importFrom matrixStats rowSums2 rowMeans2
 #' @importFrom dplyr "%>%"
@@ -69,7 +68,7 @@ setGeneric("spSwarm", function(
 setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   spCountsSng, spCountsMul, spUnsupervised,
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200,
-  cores = 1, seed = 11, norm = TRUE,
+  seed = 11, norm = TRUE,
   report = FALSE, reportRate = NULL, selectInd = NULL, vectorize = FALSE,
   ...
 ){
@@ -117,14 +116,14 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
   
   set.seed(seed)
-  opt.out <- parallel::mclapply(
+  opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
       optim.fun(
         i, fractions = fractions, multiplets = multiplets,
         singlets = singlets, classes = classes,
         n = nSyntheticMultiplets, control = control, seed = seed, ...
       )
-  }, mc.cores = cores)
+  })
   
   #process optimization results
   result <- .processResults(
