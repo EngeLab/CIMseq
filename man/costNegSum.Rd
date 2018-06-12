@@ -8,8 +8,8 @@ costNegSum(means)
 }
 \arguments{
 \item{means}{Numeric; a numeric vector of log10 row means. Typically 
-calculated with the \link{\code{calculateLogRowMeans}}.function with the 
--Inf values replaced by the \link{\code{fixNegInf}} function.}
+calculated with the \code{\link{calculateLogRowMeans}}.function with the 
+-Inf values replaced by the \code{\link{fixNegInf}} function.}
 }
 \description{
 This function takes a numeric vector and calculates the negative sum.

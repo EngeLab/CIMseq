@@ -118,7 +118,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   set.seed(seed)
   opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
-      optim.fun(
+      .optim.fun(
         i, fractions = fractions, multiplets = multiplets,
         singlets = singlets, classes = classes,
         n = nSyntheticMultiplets, control = control, seed = seed, ...
@@ -163,7 +163,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   return(list(par, cost, convergence, stats))
 }
 
-optim.fun <- function(
+.optim.fun <- function(
   i, fractions, multiplets, singlets, classes,
   seed, n, control, ...
 ){

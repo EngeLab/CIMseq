@@ -8,7 +8,7 @@ calculateLogRowMeans(densities)
 }
 \arguments{
 \item{densities}{Numeric; a numeric vector of densities. Typically 
-calculated with the \link{\code{calculateCostDensity}}.function.}
+calculated with the \code{\link{calculateCostDensity}}.function.}
 }
 \description{
 This function takes a matrix of poisson densities and calculates the row 

@@ -8,7 +8,7 @@ fixNegInf(means)
 }
 \arguments{
 \item{means}{Numeric; a numeric vector of log10 row means. Typically 
-calculated with the \link{\code{calculateLogRowMeans}}.function.}
+calculated with the \code{\link{calculateLogRowMeans}}.function.}
 }
 \description{
 This function takes a numeric vector and replaces -Inf values with 

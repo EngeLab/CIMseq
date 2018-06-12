@@ -8,12 +8,12 @@ adjustAccordingToFractionsEigen(fractions, subMat)
 }
 \arguments{
 \item{fractions}{Numeric; a numeric vector with length equal to 
-ncol(singlets) indicating the fractions that each column should be 
+\code{ncol(singlets)} indicating the fractions that each column should be 
 multiplied with.}
 
-\item{singlets}{Matrix; a counts matrix with cells/samples as columns and 
+\item{subMat}{Matrix; a counts matrix with cells/samples as columns and 
 genes as rows. This matrix should have been previously subset with the 
-\link{\code{sampleSinglets}} and \code{subsetSingletsEigen} functions so that 
+\code{\link{sampleSingletsEigen}} function so that 
 only one singlet per class/cell type is present.}
 }
 \description{

@@ -163,9 +163,10 @@ Finally, the deconvolution of the multuplets take place in this stage. Again, th
 
 ```{r, eval = TRUE}
 cellNrs <- estimateCells(cObjSng, cObjMul)
+future::plan(future::sequential)
 sObj <- spSwarm(
-  cObjMul, uObj, distFun = "dtsnCellNum", swarmsize = 150, cores = 2,
-  maxiter = 10, cellNumbers = cellNrs, e = 0.0025
+  cObjSng, cObjMul, uObj, swarmsize = 50, 
+  nSyntheticMultiplets = 10, maxiter = 10
 )
 ```
 
@@ -174,7 +175,7 @@ sObj <- spSwarm(
 We can exmaine the resulting connections with the `spSwarmPoisson` command:
 
 ```{r, eval = TRUE}
-spSwarmPoisson(sObj, edge.cutoff = 1/10.5, min.num.edges = 0, min.pval = 1)
+#spSwarmPoisson(sObj, edge.cutoff = 1/10.5, min.num.edges = 0, min.pval = 1)
 ```
 
 This reports all of the detected edges. The edge.cutoff argument specifies the fraction above which and edge is considered to be valid. Since the optimization vector is essentially a fraction, for an edge to be considered we can set the edge.cutoff to 1/(number of cell types + error margin). We can specify the number of edges a connection must have to be reported with the *min.num.edges* argument and also filter results for a specific significance level with the *min.pval* argument.

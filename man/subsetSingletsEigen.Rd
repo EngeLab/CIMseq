@@ -11,7 +11,7 @@ subsetSingletsEigen(singlets, idxToSubset)
 genes as rows.}
 
 \item{idxToSubset}{Integer; the indexes of cells/samples to be subset. 
-Typically generared using the \link{\code{subsetSinglets}} function.}
+Typically generared using the \code{\link{subsetSingletsEigen}} function.}
 }
 \description{
 This function takes a counts matrix and subsets the columns according to the

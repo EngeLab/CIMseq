@@ -67,7 +67,7 @@ Eigen::VectorXi sampleSingletsEigen(
 //' @param singlets Matrix; a counts matrix with cells/samples as columns and 
 //' genes as rows.
 //' @param idxToSubset Integer; the indexes of cells/samples to be subset. 
-//' Typically generared using the \link{\code{subsetSinglets}} function.
+//' Typically generared using the \code{\link{subsetSingletsEigen}} function.
 //' @author Jason T. Serviss
 //' @export
 // [[Rcpp::export]]
@@ -104,11 +104,11 @@ Eigen::MatrixXd subsetSingletsEigen(
 //' indices provided by the idxToSubset argument.
 //'
 //' @param fractions Numeric; a numeric vector with length equal to 
-//' ncol(singlets) indicating the fractions that each column should be 
+//' \code{ncol(singlets)} indicating the fractions that each column should be 
 //' multiplied with.
-//' @param singlets Matrix; a counts matrix with cells/samples as columns and 
+//' @param subMat Matrix; a counts matrix with cells/samples as columns and 
 //' genes as rows. This matrix should have been previously subset with the 
-//' \link{\code{sampleSinglets}} and \code{subsetSingletsEigen} functions so that 
+//' \code{\link{sampleSingletsEigen}} function so that 
 //' only one singlet per class/cell type is present.
 //' @author Jason T. Serviss
 //' @export
@@ -126,12 +126,12 @@ Eigen::MatrixXd adjustAccordingToFractionsEigen(
 //' 
 //' This function takes a counts matrix and calculates the row sums.
 //'
-//' @param adjusted matrix; A counts matrix with cells/samples as columns and 
+//' @param singlets matrix; A counts matrix with cells/samples as columns and 
 //' genes as rows. This matrix should have been previously subset with the 
-//' \link{\code{sampleSinglets}} and \code{subsetSingletsEigen} functions so that
+//' \code{\link{subsetSingletsEigen}} function so that
 //' only one singlet per class/cell type is present. Furthermore, it should have
 //' already been asjusted by the fractions using the 
-//' \link{\code{adjustAccordingToFractionsEigen}} function.
+//' \code{\link{adjustAccordingToFractionsEigen}} function.
 //' @author Jason T. Serviss
 //' @export
 // [[Rcpp::export]]
@@ -146,9 +146,8 @@ Eigen::VectorXd multipletSumsEigen(
 //' poissonSampleEigen
 //' 
 //' This function takes the rowSums calculated by the 
-//' \link{\code{multipletSumsArma}}.or \link{\code{multipletSumsEigen}} 
-//' functions and randomly samples 1 value for each input using the Poisson 
-//' distribution and the input value as lambda.
+//' \code{\link{multipletSumsEigen}} function and randomly samples 1 value for 
+//' each input using the Poisson distribution and the input value as lambda.
 //'
 //' @param rsRcpp Integer; vector of rounded row sums.
 //' @author Jason T. Serviss
@@ -193,7 +192,7 @@ Eigen::MatrixXd cpmEigen(
 //' @param classes Character; a character vector of classes with length equal to
 //' the number of cells for which counts exist.
 //' @param fractions Numeric; a numeric vector with length equal to 
-//' ncol(singlets) indicating the fractions that each column should be 
+//' \code{ncol(singlets)} indicating the fractions that each column should be 
 //' multiplied with.
 //' @param n Integer; length 1 integer indicating the number of synthetic 
 //' multiplets to generate.
@@ -286,7 +285,7 @@ Eigen::MatrixXd calculateCostDensity(
 //' means and subsequently their log10 values.
 //'
 //' @param densities Numeric; a numeric vector of densities. Typically 
-//' calculated with the \link{\code{calculateCostDensity}}.function.
+//' calculated with the \code{\link{calculateCostDensity}}.function.
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
@@ -304,7 +303,7 @@ Eigen::VectorXd calculateLogRowMeans(
 //' gives -323.0052
 //'
 //' @param means Numeric; a numeric vector of log10 row means. Typically 
-//' calculated with the \link{\code{calculateLogRowMeans}}.function.
+//' calculated with the \code{\link{calculateLogRowMeans}}.function.
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
@@ -331,8 +330,8 @@ Eigen::VectorXd fixNegInf(
 //' This function takes a numeric vector and calculates the negative sum.
 //'
 //' @param means Numeric; a numeric vector of log10 row means. Typically 
-//' calculated with the \link{\code{calculateLogRowMeans}}.function with the 
-//' -Inf values replaced by the \link{\code{fixNegInf}} function.
+//' calculated with the \code{\link{calculateLogRowMeans}}.function with the 
+//' -Inf values replaced by the \code{\link{fixNegInf}} function.
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
@@ -382,12 +381,14 @@ double calculateCostEigen(
 //' 
 //' Wrapper for deconvolution cost function using the Eigen C++ library.
 //'
+//' @param oneMultiplet Numeric; vector with the gene expression for the 
+//' multiplet currently being deconvoluted.
 //' @param singlets Matrix; a counts matrix with cells/samples as columns and 
 //' genes as rows.
 //' @param classes Character; a character vector of classes with length equal to
 //' the number of cells for which counts exist.
 //' @param fractions Numeric; a numeric vector with length equal to 
-//' ncol(singlets) indicating the fractions that each column should be 
+//' \code{ncol(singlets)} indicating the fractions that each column should be 
 //' multiplied with.
 //' @param n Integer; length 1 integer indicating the number of synthetic 
 //' multiplets to generate.

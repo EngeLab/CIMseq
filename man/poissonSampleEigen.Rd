@@ -11,9 +11,8 @@ poissonSampleEigen(rsRcpp)
 }
 \description{
 This function takes the rowSums calculated by the 
-\link{\code{multipletSumsArma}}.or \link{\code{multipletSumsEigen}} 
-functions and randomly samples 1 value for each input using the Poisson 
-distribution and the input value as lambda.
+\code{\link{multipletSumsEigen}} function and randomly samples 1 value for 
+each input using the Poisson distribution and the input value as lambda.
 }
 \author{
 Jason T. Serviss

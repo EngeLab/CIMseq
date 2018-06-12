@@ -7,6 +7,9 @@
 calculateCostC(oneMultiplet, singlets, classes, fractions, n)
 }
 \arguments{
+\item{oneMultiplet}{Numeric; vector with the gene expression for the 
+multiplet currently being deconvoluted.}
+
 \item{singlets}{Matrix; a counts matrix with cells/samples as columns and 
 genes as rows.}
 
@@ -14,7 +17,7 @@ genes as rows.}
 the number of cells for which counts exist.}
 
 \item{fractions}{Numeric; a numeric vector with length equal to 
-ncol(singlets) indicating the fractions that each column should be 
+\code{ncol(singlets)} indicating the fractions that each column should be 
 multiplied with.}
 
 \item{n}{Integer; length 1 integer indicating the number of synthetic 

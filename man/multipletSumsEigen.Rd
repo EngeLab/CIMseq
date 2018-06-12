@@ -7,12 +7,12 @@
 multipletSumsEigen(singlets)
 }
 \arguments{
-\item{adjusted}{matrix; A counts matrix with cells/samples as columns and 
+\item{singlets}{matrix; A counts matrix with cells/samples as columns and 
 genes as rows. This matrix should have been previously subset with the 
-\link{\code{sampleSinglets}} and \code{subsetSingletsEigen} functions so that
+\code{\link{subsetSingletsEigen}} function so that
 only one singlet per class/cell type is present. Furthermore, it should have
 already been asjusted by the fractions using the 
-\link{\code{adjustAccordingToFractionsEigen}} function.}
+\code{\link{adjustAccordingToFractionsEigen}} function.}
 }
 \description{
 This function takes a counts matrix and calculates the row sums.

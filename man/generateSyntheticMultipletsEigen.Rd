@@ -14,7 +14,7 @@ genes as rows.}
 the number of cells for which counts exist.}
 
 \item{fractions}{Numeric; a numeric vector with length equal to 
-ncol(singlets) indicating the fractions that each column should be 
+\code{ncol(singlets)} indicating the fractions that each column should be 
 multiplied with.}
 
 \item{n}{Integer; length 1 integer indicating the number of synthetic 
