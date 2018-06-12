@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: rocker/tidyverse:3.5.0
+From: rocker/tidyverse:3.4.3
 
 %runscript
 rm -f /var/lib/dpkg/available \

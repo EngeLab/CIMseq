@@ -1,4 +1,4 @@
-FROM rocker/tidyverse:3.5.0
+FROM rocker/tidyverse:3.4.3
 
 MAINTAINER Jason Serviss <jason.serviss@ki.se>
 
