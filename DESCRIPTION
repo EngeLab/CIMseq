@@ -34,7 +34,8 @@ Imports:
     tidygraph (>= 1.1.0),
     Rcpp (>= 0.12.17),
     RcppArmadillo (>= 0.8.500.0),
-    RcppEigen (>= 0.3.3.4.0)
+    RcppEigen (>= 0.3.3.4.0),
+    future.apply (>= 0.2.0)
 Suggests: 
     knitr (>= 1.20),
     rmarkdown (>= 1.9),
