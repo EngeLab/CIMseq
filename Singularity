@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: rocker/tidyverse:3.4.3
+From: rocker/tidyverse:3.5.0
 
 %runscript
 rm -f /var/lib/dpkg/available \
@@ -10,17 +10,58 @@ rm -f /var/lib/dpkg/available \
     libssl-dev \
     libcurl4-openssl-dev \
     libxml2-dev \
+    libudunits2-dev \
+    emacs \
     git
 
-# R dependencies
+# Install CRAN and Bioconductor packages
+%runscript Rscript -e "install.packages(c('devtools','knitr','rmarkdown','shiny','RCurl'), repos = 'https://cran.rstudio.com')"
+
+##sp.scRNAseq imports
 %runscript
-  Rscript -e "install.packages(c('devtools','knitr','rmarkdown','shiny','RCurl'), repos = 'https://cran.rstudio.com')"
+  Rscript -e "source('https://cdn.rawgit.com/road2stat/liftrlib/aa132a2d/install_cran.R'); install_cran(c(
+  'mclust/5.4',
+  'Rtsne/0.13',
+  'pso/1.0.3',
+  'matrixStats/0.53.1',
+  'ggthemes/3.5.0',
+  'igraph/1.2.1',
+  'viridis/0.5.1',
+  'ggraph/1.0.1',
+  'tidygraph/1.1.0',
+  'testthat/2.0.0',
+  'printr/0.1', 
+  'covr/3.1.0',
+  'Rcpp/0.12.17',
+  'RcppArmadillo/0.8.500.0',
+  'RcppEigen/0.3.3.4.0',
+  'future.apply/0.2.0'
+))"
 
 %runscript
-  Rscript -e "source('https://cdn.rawgit.com/road2stat/liftrlib/aa132a2d/install_cran.R');install_cran(c('openxlsx/4.0.17', 'googledrive/0.1.1'))"
+  RUN Rscript -e "source('http://bioconductor.org/biocLite.R');biocLite(c('S4Vectors', 'BiocStyle'))"
 
-# Clone and install sp.scRNAseqData
+##sp.scRNAseqData imports
 %runscript
-  git clone https://github.com/jasonserviss/sp.scRNAseqData.git /home/sp.scRNAseqData
+  Rscript -e "source('https://cdn.rawgit.com/road2stat/liftrlib/aa132a2d/install_cran.R');install_cran(c(
+  'openxlsx/4.0.17', 
+  'googledrive/0.1.1'
+))"
+
+##seqTools imports
 %runscript
-  Rscript -e "devtools::install('/home/sp.scRNAseqData')"
+  Rscript -e "source('https://cdn.rawgit.com/road2stat/liftrlib/aa132a2d/install_cran.R');install_cran(c(
+  'e1071/1.6-8', 
+  'doMC/1.3.5'
+))"
+
+# Clone and install remote R packages
+%runscript mkdir /home/Github
+%runscript git clone https://github.com/jasonserviss/sp.scRNAseqData.git /home/Github/sp.scRNAseqData
+
+%runscript Rscript -e "devtools::install('/home/Github/sp.scRNAseqData')"
+%runscript Rscript -e "source('/home/Github/sp.scRNAseqData/inst/rawData/processRaw.R')"
+%runscript Rscript -e "devtools::install('/home/Github/sp.scRNAseqData')"
+
+%runscript git clone https://github.com/jasonserviss/seqTools.git /home/Github/seqTools
+%runscript Rscript -e "devtools::install('/home/Github/seqTools')"
