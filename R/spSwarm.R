@@ -17,7 +17,6 @@ NULL
 #' @param swarmsize pySwarm argument indicating the number of swarm particals.
 #' @param nSyntheticMultiplets Numeric value indicating the number of synthetic
 #'  multiplets to generate during deconvolution.
-#' @param cores The number of cores to be used while running spRSwarm.
 #' @param seed The desired seed to set before running.
 #' @param norm Logical indicating if the sum of fractions should equal 1.
 #' @param report Logical indicating if additional reporting from the
@@ -26,7 +25,6 @@ NULL
 #'    should be generated.
 #' @param selectInd Numeric; Gene indexes to select for swarm optimization. If
 #'  NULL the selectInd slot from the spUnsupervised object is used.
-#' @param vectorize Argument to \link[pso]{psoptim}.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per
@@ -58,7 +56,7 @@ setGeneric("spSwarm", function(
   standardGeneric("spSwarm")
 })
 
-#' @importFrom parallel mclapply
+#' @importFrom future.apply future_lapply
 #' @importFrom pso psoptim
 #' @importFrom matrixStats rowSums2 rowMeans2
 #' @importFrom dplyr "%>%"
@@ -68,9 +66,8 @@ setGeneric("spSwarm", function(
 
 setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   spCountsSng, spCountsMul, spUnsupervised,
-  maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200,
-  cores = 1, seed = 11, norm = TRUE,
-  report = FALSE, reportRate = NULL, selectInd = NULL, vectorize = FALSE,
+  maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11,
+  norm = TRUE, report = FALSE, reportRate = NULL, selectInd = NULL,
   ...
 ){
     
@@ -109,7 +106,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
     )
     stats <- list()
   } else {
-    control <- list(maxit = maxiter, s = swarmsize, vectorize = vectorize)
+    control <- list(maxit = maxiter, s = swarmsize)
     stats <- list()
   }
   
@@ -117,14 +114,14 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
   
   set.seed(seed)
-  opt.out <- parallel::mclapply(
+  opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
       optim.fun(
         i, fractions = fractions, multiplets = multiplets,
         singlets = singlets, classes = classes,
         n = nSyntheticMultiplets, seed = seed, control = control, ...
       )
-  }, mc.cores = cores)
+  })
   print(opt.out)
   
   #process optimization results
