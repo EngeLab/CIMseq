@@ -73,8 +73,8 @@ Eigen::VectorXi sampleSingletsEigen(
 // [[Rcpp::export]]
 
 Eigen::MatrixXd subsetSingletsEigen(
-  Eigen::MatrixXd singlets,
-  Eigen::VectorXi idxToSubset
+    Eigen::MatrixXd singlets,
+    Eigen::VectorXi idxToSubset
 ){
   //Currently subsetting matrix by columns is not implemented in Eigen.
   //Functionality for this is in the devel version. As soon as it is implemented
@@ -423,7 +423,7 @@ double calculateCostC(
     
     //get indices for each cell type and sample for subsequent singlet matrix subsetting
     Eigen::VectorXi idxToSubset = sampleSingletsEigen(classes);
-
+    
     //subset singlets matrix
     Eigen::MatrixXd subMat = subsetSingletsEigen(singlets, idxToSubset);
     
@@ -432,10 +432,10 @@ double calculateCostC(
     
     //rowSums
     Eigen::VectorXd rs = multipletSumsEigen(adjusted);
-
+    
     //poisson sample
     Eigen::Map<Eigen::VectorXd> ps = poissonSampleEigen(rs);
-
+    
     //add to output
     syntheticMultiplets.col(o) = ps;
     
@@ -449,3 +449,4 @@ double calculateCostC(
   
   return cost;
 }
+
