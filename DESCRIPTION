@@ -10,9 +10,9 @@ Author: Jason T. Serviss [aut, cre],
   Martin Enge [aut]
 Maintainer: Jason T Serviss <jason.serviss@ki.se>
 Description: What the package does (one paragraph).
-LinkingTo: Rcpp, RcppArmadillo, RcppEigen
+LinkingTo: Rcpp, RcppArmadillo
 Depends:
-    R (>= 3.4.2)
+    R (>= 3.5.0)
 Imports:
     methods,
     mclust (>= 5.4),

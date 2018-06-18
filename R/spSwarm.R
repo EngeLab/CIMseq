@@ -60,8 +60,8 @@ setGeneric("spSwarm", function(
 #' @importFrom future.apply future_lapply
 #' @importFrom pso psoptim
 #' @importFrom matrixStats rowSums2 rowMeans2
-#' @importFrom dplyr "%>%"
-#' @importFrom purrr map map_int
+#' @importFrom dplyr "%>%" bind_rows
+#' @importFrom purrr map
 #' @rdname spSwarm
 #' @export
 
@@ -119,9 +119,8 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
       .optim.fun(
-        i, fractions = fractions, multiplets = multiplets,
-        singlets = singlets, classes = classes,
-        n = nSyntheticMultiplets, control = control, seed = seed, ...
+        i, fractions = fractions, multiplets = multiplets, singlets = singlets,
+        classes = classes, n = nSyntheticMultiplets, control = control, ...
       )
   })
   
@@ -163,16 +162,23 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   return(list(par, cost, convergence, stats))
 }
 
+.subsetSinglets <- function(classes, singlets, n) {
+  purrr::map(1:n, ~sampleSingletsArma(classes)) %>%
+    purrr::map(., ~subsetSingletsArma(singlets, .x)) %>%
+    purrr::map(., as.data.frame) %>%
+    bind_rows() %>%
+    as.matrix()
+}
+
 .optim.fun <- function(
-  i, fractions, multiplets, singlets, classes,
-  seed, n, control, ...
+  i, fractions, multiplets, singlets, classes, n, control, ...
 ){
   oneMultiplet <- multiplets[, i]
-  set.seed(seed + i)
+  singletSubset <- .subsetSinglets(classes, singlets, n)
   pso::psoptim(
-    par = fractions, fn = calculateCostC, oneMultiplet = oneMultiplet,
-    singlets = singlets, classes = classes, n = n,
-    lower = 0, upper = 1, control = control, ...
+    par = fractions, fn = preallocCost, oneMultiplet = oneMultiplet, 
+    singletSubset = singletSubset, lower = 0, upper = 1, control = control, 
+    ...
   )
 }
 

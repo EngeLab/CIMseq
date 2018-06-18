@@ -1,34 +1,16 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 
 #include <RcppArmadillo.h>
-#include <RcppEigen.h>
 
 // [[Rcpp::depends(RcppArmadillo)]]
-// [[Rcpp::depends(RcppEigen)]]
 
 using namespace Rcpp;
 
 ////////////////////////////////////////////////////////////////////////////////
-//          EIGEN FUNCTIONS TO GENERATE SYNTHETIC MULTIPLETS                  //
+//          ARMADILLO FUNCTIONS TO GENERATE SYNTHETIC MULTIPLETS              //
 ////////////////////////////////////////////////////////////////////////////////
 
-//' normalizeFractionsEigen
-//' 
-//' Takes a numeric vector and scales to [0, 1] by dividing with its sum.
-//'
-//' @param fractions Numeric; a numeric vector.
-//' @author Jason T. Serviss
-//' @export
-// [[Rcpp::export]]
-
-Eigen::VectorXd normalizeFractionsEigen(
-    const Eigen::VectorXd fractions
-){
-  Eigen::VectorXd normFractions = fractions.array() / fractions.sum();
-  return normFractions;
-}
-
-//' sampleSingletsEigen
+//' sampleSingletsArma
 //' 
 //' This function takes a character vector of classes/cell with the same order
 //' as the cells in the counts matrix. It returns one random index per unique
@@ -40,11 +22,11 @@ Eigen::VectorXd normalizeFractionsEigen(
 //' @export
 // [[Rcpp::export]]
 
-Eigen::VectorXi sampleSingletsEigen(
+arma::uvec sampleSingletsArma(
     CharacterVector classes
 ){
   CharacterVector uClasses = unique(classes).sort();
-  Eigen::VectorXi idxToSubset(uClasses.size());
+  arma::uvec idxToSubset(uClasses.size());
   
   //get indices for each cell type
   for (int y = 0; y < uClasses.size(); y++) {
@@ -59,7 +41,7 @@ Eigen::VectorXi sampleSingletsEigen(
   return idxToSubset;
 }
 
-//' subsetSingletsEigen
+//' subsetSingletsArma
 //' 
 //' This function takes a counts matrix and subsets the columns according to the
 //' indices provided by the idxToSubset argument.
@@ -67,105 +49,108 @@ Eigen::VectorXi sampleSingletsEigen(
 //' @param singlets Matrix; a counts matrix with cells/samples as columns and 
 //' genes as rows.
 //' @param idxToSubset Integer; the indexes of cells/samples to be subset. 
-//' Typically generared using the \code{\link{subsetSingletsEigen}} function.
 //' @author Jason T. Serviss
 //' @export
 // [[Rcpp::export]]
 
-Eigen::MatrixXd subsetSingletsEigen(
-    Eigen::MatrixXd singlets,
-    Eigen::VectorXi idxToSubset
+arma::mat subsetSingletsArma(
+    const arma::mat& singlets,
+    const arma::uvec& idxToSubset
 ){
-  //Currently subsetting matrix by columns is not implemented in Eigen.
-  //Functionality for this is in the devel version. As soon as it is implemented
-  //change to that. Until them we convert to Armadillo, subset and reconvert to
-  //Eigen
-  
-  //lots of conversions of idxToSubset to get right type for subsetting (painful)
-  Eigen::VectorXd eigenD = idxToSubset.cast<double>();
-  arma::vec armaVec = arma::vec(eigenD.data(), eigenD.size(), false, false);
-  arma::uvec armaIdx = arma::conv_to<arma::uvec>::from(armaVec);
-  
-  //setup output
-  arma::mat singletsArma = arma::mat(singlets.data(), singlets.rows(), singlets.cols(), false, false);
-  
-  //subset
-  arma::mat subMat = singletsArma.cols(armaIdx);
-  
-  //convert back to Eigen
-  Eigen::MatrixXd eigenMat = Eigen::Map<Eigen::MatrixXd>(subMat.memptr(), subMat.n_rows, subMat.n_cols);
-  
-  return eigenMat;
+  return singlets.cols(idxToSubset);
 }
 
-//' adjustAccordingToFractionsEigen
+//' normalizeFractionsArma
+//' 
+//' Takes a numeric vector and scales to [0, 1] by dividing with its sum.
+//'
+//' @param fractions Numeric; a numeric vector.
+//' @author Jason T. Serviss
+//' @export
+// [[Rcpp::export]]
+
+arma::vec normalizeFractionsArma(
+    const arma::vec& fractions
+){
+  return fractions / accu(fractions);
+}
+
+//' adjustAccordingToFractionsArma
 //' 
 //' This function takes a counts matrix and subsets the columns according to the
 //' indices provided by the idxToSubset argument.
 //'
 //' @param fractions Numeric; a numeric vector with length equal to 
-//' \code{ncol(singlets)} indicating the fractions that each column should be 
+//' ncol(singlets) indicating the fractions that each column should be 
 //' multiplied with.
-//' @param subMat Matrix; a counts matrix with cells/samples as columns and 
-//' genes as rows. This matrix should have been previously subset with the 
-//' \code{\link{sampleSingletsEigen}} function so that 
-//' only one singlet per class/cell type is present.
+//' @param singlets Matrix; a counts matrix with cells/samples as columns and 
+//' genes as rows.
 //' @author Jason T. Serviss
 //' @export
 // [[Rcpp::export]]
 
-Eigen::MatrixXd adjustAccordingToFractionsEigen(
-    const Eigen::VectorXd fractions,
-    const Eigen::MatrixXd subMat
+arma::mat adjustAccordingToFractionsArma(
+    const arma::vec& fractions, 
+    const arma::mat& singlets
 ){
-  Eigen::MatrixXd adjusted = subMat * fractions.asDiagonal();
-  return adjusted;
+  return singlets * arma::diagmat(fractions);
 }
 
-//' multipletSumsEigen
+//' multipletSumsArma
 //' 
-//' This function takes a counts matrix and calculates the row sums.
+//' This function takes a counts matrix and calculates the row sums. Output is
+//' subsequently rounded for integration downstream.
 //'
-//' @param singlets matrix; A counts matrix with cells/samples as columns and 
-//' genes as rows. This matrix should have been previously subset with the 
-//' \code{\link{subsetSingletsEigen}} function so that
-//' only one singlet per class/cell type is present. Furthermore, it should have
-//' already been asjusted by the fractions using the 
-//' \code{\link{adjustAccordingToFractionsEigen}} function.
+//' @param adjusted Matrix; a counts matrix with cells/samples as columns and 
+//' genes as rows.
 //' @author Jason T. Serviss
 //' @export
 // [[Rcpp::export]]
 
-Eigen::VectorXd multipletSumsEigen(
-    const Eigen::MatrixXd singlets
+arma::mat multipletSumsArma(
+    const arma::mat& adjusted
 ){
-  Eigen::VectorXd sums = singlets.rowwise().sum().array().round();
-  return sums;
+  return arma::round(arma::sum(adjusted, 1));
 }
 
-//' poissonSampleEigen
+//' poissonSampleArma
 //' 
 //' This function takes the rowSums calculated by the 
-//' \code{\link{multipletSumsEigen}} function and randomly samples 1 value for 
+//' \code{\link{multipletSumsArma}}.function and randomly samples 1 value for 
 //' each input using the Poisson distribution and the input value as lambda.
-//'
 //' @param rsRcpp Integer; vector of rounded row sums.
 //' @author Jason T. Serviss
 //' @export
 // [[Rcpp::export]]
 
-Eigen::Map<Eigen::VectorXd> poissonSampleEigen(
-    const Eigen::VectorXd rsRcpp
+arma::vec poissonSampleArma(
+    const arma::mat& rsRcpp
 ){
-  NumericVector poissonSamp(rsRcpp.rows());
-  for(int y = 0; y < rsRcpp.rows(); y++) {
+  arma::vec poissonSamp(rsRcpp.n_rows);
+  for(int y = 0; y < rsRcpp.n_rows; y++) {
     poissonSamp[y] = Rcpp::rpois(1, rsRcpp(y))[0];
   }
-  Eigen::Map<Eigen::VectorXd> rcppPS = Rcpp::as<Eigen::Map<Eigen::VectorXd> >(poissonSamp);
-  return rcppPS;
+  return poissonSamp;
 }
 
-//' cpmEigen
+//' vecToMatArma
+//' 
+//' This function takes a vector and reformats it to a matrix in a column-wise
+//' fashion.
+//'
+//' @param vec Numeric; the vector to reformat.
+//' @param nr integer; length 1 integer indicating the number of matrix rows.
+//' @param nc integer; length 1 integer indicating the number of matrix columns.
+//' @author Jason T. Serviss
+//' @export
+// [[Rcpp::export]]
+
+arma::mat vecToMatArma(arma::vec vec, int nr, int nc){
+  arma::mat X(vec.memptr(), nr, nc, false, false);
+  return X;
+}
+
+//' cpmArma
 //' 
 //' Takes a numeric matrix of counts and calculates counts per million.
 //'
@@ -174,80 +159,19 @@ Eigen::Map<Eigen::VectorXd> poissonSampleEigen(
 //' @export
 // [[Rcpp::export]]
 
-Eigen::MatrixXd cpmEigen(
-    const Eigen::MatrixXd counts
+arma::mat cpmArma(
+    const arma::mat& counts
 ){
-  Eigen::VectorXd colsums = counts.colwise().sum();
-  Eigen::MatrixXd dCounts = counts.transpose().array().colwise() / colsums.array();
-  Eigen::MatrixXd cpm = (dCounts.transpose().array() * 1000000) + 1;
-  return cpm;
-}
-
-//' generateSyntheticMultipletsEigen
-//' 
-//' Wrapper for deconvolution cost function using the Eigen C++ library.
-//'
-//' @param singlets Matrix; a counts matrix with cells/samples as columns and 
-//' genes as rows.
-//' @param classes Character; a character vector of classes with length equal to
-//' the number of cells for which counts exist.
-//' @param fractions Numeric; a numeric vector with length equal to 
-//' \code{ncol(singlets)} indicating the fractions that each column should be 
-//' multiplied with.
-//' @param n Integer; length 1 integer indicating the number of synthetic 
-//' multiplets to generate.
-//' @author Jason T. Serviss
-//' @export
-// [[Rcpp::export]]
-
-Eigen::MatrixXd generateSyntheticMultipletsEigen(
-    Eigen::MatrixXd singlets,
-    CharacterVector classes,
-    Eigen::VectorXd fractions,
-    int n
-){
-  
-  //normalize fractions
-  Eigen::VectorXd f = normalizeFractionsEigen(fractions);
-  
-  //setup output variables
-  Eigen::MatrixXd syntheticMultiplets(singlets.rows(), n);
-  
-  //setup iterator
-  int n0 = n - 1;
-  
-  //generate synthetic multiplets
-  for (int o = 0; o <= n0; o++) {
-    
-    //get indices for each cell type and sample for subsequent singlet matrix subsetting
-    Eigen::VectorXi idxToSubset = sampleSingletsEigen(classes);
-    
-    //subset singlets matrix
-    Eigen::MatrixXd subMat = subsetSingletsEigen(singlets, idxToSubset);
-    
-    //adjust according to fractions
-    Eigen::MatrixXd adjusted = adjustAccordingToFractionsEigen(f, subMat);
-    
-    //rowSums
-    Eigen::VectorXd rs = multipletSumsEigen(adjusted);
-    
-    //poisson sample
-    Eigen::Map<Eigen::VectorXd> ps = poissonSampleEigen(rs);
-    
-    //add to output
-    syntheticMultiplets.col(o) = ps;
-    
-  }
-  
-  //calculate cpm and return
-  return cpmEigen(syntheticMultiplets);
+  arma::rowvec colsums = sum(counts, 0);
+  arma::mat cNorm = counts.each_row() / colsums;
+  return (cNorm * 1000000) + 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//                        FUNCTIONS TO CALCULATE COST EIGEN                   //
+//                        FUNCTIONS TO CALCULATE COST ARMA                    //
 ////////////////////////////////////////////////////////////////////////////////
 
-//' calculateCostDensity
+//' calculateCostDensityArma
 //' 
 //' This function takes a vector of gene counts per million for one multiplet 
 //' that is being deconvoluted and a matrix of synthetic multiplets. It then 
@@ -261,14 +185,14 @@ Eigen::MatrixXd generateSyntheticMultipletsEigen(
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
-Eigen::MatrixXd calculateCostDensity(
-    Eigen::Map<Eigen::VectorXd> oneMultiplet,
-    const Eigen::MatrixXd syntheticMultiplets
+arma::mat calculateCostDensityArma(
+    arma::vec oneMultiplet,
+    arma::mat syntheticMultiplets
 ){
-  int nr = syntheticMultiplets.rows();
-  int nc = syntheticMultiplets.cols();
-  Eigen::MatrixXd densities(nr, nc);
-  oneMultiplet = oneMultiplet.array().round();
+  int nr = syntheticMultiplets.n_rows;
+  int nc = syntheticMultiplets.n_cols;
+  arma::mat densities(nr, nc);
+  oneMultiplet = round(oneMultiplet);
   
   for(int i = 0; i < nr; i++) {
     for(int j = 0; j < nc; j++) {
@@ -279,70 +203,56 @@ Eigen::MatrixXd calculateCostDensity(
   return densities;
 }
 
-//' calculateLogRowMeans
+//' calculateLogRowMeansArma
 //' 
 //' This function takes a matrix of poisson densities and calculates the row 
 //' means and subsequently their log10 values.
 //'
-//' @param densities Numeric; a numeric vector of densities. Typically 
-//' calculated with the \code{\link{calculateCostDensity}}.function.
+//' @param densities Numeric; a numeric vector of densities.
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
-Eigen::VectorXd calculateLogRowMeans(
-    const Eigen::MatrixXd densities
+arma::vec calculateLogRowMeansArma(
+    const arma::mat& densities
 ){
-  Eigen::VectorXd means = densities.rowwise().mean().array().log10();
-  return means;
+  arma::vec means = mean(densities, 1);
+  return log10(means);
 }
 
-//' fixNegInf
+//' fixNegInfArma
 //' 
 //' This function takes a numeric vector and replaces -Inf values with 
 //' -323.0052. Note: since log10(10^-324) gives -Inf but log10(10^-323) 
 //' gives -323.0052
 //'
-//' @param means Numeric; a numeric vector of log10 row means. Typically 
-//' calculated with the \code{\link{calculateLogRowMeans}}.function.
+//' @param means Numeric; a numeric vector of log10 row means.
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
-Eigen::VectorXd fixNegInf(
-    const Eigen::VectorXd means
+arma::vec fixNegInfArma(
+    arma::vec& means
 ){
-  int ms = means.size();
-  Eigen::VectorXd noInfMeans(ms);
-  Eigen::Array<bool, 1, Eigen::Dynamic> infBool;
-  infBool = means.array().isInf();
-  
-  for(int k = 0; k < ms; k++) {
-    if(infBool(k)) {
-      noInfMeans(k) = -323.0052;
-    } else {
-      noInfMeans(k) = means(k);
-    }
-  }
-  return noInfMeans;
+  arma::vec noInfMeans(means.n_elem);
+  means.elem(find_nonfinite(means)).fill(-323.0052);
+  return means;
 }
 
-//' costNegSum
+//' costNegSumArma
 //' 
 //' This function takes a numeric vector and calculates the negative sum.
 //'
-//' @param means Numeric; a numeric vector of log10 row means. Typically 
-//' calculated with the \code{\link{calculateLogRowMeans}}.function with the 
-//' -Inf values replaced by the \code{\link{fixNegInf}} function.
+//' @param means Numeric; a numeric vector of log10 row means.
 //' @author Jason T. Serviss
 // [[Rcpp::export]]
 
-double costNegSum(
-    Eigen::VectorXd means
+double costNegSumArma(
+    arma::vec means
 ){
-  double cost = means.sum() *  -1;
+  double cost = accu(means) *  -1;
   return cost;
 }
 
-//' calculateCostEigen
+//' calculateCostArma
 //' 
 //' This function takes a vector of gene counts per million for one multiplet 
 //' that is being deconvoluted and a matrix of synthetic multiplets and 
@@ -357,96 +267,67 @@ double costNegSum(
 //' @export
 // [[Rcpp::export]]
 
-double calculateCostEigen(
-    const Eigen::Map<Eigen::VectorXd> oneMultiplet,
-    const Eigen::MatrixXd syntheticMultiplets
+double calculateCostArma(
+    const arma::vec oneMultiplet,
+    const arma::mat& syntheticMultiplets
 ){
   
   //calculate densities
-  Eigen::MatrixXd ds = calculateCostDensity(oneMultiplet, syntheticMultiplets);
+  arma::mat ds = calculateCostDensityArma(oneMultiplet, syntheticMultiplets);
   
   //calculate log10 row means
-  Eigen::VectorXd means = calculateLogRowMeans(ds);
+  arma::vec means = calculateLogRowMeansArma(ds);
   
   //Replace -Inf with -323.0052
-  Eigen::VectorXd noInfMeans = fixNegInf(means);
+  arma::vec noInfMeans = fixNegInfArma(means);
   
   //calculate negative sum and return
-  return costNegSum(noInfMeans);
+  return costNegSumArma(noInfMeans);
 }
 
-// WRAPPER FUNCTION FOR SYNTHETIC MULTIPLET GENERATION AND COST CALCULATION
-
-//' calculateCostC
+//' preallocCost
 //' 
-//' Wrapper for deconvolution cost function using the Eigen C++ library.
+//' Calculates cost with a preallocated matrix of subsetted singlets.
 //'
-//' @param oneMultiplet Numeric; vector with the gene expression for the 
-//' multiplet currently being deconvoluted.
-//' @param singlets Matrix; a counts matrix with cells/samples as columns and 
-//' genes as rows.
-//' @param classes Character; a character vector of classes with length equal to
-//' the number of cells for which counts exist.
+//' @param oneMultiplet Numeric; a numeric vector of counts per million for one
+//' multiplet.
+//' @param singletSubset Matrix; Numeric matrix with the preallocated singlets. 
+//' Each of the n synthetic multiplets should be stacked, i.e. rbind.
 //' @param fractions Numeric; a numeric vector with length equal to 
-//' \code{ncol(singlets)} indicating the fractions that each column should be 
+//' ncol(singlets) indicating the fractions that each column should be 
 //' multiplied with.
-//' @param n Integer; length 1 integer indicating the number of synthetic 
-//' multiplets to generate.
 //' @author Jason T. Serviss
 //' @export
 // [[Rcpp::export]]
 
-double calculateCostC(
-    const Eigen::Map<Eigen::VectorXd> oneMultiplet,
-    const Eigen::Map<Eigen::MatrixXd> singlets,
-    const CharacterVector classes,
-    const Eigen::VectorXd fractions,
-    const int n
-){
-  
+double preallocCost(
+    const arma::vec& oneMultiplet,
+    const arma::mat& singletSubset,
+    const arma::vec& fractions
+) {
   //check all 0 fractions
-  if(fractions.sum() == 0) {
+  if(accu(fractions) == 0) {
     return 999999999;
   }
   
-  //normalize fractions
-  Eigen::VectorXd f = normalizeFractionsEigen(fractions);
+  arma::vec f = normalizeFractionsArma(fractions);
   
-  //setup output variables
-  Eigen::MatrixXd syntheticMultiplets(singlets.rows(), n);
+  //adjust according to fractions
+  arma::mat adjusted = adjustAccordingToFractionsArma(f, singletSubset);
   
-  //setup iterator
-  int n0 = n - 1;
+  //rowSums
+  arma::mat rs = multipletSumsArma(adjusted);
   
-  //generate synthetic multiplets
-  for (int o = 0; o <= n0; o++) {
-    
-    //get indices for each cell type and sample for subsequent singlet matrix subsetting
-    Eigen::VectorXi idxToSubset = sampleSingletsEigen(classes);
-    
-    //subset singlets matrix
-    Eigen::MatrixXd subMat = subsetSingletsEigen(singlets, idxToSubset);
-    
-    //adjust according to fractions
-    Eigen::MatrixXd adjusted = adjustAccordingToFractionsEigen(f, subMat);
-    
-    //rowSums
-    Eigen::VectorXd rs = multipletSumsEigen(adjusted);
-    
-    //poisson sample
-    Eigen::Map<Eigen::VectorXd> ps = poissonSampleEigen(rs);
-    
-    //add to output
-    syntheticMultiplets.col(o) = ps;
-    
-  }
+  //poisson sample
+  arma::vec ps = poissonSampleArma(rs);
   
-  //calculate cpm and return
-  Eigen::MatrixXd cpmSyntheticMultiplets = cpmEigen(syntheticMultiplets);
+  //reformat into matrix
+  arma::mat sm = vecToMatArma(ps, oneMultiplet.n_elem, f.n_elem);
+  
+  //calculate cpm
+  arma::mat cpm = cpmArma(sm);
   
   //calculate cost
-  double cost = calculateCostEigen(oneMultiplet, cpmSyntheticMultiplets);
-  
+  double cost = calculateCostArma(oneMultiplet, cpm);
   return cost;
 }
-
