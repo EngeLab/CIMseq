@@ -166,7 +166,10 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   purrr::map(1:n, ~sampleSingletsArma(classes)) %>%
     purrr::map(., ~subsetSingletsArma(singlets, .x)) %>%
     purrr::map(., as.data.frame) %>%
+    purrr::map(., ~mutate(.x, gn = 1:nrow(.x))) %>%
     bind_rows() %>%
+    arrange(gn) %>%
+    select(-gn) %>%
     as.matrix()
 }
 
