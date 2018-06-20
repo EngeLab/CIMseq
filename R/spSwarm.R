@@ -171,14 +171,15 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 }
 
 .optim.fun <- function(
-  i, fractions, multiplets, singlets, classes, n, control, ...
+  i, fractions, multiplets, singlets, classes,
+  n, control, FUN, inMat, ...
 ){
-  oneMultiplet <- multiplets[, i]
+  oneMultiplet <- round(multiplets[, i])
   singletSubset <- .subsetSinglets(classes, singlets, n)
   pso::psoptim(
-    par = fractions, fn = preallocCost, oneMultiplet = oneMultiplet, 
-    singletSubset = singletSubset, lower = 0, upper = 1, control = control, 
-    ...
+    par = fractions, fn = costFor, oneMultiplet = oneMultiplet,
+    singletSubset = singletSubset, n = n, lower = 0, upper = 1,
+    control = control, ...
   )
 }
 
