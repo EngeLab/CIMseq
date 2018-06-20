@@ -55,7 +55,8 @@ double costFor(
         adjustedSums += normFractions(j) * tSinglets(j, ci);
       }
       //pSums += R::dpois(oneMultiplet(i), adjustedSums, false);
-      pSums += R::dpois(oneMultiplet(i), Rcpp::rpois(1, adjustedSums)[0], false);
+      pSums += R::dpois(oneMultiplet(i), std::round(adjustedSums), false);
+      //pSums += R::dpois(oneMultiplet(i), Rcpp::rpois(1, adjustedSums)[0], false);
       ++ci;
     }
     
