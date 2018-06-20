@@ -329,4 +329,39 @@ test_that("check that costNegSumArma outputs the expected result", {
   expect_true(all.equal(output, expected))
 })
 
-#add test for preallocCost
+##run test .subsetSinglets
+test_that("check that .subsetSinglets outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  classes <- getData(uObj, "classification")
+  singlets <- getData(cObjSng, "counts")
+  n <- 10
+  
+  #setup expected data
+  nc <- length(unique(classes))
+  nr <- nrow(singlets) * n
+  
+  #run function
+  output <- .subsetSinglets(classes, singlets, n)
+  
+  #test
+  expect_equal(nr, nrow(output))
+  expect_equal(nc, ncol(output))
+})
+
+##run test preallocCost
+test_that("check that preallocCost outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  oneMultiplet <- getData(cObjMul, "counts.cpm")[, 1]
+  classes <- getData(uObj, "classification")
+  singlets <- getData(cObjSng, "counts")
+  n <- 10
+  singletSubset <- .subsetSinglets(classes, singlets, n)
+  fractions <- rep(1.0 / length(unique(classes)), length(unique(classes)))
+  
+  #test
+  expect_silent(preallocCost(oneMultiplet, singletSubset, fractions))
+})
