@@ -27,7 +27,7 @@ using namespace Rcpp;
 arma::uvec sampleSingletsArma(
     CharacterVector classes
 ){
-  CharacterVector uClasses = unique(classes).sort();
+  CharacterVector uClasses = unique(classes);
   arma::uvec idxToSubset(uClasses.size());
   
   //get indices for each cell type
