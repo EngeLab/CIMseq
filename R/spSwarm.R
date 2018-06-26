@@ -163,19 +163,18 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 }
 
 .subsetSinglets <- function(classes, singlets, n) {
-  mat <- purrr::map(1:n, ~sampleSingletsArma(classes)) %>%
+  purrr::map(1:n, ~sampleSingletsArma(classes)) %>%
     purrr::map(., ~subsetSingletsArma(singlets, .x)) %>%
     purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
-    do.call("rbind", .)
-  
-  mat[order(rownames(mat)), ]
+    do.call("rbind", .) %>%
+    .[order(rownames(.)), ]
 }
 
 .optim.fun <- function(
   i, fractions, multiplets, singlets, classes,
   n, control, ...
 ){
-  oneMultiplet <- round(multiplets[, i])
+  oneMultiplet <- ceiling(multiplets[, i])
   singletSubset <- .subsetSinglets(classes, singlets, n)
   pso::psoptim(
     par = fractions, fn = costFor, oneMultiplet = oneMultiplet,
