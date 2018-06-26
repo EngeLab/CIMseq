@@ -122,7 +122,6 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
         n = nSyntheticMultiplets, seed = seed, control = control, ...
       )
   })
-  print(opt.out)
   
   #process optimization results
   result <- .processResults(
