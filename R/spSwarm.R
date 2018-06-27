@@ -17,7 +17,6 @@ NULL
 #' @param swarmsize pySwarm argument indicating the number of swarm particals.
 #' @param nSyntheticMultiplets Numeric value indicating the number of synthetic
 #'  multiplets to generate during deconvolution.
-#' @param cores The number of cores to be used while running spRSwarm.
 #' @param seed The desired seed to set before running.
 #' @param norm Logical indicating if the sum of fractions should equal 1.
 #' @param report Logical indicating if additional reporting from the
@@ -58,18 +57,18 @@ setGeneric("spSwarm", function(
   standardGeneric("spSwarm")
 })
 
-#' @importFrom parallel mclapply
+#' @importFrom future.apply future_lapply
 #' @importFrom pso psoptim
 #' @importFrom matrixStats rowSums2 rowMeans2
-#' @importFrom dplyr "%>%"
-#' @importFrom purrr map map_int
+#' @importFrom dplyr "%>%" bind_rows
+#' @importFrom purrr map
 #' @rdname spSwarm
 #' @export
 
 setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   spCountsSng, spCountsMul, spUnsupervised,
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200,
-  cores = 1, seed = 11, norm = TRUE,
+  seed = 11, norm = TRUE,
   report = FALSE, reportRate = NULL, selectInd = NULL, vectorize = FALSE,
   ...
 ){
@@ -117,15 +116,13 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
   
   set.seed(seed)
-  opt.out <- parallel::mclapply(
+  opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
-      optim.fun(
-        i, fractions = fractions, multiplets = multiplets,
-        singlets = singlets, classes = classes,
-        n = nSyntheticMultiplets, control = control, ...
+      .optim.fun(
+        i, fractions = fractions, multiplets = multiplets, singlets = singlets,
+        classes = classes, n = nSyntheticMultiplets, control = control, ...
       )
-  }, mc.cores = cores)
-  print(opt.out)
+  })
   
   #process optimization results
   result <- .processResults(
@@ -159,101 +156,31 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 
   #normalize swarm output
   if(norm) {par <- par * 1/rowSums(par)}
-  colnames(par) <- cn
+  colnames(par) <- sort(cn)
   rownames(par) <- rn
   
   return(list(par, cost, convergence, stats))
 }
 
-optim.fun <- function(
+.subsetSinglets <- function(classes, singlets, n) {
+  purrr::map(1:n, ~sampleSingletsArma(classes)) %>%
+    purrr::map(., ~subsetSingletsArma(singlets, .x)) %>%
+    purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
+    do.call("rbind", .) %>%
+    .[order(as.numeric(rownames(.))), ]
+}
+
+.optim.fun <- function(
   i, fractions, multiplets, singlets, classes,
-  seed, n, control, ...
+  n, control, ...
 ){
-  oneMultiplet <- multiplets[, i]
-  set.seed(seed + i)
+  oneMultiplet <- ceiling(multiplets[, i])
+  singletSubset <- .subsetSinglets(classes, singlets, n)
   pso::psoptim(
-    par = fractions, fn = calculateCostC, oneMultiplet = oneMultiplet,
-    singlets = singlets, classes = classes, n = n,
-    lower = 0, upper = 1, control = control, ...
+    par = fractions, fn = costFor, oneMultiplet = oneMultiplet,
+    singletSubset = singletSubset, n = n, lower = 0, upper = 1,
+    control = control, ...
   )
-}
-
-#pso::psoptim(
-#  par = fractions, fn = cost.fn, oneMultiplet = oneMultiplet,
-#  singlets = singlets, classes = classes, seed = seed, n = n,
-#  lower = 0, upper = 1, control = control, ...
-#)
-
-#deconvolution functions
-cost.fn <- function(
-  fractions, oneMultiplet, singlets,
-  classes, seed, n, ...
-) {
-  
-  if(sum(fractions) == 0) {
-    return(999999999)
-  }
-  fractions <- fractions / sum(fractions)
-  
-  cost <- generateSyntheticMultiplets(
-    singlets = singlets, classes = classes, fractions = fractions,
-    n = n, seed = seed
-  ) %>%
-  costCalculation(oneMultiplet = oneMultiplet, syntheticMultiplets = .)
-  
-  return(cost)
-}
-
-generateSyntheticMultiplets <- function(
-  singlets, classes, fractions,
-  seed, n, ...
-){
-  .norm.counts <- function(counts) {
-    t(t(counts) / matrixStats::colSums2(counts) * 10^6 + 1)
-  }
-  
-  purrr::map(1:n, function(y) {
-    syntheticMultipletsFromCounts(
-      singlets = singlets, classes = classes,
-      fractions = fractions, seed = seed + y
-    )
-  }) %>%
-  do.call(cbind, .) %>%
-  .norm.counts()
-}
-
-syntheticMultipletsFromCounts <- function(
-  singlets, classes, fractions,
-  seed, ...
-){
-  set.seed(seed)
-  
-  #select one cell from the pool for each cell type
-  idx <- purrr::map_int(unique(classes), ~sample(which(classes == .x), 1))
-  exCounts <- singlets[, idx]
-  
-  #adjust the counts by multiplying with the corresponding values adjustment
-  adjusted <- exCounts %*% diag(fractions) ##rounding here means and number < 10 will become 0
-  
-  #calculate the sum of counts for each gene
-  rs <- round(matrixStats::rowSums2(adjusted))
-  
-  #Sample from the poisson distribution for each gene with lambda = rs
-  matrix(
-    rpois(n = length(rs), lambda = rs),
-    dimnames = list(rownames(exCounts), "multiplet")
-  )
-}
-
-#oneMultiplet should be the vector of gene expression values for the current multiplet
-#syntheticMultiplets should be a matrix with synthetic multiplet values
-costCalculation <- function(oneMultiplet, syntheticMultiplets) {
-  dpois(round(oneMultiplet), lambda = syntheticMultiplets) %>%
-    matrixStats::rowMeans2() %>%
-    log10() %>%
-    ifelse(is.infinite(.) & . < 0, -323.0052, .) %>%
-    sum() %>%
-    `-` (.)
 }
 
 #' spSwarmPoisson

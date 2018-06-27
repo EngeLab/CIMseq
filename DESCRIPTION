@@ -1,7 +1,7 @@
 Package: sp.scRNAseq
 Title: sp.scRNAseq is a software suite for analysis of scRNAseq data that has
     been produced using the spatial scRNAseq method
-Version: 0.0.2.2
+Version: 0.0.3.4
 Authors@R: c(
     person("Jason T.", "Serviss", email = "Jason.serviss@ki.se", role = c("aut", "cre"), comment = c(ORCID = 0000-0002-5778-7014)),
     person("Martin", "Enge", email = "Martin.Enge@ki.se", role = c("aut"))
@@ -10,9 +10,9 @@ Author: Jason T. Serviss [aut, cre],
   Martin Enge [aut]
 Maintainer: Jason T Serviss <jason.serviss@ki.se>
 Description: What the package does (one paragraph).
-LinkingTo: Rcpp, RcppArmadillo, RcppEigen
+LinkingTo: Rcpp, RcppArmadillo
 Depends:
-    R (>= 3.4.2)
+    R (>= 3.5.0)
 Imports:
     methods,
     mclust (>= 5.4),
@@ -33,8 +33,7 @@ Imports:
     ggraph (>= 1.0.1),
     tidygraph (>= 1.1.0),
     Rcpp (>= 0.12.17),
-    RcppArmadillo (>= 0.8.500.0),
-    RcppEigen (>= 0.3.3.4.0)
+    future.apply (>= 0.2.0)
 Suggests: 
     knitr (>= 1.20),
     rmarkdown (>= 1.9),
