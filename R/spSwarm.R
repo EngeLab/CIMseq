@@ -167,7 +167,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
     purrr::map(., ~subsetSingletsArma(singlets, .x)) %>%
     purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
     do.call("rbind", .) %>%
-    .[order(rownames(.)), ]
+    .[order(as.numeric(rownames(.))), ]
 }
 
 .optim.fun <- function(

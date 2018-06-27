@@ -25,10 +25,10 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 
 double costFor(
-  const arma::vec& oneMultiplet,
-  const arma::mat& singletSubset,
-  const arma::vec& fractions,
-  int n
+    const arma::vec& oneMultiplet,
+    const arma::mat& singletSubset,
+    const arma::vec& fractions,
+    int n  
 ){
   //check all 0 fractions
   if(accu(fractions) == 0) {
@@ -54,11 +54,10 @@ double costFor(
       for (int j = 0; j != normFractions.n_elem; j++) {
         adjustedSums += normFractions(j) * tSinglets(j, ci);
       }
-      //double rp = Rcpp::rpois(1, std::round(adjustedSums))[0];
-      pSums += R::dpois(oneMultiplet(i), std::round(adjustedSums), false);
+      double dp = R::dpois(oneMultiplet(i), std::round(adjustedSums), false);
+      pSums += dp;
       ++ci;
     }
-    
     pSums /= double(n);
     double lpSums = std::log10(pSums);
     if(lpSums == -std::numeric_limits<double>::infinity()) {
