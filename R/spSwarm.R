@@ -156,7 +156,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 
   #normalize swarm output
   if(norm) {par <- par * 1/rowSums(par)}
-  colnames(par) <- cn
+  colnames(par) <- sort(cn)
   rownames(par) <- rn
   
   return(list(par, cost, convergence, stats))

@@ -51,7 +51,7 @@ setMethod("spCounts", "matrix", function(
     cpm <- .norm.counts(counts)
     new("spCounts",
         counts = counts,
-        counts.log = log2(cpm),
+        counts.log = log2(cpm + 1),
         counts.cpm = cpm,
         counts.ercc = counts.ercc
     )
@@ -67,7 +67,7 @@ setMethod("spCounts", "matrix", function(
 }
 
 .norm.counts <- function(counts) {
-  t(t(counts) / colSums(counts) * 10^6 + 1)
+  t(t(counts) / colSums(counts) * 10^6)
 }
 
 #.deconv <- function(counts, counts.ercc) {
