@@ -77,19 +77,9 @@ setGeneric("spUnsupervised", function(
 #' @importFrom stats as.dist
 
 setMethod("spUnsupervised", "spCounts", function(
-  spCounts,
-  theta = 0,
-  k = 2,
-  max_iter = 2000,
-  perplexity = 10,
-  initial_dims = 50,
-  Gmax = 50,
-  seed = 11,
-  type = "max",
-  max = 2000,
-  genes = NULL,
-  weighted = TRUE,
-  ...
+  spCounts, theta = 0, k = 2, max_iter = 2000, perplexity = 10,
+  initial_dims = 50, Gmax = 50, seed = 11, type = "max",
+  max = 2000, genes = NULL, weighted = TRUE, ...
 ){
   #filter genes to be included in analysis
   select <- .featureSelection(spCounts, type, max, genes)
@@ -610,5 +600,68 @@ countsPerClass <- function(
   )
 }
 
+#' expectedInteractionFreq
+#'
+#' Calculates the expected interaction frequency between cell types.
+#'
+#' @name expectedInteractionFreq
+#' @rdname expectedInteractionFreq
+#' @aliases expectedInteractionFreq
+#' @param spUnsupervised An spUnsupervised object.
+#' @return A table with the expected frequencies..
+#' @author Jason T. Serviss
+#' @keywords expectedInteractionFreq
+#' @examples
+#'
+#' expectedInteractionFreq(testUns)
+NULL
 
+#' @rdname expectedInteractionFreq
+#' @importFrom dplyr "%>%"
+#' @export
 
+expectedInteractionFreq <- function(spUnsupervised) {
+  getData(spUnsupervised, "classification") %>%
+    table() %>% 
+    `/` (sum(.))
+}
+
+#' estimateTotalConnections
+#'
+#' Estimates the total number of connections in the multiplets.
+#'
+#' @name estimateTotalConnections
+#' @rdname estimateTotalConnections
+#' @aliases estimateTotalConnections
+#' @param spCountsSng An spCounts object containing singlets.
+#' @param spCountsMul An spCounts object containing multiplets.
+#' @return A table with the expected frequencies..
+#' @author Jason T. Serviss
+#' @keywords estimateTotalConnections
+#' @examples
+#'
+#' expectedInteractionFreq(testUns)
+NULL
+
+#' @rdname estimateTotalConnections
+#' @importFrom dplyr "%>%"
+#' @export
+
+estimateTotalConnections <- function(spCountsSng, spCountsMul) {
+  estimateCells(spCountsSng, spCountsMul) %>%
+    filter(sampleType == "Multiplet") %>%
+    pull(cellNumberMedian) %>%
+    sum() %>%
+    round() %>%
+    {combn(1:., 2)} %>%
+    ncol(.)
+}
+
+produceEstimatedInteractionTable <- function(spCountsSng, spCountsMul, spUnsupervised) {
+  classes <- unique(getData(spUnsupervised, "classification"))
+  t <- expand.grid(classes, classes)
+  intFreq <- expectedInteractionFreq(spUnsupervised)
+  t$freq <- apply(t, 1, function(x) {intFreq[x[1]] * intFreq[x[2]]})
+  totConn <- estimateTotalConnections(spCountsSng, spCountsMul)
+  t$abs <- t$freq * totConn
+}
