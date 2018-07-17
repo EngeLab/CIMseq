@@ -118,13 +118,18 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   #run optimization
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
   
+  #setup synthetic multiplets
   set.seed(seed)
+  if(permute) {singlets <- .permuteGenes(singlets)}
+  singletSubset <- .subsetSinglets(classes, singlets, nSyntheticMultiplets)
+  
+  #deconvolution
   opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
       .optim.fun(
-        i, fractions = fractions, multiplets = multiplets, singlets = singlets,
-        classes = classes, n = nSyntheticMultiplets, control = control,
-        permute = permute, ...
+        i, fractions = fractions, multiplets = multiplets,
+        singletSubset = singletSubset, n = nSyntheticMultiplets,
+        control = control, ...
       )
   })
   
@@ -138,7 +143,8 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   new("spSwarm",
     spSwarm = result[[1]], costs = result[[2]],
     convergence = result[[3]], stats = result[[4]],
-    arguments = list(maxiter = maxiter, swarmsize = swarmsize)
+    arguments = list(maxiter = maxiter, swarmsize = swarmsize),
+    syntheticMultiplets = singletSubset
   )
 })
 
@@ -175,12 +181,10 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 }
 
 .optim.fun <- function(
-  i, fractions, multiplets, singlets, classes,
-  n, control, permute, ...
+  i, fractions, multiplets, singletSubset,
+  n, control, ...
 ){
   oneMultiplet <- ceiling(multiplets[, i])
-  if(permute) {singlets <- .permuteGenes(singlets)}
-  singletSubset <- .subsetSinglets(classes, singlets, n)
   pso::psoptim(
     par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,
