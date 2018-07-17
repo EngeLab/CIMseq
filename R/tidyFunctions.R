@@ -53,7 +53,7 @@ namedListToTibble <- function(l) {
 
 matrix_to_tibble <- function(data, rowname = "rowname") {
   data %>%
-  as.data.frame() %>%
+  as.data.frame(stringsAsFactors = FALSE) %>%
   rownames_to_column(var = rowname) %>%
   as_tibble()
 }
