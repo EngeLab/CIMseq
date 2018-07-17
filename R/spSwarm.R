@@ -609,6 +609,7 @@ NULL
 #' @export
 
 setGeneric("calculateCosts", function(
+  spCountsMul,
   spSwarm,
   fractions,
   ...
@@ -619,7 +620,12 @@ setGeneric("calculateCosts", function(
 #' @rdname calculateCosts
 #' @export
 
-setMethod("calculateCosts", "spSwarm", function(spSwarm, ...){
+setMethod("calculateCosts", c("spCounts", "spSwarm", "numeric"), function(
+  spCountsMul,
+  spSwarm,
+  fractions,
+  ...
+){
   mulCPM <- getData(spCountsMul, "counts.cpm")
   selectInd <- getData(spSwarm, "arguments")$selectInd
   
