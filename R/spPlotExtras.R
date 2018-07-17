@@ -75,8 +75,8 @@ convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
   filter(.data$sampleType == "Singlet") %>%
   pull(.data$frac.ercc) %>%
   median(., na.rm = TRUE) %>%
-  `*` (100) %>%
-  `/` (ercc)
+  multiply_by(100) %>%
+  divide_by(ercc)
 }
 
 #' coloursFromTargets

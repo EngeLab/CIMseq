@@ -128,6 +128,41 @@ tidySwarm <- function(spSwarm) {
   mutate('Convergence' = getData(spSwarm, "convergence"))
 }
 
+#' divide_by
+#'
+#' Facilitates division in pipes and "avoids wrong number of arguments to"
+#' complaint by check. Adopted from magrittr:
+#' \link{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L93-L96}
+#'
+#' @name divide_by
+#' @rdname divide_by
+#' @author Jason T. Serviss
+#' @examples
+#'
+#' 100 %>% divide_by(2)
+#'
+#' @export
+
+divide_by <- `/`
+
+#' multiply_by
+#'
+#' Facilitates division in pipes and "avoids wrong number of arguments to"
+#' complaint by check. Adopted from magrittr:
+#' \link{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L82-L85}
+#'
+#' @name multiply_by
+#' @rdname multiply_by
+#' @author Jason T. Serviss
+#' @examples
+#'
+#' 100 %>% multiply_by(2)
+#'
+#' @export
+
+multiply_by <- `*`
+
+
 #spSwarmPoisson(spSwarm, edge.cutoff = 0) %>%
 #  full_join(
 #    getMultipletsForEdge(spSwarm, edge.cutoff = 0, edges = .),
