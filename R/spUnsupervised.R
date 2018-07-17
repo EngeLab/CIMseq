@@ -626,7 +626,7 @@ NULL
 expectedInteractionFreq <- function(spUnsupervised) {
   getData(spUnsupervised, "classification") %>%
     table() %>% 
-    `/` (sum(.))
+    divide_by(sum(.))
 }
 
 #' estimateTotalConnections

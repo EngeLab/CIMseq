@@ -179,7 +179,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   n, control, permute, ...
 ){
   oneMultiplet <- ceiling(multiplets[, i])
-  if(permute) singlets <- .permuteGenes(singlets)
+  if(permute) {singlets <- .permuteGenes(singlets)}
   singletSubset <- .subsetSinglets(classes, singlets, n)
   pso::psoptim(
     par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
