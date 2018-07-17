@@ -143,7 +143,12 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   new("spSwarm",
     spSwarm = result[[1]], costs = result[[2]],
     convergence = result[[3]], stats = result[[4]],
-    arguments = list(maxiter = maxiter, swarmsize = swarmsize),
+    arguments = list(
+      maxiter = maxiter, swarmsize = swarmsize,
+      nSyntheticMultiplets = nSyntheticMultiplets, seed = seed, norm = norm,
+      report = report, reportRate = reportRate, selectInd = selectInd,
+      vectorize = vectorize, permute = permute
+    ),
     syntheticMultiplets = singletSubset
   )
 })
@@ -580,3 +585,63 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
     
   }
 }
+
+#' calculateCosts
+#'
+#'
+#' Description
+#'
+#' @name calculateCosts
+#' @rdname calculateCosts
+#' @aliases calculateCosts
+#' @param spSwarm An spSwarm object.
+#' @param ... additional arguments to pass on
+#' @return Costs
+#' @author Jason T. Serviss
+#' @keywords calculateCosts
+#' @examples
+#'
+#' #
+#'
+NULL
+
+#' @rdname calculateCosts
+#' @export
+
+setGeneric("calculateCosts", function(
+  spSwarm,
+  fractions,
+  ...
+){
+  standardGeneric("calculateCosts")
+})
+
+#' @rdname calculateCosts
+#' @export
+
+setMethod("calculateCosts", "spSwarm", function(spSwarm, ...){
+  mulCPM <- getData(spCountsMul, "counts.cpm")
+  selectInd <- getData(spSwarm, "arguments")$selectInd
+  
+  multiplets <- matrix(
+    mulCPM[selectInd, ],
+    ncol = ncol(mulCPM),
+    dimnames = list(NULL, colnames(mulCPM))
+  )
+  
+  #run optimization
+  to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
+  
+  #setup synthetic multiplets
+  singletSubset <- getData(spSwarm, "syntheticMultiplets")
+  
+  #calculate costs
+  opt.out <- future_lapply(
+    X = 1:to, FUN = function(i) {
+      oneMultiplet <- ceiling(multiplets[, i])
+      calculateCost(oneMultiplet, singletSubset, fractions)
+  })
+  names(opt.out) <- colnames(multiplets)
+  opt.out
+})
+
