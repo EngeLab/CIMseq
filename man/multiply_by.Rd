@@ -7,14 +7,9 @@
 multiply_by()
 }
 \description{
-Facilitates division in pipes and "avoids wrong number of arguments to"
+Facilitates multiplication in pipes and "avoids wrong number of arguments to"
 complaint by check. Adopted from magrittr:
 \link{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L82-L85}
-}
-\examples{
-
-100 \%>\% multiply_by(2)
-
 }
 \author{
 Jason T. Serviss

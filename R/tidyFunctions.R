@@ -137,27 +137,19 @@ tidySwarm <- function(spSwarm) {
 #' @name divide_by
 #' @rdname divide_by
 #' @author Jason T. Serviss
-#' @examples
-#'
-#' 100 %>% divide_by(2)
-#'
 #' @export
 
 divide_by <- `/`
 
 #' multiply_by
 #'
-#' Facilitates division in pipes and "avoids wrong number of arguments to"
+#' Facilitates multiplication in pipes and "avoids wrong number of arguments to"
 #' complaint by check. Adopted from magrittr:
 #' \link{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L82-L85}
 #'
 #' @name multiply_by
 #' @rdname multiply_by
 #' @author Jason T. Serviss
-#' @examples
-#'
-#' 100 %>% multiply_by(2)
-#'
 #' @export
 
 multiply_by <- `*`
