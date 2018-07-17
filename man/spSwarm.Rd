@@ -25,7 +25,8 @@ spSwarm(spCountsSng, spCountsMul, spUnsupervised, ...)
 \S4method{spSwarm}{spCounts,spCounts,spUnsupervised}(spCountsSng, spCountsMul,
   spUnsupervised, maxiter = 10, swarmsize = 150,
   nSyntheticMultiplets = 200, seed = 11, norm = TRUE, report = FALSE,
-  reportRate = NULL, selectInd = NULL, vectorize = FALSE, ...)
+  reportRate = NULL, selectInd = NULL, vectorize = FALSE,
+  permute = FALSE, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}
@@ -74,6 +75,9 @@ should be generated.}
 NULL the selectInd slot from the spUnsupervised object is used.}
 
 \item{vectorize}{Argument to \link[pso]{psoptim}.}
+
+\item{permute}{Logical; indicates if genes should be permuted before
+deconvolution. For use with permutation testing.}
 }
 \value{
 spSwarm output.

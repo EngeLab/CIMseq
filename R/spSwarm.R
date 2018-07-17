@@ -26,6 +26,8 @@ NULL
 #' @param selectInd Numeric; Gene indexes to select for swarm optimization. If
 #'  NULL the selectInd slot from the spUnsupervised object is used.
 #' @param vectorize Argument to \link[pso]{psoptim}.
+#' @param permute Logical; indicates if genes should be permuted before
+#'  deconvolution. For use with permutation testing.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per
@@ -70,6 +72,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200,
   seed = 11, norm = TRUE,
   report = FALSE, reportRate = NULL, selectInd = NULL, vectorize = FALSE,
+  permute = FALSE,
   ...
 ){
     
@@ -120,7 +123,8 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
     X = 1:to, FUN = function(i) {
       .optim.fun(
         i, fractions = fractions, multiplets = multiplets, singlets = singlets,
-        classes = classes, n = nSyntheticMultiplets, control = control, ...
+        classes = classes, n = nSyntheticMultiplets, control = control,
+        permute = permute, ...
       )
   })
   
@@ -172,15 +176,20 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 
 .optim.fun <- function(
   i, fractions, multiplets, singlets, classes,
-  n, control, ...
+  n, control, permute, ...
 ){
   oneMultiplet <- ceiling(multiplets[, i])
+  if(permute) singlets <- .permuteGenes(singlets)
   singletSubset <- .subsetSinglets(classes, singlets, n)
   pso::psoptim(
     par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,
     control = control, ...
   )
+}
+
+.permuteGenes <- function(counts){
+  t(apply(counts, 1, sample))
 }
 
 #' spSwarmPoisson
