@@ -552,7 +552,10 @@ erccPerClass <- function(
   estimateCells(spCountsSng, spCountsMul) %>%
   right_join(class, by = "sampleName") %>%
   group_by(class) %>%
-  summarise(medianFracErcc = median(.data$frac.ercc, na.rm = TRUE))
+  summarise(
+    medianFracErcc = median(.data$frac.ercc, na.rm = TRUE),
+    meanFracErcc = mean(.data$frac.ercc, na.rm = TRUE)
+  )
 }
 
 #' countsPerClass
@@ -650,18 +653,11 @@ NULL
 estimateTotalConnections <- function(spCountsSng, spCountsMul) {
   estimateCells(spCountsSng, spCountsMul) %>%
     filter(sampleType == "Multiplet") %>%
-    pull(cellNumberMedian) %>%
-    sum() %>%
-    round() %>%
-    {combn(1:., 2)} %>%
-    ncol(.)
-}
-
-produceEstimatedInteractionTable <- function(spCountsSng, spCountsMul, spUnsupervised) {
-  classes <- unique(getData(spUnsupervised, "classification"))
-  t <- expand.grid(classes, classes)
-  intFreq <- expectedInteractionFreq(spUnsupervised)
-  t$freq <- apply(t, 1, function(x) {intFreq[x[1]] * intFreq[x[2]]})
-  totConn <- estimateTotalConnections(spCountsSng, spCountsMul)
-  t$abs <- t$freq * totConn
+    mutate(cellNumber = round(cellNumberMedian)) %>%
+    filter(cellNumber > 1) %>%
+    mutate(connections = map_dbl(cellNumber, function(n) {
+      ncol(combn(1:n, 2))
+    })) %>%
+    pull(connections) %>%
+    sum()
 }
