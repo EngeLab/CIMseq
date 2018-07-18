@@ -97,12 +97,12 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   multiplets <- matrix(
     mulCPM[selectInd, ],
     ncol = ncol(mulCPM),
-    dimnames = list(NULL, colnames(mulCPM))
+    dimnames = list(rownames(mulCPM)[selectInd], colnames(mulCPM))
   )
   singlets <- matrix(
     sngCPM[selectInd, ],
     ncol = ncol(sngCPM),
-    dimnames = list(NULL, colnames(sngCPM))
+    dimnames = list(rownames(sngCPM)[selectInd], colnames(sngCPM))
   )
   
   #setup args for optimization
@@ -186,7 +186,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
     purrr::map(., function(x) {rownames(x) <- rownames(singlets); x}) %>%
     purrr::map(., function(x) {colnames(x) <- unique(classes); x}) %>%
     do.call("rbind", .) %>%
-    .[order(as.numeric(rownames(.))), ]
+    .[order(rownames(.)), ]
 }
 
 .optim.fun <- function(
