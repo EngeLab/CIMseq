@@ -28,6 +28,8 @@ NULL
 #' @param vectorize Argument to \link[pso]{psoptim}.
 #' @param permute Logical; indicates if genes should be permuted before
 #'  deconvolution. For use with permutation testing.
+#' @param saveSingletData Logical: indicated if the singlets matrix used to
+#'  synthesize the syntheticMultiplets should be saved.
 #' @param spSwarm The spSwarm results.
 #' @param costs The costs after optimization.
 #' @param convergence The convergence output from psoptim. One value per
@@ -72,7 +74,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200,
   seed = 11, norm = TRUE,
   report = FALSE, reportRate = NULL, selectInd = NULL, vectorize = FALSE,
-  permute = FALSE,
+  permute = FALSE, saveSingletData = TRUE,
   ...
 ){
     
@@ -149,7 +151,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
       report = report, reportRate = reportRate, selectInd = selectInd,
       vectorize = vectorize, permute = permute
     ),
-    syntheticMultiplets = singletSubset
+    syntheticMultiplets = if(saveSingletData) {singletSubset} else {matrix()}
   )
 })
 
@@ -180,7 +182,9 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 .subsetSinglets <- function(classes, singlets, n) {
   purrr::map(1:n, ~sampleSinglets(classes)) %>%
     purrr::map(., ~subsetSinglets(singlets, .x)) %>%
-    purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
+    #purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
+    purrr::map(., function(x) {rownames(x) <- rownames(singlets); x}) %>%
+    purrr::map(., function(x) {colnames(x) <- unique(classes); x}) %>%
     do.call("rbind", .) %>%
     .[order(as.numeric(rownames(.))), ]
 }

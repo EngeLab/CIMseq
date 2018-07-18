@@ -26,7 +26,7 @@ spSwarm(spCountsSng, spCountsMul, spUnsupervised, ...)
   spUnsupervised, maxiter = 10, swarmsize = 150,
   nSyntheticMultiplets = 200, seed = 11, norm = TRUE, report = FALSE,
   reportRate = NULL, selectInd = NULL, vectorize = FALSE,
-  permute = FALSE, ...)
+  permute = FALSE, saveSingletData = TRUE, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}
@@ -78,6 +78,9 @@ NULL the selectInd slot from the spUnsupervised object is used.}
 
 \item{permute}{Logical; indicates if genes should be permuted before
 deconvolution. For use with permutation testing.}
+
+\item{saveSingletData}{Logical: indicated if the singlets matrix used to
+synthesize the syntheticMultiplets should be saved.}
 }
 \value{
 spSwarm output.

@@ -4,12 +4,13 @@
 \name{calculateCosts}
 \alias{calculateCosts}
 \alias{calculateCosts}
-\alias{calculateCosts,spSwarm-method}
+\alias{calculateCosts,spCounts,spSwarm,numeric-method}
 \title{calculateCosts}
 \usage{
-calculateCosts(spSwarm, fractions, ...)
+calculateCosts(spCountsMul, spSwarm, fractions, ...)
 
-\S4method{calculateCosts}{spSwarm}(spSwarm, fractions, ...)
+\S4method{calculateCosts}{spCounts,spSwarm,numeric}(spCountsMul, spSwarm,
+  fractions, ...)
 }
 \arguments{
 \item{spSwarm}{An spSwarm object.}
