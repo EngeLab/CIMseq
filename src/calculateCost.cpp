@@ -121,3 +121,241 @@ double calculateCost(
   }
   return -cost;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//                        FUNCTIONS FOR TESTING ETC.                          //
+////////////////////////////////////////////////////////////////////////////////
+
+//' normalizeFractions
+//'
+//' Takes a numeric vector and scales to [0, 1] by dividing with its sum.
+//'
+//' @param fractions Numeric; a numeric vector.
+//' @author Jason T. Serviss
+//' @export
+// [[Rcpp::export]]
+
+arma::vec normalizeFractions(
+    const arma::vec& fractions
+){
+  return fractions / accu(fractions);
+}
+
+//' adjustAccordingToFractions
+//'
+//' This function takes a counts matrix and subsets the columns according to the
+//' indices provided by the idxToSubset argument.
+//'
+//' @param fractions Numeric; a numeric vector with length equal to
+//' ncol(singlets) indicating the fractions that each column should be
+//' multiplied with.
+//' @param singlets Matrix; a counts matrix with cells/samples as columns and
+//' genes as rows.
+//' @author Jason T. Serviss
+//' @export
+// [[Rcpp::export]]
+
+arma::mat adjustAccordingToFractions(
+    const arma::vec& fractions,
+    const arma::mat& singlets
+){
+  return singlets * arma::diagmat(fractions);
+}
+
+//' multipletSums
+//'
+//' This function takes a counts matrix and calculates the row sums. Output is
+//' subsequently rounded for integration downstream.
+//'
+//' @param adjusted Matrix; a counts matrix with cells/samples as columns and
+//' genes as rows.
+//' @author Jason T. Serviss
+//' @export
+// [[Rcpp::export]]
+
+arma::mat multipletSums(
+    const arma::mat& adjusted
+){
+  return arma::round(arma::sum(adjusted, 1));
+}
+
+//' vecToMat
+//'
+//' This function takes a vector and reformats it to a matrix in a column-wise
+//' fashion.
+//'
+//' @param vec Numeric; the vector to reformat.
+//' @param nr integer; length 1 integer indicating the number of matrix rows.
+//' @param nc integer; length 1 integer indicating the number of matrix columns.
+//' @author Jason T. Serviss
+//' @export
+// [[Rcpp::export]]
+
+arma::mat vecToMat(arma::vec vec, int nr, int nc){
+  arma::mat X(vec.memptr(), nr, nc, false, false);
+  return X;
+}
+
+//' calculateCostDensity
+//'
+//' This function takes a vector of gene counts per million for one multiplet
+//' that is being deconvoluted and a matrix of synthetic multiplets. It then
+//' calculates the poisson density for each gene count and each corresponding
+//' value in the matrix row.
+//'
+//' @param oneMultiplet Numeric; a numeric vector of counts per million for one
+//' multiplet.
+//' @param syntheticMultiplets Matrix; a numeric matrix of synthetic multiplets
+//' with samples as columns and genes as rows.
+//' @author Jason T. Serviss
+// [[Rcpp::export]]
+
+arma::mat calculateCostDensity(
+    arma::vec oneMultiplet,
+    arma::mat syntheticMultiplets
+){
+  int nr = syntheticMultiplets.n_rows;
+  int nc = syntheticMultiplets.n_cols;
+  arma::mat densities(nr, nc);
+  oneMultiplet = round(oneMultiplet);
+  
+  for(int i = 0; i < nr; i++) {
+    for(int j = 0; j < nc; j++) {
+      densities(i, j) = R::dpois(oneMultiplet(i), syntheticMultiplets(i, j), false);
+    }
+  }
+  
+  return densities;
+}
+
+//' calculateLogRowMeans
+//'
+//' This function takes a matrix of poisson densities and calculates the row
+//' means and subsequently their log10 values.
+//'
+//' @param densities Numeric; a numeric vector of densities.
+//' @author Jason T. Serviss
+// [[Rcpp::export]]
+
+arma::vec calculateLogRowMeans(
+    const arma::mat& densities
+){
+  arma::vec means = mean(densities, 1);
+  return log10(means);
+}
+
+//' fixNegInf
+//'
+//' This function takes a numeric vector and replaces -Inf values with
+//' -323.0052. Note: since log10(10^-324) gives -Inf but log10(10^-323)
+//' gives -323.0052
+//'
+//' @param means Numeric; a numeric vector of log10 row means.
+//' @author Jason T. Serviss
+// [[Rcpp::export]]
+
+arma::vec fixNegInf(
+    arma::vec& means
+){
+  arma::vec noInfMeans(means.n_elem);
+  means.elem(find_nonfinite(means)).fill(-323.0052);
+  return means;
+}
+
+//' costNegSum
+//'
+//' This function takes a numeric vector and calculates the negative sum.
+//'
+//' @param means Numeric; a numeric vector of log10 row means.
+//' @author Jason T. Serviss
+// [[Rcpp::export]]
+
+double costNegSum(
+    arma::vec means
+){
+  double cost = accu(means) *  -1;
+  return cost;
+}
+
+//' costCalc
+//'
+//' This function takes a vector of gene counts per million for one multiplet
+//' that is being deconvoluted and a matrix of synthetic multiplets and
+//' calculates the cost which is returned to the optimization algorithm during
+//' deconvolution.
+//'
+//' @param oneMultiplet Numeric; a numeric vector of counts per million for one
+//' multiplet.
+//' @param syntheticMultiplets Matrix; a numeric matrix of synthetic multiplets
+//' with samples as columns and genes as rows.
+//' @author Jason T. Serviss
+//' @export
+// [[Rcpp::export]]
+
+double costCalc(
+    const arma::vec oneMultiplet,
+    const arma::mat& syntheticMultiplets
+){
+  
+  //calculate densities
+  arma::mat ds = calculateCostDensity(oneMultiplet, syntheticMultiplets);
+  
+  //calculate log10 row means
+  arma::vec means = calculateLogRowMeans(ds);
+  
+  //Replace -Inf with -323.0052
+  arma::vec noInfMeans = fixNegInf(means);
+  
+  //calculate negative sum and return
+  return costNegSum(noInfMeans);
+}
+
+//' cost
+//'
+//' Wrapper for deconvolution cost function using the Armadillo C++ library.
+//'
+//' @param oneMultiplet Integer; a integer vector of rounded counts per million
+//' for one multiplet.
+//' @param singlets Matrix; a counts matrix with cells/samples as columns and
+//' genes as rows.
+//' @param classes Character; a character vector of classes with length equal to
+//' the number of cells for which counts exist.
+//' @param fractions Numeric; a numeric vector with length equal to
+//' ncol(singlets) indicating the fractions that each column should be
+//' multiplied with.
+//' @param n Integer; length 1 integer indicating the number of synthetic
+//' multiplets to generate.
+//' @author Jason T. Serviss
+//' @export
+// [[Rcpp::export]]
+
+double cost(
+    const arma::vec& oneMultiplet,
+    const arma::mat& singletSubset,
+    const arma::vec& fractions,
+    const int n
+){
+  
+  //check all 0 fractions
+  if(accu(fractions) == 0) {
+    return 999999999;
+  }
+  
+  //normalize fractions
+  arma::vec f = normalizeFractions(fractions); //note: returns a matrix(?)
+  
+  //adjust according to fractions
+  arma::mat adjusted = adjustAccordingToFractions(f, singletSubset);
+  
+  //rowSums
+  arma::mat rs = multipletSums(adjusted);
+  
+  //reformat to wide
+  arma::mat sm = vecToMat(rs, n, oneMultiplet.n_elem).t();
+  
+  //calculate cost
+  double cost = costCalc(oneMultiplet, sm);
+  
+  return cost;
+}
+

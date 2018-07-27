@@ -42,6 +42,8 @@ namedListToTibble <- function(l) {
 #' @param data matrix; The matrix to be converted.
 #' @param rowname character; Length 1 vector indicating the colname that
 #'  rownames should have upon tibble conversion.
+#' @param drop logical; indicated if rownames should be dropped.
+#'  Default = FALSE.
 #' @keywords matrix_to_tibble
 #' @examples
 #'
@@ -51,9 +53,13 @@ namedListToTibble <- function(l) {
 #' @export
 #' @importFrom tibble as_tibble rownames_to_column
 
-matrix_to_tibble <- function(data, rowname = "rowname") {
+matrix_to_tibble <- function(data, rowname = "rowname", drop = FALSE) {
+  if(drop) {
+    return(data %>% as.data.frame %>% as_tibble)
+  }
   rn.quo <- enquo(rowname)
   rn <- rownames(data)
+  if(is.null(rn)) rn <- 1:nrow(data)
   
   data %>%
   as.data.frame(stringsAsFactors = FALSE) %>%

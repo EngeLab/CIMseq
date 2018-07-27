@@ -44,11 +44,139 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// normalizeFractions
+arma::vec normalizeFractions(const arma::vec& fractions);
+RcppExport SEXP _sp_scRNAseq_normalizeFractions(SEXP fractionsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type fractions(fractionsSEXP);
+    rcpp_result_gen = Rcpp::wrap(normalizeFractions(fractions));
+    return rcpp_result_gen;
+END_RCPP
+}
+// adjustAccordingToFractions
+arma::mat adjustAccordingToFractions(const arma::vec& fractions, const arma::mat& singlets);
+RcppExport SEXP _sp_scRNAseq_adjustAccordingToFractions(SEXP fractionsSEXP, SEXP singletsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type fractions(fractionsSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type singlets(singletsSEXP);
+    rcpp_result_gen = Rcpp::wrap(adjustAccordingToFractions(fractions, singlets));
+    return rcpp_result_gen;
+END_RCPP
+}
+// multipletSums
+arma::mat multipletSums(const arma::mat& adjusted);
+RcppExport SEXP _sp_scRNAseq_multipletSums(SEXP adjustedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type adjusted(adjustedSEXP);
+    rcpp_result_gen = Rcpp::wrap(multipletSums(adjusted));
+    return rcpp_result_gen;
+END_RCPP
+}
+// vecToMat
+arma::mat vecToMat(arma::vec vec, int nr, int nc);
+RcppExport SEXP _sp_scRNAseq_vecToMat(SEXP vecSEXP, SEXP nrSEXP, SEXP ncSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type vec(vecSEXP);
+    Rcpp::traits::input_parameter< int >::type nr(nrSEXP);
+    Rcpp::traits::input_parameter< int >::type nc(ncSEXP);
+    rcpp_result_gen = Rcpp::wrap(vecToMat(vec, nr, nc));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calculateCostDensity
+arma::mat calculateCostDensity(arma::vec oneMultiplet, arma::mat syntheticMultiplets);
+RcppExport SEXP _sp_scRNAseq_calculateCostDensity(SEXP oneMultipletSEXP, SEXP syntheticMultipletsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type oneMultiplet(oneMultipletSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type syntheticMultiplets(syntheticMultipletsSEXP);
+    rcpp_result_gen = Rcpp::wrap(calculateCostDensity(oneMultiplet, syntheticMultiplets));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calculateLogRowMeans
+arma::vec calculateLogRowMeans(const arma::mat& densities);
+RcppExport SEXP _sp_scRNAseq_calculateLogRowMeans(SEXP densitiesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type densities(densitiesSEXP);
+    rcpp_result_gen = Rcpp::wrap(calculateLogRowMeans(densities));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fixNegInf
+arma::vec fixNegInf(arma::vec& means);
+RcppExport SEXP _sp_scRNAseq_fixNegInf(SEXP meansSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec& >::type means(meansSEXP);
+    rcpp_result_gen = Rcpp::wrap(fixNegInf(means));
+    return rcpp_result_gen;
+END_RCPP
+}
+// costNegSum
+double costNegSum(arma::vec means);
+RcppExport SEXP _sp_scRNAseq_costNegSum(SEXP meansSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type means(meansSEXP);
+    rcpp_result_gen = Rcpp::wrap(costNegSum(means));
+    return rcpp_result_gen;
+END_RCPP
+}
+// costCalc
+double costCalc(const arma::vec oneMultiplet, const arma::mat& syntheticMultiplets);
+RcppExport SEXP _sp_scRNAseq_costCalc(SEXP oneMultipletSEXP, SEXP syntheticMultipletsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec >::type oneMultiplet(oneMultipletSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type syntheticMultiplets(syntheticMultipletsSEXP);
+    rcpp_result_gen = Rcpp::wrap(costCalc(oneMultiplet, syntheticMultiplets));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cost
+double cost(const arma::vec& oneMultiplet, const arma::mat& singletSubset, const arma::vec& fractions, const int n);
+RcppExport SEXP _sp_scRNAseq_cost(SEXP oneMultipletSEXP, SEXP singletSubsetSEXP, SEXP fractionsSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::vec& >::type oneMultiplet(oneMultipletSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type singletSubset(singletSubsetSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type fractions(fractionsSEXP);
+    Rcpp::traits::input_parameter< const int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(cost(oneMultiplet, singletSubset, fractions, n));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_sp_scRNAseq_sampleSinglets", (DL_FUNC) &_sp_scRNAseq_sampleSinglets, 1},
     {"_sp_scRNAseq_subsetSinglets", (DL_FUNC) &_sp_scRNAseq_subsetSinglets, 2},
     {"_sp_scRNAseq_calculateCost", (DL_FUNC) &_sp_scRNAseq_calculateCost, 4},
+    {"_sp_scRNAseq_normalizeFractions", (DL_FUNC) &_sp_scRNAseq_normalizeFractions, 1},
+    {"_sp_scRNAseq_adjustAccordingToFractions", (DL_FUNC) &_sp_scRNAseq_adjustAccordingToFractions, 2},
+    {"_sp_scRNAseq_multipletSums", (DL_FUNC) &_sp_scRNAseq_multipletSums, 1},
+    {"_sp_scRNAseq_vecToMat", (DL_FUNC) &_sp_scRNAseq_vecToMat, 3},
+    {"_sp_scRNAseq_calculateCostDensity", (DL_FUNC) &_sp_scRNAseq_calculateCostDensity, 2},
+    {"_sp_scRNAseq_calculateLogRowMeans", (DL_FUNC) &_sp_scRNAseq_calculateLogRowMeans, 1},
+    {"_sp_scRNAseq_fixNegInf", (DL_FUNC) &_sp_scRNAseq_fixNegInf, 1},
+    {"_sp_scRNAseq_costNegSum", (DL_FUNC) &_sp_scRNAseq_costNegSum, 1},
+    {"_sp_scRNAseq_costCalc", (DL_FUNC) &_sp_scRNAseq_costCalc, 2},
+    {"_sp_scRNAseq_cost", (DL_FUNC) &_sp_scRNAseq_cost, 4},
     {NULL, NULL, 0}
 };
 

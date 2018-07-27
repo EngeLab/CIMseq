@@ -182,7 +182,6 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 .subsetSinglets <- function(classes, singlets, n) {
   purrr::map(1:n, ~sampleSinglets(classes)) %>%
     purrr::map(., ~subsetSinglets(singlets, .x)) %>%
-    #purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
     purrr::map(., function(x) {rownames(x) <- rownames(singlets); x}) %>%
     purrr::map(., function(x) {colnames(x) <- unique(classes); x}) %>%
     do.call("rbind", .) %>%
@@ -644,12 +643,13 @@ setMethod("calculateCosts", c("spCounts", "spSwarm", "numeric"), function(
   
   #setup synthetic multiplets
   singletSubset <- getData(spSwarm, "syntheticMultiplets")
+  n <- getData(perms[[1]], "arguments")$nSyntheticMultiplets
   
   #calculate costs
   opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
       oneMultiplet <- ceiling(multiplets[, i])
-      calculateCost(oneMultiplet, singletSubset, fractions)
+      calculateCost(oneMultiplet, singletSubset, fractions, n)
   })
   names(opt.out) <- colnames(multiplets)
   opt.out
