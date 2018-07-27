@@ -52,9 +52,12 @@ namedListToTibble <- function(l) {
 #' @importFrom tibble as_tibble rownames_to_column
 
 matrix_to_tibble <- function(data, rowname = "rowname") {
+  rn.quo <- enquo(rowname)
+  rn <- rownames(data)
+  
   data %>%
   as.data.frame(stringsAsFactors = FALSE) %>%
-  rownames_to_column(var = rowname) %>%
+  add_column(!! quo_name(rn.quo) := rn, .before = 1) %>%
   as_tibble()
 }
 
