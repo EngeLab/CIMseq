@@ -38,7 +38,7 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
     )
     
     #run function
-    output1 <- getMultipletsForEdge(sObj, 1/4, data.frame("A1", "B1"))
+    output1 <- getMultipletsForEdge(sObj, 0, data.frame("A1", "B1"))
     output2 <- getMultipletsForEdge(sObj, 1/4, data.frame("C1", "D1"))
     output3 <- getMultipletsForEdge(
       sObj, 1/4, data.frame(c("A1", "C1"), c("B1", "D1"))
@@ -121,7 +121,7 @@ context("generateSyntheticMultiplets")
 ################################################################################
 
 ##run test normalizeFractionsArma
-test_that("check that normalizeFractionsArma outputs the expected result", {
+test_that("check that normalizeFractions outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -131,14 +131,14 @@ test_that("check that normalizeFractionsArma outputs the expected result", {
   expected <- matrix(fractions / sum(fractions))
   
   #run function
-  output <- normalizeFractionsArma(fractions)
+  output <- normalizeFractions(fractions)
   
   #test
   expect_equal(output, expected)
 })
 
 ##run test sampleSingletsArma
-test_that("check that sampleSingletsArma outputs the expected result", {
+test_that("check that sampleSinglets outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -150,7 +150,7 @@ test_that("check that sampleSingletsArma outputs the expected result", {
   c <- c(4, 5)
   
   #run function
-  output <- sampleSingletsArma(classes) #returns a matrix
+  output <- sampleSinglets(classes) #returns a matrix
   
   #test
   expect_true(length(output) == 3)
@@ -160,7 +160,7 @@ test_that("check that sampleSingletsArma outputs the expected result", {
 })
 
 ##run test subsetSingletsArma
-test_that("check that subsetSingletsArma outputs the expected result", {
+test_that("check that subsetSinglets outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -172,7 +172,7 @@ test_that("check that subsetSingletsArma outputs the expected result", {
   b <- 8
   
   #run function
-  output <- subsetSingletsArma(singlets, idx)
+  output <- subsetSinglets(singlets, idx)
   
   #test
   expect_true(all(output[, 1] == a))
@@ -180,7 +180,7 @@ test_that("check that subsetSingletsArma outputs the expected result", {
 })
 
 ##run test adjustAccordingToFractionsArma
-test_that("check that adjustAccordingToFractionsArma outputs the expected result", {
+test_that("check that adjustAccordingToFractions outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -191,14 +191,14 @@ test_that("check that adjustAccordingToFractionsArma outputs the expected result
   expected <- t(t(singlets) * fractions)
   
   #run function
-  output <- adjustAccordingToFractionsArma(fractions, singlets)
+  output <- adjustAccordingToFractions(fractions, singlets)
   
   #test
   expect_identical(output, expected)
 })
 
 ##run test multipletSumsArma
-test_that("check that multipletSumsArma outputs the expected result", {
+test_that("check that multipletSums outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -210,46 +210,10 @@ test_that("check that multipletSumsArma outputs the expected result", {
   expected <- matrix(ceiling(rowSums(singlets)))
   
   #run function
-  output <- multipletSumsArma(singlets)
+  output <- multipletSums(singlets)
   
   #test
   expect_identical(output, expected)
-})
-
-##run test poissonSampleArma
-test_that("check that poissonSampleArma outputs the expected result", {
-  
-  ###TEST1####
-  #prepare normal input data
-  singlets <- matrix(rep(1:10, each = 1000), ncol = 1000)
-  rs <- rowSums(singlets)
-  
-  #setup expected data
-  expected <- rpois(length(rs), rs)
-  
-  #run function
-  output <- poissonSampleArma(matrix(rs, ncol = 1))
-  
-  #test
-  expect_true(all.equal(mean(output), mean(expected), tolerance = 100))
-})
-
-##run test cpmArma
-test_that("check that cpmArma outputs the expected result", {
-  
-  ###TEST1####
-  #prepare normal input data
-  counts <- matrix(sample(seq(0.01, 0.001, -0.00001), 20) + 1, ncol = 2)
-  
-  #setup expected data
-  expected <- t(t(counts) / colSums(counts) * 10^6 + 1)
-  
-  #run function
-  output <- cpmArma(counts)
-  
-  #test
-  expect_equal(output, expected)
-  expect_error(cpmC(matrix(1:10, ncol = 2)))
 })
 
 ################################################################################
@@ -257,7 +221,7 @@ test_that("check that cpmArma outputs the expected result", {
 ################################################################################
 
 ##run test calculateCostDensityArma
-test_that("check that calculateCostDensityArma outputs the expected result", {
+test_that("check that calculateCostDensity outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -270,14 +234,14 @@ test_that("check that calculateCostDensityArma outputs the expected result", {
   
   #run function
   storage.mode(oneMultiplet) <- "numeric"
-  output <- calculateCostDensityArma(oneMultiplet, syntheticMultiplets)
+  output <- calculateCostDensity(oneMultiplet, syntheticMultiplets)
   
   #test
   expect_identical(output, expected)
 })
 
 ##run test calculateLogRowMeansArma
-test_that("check that calculateLogRowMeansArma outputs the expected result", {
+test_that("check that calculateLogRowMeans outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -287,14 +251,14 @@ test_that("check that calculateLogRowMeansArma outputs the expected result", {
   expected <- matrix(log10(rowMeans(densities)))
   
   #run function
-  output <- calculateLogRowMeansArma(densities)
+  output <- calculateLogRowMeans(densities)
   
   #test
   expect_identical(output, expected)
 })
 
 ##run test fixNegInfArma
-test_that("check that fixNegInfArma outputs the expected result", {
+test_that("check that fixNegInf outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -306,14 +270,14 @@ test_that("check that fixNegInfArma outputs the expected result", {
   expected <- matrix(tmp)
   
   #run function
-  output <- fixNegInfArma(values)
+  output <- fixNegInf(values)
   
   #test
   expect_identical(output, expected)
 })
 
 ##run test costNegSumArma
-test_that("check that costNegSumArma outputs the expected result", {
+test_that("check that costNegSum outputs the expected result", {
   
   ###TEST1####
   #prepare normal input data
@@ -323,7 +287,7 @@ test_that("check that costNegSumArma outputs the expected result", {
   expected <- -sum(values)
   
   #run function
-  output <- costNegSumArma(values)
+  output <- costNegSum(values)
   
   #test
   expect_true(all.equal(output, expected))
@@ -348,20 +312,4 @@ test_that("check that .subsetSinglets outputs the expected result", {
   #test
   expect_equal(nr, nrow(output))
   expect_equal(nc, ncol(output))
-})
-
-##run test preallocCost
-test_that("check that preallocCost outputs the expected result", {
-  
-  ###TEST1####
-  #prepare normal input data
-  oneMultiplet <- getData(cObjMul, "counts.cpm")[, 1]
-  classes <- getData(uObj, "classification")
-  singlets <- getData(cObjSng, "counts")
-  n <- 10
-  singletSubset <- .subsetSinglets(classes, singlets, n)
-  fractions <- rep(1.0 / length(unique(classes)), length(unique(classes)))
-  
-  #test
-  expect_silent(preallocCost(oneMultiplet, singletSubset, fractions))
 })
