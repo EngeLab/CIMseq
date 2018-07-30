@@ -348,7 +348,7 @@ spSwarmPoisson <- function(
 #' @name calcResiduals
 #' @rdname calcResiduals
 #' @aliases calcResiduals
-#' @param spCounts An spCounts object with multiplets.
+#' @param spCountsMul An spCounts object with multiplets.
 #' @param spUnsupervised An spUnsupervised object.
 #' @param spSwarm An spSwarm object.
 #' @param clusters A character vector of length 2 indicating 2 classes to
@@ -365,59 +365,38 @@ NULL
 #' @rdname calcResiduals
 #' @export
 
-
 calcResiduals <- function(
-  spCounts,
-  spUnsupervised,
+  spCountsMul,
   spSwarm,
-  clusters = NULL,
-  edge.cutoff = NULL,
-  distFun = .dtsnCellNum,
   ...
 ){
-  #spCounts should only include multiplets
   
-  groupMeans <- getData(spUnsupervised, "groupMeans")
-  selectInd <- getData(spUnsupervised, "selectInd")
   frac <- getData(spSwarm, "spSwarm")
-  counts <- getData(spCounts, "counts.cpm")
+  sm <- getData(spSwarm, "syntheticMultiplets")
+  selectInd <- getData(spSwarm, "arguments")[['selectInd']]
+  n <- getData(spSwarm, "arguments")[['nSyntheticMultiplets']]
   
-  cellTypes <- groupMeans[selectInd, ]
-  multiplets <- counts[selectInd, ]
+  mulCPM <- getData(spCountsMul, "counts.cpm")
+  multiplets <- matrix(
+    mulCPM[selectInd, ],
+    ncol = ncol(mulCPM),
+    dimnames = list(rownames(mulCPM)[selectInd], colnames(mulCPM))
+  )
   
-  if(all(c("e", "cellNumber") %in% names(list(...)))) {
-    e <- list(...)[['e']]
-    cellNumber <- list(...)[['cellNumber']]
-    cellNumber <- cellNumber[match(colnames(multiplets), cellNumber$sampleName), "cellNumberMedian"][[1]]
-  }
-  
-  diff <- sapply(1:ncol(multiplets), function(x) {
-    distFun(as.numeric(frac[x, ]), cellTypes, multiplets[, x], e = e, cellNumber = cellNumber[x])
-  })
-
-  colnames(diff) <- rownames(frac)
-  
-  if(!is.null(clusters) & !is.null(edge.cutoff)) {
-    diff <- diff[,
-      getMultipletsForEdge(spSwarm, edge.cutoff, clusters[1], clusters[2])
-    ]
-  }
-  return(diff)
-}
-
-.dtsnCellNum <- function(
- fractions, cellTypes, oneMultiplet, e, cellNumber, ...
-){
-  if(sum(fractions) == 0) {
-    return(999999999)
-  }
-  normFractions <- fractions / sum(fractions)
-  cellTypes <- cellTypes / mean(cellTypes)
-  a <- .makeSyntheticSlice(cellTypes, normFractions)
-  a <- a/mean(a)
-  k <- length(which(normFractions > 0))
-  penalty <- .complexityPenilty(k, e, cellNumber)
-  abs((oneMultiplet - a) / (a + 1)) * penalty
+  map_dfc(1:ncol(multiplets), function(i) {
+    as.numeric(frac[rownames(frac) == colnames(multiplets)[i], ]) %>%
+    adjustAccordingToFractions(sm) %>%
+    multipletSums() %>%
+    vecToMat(nrow(multiplets), n) %>% #double check that this is happening as expected
+    calculateCostDensity(multiplets[, i], .) %>%
+    calculateLogRowMeans() %>%
+    fixNegInf() %>%
+    `*` (-1) %>%
+    matrix_to_tibble(drop = TRUE)
+  }) %>%
+  set_names(colnames(multiplets)) %>%
+  add_column(gene = rownames(multiplets), .before = 1) %>%
+  gather(sample, residual, -gene)
 }
 
 #' getMultipletsForEdge
