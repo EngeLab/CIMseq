@@ -56,11 +56,14 @@ namedListToTibble <- function(l) {
 matrix_to_tibble <- function(data, rowname = "rowname", drop = FALSE) {
   if(!is.matrix(data)) stop("The 'data' argument is not a matrix")
   if(drop) {
+    rownames(data) <- NULL
     return(data %>% as.data.frame %>% as_tibble)
   }
   rn.quo <- enquo(rowname)
   rn <- rownames(data)
   if(is.null(rn)) rn <- 1:nrow(data)
+  
+  rownames(data) <- NULL
   
   data %>%
   as.data.frame(stringsAsFactors = FALSE) %>%
