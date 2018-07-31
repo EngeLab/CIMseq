@@ -54,6 +54,7 @@ namedListToTibble <- function(l) {
 #' @importFrom tibble as_tibble rownames_to_column
 
 matrix_to_tibble <- function(data, rowname = "rowname", drop = FALSE) {
+  if(!is.matrix(data)) stop("The 'data' argument is not a matrix")
   if(drop) {
     return(data %>% as.data.frame %>% as_tibble)
   }
