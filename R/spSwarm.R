@@ -183,9 +183,23 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   purrr::map(1:n, ~sampleSinglets(classes)) %>%
     purrr::map(., ~subsetSinglets(singlets, .x)) %>%
     purrr::map(., function(x) {rownames(x) <- rownames(singlets); x}) %>%
-    purrr::map(., function(x) {colnames(x) <- unique(classes); x}) %>%
+    purrr::map(., function(x) {colnames(x) <- sort(unique(classes)); x}) %>%
     do.call("rbind", .) %>%
     .[order(rownames(.)), ]
+}
+
+.backTransform <- function(singletSubset, n) {
+  out <- split(singletSubset, rownames(singletSubset)) %>%
+  map(~matrix(.x, nrow = 1)) %>%
+  map(function(x) {
+    base <- rep(colnames(singletSubset), each = n)
+    suffix <- 1:n
+    colnames(x) <- paste(base, suffix, sep = "_")
+    x
+  }) %>%
+  do.call("rbind", .)
+  rownames(out) <- unique(rownames(singletSubset))
+  out
 }
 
 .optim.fun <- function(

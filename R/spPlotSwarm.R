@@ -355,13 +355,14 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   spCountsMul,
   genes,
   multiplets,
-  fractions = NULL,
   freq = 10,
   ...
 ){
   sm <- getData(spSwarm, "syntheticMultiplets")
   cpm <- getData(spCountsMul, "counts.cpm")
   nSyntheticMultiplets <- getData(spSwarm, "arguments")$nSyntheticMultiplets
+  selectInd <- getData(spSwarm, "arguments")$selectInd
+  fractions <- getData(spSwarm, "spSwarm")
   
   if(all(is.na(sm))) {
     mess <- paste0(
@@ -371,62 +372,32 @@ setMethod("plotSwarmGenes", "spSwarm", function(
     )
     stop(mess)
   }
-  if(length(genes) > 20) {
-    stop("Plotting more than 20 genes at a time is not possible.")
+  if(length(genes) > 10) {
+    stop("Plotting more than 10 genes at a time is not possible.")
   }
   if(!all(genes %in% rownames(sm))) {
     idx <- which(!genes %in% rownames(sm))
     mess <- paste0(rownames(sm)[idx], " genes were not found in the data")
     stop(mess)
   }
-  if(is.data.frame(fractions)) {
-    if(nrow(fractions) != length(multiplets)) {
-      mess <- paste0(
-        "You provided a data.frame of fractions but the number of rows does not",
-        " equal the length of the multiplets arg. "
-      )
-      warning(mess)
-    }
-  }
-  if(is.data.frame(fractions)) {
-    if(!all(multiplets %in% rownames(fractions))) {
-      mess <- paste0(
-        rownames(fractions)[!rownames(fractions) %in% multiplets],
-        " were provided via the multiplets arg but are not in the rownames of",
-        " the fractions data.frame"
-      )
-      stop(mess)
-    }
-  }
   
   #process synthetic data
-  .processSyntheticMultiplet <- function(s, f, n, genes) {
-    adjustAccordingToFractions(f, s) %>%
+  synthetic <- map(multiplets, function(m) {
+    f <- as.numeric(fractions[m, ])
+    adjustAccordingToFractions(f, sm) %>%
     multipletSums() %>%
-    as.numeric() %>%
-    vecToMat(n, length(genes)) %>%
+    vecToMat(nSyntheticMultiplets, length(selectInd)) %>%
     t() %>%
-    matrix(., ncol = n, dimnames = list(genes, 1:n)) %>%
-    matrix_to_tibble("gene") %>%
-    gather(syntheticMultipletID, syntheticValues, -gene)
-  }
-  
-  if(is.null(fractions)) {fractions <- getData(spSwarm, "spSwarm")}
-  
-  synthetic <- map(multiplets, function(i) {
-    if(class(fractions) == "numeric") {
-      f <- fractions
-    } else {
-      f <- as.numeric(fractions[i, ])
-    }
-    
-    .processSyntheticMultiplet(
-      as.matrix(sm[rownames(sm) %in% genes, ]),
-      f, nSyntheticMultiplets, genes
-    )
+    matrix_to_tibble(drop = TRUE) %>%
+    add_column(gene = rownames(cpm)[selectInd], .before = 1) %>%
+    filter(gene %in% genes) %>%
+    gather(syntheticMultipletID, syntheticValues, -gene) %>%
+    mutate(syntheticMultipletID = str_replace(
+      syntheticMultipletID, ".(.*)", "\\1"
+    )) %>%
+    add_column(sample = m)
   }) %>%
-    map2(., multiplets, ~add_column(.x, sample = .y)) %>%
-    bind_rows()
+  reduce(bind_rows)
   
   #process real data and bind synthetic
   data <- cpm[rownames(cpm) %in% genes, multiplets] %>%

@@ -36,7 +36,6 @@ arma::uvec sampleSinglets(
     for (int j = 0; j < classes.size(); j++) {
       if(classes[j] == uClasses[y]) {idxs.push_back(j);}
     }
-    
     //sample with length 1
     idxToSubset(y) = sample(idxs, 1)[0];
   }
