@@ -362,7 +362,8 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   sm <- getData(spSwarm, "syntheticMultiplets")
   cpm <- getData(spCountsMul, "counts.cpm")
   nSyntheticMultiplets <- getData(spSwarm, "arguments")$nSyntheticMultiplets
-  
+  selectInd <- getData(spSwarm, "arguments")$selectInd
+
   if(all(is.na(sm))) {
     mess <- paste0(
       "The syntheticMultiplets slot matrix only contains NA values. ",
@@ -399,6 +400,27 @@ setMethod("plotSwarmGenes", "spSwarm", function(
     }
   }
   
+  if(is.null(fractions)) {fractions <- getData(spSwarm, "spSwarm")}
+
+  synthetic <- map(multiplets, function(m) {
+    f <- as.numeric(fractions[m, ])
+    adjustAccordingToFractions(f, singletSubset) %>%
+    multipletSums() %>%
+    vecToMat(nSyntheticMultiplets, length(selectInd)) %>%
+    t() %>%
+    matrix_to_tibble(drop = TRUE) %>%
+    add_column(gene = rownames(cpm)[selectInd], .before = 1) %>%
+    filter(gene %in% genes) %>%
+    gather(syntheticMultipletID, syntheticValues, -gene) %>%
+    mutate(syntheticMultipletID = str_replace(
+      syntheticMultipletID,
+      ".(.*)",
+      "\\1"
+    )) %>%
+    add_column(sample = m)
+  }) %>%
+  reduce(bind_rows)
+  
   #process and merge the synthetic multiplets and real multiplet data.
   processSynthetic <- function(m, nSyntheticMultiplets) {
     m %>%
@@ -414,6 +436,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
     if(is.null(fractions)) {fractions <- getData(spSwarm, "spSwarm")}
     
     synthetic <- map(multiplets, function(i) {
+      #adjustAccordingToFractions(as.numeric(fractions[i, ]), sm[rownames(sm) %in% genes, ])
       t(t(sm[rownames(sm) %in% genes, ]) * as.numeric(fractions[i, ]))
     }) %>%
     map(processSynthetic, nSyntheticMultiplets) %>%
