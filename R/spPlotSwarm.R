@@ -399,86 +399,90 @@ setMethod("plotSwarmGenes", "spSwarm", function(
     }
   }
   
-  #process and merge the synthetic multiplets and real multiplet data.
-  processSynthetic <- function(m, nSyntheticMultiplets) {
-    m %>%
-    matrixStats::rowSums2() %>%
-    setNames(rep(1:nSyntheticMultiplets, length(.) / nSyntheticMultiplets)) %>%
-    split(., names(.)) %>%
-    map(function(x) {names(x) <- genes; x}) %>%
-    reduce(bind_rows)
+  #process synthetic data
+  .processSyntheticMultiplet <- function(s, f, n, genes) {
+    adjustAccordingToFractions(f, s) %>%
+    multipletSums() %>%
+    as.numeric() %>%
+    vecToMat(n, length(genes)) %>%
+    t() %>%
+    matrix(., ncol = n, dimnames = list(genes, 1:n)) %>%
+    matrix_to_tibble("gene") %>%
+    gather(syntheticMultipletID, syntheticValues, -gene)
   }
   
-  if(is.data.frame(fractions) | is.null(fractions)) {
+  if(is.null(fractions)) {fractions <- getData(spSwarm, "spSwarm")}
+  
+  synthetic <- map(multiplets, function(i) {
+    if(class(fractions) == "numeric") {
+      f <- fractions
+    } else {
+      f <- as.numeric(fractions[i, ])
+    }
     
-    if(is.null(fractions)) {fractions <- getData(spSwarm, "spSwarm")}
-    
-    synthetic <- map(multiplets, function(i) {
-      t(t(sm[rownames(sm) %in% genes, ]) * as.numeric(fractions[i, ]))
-    }) %>%
-    map(processSynthetic, nSyntheticMultiplets) %>%
-    map2(., multiplets, function(x, y) {
-      x %>% add_column(sample = y)
-    }) %>%
-    bind_rows() %>%
-    gather(gene, syntheticValues, -sample)
-    
-    data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
-    matrix_to_tibble("gene") %>%
+    .processSyntheticMultiplet(
+      as.matrix(sm[rownames(sm) %in% genes, ]),
+      f, nSyntheticMultiplets, genes
+    )
+  }) %>%
+    map2(., multiplets, ~add_column(.x, sample = .y)) %>%
+    bind_rows()
+  
+  #process real data and bind synthetic
+  data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
+    matrix_to_tibble("gene") %>% #will fail if only one multiplet is provided since line above returns a numeric
     gather(sample, count, -gene) %>%
     inner_join(synthetic, by = c("sample", "gene")) %>%
-    nest(syntheticValues, .key = "syntheticValues")
-    
-  } else if(is.numeric(fractions)) {
-  
-    synthetic <- processSynthetic(
-      t(t(sm[rownames(sm) %in% genes, ]) * fractions),
-      nSyntheticMultiplets
-    )
-    
-    data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
-    matrix_to_tibble("gene") %>%
-    gather(sample, count, -gene) %>%
-    mutate(syntheticValues = map(gene, function(g) {
-      pull(synthetic, g)
-    }))
-    
-  }
+    nest(syntheticMultipletID, syntheticValues, .key = "syntheticData")
   
   #poisson distribution of each synthetic multiplet value
-  poissonDistSM <- data %>%
+  .pd <- function(data, freq) {
+    m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
+
+    data %>%
     unnest() %>%
-    mutate(pos = list(seq(-10, max(syntheticValues) + 200, freq))) %>%
-    mutate(ind.dpois = map2(syntheticValues, pos, ~dpois(round(.y), .x))) %>%
+    mutate(pos = list(seq(-10, m + 200, freq))) %>%
+    mutate(ind.pois = map2(syntheticValues, pos, function(sv, p) {
+      dpois(ceiling(p), ceiling(sv))
+    })) %>%
     unnest() %>%
-    group_by(gene, sample) %>%
-    mutate(ind.dpois.norm = normalizeVec(ind.dpois)) %>%
+    group_by(sample, gene) %>%
+    mutate(ind.dpois.norm = normalizeVec(ind.pois)) %>%
     ungroup()
+  }
+  
+  poissonDistSM <- .pd(data, freq)
   
   #calculate dpois only for the real synthetic multiplet values to be able to
-  #show the real mean cost per gene. Ideally a
-  #seperate function would calculate dpois and cost.
-  realCost <- data %>%
-    unnest() %>%
-    mutate(dpois.real = map2_dbl(ceiling(count), ceiling(syntheticValues), ~dpois(.x, .y, FALSE))) %>%
-    group_by(gene, sample) %>%
-    summarize(mean.dpois = mean(dpois.real)) %>%
-    ungroup() %>%
-    mutate(mean.log = log10(mean.dpois)) %>%
-    mutate(cost.real = if_else(is.infinite(mean.log), 323.0052, mean.log * - 1))
-
+  #show the real mean cost per gene.
+  .rc <- function(data) {
+    data %>%
+    mutate(cost.real = map2_dbl(count, syntheticData,
+      ~costCalc(.x, matrix(unlist(.y$syntheticValues), nrow = 1))
+    ))
+  }
+  
+  realCost <- .rc(data)
+  
   #calculate the entire cost space (blue line)
-  entireCost <- data %>%
+  .ec <- function(data, freq) {
+    m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
+    
+    data %>%
     unnest() %>%
-    mutate(dpois.x = list(round(seq(0, max(syntheticValues), freq)))) %>%
+    mutate(dpois.x = list(ceiling(seq(0, m + 200, freq)))) %>%
     unnest() %>%
     mutate(dpois = dpois(dpois.x, syntheticValues)) %>%
+    #mutate(dpois = dpois(dpois.x, ceiling(count))) %>%
     group_by(gene, sample, dpois.x) %>%
     summarize(mean = mean(dpois)) %>%
     mutate(mean.log = log10(mean)) %>%
-    mutate(cost = if_else(is.infinite(mean.log), 323.005, mean.log * - 1)) %>%
+    mutate(cost = if_else(is.infinite(mean.log), 323.005, mean.log * (-1))) %>%
     ungroup() %>%
-    mutate(cost.norm = (cost - min(cost)) / (max(cost) - min(cost)))
+    mutate(cost.norm = normalizeVec(cost))
+  }
+  
+  entireCost <- .ec(data, freq)
 
   max.cost <- max(entireCost$cost)
 
@@ -555,6 +559,8 @@ setMethod("plotSwarmGenes", "spSwarm", function(
     legend.title = element_blank()
   )
 })
+
+
 
 ################################################################################
 #                                                                              #
