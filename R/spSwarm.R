@@ -619,9 +619,10 @@ setGeneric("calculateCosts", function(
 setMethod("calculateCosts", c("spCounts", "spSwarm", "numeric"), function(
   spCountsMul,
   spSwarm,
-  fractions,
+  fractions = NULL,
   ...
 ){
+  if(is.null(fractions)) fractions <- getData(spSwarm, "spSwarm")
   mulCPM <- getData(spCountsMul, "counts.cpm")
   selectInd <- getData(spSwarm, "arguments")$selectInd
   
@@ -636,13 +637,13 @@ setMethod("calculateCosts", c("spCounts", "spSwarm", "numeric"), function(
   
   #setup synthetic multiplets
   singletSubset <- getData(spSwarm, "syntheticMultiplets")
-  n <- getData(perms[[1]], "arguments")$nSyntheticMultiplets
+  n <- getData(spSwarm, "arguments")$nSyntheticMultiplets
   
   #calculate costs
   opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
       oneMultiplet <- ceiling(multiplets[, i])
-      calculateCost(oneMultiplet, singletSubset, fractions, n)
+      calculateCost(oneMultiplet, singletSubset, as.numeric(fractions[i, ]), n)
   })
   names(opt.out) <- colnames(multiplets)
   opt.out
