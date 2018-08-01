@@ -254,6 +254,32 @@ test_that("check that multipletSums outputs the expected result", {
   expect_identical(output, expected)
 })
 
+##run test vecToMat
+test_that("check that vecToMat outputs the expected result", {
+  
+  ###TEST1####
+  #prepare normal input data
+  vec <- c(
+    rep(1, 10),
+    rep(2, 10),
+    rep(3, 10)
+  )
+  names(vec) <- c(
+    rep("a", 10),
+    rep("b", 10),
+    rep("c", 10)
+  )
+  #setup expected data
+  expected <- matrix(vec, nrow = 3, byrow = TRUE)
+  
+  #run function
+  output <- vecToMat(vec, 3, 10)
+  
+  #test
+  expect_identical(output, expected)
+})
+
+
 ################################################################################
 ##                        FUNCTIONS TO CALCULATE COST ARMA                    ##
 ################################################################################
