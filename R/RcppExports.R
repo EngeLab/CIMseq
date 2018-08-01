@@ -91,7 +91,8 @@ multipletSums <- function(adjusted) {
 #' vecToMat
 #'
 #' This function takes a vector and reformats it to a matrix in a column-wise
-#' fashion.
+#' fashion. Since Armadillo "builds" the matrix column-wise, some code tricks
+#' are employed to automagically deliever the expected result.
 #'
 #' @param vec Numeric; the vector to reformat.
 #' @param nr integer; length 1 integer indicating the number of matrix rows.

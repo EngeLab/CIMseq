@@ -181,7 +181,8 @@ arma::mat multipletSums(
 //' vecToMat
 //'
 //' This function takes a vector and reformats it to a matrix in a column-wise
-//' fashion.
+//' fashion. Since Armadillo "builds" the matrix column-wise, some code tricks
+//' are employed to automagically deliever the expected result.
 //'
 //' @param vec Numeric; the vector to reformat.
 //' @param nr integer; length 1 integer indicating the number of matrix rows.
@@ -191,8 +192,8 @@ arma::mat multipletSums(
 // [[Rcpp::export]]
 
 arma::mat vecToMat(arma::vec vec, int nr, int nc){
-  arma::mat X(vec.memptr(), nr, nc, false, false);
-  return X;
+  arma::mat X(vec.memptr(), nc, nr, false, false);
+  return X.t();
 }
 
 //' calculateCostDensity

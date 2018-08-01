@@ -5,15 +5,16 @@
 \alias{calcResiduals}
 \title{calcResiduals}
 \usage{
-calcResiduals(spCounts, spUnsupervised, spSwarm, clusters = NULL,
-  edge.cutoff = NULL, distFun = .dtsnCellNum, ...)
+calcResiduals(spCountsMul, spSwarm, ...)
 }
 \arguments{
-\item{spCounts}{An spCounts object with multiplets.}
-
-\item{spUnsupervised}{An spUnsupervised object.}
+\item{spCountsMul}{An spCounts object with multiplets.}
 
 \item{spSwarm}{An spSwarm object.}
+
+\item{...}{additional arguments to pass on}
+
+\item{spUnsupervised}{An spUnsupervised object.}
 
 \item{clusters}{A character vector of length 2 indicating 2 classes to
 specifically extract residuals from.}
@@ -21,8 +22,6 @@ specifically extract residuals from.}
 \item{edge.cutoff}{The minimum fraction to consider (?).}
 
 \item{distFun}{The distance function to be used to calculate the residuals.}
-
-\item{...}{additional arguments to pass on}
 }
 \value{
 spSwarm connection strengths and p-values.

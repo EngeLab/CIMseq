@@ -10,7 +10,7 @@
 plotSwarmGenes(spSwarm, ...)
 
 \S4method{plotSwarmGenes}{spSwarm}(spSwarm, spCountsMul, genes, multiplets,
-  fractions = NULL, ...)
+  freq = 10, ...)
 }
 \arguments{
 \item{spSwarm}{spSwarm; An spSwarm object.}
@@ -21,12 +21,15 @@ plotSwarmGenes(spSwarm, ...)
 
 \item{multiplets}{Character; Multiplets to be plotted.}
 
+\item{freq}{Numeric, Length 1 vector indicating the frequency the cost should
+be calculated along x.}
+
+\item{spCountsMul;}{An spCounts object containing multiplets.}
+
 \item{fractions}{Can either be numeric vector, in which case the fractions
 are applied to all of the samples, a data.frame mimicking the structure of
 the spSwarm slot in an spSwarm object, or NULL, in which case the fractions
 are extracted from the spSwarm argument.}
-
-\item{spCountsMul;}{An spCounts object containing multiplets.}
 }
 \value{
 A ggplot object.

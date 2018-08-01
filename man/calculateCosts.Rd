@@ -10,7 +10,7 @@
 calculateCosts(spCountsMul, spSwarm, fractions, ...)
 
 \S4method{calculateCosts}{spCounts,spSwarm,numeric}(spCountsMul, spSwarm,
-  fractions, ...)
+  fractions = NULL, ...)
 }
 \arguments{
 \item{spSwarm}{An spSwarm object.}
