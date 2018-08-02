@@ -1,0 +1,36 @@
+#script to "simplify" sp.scRNAseq depenencies. Essentially remoevs all plotting
+#capability. 
+
+if(!"desc" %in% rownames(installed.packages())) {
+  source("https://install-github.me/r-lib/desc")
+}
+
+library(desc)
+library(purrr)
+library(dplyr)
+
+desc <- description$new()
+
+#remove depend versions
+depends <- "R"
+purrr::map(depends, ~desc_set_dep(.x, "Depends"))
+
+#remove plotting imports
+imports <- c(
+  "methods", "mclust", "Rtsne", "pso", "S4Vectors", "readr", "rlang", 
+  "matrixStats", "dplyr", "tibble", "purrr", "tidyr", "Rcpp", "future.apply"
+)
+currentImps <- dplyr::filter(desc$get_deps(), type == "Imports")
+impToRm <- dplyr::filter(currentImps, !package %in% imports)$package
+purrr::map(impToRm, ~desc_del_dep(.x))
+
+#remove version requirments
+purrr::map(imports, ~desc_set_dep(.x, "Imports"))
+
+#remove suggests
+currentSugg <- dplyr::filter(desc$get_deps(), type == "Suggests")$package
+purrr::map(currentSugg, ~desc_del_dep(.x))
+
+#remove files including plotting functions
+f <- list.files(path = "R", pattern = "Plot", full.names = TRUE)
+file.remove(f)
