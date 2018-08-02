@@ -34,3 +34,17 @@ purrr::map(currentSugg, ~desc_del_dep(.x))
 #remove files including plotting functions
 f <- list.files(path = "R", pattern = "Plot", full.names = TRUE)
 file.remove(f)
+
+#remove vignette
+if(file.exists('vignettes')) unlink('vignettes', TRUE)
+
+#remove tests
+if(file.exists('tests')) unlink('tests', TRUE)
+
+#remove revdep
+if(file.exists('revdep')) unlink('revdep', TRUE)
+
+#remove revdep
+if(file.exists('README.md')) unlink('README.md')
+if(file.exists('README.Rmd')) unlink('README.Rmd')
+
