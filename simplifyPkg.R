@@ -8,6 +8,7 @@ if(!"desc" %in% rownames(installed.packages())) {
 library(desc)
 library(purrr)
 library(dplyr)
+library(devtools)
 
 desc <- description$new()
 
@@ -48,3 +49,8 @@ if(file.exists('revdep')) unlink('revdep', TRUE)
 if(file.exists('README.md')) unlink('README.md')
 if(file.exists('README.Rmd')) unlink('README.Rmd')
 
+#run devtools::document to update docs
+devtools::document()
+
+#install simplified version
+devtools::install()
