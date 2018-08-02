@@ -120,7 +120,7 @@ context("generateSyntheticMultiplets")
 ##          ARMADILLO FUNCTIONS TO GENERATE SYNTHETIC MULTIPLETS              ##
 ################################################################################
 
-##run test normalizeFractionsArma
+##run test normalizeFractions
 test_that("check that normalizeFractions outputs the expected result", {
   
   ###TEST1####
@@ -137,7 +137,7 @@ test_that("check that normalizeFractions outputs the expected result", {
   expect_equal(output, expected)
 })
 
-##run test sampleSingletsArma
+##run test sampleSinglets
 test_that("check that sampleSinglets outputs the expected result", {
   
   ###TEST1####
@@ -159,7 +159,7 @@ test_that("check that sampleSinglets outputs the expected result", {
   expect_true(output[3] %in% c)
 })
 
-##run test subsetSingletsArma
+##run test subsetSinglets
 test_that("check that subsetSinglets outputs the expected result", {
   
   ###TEST1####
@@ -204,7 +204,7 @@ test_that("check that subsetSinglets outputs the expected result", {
   idx <- purrr::map(1:n, ~sampleSinglets(classes))
   
   #check the indexes first
-  idxCheck <- purrr::map_dfc(idx, function(i) as_tibble(classes[i + 1]))
+  idxCheck <- purrr::map_dfc(idx, function(i) tibble::as_tibble(classes[i + 1]))
   expect_true(all("a" == unname(unlist(idxCheck[1, ]))))
   expect_true(all("b" == unname(unlist(idxCheck[2, ]))))
   expect_true(all("c" == unname(unlist(idxCheck[3, ]))))
@@ -217,7 +217,7 @@ test_that("check that subsetSinglets outputs the expected result", {
   expect_true(all(purrr::map_lgl(output, ~identical(.x, expected))))
 })
 
-##run test adjustAccordingToFractionsArma
+##run test adjustAccordingToFractions
 test_that("check that adjustAccordingToFractions outputs the expected result", {
   
   ###TEST1####
@@ -235,7 +235,7 @@ test_that("check that adjustAccordingToFractions outputs the expected result", {
   expect_identical(output, expected)
 })
 
-##run test multipletSumsArma
+##run test multipletSums
 test_that("check that multipletSums outputs the expected result", {
   
   ###TEST1####
@@ -394,28 +394,23 @@ test_that("check that .subsetSinglets outputs the expected result", {
   expect_identical(rn, rownames(output))
 })
 
-test_that("check that costs match", {
+test_that("check that calculateCost and cost give identical results", {
   
   ###TEST1####
   #prepare normal input data
   singletSubset <- getData(sObj, "syntheticMultiplets")
-  d <- tibble(
-    sample = rownames(getData(sObj, "spSwarm")),
-    fractions = map(
-      sample,
-      function(s) as.numeric(getData(sObj, "spSwarm")[s, ])
-    ),
-    counts = map(
-      sample,
-      function(s) ceiling(as.numeric(getData(cObjMul, "counts.cpm")[, s]))
-    ),
-    cost = getData(sObj, "costs")
-  ) %>%
-  mutate(cost2 = map2_dbl(counts, fractions, function(c, f) {
-    calculateCost(c, singletSubset, f, n)
-  }))
+  m <- "m.A1B1.341"
+  oneMultiplet <- ceiling(getData(cObjMul, "counts.cpm")[, m])
+  fractions <- as.numeric(getData(sObj, "spSwarm")[m, ])
+  n <- getData(sObj, "arguments")$nSyntheticMultiplets
+  
+  #expected
+  expected <- cost(oneMultiplet, singletSubset, fractions, n)
+  
+  #output
+  output <- calculateCost(oneMultiplet, singletSubset, fractions, n)
   
   #test
-  expect_equal(pull(d, cost), pull(d, cost2))
+  expect_equal(expected, output)
 })
 

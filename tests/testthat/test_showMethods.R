@@ -50,7 +50,7 @@ test_that("check that the .showSpSwarm function outputs the expected result", {
   
   expected <- paste0(
     "Class: spSwarm\nContains: \n1. spSwarm\n<2 elements><4 ",
-    "columns>\n-----------\n\n2. costs\n1416.937 1069.851\n-----------\n\n3. ",
+    "columns>\n-----------\n\n2. costs\n1416.951 1069.851\n-----------\n\n3. ",
     "convergence\nMaximal number of iterations reached. Maximal number of ",
     "iterations reached.\n-----------\n\n4. stats\nList of length ",
     "2\n-----------\n\n5. arguments\nList of length 10\nnames(10): maxiter ",

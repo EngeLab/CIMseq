@@ -206,7 +206,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   i, fractions, multiplets, singletSubset,
   n, control, ...
 ){
-  oneMultiplet <- ceiling(multiplets[, i])
+  oneMultiplet <- ceiling(multiplets[, i]) #change this to round() ?
   pso::psoptim(
     par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,

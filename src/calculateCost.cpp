@@ -217,7 +217,7 @@ arma::mat calculateCostDensity(
   int nr = syntheticMultiplets.n_rows;
   int nc = syntheticMultiplets.n_cols;
   arma::mat densities(nr, nc);
-  oneMultiplet = round(oneMultiplet);
+  //oneMultiplet = round(oneMultiplet); should be done upstream
   
   for(int i = 0; i < nr; i++) {
     for(int j = 0; j < nc; j++) {
@@ -351,7 +351,7 @@ double cost(
   arma::mat rs = multipletSums(adjusted);
   
   //reformat to wide
-  arma::mat sm = vecToMat(rs, n, oneMultiplet.n_elem);
+  arma::mat sm = vecToMat(rs, oneMultiplet.n_elem, n);
   
   //calculate cost
   double cost = costCalc(oneMultiplet, sm);
