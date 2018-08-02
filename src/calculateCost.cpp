@@ -351,7 +351,7 @@ double cost(
   arma::mat rs = multipletSums(adjusted);
   
   //reformat to wide
-  arma::mat sm = vecToMat(rs, n, oneMultiplet.n_elem).t();
+  arma::mat sm = vecToMat(rs, n, oneMultiplet.n_elem);
   
   //calculate cost
   double cost = costCalc(oneMultiplet, sm);

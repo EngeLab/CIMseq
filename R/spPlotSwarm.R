@@ -384,12 +384,13 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   #process synthetic data
   synthetic <- map(multiplets, function(m) {
     f <- as.numeric(fractions[m, ])
+    gNames <- unique(rownames(sm)[rownames(sm) %in% rownames(cpm)[selectInd]])
+    
     adjustAccordingToFractions(f, sm) %>%
     multipletSums() %>%
-    vecToMat(nSyntheticMultiplets, length(selectInd)) %>%
-    t() %>%
+    vecToMat(length(selectInd), nSyntheticMultiplets) %>%
     matrix_to_tibble(drop = TRUE) %>%
-    add_column(gene = rownames(cpm)[selectInd], .before = 1) %>%
+    add_column(gene = gNames, .before = 1) %>%
     filter(gene %in% genes) %>%
     gather(syntheticMultipletID, syntheticValues, -gene) %>%
     mutate(syntheticMultipletID = str_replace(
@@ -413,16 +414,26 @@ setMethod("plotSwarmGenes", "spSwarm", function(
     data %>%
     unnest() %>%
     mutate(pos = list(seq(-10, m + 200, freq))) %>%
+    unnest() %>%
     mutate(ind.pois = map2(syntheticValues, pos, function(sv, p) {
-      dpois(ceiling(p), ceiling(sv))
+      dpois(round(p), round(sv))
     })) %>%
     unnest() %>%
     group_by(sample, gene) %>%
-    mutate(ind.dpois.norm = normalizeVec(ind.pois)) %>%
+    mutate(ind.dpois.norm = case_when(
+      all(ind.pois == 0) ~ ind.pois,
+      TRUE ~ normalizeVec(ind.pois)
+    )) %>%
     ungroup()
   }
   
   poissonDistSM <- .pd(data, freq)
+  
+  #check 
+  #poissonDistSM %>% 
+  #  ggplot() +
+  #  geom_line(aes(pos, ind.dpois.norm, group = syntheticMultipletID)) +
+  #  facet_grid(gene~sample)
   
   #calculate dpois only for the real synthetic multiplet values to be able to
   #show the real mean cost per gene.
@@ -435,16 +446,20 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   
   realCost <- .rc(data)
   
+  #isolate the real multiplet value
+  realMultiplet <- data %>%
+    select(gene, count, sample) %>%
+    distinct()
+  
   #calculate the entire cost space (blue line)
   .ec <- function(data, freq) {
     m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
     
     data %>%
     unnest() %>%
-    mutate(dpois.x = list(ceiling(seq(0, m + 200, freq)))) %>%
+    mutate(dpois.x = list(round(seq(0, m + 200, freq)))) %>%
     unnest() %>%
-    mutate(dpois = dpois(dpois.x, syntheticValues)) %>%
-    #mutate(dpois = dpois(dpois.x, ceiling(count))) %>%
+    mutate(dpois = dpois(dpois.x, round(syntheticValues))) %>%
     group_by(gene, sample, dpois.x) %>%
     summarize(mean = mean(dpois)) %>%
     mutate(mean.log = log10(mean)) %>%
@@ -454,15 +469,20 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   }
   
   entireCost <- .ec(data, freq)
+  
+  #check
+  #entireCost %>%
+  #  ggplot() +
+  #  geom_line(aes(dpois.x, cost.norm), size = 0.5) +
+  #  facet_grid(gene ~ sample) +
+  #  geom_segment(data = realMultiplet, aes(
+  #      x = count, xend = count, y = 0, yend = 1.05
+  #  ), size = 0.5, colour = "red")
+    
 
   max.cost <- max(entireCost$cost)
-
-  #isolate the real multiplet value
-  realMultiplet <- data %>%
-    select(gene, count, sample) %>%
-    distinct()
   
-  data %>%
+  p <- data %>%
   unnest() %>%
   #plot
   ggplot() +
@@ -471,7 +491,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
     aes(syntheticValues, ..density..),
     binwidth = freq, fill = "black"
   ) +
-  facet_grid(gene ~ sample, scales = "free_y") +
+  facet_grid(gene ~ sample, scales = "free") +
   #this just facilitates the histogram legend
   geom_line(
     aes(x = 0, y = 0, linetype = "Synthetic multiplet values  ")
@@ -529,6 +549,10 @@ setMethod("plotSwarmGenes", "spSwarm", function(
     legend.key = element_blank(),
     legend.title = element_blank()
   )
+  
+  p
+  
+  return(p)
 })
 
 
