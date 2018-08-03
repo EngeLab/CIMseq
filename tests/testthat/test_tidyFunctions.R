@@ -24,7 +24,11 @@ test_that("check that matrix_to_tibble outputs the expected result", {
   output <- matrix_to_tibble(input)
   expect_identical(output, expected)
   
-  input <- data.frame(A = 1:5, B = 6:10, row.names = letters[1:5])
-  output <- matrix_to_tibble(input)
+  input <- matrix(1:10, ncol = 2, dimnames = list(letters[1:5], LETTERS[1:2]))
+  expected <- tibble::tibble(A = 1:5, B = 6:10)
+  output <- matrix_to_tibble(input, drop = TRUE)
   expect_identical(output, expected)
+  
+  input <- data.frame(A = 1:5, B = 6:10, row.names = letters[1:5])
+  expect_error(matrix_to_tibble(input))
 })

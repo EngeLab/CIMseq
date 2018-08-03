@@ -1,7 +1,7 @@
 Package: sp.scRNAseq
 Title: sp.scRNAseq is a software suite for analysis of scRNAseq data that has
     been produced using the spatial scRNAseq method
-Version: 0.0.2.0
+Version: 0.1.0.0
 Authors@R: c(
     person("Jason T.", "Serviss", email = "Jason.serviss@ki.se", role = c("aut", "cre"), comment = c(ORCID = 0000-0002-5778-7014)),
     person("Martin", "Enge", email = "Martin.Enge@ki.se", role = c("aut"))
@@ -10,34 +10,37 @@ Author: Jason T. Serviss [aut, cre],
   Martin Enge [aut]
 Maintainer: Jason T Serviss <jason.serviss@ki.se>
 Description: What the package does (one paragraph).
+LinkingTo: Rcpp, RcppArmadillo
 Depends:
-    R (>= 3.4.2)
+    R (>= 3.5.0)
 Imports:
-    ggplot2,
-    mclust,
-    Rtsne,
-    ggthemes,
-    igraph,
     methods,
-    dplyr,
-    viridis,
-    pso,
-    tibble,
-    purrr,
-    tidyr,
-    S4Vectors,
-    ggraph,
-    tidygraph,
-    readr,
-    rlang,
-    matrixStats
+    mclust (>= 5.4),
+    Rtsne (>= 0.13),
+    pso (>= 1.0.3),
+    S4Vectors (>= 0.18.2),
+    readr (>= 1.1.1),
+    rlang (>= 0.2.0),
+    matrixStats (>= 0.53.1),
+    dplyr (>= 0.7.5),
+    tibble (>= 1.4.2),
+    purrr (>= 0.2.4),
+    tidyr (>= 0.8.1),
+    ggplot2 (>= 2.2.1),
+    ggthemes (>= 3.5.0),
+    igraph (>= 1.2.1),
+    viridis (>= 0.5.1),
+    ggraph (>= 1.0.1),
+    tidygraph (>= 1.1.0),
+    Rcpp (>= 0.12.17),
+    future.apply (>= 0.2.0)
 Suggests: 
-    knitr,
-    rmarkdown,
-    testthat,
-    BiocStyle,
-    printr,
-    covr
+    knitr (>= 1.20),
+    rmarkdown (>= 1.9),
+    testthat (>= 2.0.0),
+    BiocStyle (>= 2.8.1),
+    printr (>= 0.1),
+    covr (>= 3.1.0)
 VignetteBuilder: knitr
 License: GPL-3
 Encoding: UTF-8
@@ -46,6 +49,7 @@ NeedsCompilation: no
 Collate: 
     'sp.scRNAseq-package.R'
     'All-classes.R'
+    'RcppExports.R'
     'debugging.R'
     'initialize-methods.R'
     'show-methods.R'

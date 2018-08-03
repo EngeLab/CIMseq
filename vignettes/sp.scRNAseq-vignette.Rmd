@@ -25,7 +25,7 @@ editor_options:
 
 ```{r style, echo = FALSE, results = 'asis', eval = TRUE}
 BiocStyle::markdown()
-packages <- c("sp.scRNAseq", "printr")
+packages <- c("sp.scRNAseq", "printr", "future")
 purrr::walk(packages, library, character.only = TRUE)
 rm(packages)
 ```
@@ -162,10 +162,10 @@ Finally, the deconvolution of the multuplets take place in this stage. Again, th
 8. cores=1: This step is able to run in parallel by specifying the number of desired cores here.
 
 ```{r, eval = TRUE}
-cellNrs <- estimateCells(cObjSng, cObjMul)
+plan(sequential)
 sObj <- spSwarm(
-  cObjMul, uObj, distFun = "dtsnCellNum", swarmsize = 150, cores = 2,
-  maxiter = 10, cellNumbers = cellNrs, e = 0.0025
+  cObjSng, cObjMul, uObj, swarmsize = 500, 
+  nSyntheticMultiplets = 50, maxiter = 10
 )
 ```
 
@@ -174,7 +174,7 @@ sObj <- spSwarm(
 We can exmaine the resulting connections with the `spSwarmPoisson` command:
 
 ```{r, eval = TRUE}
-spSwarmPoisson(sObj, edge.cutoff = 1/10.5, min.num.edges = 0, min.pval = 1)
+#spSwarmPoisson(sObj, edge.cutoff = 1/10.5, min.num.edges = 0, min.pval = 1)
 ```
 
 This reports all of the detected edges. The edge.cutoff argument specifies the fraction above which and edge is considered to be valid. Since the optimization vector is essentially a fraction, for an edge to be considered we can set the edge.cutoff to 1/(number of cell types + error margin). We can specify the number of edges a connection must have to be reported with the *min.num.edges* argument and also filter results for a specific significance level with the *min.pval* argument.

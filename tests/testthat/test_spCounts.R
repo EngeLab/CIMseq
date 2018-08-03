@@ -12,7 +12,7 @@ test_that("check that the .norm.counts function outputs the expected result", {
   
   #setup expected data
   expected <- matrix(
-    c(1, 1000001, 1000001, 1),
+    c(0, 1000000, 1000000, 0),
     nrow = 2,
     ncol = 2
   )

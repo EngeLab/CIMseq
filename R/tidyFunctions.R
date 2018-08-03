@@ -42,6 +42,8 @@ namedListToTibble <- function(l) {
 #' @param data matrix; The matrix to be converted.
 #' @param rowname character; Length 1 vector indicating the colname that
 #'  rownames should have upon tibble conversion.
+#' @param drop logical; indicated if rownames should be dropped.
+#'  Default = FALSE.
 #' @keywords matrix_to_tibble
 #' @examples
 #'
@@ -51,10 +53,21 @@ namedListToTibble <- function(l) {
 #' @export
 #' @importFrom tibble as_tibble rownames_to_column
 
-matrix_to_tibble <- function(data, rowname = "rowname") {
+matrix_to_tibble <- function(data, rowname = "rowname", drop = FALSE) {
+  if(!is.matrix(data)) stop("The 'data' argument is not a matrix")
+  if(drop) {
+    rownames(data) <- NULL
+    return(data %>% as.data.frame %>% as_tibble)
+  }
+  rn.quo <- enquo(rowname)
+  rn <- rownames(data)
+  if(is.null(rn)) rn <- 1:nrow(data)
+  
+  rownames(data) <- NULL
+  
   data %>%
-  as.data.frame() %>%
-  rownames_to_column(var = rowname) %>%
+  as.data.frame(stringsAsFactors = FALSE) %>%
+  add_column(!! quo_name(rn.quo) := rn, .before = 1) %>%
   as_tibble()
 }
 
@@ -127,6 +140,33 @@ tidySwarm <- function(spSwarm) {
   mutate('Costs' = getData(spSwarm, "costs")) %>%
   mutate('Convergence' = getData(spSwarm, "convergence"))
 }
+
+#' divide_by
+#'
+#' Facilitates division in pipes and "avoids wrong number of arguments to"
+#' complaint by check. Adopted from magrittr:
+#' \link{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L93-L96}
+#'
+#' @name divide_by
+#' @rdname divide_by
+#' @author Jason T. Serviss
+#' @export
+
+divide_by <- `/`
+
+#' multiply_by
+#'
+#' Facilitates multiplication in pipes and "avoids wrong number of arguments to"
+#' complaint by check. Adopted from magrittr:
+#' \link{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L82-L85}
+#'
+#' @name multiply_by
+#' @rdname multiply_by
+#' @author Jason T. Serviss
+#' @export
+
+multiply_by <- `*`
+
 
 #spSwarmPoisson(spSwarm, edge.cutoff = 0) %>%
 #  full_join(

@@ -4,13 +4,16 @@
 \alias{matrix_to_tibble}
 \title{matrix_to_tibble}
 \usage{
-matrix_to_tibble(data, rowname = "rowname")
+matrix_to_tibble(data, rowname = "rowname", drop = FALSE)
 }
 \arguments{
 \item{data}{matrix; The matrix to be converted.}
 
 \item{rowname}{character; Length 1 vector indicating the colname that
 rownames should have upon tibble conversion.}
+
+\item{drop}{logical; indicated if rownames should be dropped.
+Default = FALSE.}
 }
 \description{
 Converts a matrix to a tibble without removing rownames.

@@ -313,6 +313,250 @@ setMethod("plotSwarmHeat", "spSwarm", function(
   guides(fill = guide_colourbar(title = "Weight", title.position = "top"))
 })
 
+
+#' plotSwarmGenes
+#'
+#'
+#' @name plotSwarmGenes
+#' @rdname plotSwarmGenes
+#' @aliases plotSwarmGenes
+#' @param spSwarm spSwarm; An spSwarm object.
+#' @param spCountsMul; An spCounts object containing multiplets.
+#' @param genes Character; Genes to be plotted. Can not exceed 20.
+#' @param multiplets Character; Multiplets to be plotted.
+#' @param fractions Can either be numeric vector, in which case the fractions
+#'  are applied to all of the samples, a data.frame mimicking the structure of
+#'  the spSwarm slot in an spSwarm object, or NULL, in which case the fractions
+#'  are extracted from the spSwarm argument.
+#' @param freq Numeric, Length 1 vector indicating the frequency the cost should
+#'  be calculated along x.
+#' @param ... additional arguments to pass on.
+#' @return A ggplot object.
+#' @author Jason T. Serviss
+#' @keywords plotSwarmGenes
+NULL
+
+#' @rdname plotSwarmGenes
+
+setGeneric("plotSwarmGenes", function(
+  spSwarm,
+  ...
+){
+  standardGeneric("plotSwarmGenes")
+})
+
+#' @rdname plotSwarmGenes
+#' @export
+#' @import ggplot2
+#' @importFrom dplyr desc
+
+setMethod("plotSwarmGenes", "spSwarm", function(
+  spSwarm,
+  spCountsMul,
+  genes,
+  multiplets,
+  freq = 10,
+  ...
+){
+  sm <- getData(spSwarm, "syntheticMultiplets")
+  cpm <- getData(spCountsMul, "counts.cpm")
+  nSyntheticMultiplets <- getData(spSwarm, "arguments")$nSyntheticMultiplets
+  selectInd <- getData(spSwarm, "arguments")$selectInd
+  fractions <- getData(spSwarm, "spSwarm")
+  
+  if(all(is.na(sm))) {
+    mess <- paste0(
+      "The syntheticMultiplets slot matrix only contains NA values. ",
+      "The 'saveSingletData' arg must be TRUE when running spSwarm for this",
+      " plot to work."
+    )
+    stop(mess)
+  }
+  if(length(genes) > 10) {
+    stop("Plotting more than 10 genes at a time is not possible.")
+  }
+  if(!all(genes %in% rownames(sm))) {
+    idx <- which(!genes %in% rownames(sm))
+    mess <- paste0(rownames(sm)[idx], " genes were not found in the data")
+    stop(mess)
+  }
+  
+  #process synthetic data
+  synthetic <- map(multiplets, function(m) {
+    f <- as.numeric(fractions[m, ])
+    gNames <- unique(rownames(sm)[rownames(sm) %in% rownames(cpm)[selectInd]])
+    
+    adjustAccordingToFractions(f, sm) %>%
+    multipletSums() %>%
+    vecToMat(length(selectInd), nSyntheticMultiplets) %>%
+    matrix_to_tibble(drop = TRUE) %>%
+    add_column(gene = gNames, .before = 1) %>%
+    filter(gene %in% genes) %>%
+    gather(syntheticMultipletID, syntheticValues, -gene) %>%
+    mutate(syntheticMultipletID = str_replace(
+      syntheticMultipletID, ".(.*)", "\\1"
+    )) %>%
+    add_column(sample = m)
+  }) %>%
+  reduce(bind_rows)
+  
+  #process real data and bind synthetic
+  data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
+    matrix_to_tibble("gene") %>% #will fail if only one multiplet is provided since line above returns a numeric
+    gather(sample, count, -gene) %>%
+    inner_join(synthetic, by = c("sample", "gene")) %>%
+    nest(syntheticMultipletID, syntheticValues, .key = "syntheticData")
+  
+  #poisson distribution of each synthetic multiplet value
+  .pd <- function(data, freq) {
+    m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
+
+    data %>%
+    unnest() %>%
+    mutate(pos = list(seq(-10, m + 200, freq))) %>%
+    unnest() %>%
+    mutate(ind.pois = map2(syntheticValues, pos, function(sv, p) {
+      dpois(round(p), round(sv))
+    })) %>%
+    unnest() %>%
+    group_by(sample, gene) %>%
+    mutate(ind.dpois.norm = case_when(
+      all(ind.pois == 0) ~ ind.pois,
+      TRUE ~ normalizeVec(ind.pois)
+    )) %>%
+    ungroup()
+  }
+  
+  poissonDistSM <- .pd(data, freq)
+  
+  #check 
+  #poissonDistSM %>% 
+  #  ggplot() +
+  #  geom_line(aes(pos, ind.dpois.norm, group = syntheticMultipletID)) +
+  #  facet_grid(gene~sample)
+  
+  #calculate dpois only for the real synthetic multiplet values to be able to
+  #show the real mean cost per gene.
+  .rc <- function(data) {
+    data %>%
+    mutate(cost.real = map2_dbl(count, syntheticData,
+      ~costCalc(.x, matrix(unlist(.y$syntheticValues), nrow = 1))
+    ))
+  }
+  
+  realCost <- .rc(data)
+  
+  #isolate the real multiplet value
+  realMultiplet <- data %>%
+    select(gene, count, sample) %>%
+    distinct()
+  
+  #calculate the entire cost space (blue line)
+  .ec <- function(data, freq) {
+    m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
+    
+    data %>%
+    unnest() %>%
+    mutate(dpois.x = list(round(seq(0, m + 200, freq)))) %>%
+    unnest() %>%
+    mutate(dpois = dpois(dpois.x, round(syntheticValues))) %>%
+    group_by(gene, sample, dpois.x) %>%
+    summarize(mean = mean(dpois)) %>%
+    mutate(mean.log = log10(mean)) %>%
+    mutate(cost = if_else(is.infinite(mean.log), 323.005, mean.log * (-1))) %>%
+    ungroup() %>%
+    mutate(cost.norm = normalizeVec(cost))
+  }
+  
+  entireCost <- .ec(data, freq)
+  
+  #check
+  #entireCost %>%
+  #  ggplot() +
+  #  geom_line(aes(dpois.x, cost.norm), size = 0.5) +
+  #  facet_grid(gene ~ sample) +
+  #  geom_segment(data = realMultiplet, aes(
+  #      x = count, xend = count, y = 0, yend = 1.05
+  #  ), size = 0.5, colour = "red")
+    
+
+  max.cost <- max(entireCost$cost)
+  
+  p <- data %>%
+  unnest() %>%
+  #plot
+  ggplot() +
+  #synthetic multiplet values
+  geom_histogram(
+    aes(syntheticValues, ..density..),
+    binwidth = freq, fill = "black"
+  ) +
+  facet_grid(gene ~ sample, scales = "free") +
+  #this just facilitates the histogram legend
+  geom_line(
+    aes(x = 0, y = 0, linetype = "Synthetic multiplet values  ")
+  ) +
+  #poisson distribution of individual synthetic multiplets
+  geom_line(
+    data = poissonDistSM,
+    aes(
+      pos, ind.dpois.norm,
+      group = interaction(gene, sample, syntheticValues),
+      linetype = "Distribution  "
+    ),
+    size = 0.1, colour = "lightgrey"
+  ) +
+  #costs
+  geom_line(
+    data = entireCost,
+    aes(dpois.x, cost.norm, linetype = "Costs  "),
+    colour = "#3366FF"
+  ) +
+  #real multiplet value
+  geom_segment(
+    data = realMultiplet,
+    aes(
+      x = count, xend = count, y = 0, yend = 1.05,
+      linetype = "Real multiplet values  "
+    ),
+    size = 0.5, colour = "red"
+  ) +
+  #adds mean cost
+  geom_text(
+    data = realCost,
+    aes(
+      x = 0, y = 1.1,
+      label = paste0("Mean cost: ", round(cost.real, digits = 2)
+    )
+    ), colour = "gray13", hjust = 0, size = 3.5
+  ) +
+  theme_few() +
+  labs(y = "Density", x = "CPM") +
+  scale_y_continuous(
+    breaks = seq(0, 1, 0.2),
+    sec.axis = sec_axis(~. * max.cost, name = "Cost")
+  ) +
+  scale_linetype_manual(values = c(1, 1, 2, 1)) +
+  guides(linetype = guide_legend(
+      title = "",
+      override.aes = list(
+        fill = rep("white", 4),
+        colour = c("#3366FF", "lightgrey", "red", "black")
+      )
+  )) +
+  theme(
+    legend.position = "top",
+    legend.key = element_blank(),
+    legend.title = element_blank()
+  )
+  
+  p
+  
+  return(p)
+})
+
+
+
 ################################################################################
 #                                                                              #
 # Residual Plots                                                               #

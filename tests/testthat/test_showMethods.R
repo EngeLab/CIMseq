@@ -49,11 +49,14 @@ test_that("check that the .showSpSwarm function outputs the expected result", {
   output <- evaluate_promise(.showSpSwarm(sObj))
   
   expected <- paste0(
-    "Class: spSwarm\nContains: \n1. spSwarm\n<2 elements><4 columns>\n",
-    "-----------\n\n2. costs\n492647.2 451206.8\n-----------\n\n3. convergence",
-    "\nMaximal number of iterations reached. Maximal number of iterations ",
-    "reached.\n-----------\n\n4. stats\nList of length 0\n5. arguments\nList ",
-    "of length 2\nnames(2): maxiter swarmsize"
+    "Class: spSwarm\nContains: \n1. spSwarm\n<2 elements><4 ",
+    "columns>\n-----------\n\n2. costs\n1416.951 1069.851\n-----------\n\n3. ",
+    "convergence\nMaximal number of iterations reached. Maximal number of ",
+    "iterations reached.\n-----------\n\n4. stats\nList of length ",
+    "2\n-----------\n\n5. arguments\nList of length 10\nnames(10): maxiter ",
+    "swarmsize nSyntheticMultiplets seed norm report reportRate selectInd ",
+    "vectorize permute\n-----------\n\n6. syntheticMultiplets\n<100000 ",
+    "elements><4 columns>\n-----------\n"
   )
   
   expect_identical(output$output, expected)
@@ -78,7 +81,7 @@ test_that("check that the .showBasics function outputs the expected result", {
 
 test_that("check that the .showList function outputs the expected result", {
   output <- evaluate_promise(.showList(list(a = 1:5)))
-  expected <- "List of length 1\nnames(1): a"
+  expected <- "List of length 1\nnames(1): a\n-----------\n"
   expect_identical(output$output, expected)
 })
 

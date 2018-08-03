@@ -151,9 +151,9 @@ test_that("check that averageGroupExpression outputs the expected result", {
     classes <- getData(testUns, "classification")
 
     #setup expected data
-    expectedFirstRow <- c(4624, 598, 1505, 1920)
-    expectedLastRow <- c(3921, 827, 3327, 6222)
-
+    expectedFirstRow <- c(4623, 597, 1504, 1919)
+    expectedLastRow <- c(3920, 826, 3326, 6221)
+    
     names(expectedFirstRow) <- unique(classes)
     names(expectedLastRow) <- unique(classes)
 
@@ -195,7 +195,8 @@ test_that("check that erccPerClass outputs the expected result",{
     #setup expected data
     expected1 <- tibble::tibble(
         class = c("A1", "B1", "C1", "D1"),
-        medianFracErcc = rep(1, 4)
+        medianFracErcc = rep(1, 4),
+        meanFracErcc = c(0.5719481, 0.6765434, 0.7691978, 0.7687211)
     )
     
     #run function
@@ -203,7 +204,9 @@ test_that("check that erccPerClass outputs the expected result",{
     output$medianFracErcc <- round(output$medianFracErcc)
     
     #test
-    expect_identical(expected1, output)
+    expect_equal(expected1[[1]], output[[1]])
+    expect_equal(expected1[[2]], output[[2]])
+    expect_equal(expected1[[3]], output[[3]], tolerance = 10^-6)
     expect_type(output$class, "character")
     expect_type(output$medianFracErcc, "double")
     expect_false(any(is.na(output$medianFracErcc)))

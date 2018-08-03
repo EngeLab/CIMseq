@@ -2,6 +2,7 @@
 
 library(sp.scRNAseqTesting)
 library(sp.scRNAseqData)
+library(future)
 
 ########unit test and vignettes data
 #minimize cells
@@ -76,17 +77,17 @@ colnames(testErcc) <- paste(colnames(testErcc), 1:ncol(testErcc), sep = ".")
 cObjSng <- spCounts(testCounts[, s2], testErcc[, s2])
 cObjMul <- spCounts(testCounts[, !s2], testErcc[, !s2])
 testUns <- spUnsupervised(cObjSng, max = 250, max_iter = 1000)
-cn <- estimateCells(cObjSng, cObjMul)
 
+plan(multiprocess)
 testSwa <- spSwarm(
+  cObjSng,
   cObjMul,
   testUns,
-  distFun = "dtsnCellNum",
   maxiter = 100,
   swarmsize = 500,
-  cores = 2,
-  cellNumbers = cn,
-  e = 0.0025
+  nSyntheticMultiplets = 400,
+  report = TRUE,
+  reportRate = 10
 )
 
 #save

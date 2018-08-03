@@ -5,16 +5,12 @@ NULL
 #' @importFrom S4Vectors show
 #' @importFrom utils head
 #' @export
-setMethod("show", "spCounts", function(
-  object
-){
+setMethod("show", "spCounts", function(object){
   .showCounts(object)
 })
 
 #internal show function
-.showCounts <- function(
-    object
-){
+.showCounts <- function(object){
   names <- slotNames(object)
   cat("Class:","spCounts\n")
   cat("Contains: \n")
@@ -29,24 +25,19 @@ setMethod("show", "spCounts", function(
 #' @importFrom S4Vectors show
 #' @importFrom utils head
 #' @export
-setMethod("show", "spUnsupervised", function(
-  object
-){
+
+setMethod("show", "spUnsupervised", function(object){
   .showUnsupervised(object)
 })
 
 #internal show function
-.showUnsupervised <- function(
-  object
-){
+.showUnsupervised <- function(object){
   names <- slotNames(object)
   cat("Class:","spUnsupervised\n")
   cat("Contains: \n")
   for(i in 1:length(names)){
-    
     cat(paste(i, ". ", names[i], "\n",sep=""))
     mat <- slot(object, names[i])
-    
     if(class(mat) == "matrix" | class(mat) == "data.frame") {
       .showMatrix(mat)
     } else {
@@ -59,32 +50,29 @@ setMethod("show", "spUnsupervised", function(
 #' @importFrom S4Vectors show
 #' @importFrom utils head
 #' @export
-setMethod("show", "spSwarm", function(
-    object
-){
+
+setMethod("show", "spSwarm", function(object){
     .showSpSwarm(object)
 })
 
 #internal show function
-.showSpSwarm <- function(
-    object
-){
-    names <- slotNames(object)
-    cat("Class:","spSwarm\n")
-    cat("Contains: \n")
-    for(i in 1:length(names)){
-        
-        cat(paste(i,". ", names[i], "\n",sep=""))
-        mat <- slot(object, names[i])
-        
-        if(class(mat) == "data.frame") {
-            .showMatrix(mat)
-        } else if(class(mat) == "list") {
-            .showList(mat)
-        } else {
-            .showBasics(mat)
-        }
+.showSpSwarm <- function(object){
+  names <- slotNames(object)
+  cat("Class:","spSwarm\n")
+  cat("Contains: \n")
+  for(i in 1:length(names)){
+    cat(paste(i,". ", names[i], "\n",sep=""))
+    mat <- slot(object, names[i])
+    if(class(mat) == "data.frame") {
+      .showMatrix(mat)
+    } else if(class(mat) == "list") {
+      .showList(mat)
+    } else if(class(mat) == "matrix") {
+      .showMatrix(mat)
+    } else {
+      .showBasics(mat)
     }
+  }
 }
 
 ################################################################################
@@ -93,44 +81,32 @@ setMethod("show", "spSwarm", function(
 #                                                                              #
 ################################################################################
 
-.showBasics <- function(
-    obj
-){
-    
-    if(class(obj) == "call") {return("")}
-    
-    if(length(obj) <= 5) {
-        cat(head(obj))
-        cat("\n-----------\n\n")
-    } else {
-        additionalElements <- length(obj) - 5
-        cat(head(obj))
-        cat("...\n")
-        cat(paste("<", additionalElements, " more elements>", sep=""))
-        cat("\n-----------\n\n")
-    }
+.showBasics <- function(obj){
+  if(class(obj) == "call") {return("")}
+  if(length(obj) <= 5) {
+    cat(head(obj))
+    cat("\n-----------\n\n")
+  } else {
+    additionalElements <- length(obj) - 5
+    cat(head(obj))
+    cat("...\n")
+    cat(paste("<", additionalElements, " more elements>", sep=""))
+    cat("\n-----------\n\n")
+  }
 }
 
-
-.showList <- function(
-    obj
-){
-    show(as(obj, "List"))
+.showList <- function(obj){
+  show(as(obj, "List"))
+  cat("-----------\n\n")
 }
 
-.showMatrix <- function(
-    obj
-){
-    if(all(is.na(obj)) == TRUE) {
-        
-        print("NA")
-        cat("\n-----------\n\n")
-        
-    } else {
-        
-        cat(paste("<", nrow(obj), " elements>", sep=""))
-        cat(paste("<", ncol(obj), " columns>", sep=""))
-        cat("\n-----------\n\n")
-    }
-
+.showMatrix <- function(obj){
+  if(all(is.na(obj)) == TRUE) {
+    print("NA")
+    cat("\n-----------\n\n")
+  } else {
+    cat(paste("<", nrow(obj), " elements>", sep=""))
+    cat(paste("<", ncol(obj), " columns>", sep=""))
+    cat("\n-----------\n\n")
+  }
 }

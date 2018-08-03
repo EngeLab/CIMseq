@@ -10,22 +10,23 @@
 \alias{show,spSwarm-method}
 \alias{spSwarm}
 \alias{spSwarm}
-\alias{spSwarm,spCounts,spUnsupervised-method}
+\alias{spSwarm,spCounts,spCounts,spUnsupervised-method}
 \title{spSwarm}
 \usage{
 \S4method{getData}{spSwarm}(object, n = NULL)
 
 \S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costs, convergence, stats,
-  arguments)
+  arguments, syntheticMultiplets)
 
 \S4method{show}{spSwarm}(object)
 
-spSwarm(spCounts, spUnsupervised, ...)
+spSwarm(spCountsSng, spCountsMul, spUnsupervised, ...)
 
-\S4method{spSwarm}{spCounts,spUnsupervised}(spCounts, spUnsupervised,
-  distFun = "distToSliceNorm", maxiter = 10, swarmsize = 150, cores = 1,
-  seed = 11, norm = TRUE, report = FALSE, reportRate = NULL,
-  cellNumbers = NULL, e = NULL, selectInd = NULL, ...)
+\S4method{spSwarm}{spCounts,spCounts,spUnsupervised}(spCountsSng, spCountsMul,
+  spUnsupervised, maxiter = 10, swarmsize = 150,
+  nSyntheticMultiplets = 200, seed = 11, norm = TRUE, report = FALSE,
+  reportRate = NULL, selectInd = NULL, vectorize = FALSE,
+  permute = FALSE, saveSingletData = TRUE, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}
@@ -47,20 +48,18 @@ multiplet.}
 
 \item{arguments}{Arguments passed to the spSwarm function.}
 
-\item{spCounts}{an spCount object with multiplets.}
+\item{spCountsSng}{an spCount object with singlets.}
+
+\item{spCountsMul}{an spCount object with multiplets.}
 
 \item{spUnsupervised}{an spCount object.}
-
-\item{distFun}{The distance function used to calculate the cost. Either the
-name of a custom function in the local environment or one of the included
-functions, i.e. \code{distToSlice, distToSliceNorm, distToSliceTop,
-distToSliceEuclid, distToSlicePearson, bic}.}
 
 \item{maxiter}{pySwarm argument indicating maximum optimization iterations.}
 
 \item{swarmsize}{pySwarm argument indicating the number of swarm particals.}
 
-\item{cores}{The number of cores to be used while running spRSwarm.}
+\item{nSyntheticMultiplets}{Numeric value indicating the number of synthetic
+multiplets to generate during deconvolution.}
 
 \item{seed}{The desired seed to set before running.}
 
@@ -72,12 +71,16 @@ optimization should be included.}
 \item{reportRate}{If report is TRUE, the iteration interval that a report
 should be generated.}
 
-\item{cellNumbers}{Tibble; Output from \code{estimateCells} function.}
-
-\item{e}{Numeric; The epsilon value for the .complexityPenilty unit.}
-
 \item{selectInd}{Numeric; Gene indexes to select for swarm optimization. If
 NULL the selectInd slot from the spUnsupervised object is used.}
+
+\item{vectorize}{Argument to \link[pso]{psoptim}.}
+
+\item{permute}{Logical; indicates if genes should be permuted before
+deconvolution. For use with permutation testing.}
+
+\item{saveSingletData}{Logical: indicated if the singlets matrix used to
+synthesize the syntheticMultiplets should be saved.}
 }
 \value{
 spSwarm output.
@@ -91,14 +94,6 @@ Description
 \examples{
 
 #use demo data
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-cn <- estimateCells(cObjSng, cObjMul)
-sObj <- spSwarm(
- cObjMul, testUns, distFun = "dtsnCellNum",
- cellNumbers = cn, e = 0.0025
-)
 
 }
 \author{

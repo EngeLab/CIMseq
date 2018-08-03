@@ -119,8 +119,3 @@ setMethod("plotSwarmPosition", "spSwarm", function(
     p
     return(p)
 })
-
-swarmPositionjoy <- function(multiplets, iterations = NULL) {
-
-
-}

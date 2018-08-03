@@ -65,9 +65,8 @@ setMethod("plotData", "gg", function(
 #' @param spCountsSng spCounts; An spCounts object with singlets.
 #' @param spCountsMul spCounts; An spCounts object with multiplets.
 #' @keywords convertToERCC
-#'
 #' @export
-#' @importFrom dplyr select filter pull
+#' @importFrom dplyr select filter pull "%>%"
 #' @importFrom stats median
 
 convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
@@ -76,8 +75,8 @@ convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
   filter(.data$sampleType == "Singlet") %>%
   pull(.data$frac.ercc) %>%
   median(., na.rm = TRUE) %>%
-  `*` (100) %>%
-  `/` (ercc)
+  multiply_by(100) %>%
+  divide_by(ercc)
 }
 
 #' coloursFromTargets
