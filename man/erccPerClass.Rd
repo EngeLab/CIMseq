@@ -15,7 +15,7 @@ erccPerClass(spCountsSng, spCountsMul, spUnsupervised)
 \item{spUnsupervised}{An spUnsupervised object.}
 }
 \value{
-A matrix containing the mean value for each gene for each
+A matrix containing the median value for each gene for each
    classification group.
 }
 \description{

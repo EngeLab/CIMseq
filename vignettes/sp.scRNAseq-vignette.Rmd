@@ -8,9 +8,11 @@ output:
         toc: yes
 vignette: >
     %\VignetteIndexEntry{ClusterSignificance Vignette} 
-    %\VignetteEngine{knitr::rmarkdown} 
     %\usepackage[utf8]{inputenc}
     %\SweaveUTF8
+    %\VignetteEngine{knitr::rmarkdown} 
+editor_options: 
+  chunk_output_type: console
 ---
 
 <style>
@@ -162,14 +164,8 @@ Finally, the deconvolution of the multuplets take place in this stage. Again, th
 ```{r, eval = TRUE}
 cellNrs <- estimateCells(cObjSng, cObjMul)
 sObj <- spSwarm(
-  cObjMul, 
-  uObj,
-  distFun = "dtsnCellNum",
-  swarmsize = 150,
-  cores = 2,
-  maxiter = 10,
-  cellNumbers = cellNrs,
-  e = 0.0025
+  cObjMul, uObj, distFun = "dtsnCellNum", swarmsize = 150, cores = 2,
+  maxiter = 10, cellNumbers = cellNrs, e = 0.0025
 )
 ```
 
@@ -213,3 +209,8 @@ Edges:
 ## Helper functions
 
 Write about the various helper functions to pluck information from the objects, mostly the spSwarm objects.
+
+```{r}
+sessionInfo()
+```
+

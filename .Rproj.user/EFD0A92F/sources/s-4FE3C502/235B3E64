@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1533283415525.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "235B3E64",
+    "lastKnownWriteTime" : 1533285534,
+    "last_content_update" : 1533285534,
+    "path" : "~/Github/sp.scRNAseq/tests/testthat/test_spSwarm.R",
+    "project_path" : "tests/testthat/test_spSwarm.R",
+    "properties" : {
+        "cursorPosition" : "228,0",
+        "scrollLine" : "360"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

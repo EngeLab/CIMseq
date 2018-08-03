@@ -29,7 +29,8 @@ Imports:
     ggraph,
     tidygraph,
     readr,
-    rlang
+    rlang,
+    matrixStats
 Suggests: 
     knitr,
     rmarkdown,

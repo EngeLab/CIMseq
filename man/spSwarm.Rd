@@ -23,9 +23,9 @@
 spSwarm(spCounts, spUnsupervised, ...)
 
 \S4method{spSwarm}{spCounts,spUnsupervised}(spCounts, spUnsupervised,
-  distFun = "distToSlice", maxiter = 10, swarmsize = 150, cores = 1,
+  distFun = "distToSliceNorm", maxiter = 10, swarmsize = 150, cores = 1,
   seed = 11, norm = TRUE, report = FALSE, reportRate = NULL,
-  cellNumbers = NULL, e = NULL, ...)
+  cellNumbers = NULL, e = NULL, selectInd = NULL, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}
@@ -75,6 +75,9 @@ should be generated.}
 \item{cellNumbers}{Tibble; Output from \code{estimateCells} function.}
 
 \item{e}{Numeric; The epsilon value for the .complexityPenilty unit.}
+
+\item{selectInd}{Numeric; Gene indexes to select for swarm optimization. If
+NULL the selectInd slot from the spUnsupervised object is used.}
 }
 \value{
 spSwarm output.
@@ -92,7 +95,10 @@ s <- grepl("^s", colnames(testCounts))
 cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
 cn <- estimateCells(cObjSng, cObjMul)
-sObj <- spSwarm(cObjMul, testUns, distFun = "dtsnCellNum", cellNumbers = cn, e = 0.0025)
+sObj <- spSwarm(
+ cObjMul, testUns, distFun = "dtsnCellNum",
+ cellNumbers = cn, e = 0.0025
+)
 
 }
 \author{

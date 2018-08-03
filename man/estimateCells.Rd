@@ -6,12 +6,17 @@
 \alias{estimateCells,spCounts-method}
 \title{estimateCells}
 \usage{
-\S4method{estimateCells}{spCounts}(spCountsSng, spCountsMul, ...)
+\S4method{estimateCells}{spCounts}(spCountsSng, spCountsMul, warning = TRUE,
+  ...)
 }
 \arguments{
 \item{spCountsSng}{A spCounts object with singlets.}
 
 \item{spCountsMul}{A spCounts object with multiplets.}
+
+\item{warning}{logical; Indicates if a warning should be issued when all ERCC
+counts for a sample are equal to 0. If this warning is issued it can be
+satisfactorily resolved by setting the ERCC reads for these samples to NA.}
 
 \item{...}{additional arguments to pass on}
 }

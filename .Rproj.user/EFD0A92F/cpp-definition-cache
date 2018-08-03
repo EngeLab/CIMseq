@@ -1,0 +1,131 @@
+[
+    {
+        "definitions" : [
+        ],
+        "file" : "/Users/jasonserviss/Github/sp.scRNAseq/inst/include/sp.scRNAseq.h",
+        "file_last_write" : 1530113597
+    },
+    {
+        "definitions" : [
+            {
+                "column" : 12,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 27,
+                "name" : "sampleSinglets(CharacterVector)",
+                "parent_name" : "",
+                "usr" : "c:@F@sampleSinglets#$@N@Rcpp@C@Vector>#VI16#@N@Rcpp@CT>1#T@PreserveStorage#"
+            },
+            {
+                "column" : 11,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 57,
+                "name" : "subsetSinglets(const arma::mat &, const arma::uvec &)",
+                "parent_name" : "",
+                "usr" : "c:@F@subsetSinglets#&1$@N@arma@C@Mat>#d#&1$@N@arma@C@Col>#i#"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 81,
+                "name" : "calculateCost(const arma::vec &, const arma::mat &, const arma::vec &, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@calculateCost#&1$@N@arma@C@Col>#d#&1$@N@arma@C@Mat>#d#S0_#I#"
+            },
+            {
+                "column" : 11,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 137,
+                "name" : "normalizeFractions(const arma::vec &)",
+                "parent_name" : "",
+                "usr" : "c:@F@normalizeFractions#&1$@N@arma@C@Col>#d#"
+            },
+            {
+                "column" : 11,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 157,
+                "name" : "adjustAccordingToFractions(const arma::vec &, const arma::mat &)",
+                "parent_name" : "",
+                "usr" : "c:@F@adjustAccordingToFractions#&1$@N@arma@C@Col>#d#&1$@N@arma@C@Mat>#d#"
+            },
+            {
+                "column" : 11,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 175,
+                "name" : "multipletSums(const arma::mat &)",
+                "parent_name" : "",
+                "usr" : "c:@F@multipletSums#&1$@N@arma@C@Mat>#d#"
+            },
+            {
+                "column" : 11,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 194,
+                "name" : "vecToMat(arma::vec, int, int)",
+                "parent_name" : "",
+                "usr" : "c:@F@vecToMat#$@N@arma@C@Col>#d#I#I#"
+            },
+            {
+                "column" : 11,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 213,
+                "name" : "calculateCostDensity(arma::vec, arma::mat)",
+                "parent_name" : "",
+                "usr" : "c:@F@calculateCostDensity#$@N@arma@C@Col>#d#$@N@arma@C@Mat>#d#"
+            },
+            {
+                "column" : 11,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 240,
+                "name" : "calculateLogRowMeans(const arma::mat &)",
+                "parent_name" : "",
+                "usr" : "c:@F@calculateLogRowMeans#&1$@N@arma@C@Mat>#d#"
+            },
+            {
+                "column" : 11,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 257,
+                "name" : "fixNegInf(arma::vec &)",
+                "parent_name" : "",
+                "usr" : "c:@F@fixNegInf#&$@N@arma@C@Col>#d#"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 273,
+                "name" : "costNegSum(arma::vec)",
+                "parent_name" : "",
+                "usr" : "c:@F@costNegSum#$@N@arma@C@Col>#d#"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 295,
+                "name" : "costCalc(const arma::vec, const arma::mat &)",
+                "parent_name" : "",
+                "usr" : "c:@F@costCalc#1$@N@arma@C@Col>#d#&1$@N@arma@C@Mat>#d#"
+            },
+            {
+                "column" : 8,
+                "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+                "kind" : 6,
+                "line" : 332,
+                "name" : "cost(const arma::vec &, const arma::mat &, const arma::vec &, const int)",
+                "parent_name" : "",
+                "usr" : "c:@F@cost#&1$@N@arma@C@Col>#d#&1$@N@arma@C@Mat>#d#S0_#1I#"
+            }
+        ],
+        "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
+        "file_last_write" : 1533198538
+    }
+]

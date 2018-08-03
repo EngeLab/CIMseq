@@ -40,7 +40,7 @@ plotUnsupervisedData <-  function(
   tidyUnsupervised(spUnsupervised) %>%
   #add colors
   full_join(
-    coloursFromTargets(pal, getData(spCountsSng, "counts"), markers),
+    coloursFromTargets(pal, getData(spCountsSng, "counts.cpm"), markers),
     by = "Sample"
   ) %>%
   #add marker data
@@ -168,6 +168,11 @@ setMethod("plotUnsupervisedMarkers", c("spUnsupervised", "spCounts"), function(
   pal = col40(),
   ...
 ){
+  
+  if(is.null(markers)) {
+    stop("At least one marker must be provided in the markers argument.")
+  }
+  
   names(pal) <- markers
   pal <- pal[order(names(pal))]
   

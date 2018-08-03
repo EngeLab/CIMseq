@@ -1,4 +1,31 @@
+
 v0.0.2.0
+* Change in spSwarmPoisson that causes the edges to only be calculated for uniquely named cell types (unsure if this is a great idea or not but doing it for now).
+
+v0.0.1.9
+* Fixed bug in complexityPenalty where multiplets with a cell number < 1 gave negative residuals
+* Updated calcResiduals to work with dtsnCellNum although it is not tested with other distance functions
+
+v0.0.1.8
+* Added countsPerClass function.
+
+v0.0.1.7
+* adding calculateCost function (may remove later)
+* fixed apparent bug in spSwarmPoisson .calculateWeight unit
+
+v0.0.1.6
+* Issue #46: Improved performance by using matrixStats package for spUnsupervised
+* Issue #47: Improved performance of spCounts.
+
+v0.0.1.5
+* Issue #45: NAs in ERCC problem with convertToERCC function
+
+v0.0.1.4
+* Issue #41: NAs in ERCC problem with estimateCells function
+* Fixing badges
+* Adding unit tests
+
+v0.0.1.3
 * Plots reworked to have more managable code and facilitate users gaining access to plot data to make custom plots.
 * Added plotting vignette to describe plotting features.
 * tidy functions added for spUnsupervised and spSwarm objects.
