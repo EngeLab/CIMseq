@@ -50,7 +50,7 @@ test_that("check that the .showSpSwarm function outputs the expected result", {
   
   expected <- paste0(
     "Class: spSwarm\nContains: \n1. spSwarm\n<2 elements><4 ",
-    "columns>\n-----------\n\n2. costs\n1416.951 1069.851\n-----------\n\n3. ",
+    "columns>\n-----------\n\n2. costs\n1030.114 951.1671\n-----------\n\n3. ",
     "convergence\nMaximal number of iterations reached. Maximal number of ",
     "iterations reached.\n-----------\n\n4. stats\nList of length ",
     "2\n-----------\n\n5. arguments\nList of length 10\nnames(10): maxiter ",
@@ -59,7 +59,9 @@ test_that("check that the .showSpSwarm function outputs the expected result", {
     "elements><4 columns>\n-----------\n"
   )
   
-  expect_identical(output$output, expected)
+  diff <- Reduce(setdiff, strsplit(c(output$output, expected), split = ""))
+  if(length(diff) != 0) print(diff)
+  expect_true(length(diff) == 0)
   expect_error(invisible(capture.output(.showSpSwarm("a"))))
   expect_error(invisible(capture.output(.showSpSwarm(1))))
   expect_error(invisible(capture.output(.showSpSwarm(TRUE))))

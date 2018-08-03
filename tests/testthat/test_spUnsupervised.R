@@ -196,7 +196,7 @@ test_that("check that erccPerClass outputs the expected result",{
     expected1 <- tibble::tibble(
         class = c("A1", "B1", "C1", "D1"),
         medianFracErcc = rep(1, 4),
-        meanFracErcc = c(0.5719481, 0.6765434, 0.7691978, 0.7687211)
+        meanFracErcc = c(0.5497811, 0.6841831, 0.7720717, 0.7573045)
     )
     
     #run function
