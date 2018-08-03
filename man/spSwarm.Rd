@@ -48,6 +48,8 @@ multiplet.}
 
 \item{arguments}{Arguments passed to the spSwarm function.}
 
+\item{syntheticMultiplets}{NAME WILL BE CHANGED TO BETTER IN FUTURE}
+
 \item{spCountsSng}{an spCount object with singlets.}
 
 \item{spCountsMul}{an spCount object with multiplets.}

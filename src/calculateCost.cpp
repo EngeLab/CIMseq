@@ -316,10 +316,8 @@ double costCalc(
 //'
 //' @param oneMultiplet Integer; a integer vector of rounded counts per million
 //' for one multiplet.
-//' @param singlets Matrix; a counts matrix with cells/samples as columns and
-//' genes as rows.
-//' @param classes Character; a character vector of classes with length equal to
-//' the number of cells for which counts exist.
+//' @param singletSubset Matrix; a counts matrix or pre-subsetted singlets. 
+//' Typically from the .subsetSinglets function.
 //' @param fractions Numeric; a numeric vector with length equal to
 //' ncol(singlets) indicating the fractions that each column should be
 //' multiplied with.

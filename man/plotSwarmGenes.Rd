@@ -25,11 +25,6 @@ plotSwarmGenes(spSwarm, ...)
 be calculated along x.}
 
 \item{spCountsMul;}{An spCounts object containing multiplets.}
-
-\item{fractions}{Can either be numeric vector, in which case the fractions
-are applied to all of the samples, a data.frame mimicking the structure of
-the spSwarm slot in an spSwarm object, or NULL, in which case the fractions
-are extracted from the spSwarm argument.}
 }
 \value{
 A ggplot object.

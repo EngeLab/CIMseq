@@ -411,7 +411,7 @@ test_that("check that calculateCost and cost give identical results", {
   
   #expected
   expected <- cost(oneMultiplet, singletSubset, fractions, n)
-  expected2 <- costCalculationR(oneMultiplet, sm)
+  expected2 <- .costCalculationR(oneMultiplet, sm)
   
   #output
   output <- calculateCost(oneMultiplet, singletSubset, fractions, n)
@@ -457,4 +457,6 @@ test_that("check that calculateCost and cost give identical results", {
   #test
   expect_equal(cost.cpp, cost)
 })
+
+
 

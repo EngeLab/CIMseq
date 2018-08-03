@@ -9,7 +9,7 @@ multiply_by()
 \description{
 Facilitates multiplication in pipes and "avoids wrong number of arguments to"
 complaint by check. Adopted from magrittr:
-\link{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L82-L85}
+\url{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L82-L85}
 }
 \author{
 Jason T. Serviss

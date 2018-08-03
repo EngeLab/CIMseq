@@ -9,7 +9,7 @@ divide_by()
 \description{
 Facilitates division in pipes and "avoids wrong number of arguments to"
 complaint by check. Adopted from magrittr:
-\link{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L93-L96}
+\url{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L93-L96}
 }
 \author{
 Jason T. Serviss
