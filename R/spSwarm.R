@@ -179,13 +179,16 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   return(list(par, cost, convergence, stats))
 }
 
-.subsetSinglets <- function(classes, singlets, n) {
-  purrr::map(1:n, ~sampleSinglets(classes)) %>%
-    purrr::map(., ~subsetSinglets(singlets, .x)) %>%
-    purrr::map2(., 1:n, function(x, i) {rownames(x) <- paste(rownames(singlets), i, sep = "."); x}) %>%
-    purrr::map(., function(x) {colnames(x) <- sort(unique(classes)); x}) %>%
-    do.call("rbind", .) %>%
-    .[order(rownames(.)), ]
+.subsetSinglets <- function(classes, singlets, n, idx) {
+  sub <- purrr::map(1:n, ~sampleSinglets(classes)) %>%
+  purrr::map(., ~subsetSinglets(singlets, .x)) %>%
+  purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
+  do.call("rbind", .) %>%
+  .[order(as.numeric(rownames(.))), ]
+  
+  rownames(sub) <- paste(rep(rownames(singlets), each = n), 1:n, sep = ".")
+  colnames(sub) <- sort(unique(classes))
+  sub
 }
 
 .backTransform <- function(singletSubset, n) {
