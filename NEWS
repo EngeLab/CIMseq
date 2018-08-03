@@ -1,3 +1,6 @@
+v.0.1.0.0
+* Deconvolution also now using poisson method. Old method moved to legacy branch.
+
 v.0.0.1.90
 * Change in spSwarmPoisson that causes the edges to only be calculated for uniquely named cell types (unsure if this is a great idea or not but doing it for now).
 
