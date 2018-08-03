@@ -374,11 +374,7 @@ test_that("check that .subsetSinglets outputs the expected result", {
   #setup expected data
   nc <- length(unique(classes))
   nr <- nrow(singlets) * n
-  rn <- paste(
-    rep(LETTERS[1:nrow(singlets)], each = n), 
-    sort(as.character(1:n)), 
-    sep = "."
-  )
+  rn <- paste(rep(LETTERS[1:nrow(singlets)], each = n), 1:n, sep = ".")
   col1 <- rep(1, n * nrow(singlets))
   col2 <- rep(2, n * nrow(singlets))
   col3 <- rep(3, n * nrow(singlets))
@@ -461,4 +457,6 @@ test_that("check that calculateCost and cost give identical results", {
   #test
   expect_equal(cost.cpp, cost)
 })
+
+
 

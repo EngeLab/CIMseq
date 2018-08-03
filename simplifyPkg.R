@@ -49,6 +49,15 @@ if(file.exists('revdep')) unlink('revdep', TRUE)
 if(file.exists('README.md')) unlink('README.md')
 if(file.exists('README.Rmd')) unlink('README.Rmd')
 
+#remake c++ accessory files
+if(file.exists('src/calculateCost.o')) file.remove('src/calculateCost.o')
+if(file.exists('src/RcppExports.cpp')) file.remove('src/RcppExports.cpp')
+if(file.exists('src/RcppExports.o')) file.remove('src/RcppExports.o')
+if(file.exists('src/sp.scRNAseq.so')) file.remove('src/sp.scRNAseq.so')
+
+#compile attributes
+Rcpp::compileAttributes()
+
 #run devtools::document to update docs
 devtools::document()
 

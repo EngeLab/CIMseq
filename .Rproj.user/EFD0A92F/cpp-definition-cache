@@ -3,7 +3,7 @@
         "definitions" : [
         ],
         "file" : "/Users/jasonserviss/Github/sp.scRNAseq/inst/include/sp.scRNAseq.h",
-        "file_last_write" : 1530113597
+        "file_last_write" : 1533286354
     },
     {
         "definitions" : [
@@ -126,6 +126,6 @@
             }
         ],
         "file" : "/Users/jasonserviss/Github/sp.scRNAseq/src/calculateCost.cpp",
-        "file_last_write" : 1533198538
+        "file_last_write" : 1533286354
     }
 ]
