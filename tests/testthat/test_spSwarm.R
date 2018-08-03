@@ -114,7 +114,7 @@ has_zero_range <- function(x, tol = .Machine$double.eps ^ 0.5) {
 #                                                                              #
 ################################################################################
 
-context("generateSyntheticMultiplets")
+context("calculateCost")
 
 ################################################################################
 ##          ARMADILLO FUNCTIONS TO GENERATE SYNTHETIC MULTIPLETS              ##
@@ -284,7 +284,7 @@ test_that("check that vecToMat outputs the expected result", {
 ##                        FUNCTIONS TO CALCULATE COST ARMA                    ##
 ################################################################################
 
-##run test calculateCostDensityArma
+##run test calculateCostDensity
 test_that("check that calculateCostDensity outputs the expected result", {
   
   ###TEST1####
@@ -304,7 +304,7 @@ test_that("check that calculateCostDensity outputs the expected result", {
   expect_identical(output, expected)
 })
 
-##run test calculateLogRowMeansArma
+##run test calculateLogRowMeans
 test_that("check that calculateLogRowMeans outputs the expected result", {
   
   ###TEST1####
@@ -321,7 +321,7 @@ test_that("check that calculateLogRowMeans outputs the expected result", {
   expect_identical(output, expected)
 })
 
-##run test fixNegInfArma
+##run test fixNegInf
 test_that("check that fixNegInf outputs the expected result", {
   
   ###TEST1####
@@ -340,7 +340,7 @@ test_that("check that fixNegInf outputs the expected result", {
   expect_identical(output, expected)
 })
 
-##run test costNegSumArma
+##run test costNegSum
 test_that("check that costNegSum outputs the expected result", {
   
   ###TEST1####
@@ -374,7 +374,11 @@ test_that("check that .subsetSinglets outputs the expected result", {
   #setup expected data
   nc <- length(unique(classes))
   nr <- nrow(singlets) * n
-  rn <- rep(LETTERS[1:nrow(singlets)], each = n)
+  rn <- paste(
+    rep(LETTERS[1:nrow(singlets)], each = n), 
+    sort(as.character(1:n)), 
+    sep = "."
+  )
   col1 <- rep(1, n * nrow(singlets))
   col2 <- rep(2, n * nrow(singlets))
   col3 <- rep(3, n * nrow(singlets))
@@ -392,6 +396,7 @@ test_that("check that .subsetSinglets outputs the expected result", {
   expect_equal(col3, unname(output[, 3]))
   expect_equal(col4, unname(output[, 4]))
   expect_identical(rn, rownames(output))
+  expect_true(all(colnames(output) == sort(colnames(output))))
 })
 
 test_that("check that calculateCost and cost give identical results", {
@@ -404,13 +409,56 @@ test_that("check that calculateCost and cost give identical results", {
   fractions <- as.numeric(getData(sObj, "spSwarm")[m, ])
   n <- getData(sObj, "arguments")$nSyntheticMultiplets
   
+  adj <- adjustAccordingToFractions(fractions, singletSubset)
+  rm <- multipletSums(adj)
+  sm <- vecToMat(rm, length(oneMultiplet), n)
+  
   #expected
   expected <- cost(oneMultiplet, singletSubset, fractions, n)
+  expected2 <- costCalculationR(oneMultiplet, sm)
   
   #output
   output <- calculateCost(oneMultiplet, singletSubset, fractions, n)
   
   #test
   expect_equal(expected, output)
+  expect_equal(expected2, output)
+  
+  #check with "simple exemple"
+  #setup input data
+  classes <- rep(letters[1:2], each = 2)
+  singlets <- matrix(c(rep(1:10, 2), rep(11:20, 2)), ncol = 4)
+  rownames(singlets) <- LETTERS[1:nrow(singlets)]
+  n <- 2
+  
+  sm <- purrr::map(1:n, ~sampleSinglets(classes)) %>%
+    purrr::map(., ~subsetSinglets(singlets, .x)) %>%
+    purrr::map2(., 1:n, function(x, i) {
+      rownames(x) <- paste(rownames(singlets), i, sep = ".")
+      x
+      }) %>%
+    purrr::map(., function(x) {colnames(x) <- sort(unique(classes)); x}) %>%
+    do.call("rbind", .) %>%
+    .[order(rownames(.)), ]
+  
+  fractions <- rep(0.5, 2)
+  multiplets <- matrix(rep(rowSums(singlets[,2:3]), 2), ncol = 2)
+  oneMultiplet <- multiplets[, 1]
+  
+  #calculate cost "by hand"
+  adj <- t(t(sm) * fractions)
+  rs <- rowSums(adj)
+  sm.hand <- matrix(rs, ncol = 2, byrow = TRUE)
+  dp <- dpois(round(oneMultiplet), sm.hand)
+  rm <- rowMeans(dp)
+  lrm <- log10(rm)
+  lrm[is.infinite(lrm)] <- -323.0052
+  cost <- sum(lrm) * (-1)
+  
+  #calculate cost with c++ fun
+  cost.cpp <- calculateCost(oneMultiplet, sm, fractions, n)
+  
+  #test
+  expect_equal(cost.cpp, cost)
 })
 

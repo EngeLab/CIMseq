@@ -138,7 +138,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   #process optimization results
   result <- .processResults(
     opt.out, report, norm, stats,
-    unique(classes), colnames(multiplets)
+    sort(unique(classes)), colnames(multiplets)
   )
   
   #create object
@@ -182,7 +182,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 .subsetSinglets <- function(classes, singlets, n) {
   purrr::map(1:n, ~sampleSinglets(classes)) %>%
     purrr::map(., ~subsetSinglets(singlets, .x)) %>%
-    purrr::map(., function(x) {rownames(x) <- rownames(singlets); x}) %>%
+    purrr::map2(., 1:n, function(x, i) {rownames(x) <- paste(rownames(singlets), i, sep = "."); x}) %>%
     purrr::map(., function(x) {colnames(x) <- sort(unique(classes)); x}) %>%
     do.call("rbind", .) %>%
     .[order(rownames(.)), ]
@@ -206,7 +206,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   i, fractions, multiplets, singletSubset,
   n, control, ...
 ){
-  oneMultiplet <- ceiling(multiplets[, i]) #change this to round() ?
+  oneMultiplet <- round(multiplets[, i]) #change this to round() ?
   pso::psoptim(
     par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,
@@ -216,6 +216,15 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 
 .permuteGenes <- function(counts){
   t(apply(counts, 1, sample))
+}
+
+costCalculationR <- function(oneMultiplet, syntheticMultiplets) {
+  dpois(round(oneMultiplet), lambda = syntheticMultiplets) %>%
+  matrixStats::rowMeans2() %>%
+  log10() %>%
+  ifelse(is.infinite(.) & . < 0, -323.0052, .) %>%
+  sum() %>%
+  `-` (.)
 }
 
 #' spSwarmPoisson
