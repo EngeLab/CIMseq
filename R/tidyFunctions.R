@@ -136,7 +136,8 @@ tidyUnsupervised <- function(spUnsupervised) {
 
 tidySwarm <- function(spSwarm) {
   getData(spSwarm, "spSwarm") %>%
-  matrix_to_tibble(., rowname = "Sample") %>%
+  rownames_to_column("Sample") %>%
+  as_tibble() %>%
   mutate('Costs' = getData(spSwarm, "costs")) %>%
   mutate('Convergence' = getData(spSwarm, "convergence"))
 }
@@ -145,7 +146,7 @@ tidySwarm <- function(spSwarm) {
 #'
 #' Facilitates division in pipes and "avoids wrong number of arguments to"
 #' complaint by check. Adopted from magrittr:
-#' \link{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L93-L96}
+#' \url{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L93-L96}
 #'
 #' @name divide_by
 #' @rdname divide_by
@@ -158,7 +159,7 @@ divide_by <- `/`
 #'
 #' Facilitates multiplication in pipes and "avoids wrong number of arguments to"
 #' complaint by check. Adopted from magrittr:
-#' \link{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L82-L85}
+#' \url{https://github.com/tidyverse/magrittr/blob/master/R/aliases.R#L82-L85}
 #'
 #' @name multiply_by
 #' @rdname multiply_by

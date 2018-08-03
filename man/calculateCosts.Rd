@@ -13,7 +13,11 @@ calculateCosts(spCountsMul, spSwarm, fractions, ...)
   fractions = NULL, ...)
 }
 \arguments{
+\item{spCountsMul}{An spCounts object with multiplets.}
+
 \item{spSwarm}{An spSwarm object.}
+
+\item{fractions}{WILL PROBABLY BE REMOVED}
 
 \item{...}{additional arguments to pass on}
 }

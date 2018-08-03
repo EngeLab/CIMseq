@@ -324,10 +324,6 @@ setMethod("plotSwarmHeat", "spSwarm", function(
 #' @param spCountsMul; An spCounts object containing multiplets.
 #' @param genes Character; Genes to be plotted. Can not exceed 20.
 #' @param multiplets Character; Multiplets to be plotted.
-#' @param fractions Can either be numeric vector, in which case the fractions
-#'  are applied to all of the samples, a data.frame mimicking the structure of
-#'  the spSwarm slot in an spSwarm object, or NULL, in which case the fractions
-#'  are extracted from the spSwarm argument.
 #' @param freq Numeric, Length 1 vector indicating the frequency the cost should
 #'  be calculated along x.
 #' @param ... additional arguments to pass on.

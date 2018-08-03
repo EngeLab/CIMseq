@@ -36,6 +36,7 @@ NULL
 #'    multiplet.
 #' @param stats The stats output from psoptim.
 #' @param arguments Arguments passed to the spSwarm function.
+#' @param syntheticMultiplets NAME WILL BE CHANGED TO BETTER IN FUTURE
 #' @param object spRSwarm object.
 #' @param n Data to extract from spRSwarm object.
 #' @param .Object Internal object.
@@ -221,7 +222,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   t(apply(counts, 1, sample))
 }
 
-costCalculationR <- function(oneMultiplet, syntheticMultiplets) {
+.costCalculationR <- function(oneMultiplet, syntheticMultiplets) {
   dpois(round(oneMultiplet), lambda = syntheticMultiplets) %>%
   matrixStats::rowMeans2() %>%
   log10() %>%
@@ -375,12 +376,7 @@ spSwarmPoisson <- function(
 #' @rdname calcResiduals
 #' @aliases calcResiduals
 #' @param spCountsMul An spCounts object with multiplets.
-#' @param spUnsupervised An spUnsupervised object.
 #' @param spSwarm An spSwarm object.
-#' @param clusters A character vector of length 2 indicating 2 classes to
-#'    specifically extract residuals from.
-#' @param edge.cutoff The minimum fraction to consider (?).
-#' @param distFun The distance function to be used to calculate the residuals.
 #' @param ... additional arguments to pass on
 #' @return spSwarm connection strengths and p-values.
 #' @author Jason T. Serviss
@@ -602,7 +598,9 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
 #' @name calculateCosts
 #' @rdname calculateCosts
 #' @aliases calculateCosts
+#' @param spCountsMul An spCounts object with multiplets.
 #' @param spSwarm An spSwarm object.
+#' @param fractions WILL PROBABLY BE REMOVED
 #' @param ... additional arguments to pass on
 #' @return Costs
 #' @author Jason T. Serviss

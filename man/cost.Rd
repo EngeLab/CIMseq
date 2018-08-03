@@ -10,18 +10,15 @@ cost(oneMultiplet, singletSubset, fractions, n)
 \item{oneMultiplet}{Integer; a integer vector of rounded counts per million
 for one multiplet.}
 
+\item{singletSubset}{Matrix; a counts matrix or pre-subsetted singlets. 
+Typically from the .subsetSinglets function.}
+
 \item{fractions}{Numeric; a numeric vector with length equal to
 ncol(singlets) indicating the fractions that each column should be
 multiplied with.}
 
 \item{n}{Integer; length 1 integer indicating the number of synthetic
 multiplets to generate.}
-
-\item{singlets}{Matrix; a counts matrix with cells/samples as columns and
-genes as rows.}
-
-\item{classes}{Character; a character vector of classes with length equal to
-the number of cells for which counts exist.}
 }
 \description{
 Wrapper for deconvolution cost function using the Armadillo C++ library.
