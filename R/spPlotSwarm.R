@@ -398,11 +398,23 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   reduce(bind_rows)
   
   #process real data and bind synthetic
-  data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
-    matrix_to_tibble("gene") %>% #will fail if only one multiplet is provided since line above returns a numeric
-    gather(sample, count, -gene) %>%
-    inner_join(synthetic, by = c("sample", "gene")) %>%
-    nest(syntheticMultipletID, syntheticValues, .key = "syntheticData")
+  if(length(multiplets) == 1) {
+    data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
+      as.data.frame() %>%
+      setNames(multiplets) %>%
+      rownames_to_column("gene") %>%
+      as_tibble() %>%
+      gather(sample, count, -gene) %>%
+      inner_join(synthetic, by = c("sample", "gene")) %>%
+      nest(syntheticMultipletID, syntheticValues, .key = "syntheticData")
+  } else {
+    data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
+      matrix_to_tibble("gene") %>%
+      gather(sample, count, -gene) %>%
+      inner_join(synthetic, by = c("sample", "gene")) %>%
+      nest(syntheticMultipletID, syntheticValues, .key = "syntheticData")
+  }
+  
   
   #poisson distribution of each synthetic multiplet value
   .pd <- function(data, freq) {
