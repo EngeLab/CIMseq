@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotUnsupervisedClass}
 \alias{plotUnsupervisedClass}
-\alias{plotUnsupervisedClass}
 \alias{plotUnsupervisedClass,spUnsupervised,spCounts-method}
 \title{plotUnsupervisedClass}
 \usage{

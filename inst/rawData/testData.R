@@ -87,7 +87,7 @@ testSwa <- spSwarm(
   swarmsize = 500,
   nSyntheticMultiplets = 400,
   report = TRUE,
-  reportRate = 10
+  reportRate = 1
 )
 
 #save

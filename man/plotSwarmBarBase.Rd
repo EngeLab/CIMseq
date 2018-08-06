@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotSwarmBarBase}
 \alias{plotSwarmBarBase}
-\alias{plotSwarmBarBase}
 \alias{plotSwarmBarBase,spSwarm-method}
 \title{plotSwarmBarBase}
 \usage{

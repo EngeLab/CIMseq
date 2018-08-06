@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotCountsMarkers}
 \alias{plotCountsMarkers}
-\alias{plotCountsMarkers}
 \alias{plotCountsMarkers,spCounts,spCounts-method}
 \title{plotCountsMarkers}
 \usage{

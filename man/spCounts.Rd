@@ -10,7 +10,6 @@
 \alias{initialize,spCounts-method}
 \alias{show,spCounts-method}
 \alias{spCounts}
-\alias{spCounts}
 \alias{spCounts,matrix-method}
 \title{spCounts}
 \usage{
@@ -18,8 +17,8 @@ getData(object, ...)
 
 \S4method{getData}{spCounts}(object, n = NULL)
 
-\S4method{initialize}{spCounts}(.Object, ..., counts, counts.log, counts.cpm,
-  counts.ercc)
+\S4method{initialize}{spCounts}(.Object, ..., counts, counts.log,
+  counts.cpm, counts.ercc)
 
 \S4method{show}{spCounts}(object)
 

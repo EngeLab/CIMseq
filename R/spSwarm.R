@@ -65,8 +65,10 @@ setGeneric("spSwarm", function(
 #' @importFrom future.apply future_lapply
 #' @importFrom pso psoptim
 #' @importFrom matrixStats rowSums2 rowMeans2
-#' @importFrom dplyr "%>%" bind_rows
-#' @importFrom purrr map
+#' @importFrom dplyr "%>%" bind_rows mutate
+#' @importFrom purrr map map_dbl
+#' @importFrom tibble tibble as_tibble add_column
+#' @importFrom tidyr unnest
 #' @rdname spSwarm
 #' @export
 
@@ -112,10 +114,8 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
       maxit = maxiter, s = swarmsize, trace = 1,
       REPORT = reportRate, trace.stats = TRUE
     )
-    stats <- list()
   } else {
     control <- list(maxit = maxiter, s = swarmsize, vectorize = vectorize)
-    stats <- list()
   }
   
   #run optimization
@@ -136,16 +136,15 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
       )
   })
   
-  #process optimization results
-  result <- .processResults(
-    opt.out, report, norm, stats,
-    sort(unique(classes)), colnames(multiplets)
-  )
+  #process and return results
+  cn <- sort(unique(classes))
+  rn <- colnames(multiplets)
   
-  #create object
   new("spSwarm",
-    spSwarm = result[[1]], costs = result[[2]],
-    convergence = result[[3]], stats = result[[4]],
+    spSwarm = .processSwarm(opt.out, cn, rn, norm),
+    costs = map_dbl(opt.out, 2),
+    convergence = .processConvergence(opt.out),
+    stats = if(report) {.processStats(opt.out, cn, rn)} else {tibble()},
     arguments = list(
       maxiter = maxiter, swarmsize = swarmsize,
       nSyntheticMultiplets = nSyntheticMultiplets, seed = seed, norm = norm,
@@ -156,28 +155,47 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   )
 })
 
-.processResults <- function(result, report, norm, stats, cn, rn) {
+.processSwarm <- function(opt.out, cn, rn, norm) {
+  par <- map(opt.out, 1) %>%
+    do.call("rbind", .) %>%
+    as.data.frame()
   
-  #extract swarm output
-  par <- data.frame(t(sapply(result, function(j) j[[1]])))
-  cost <- sapply(result, function(j) j[[2]])
-  counts <- t(sapply(result, function(j) j[[3]]))
-  convergence <- sapply(result, function(j) j[[4]])
-  convergenceKey <- c(
-    "Maximal number of function evaluations reached." = 1,
-    "Maximal number of iterations reached." = 2,
-    "Maximal number of restarts reached." = 3,
-    "Maximal number of iterations without improvement reached." = 4
-  )
-  convergence <- names(convergenceKey)[match(convergence, convergenceKey)]
-  if(report) stats <- lapply(result, function(x) x[[6]])
-
-  #normalize swarm output
-  if(norm) {par <- par * 1/rowSums(par)}
+  if(norm) {par <- par * 1 / rowSums(par)}
   colnames(par) <- sort(cn)
   rownames(par) <- rn
-  
-  return(list(par, cost, convergence, stats))
+  par
+}
+
+.processConvergence <- function(opt.out) {
+  convergence <- map_dbl(opt.out, 4)
+  convergenceKey <- c(
+  "Maximal number of function evaluations reached.",
+  "Maximal number of iterations reached.",
+  "Maximal number of restarts reached.",
+  "Maximal number of iterations without improvement reached."
+  )
+  convergenceKey[convergence]
+}
+
+.processStats <- function(opt.out, cn, rn) {
+  stats <- map(opt.out, 6)
+  tibble(
+    sample = rn,
+    iteration = map(stats, function(x) x$it),
+    error = map(stats, function(x) x$error),
+    fitness = map(stats, function(x) x$f),
+    position = map(stats, function(x) {
+      map(x$x, function(y) t(y) * 1/colSums(y))
+    })
+  ) %>%
+  unnest() %>%
+  mutate(position = map(position, function(x) {
+    x %>%
+    as.data.frame() %>%
+    setNames(cn) %>%
+    as_tibble() %>%
+    add_column(swarmMemberID = 1:nrow(.), .before = 1)
+  }))
 }
 
 .subsetSinglets <- function(classes, singlets, n, idx) {
@@ -413,7 +431,7 @@ calcResiduals <- function(
     calculateCostDensity(multiplets[, i], .) %>%
     calculateLogRowMeans() %>%
     fixNegInf() %>%
-    `*` (-1) %>%
+    multiply_by(-1) %>%
     matrix_to_tibble(drop = TRUE)
   }) %>%
   set_names(colnames(multiplets)) %>%

@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotSwarmPbar}
 \alias{plotSwarmPbar}
-\alias{plotSwarmPbar}
 \alias{plotSwarmPbar,spSwarm-method}
 \title{plotSwarmPbar}
 \usage{

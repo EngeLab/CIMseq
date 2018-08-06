@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{spTopMax}
 \alias{spTopMax}
-\alias{spTopMax}
 \title{spTopMax}
 \usage{
 spTopMax(spCounts, n)

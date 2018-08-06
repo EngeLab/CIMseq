@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotCountsERCC}
 \alias{plotCountsERCC}
-\alias{plotCountsERCC}
 \alias{plotCountsERCC,spCounts,spCounts-method}
 \title{plotCountsERCC}
 \usage{

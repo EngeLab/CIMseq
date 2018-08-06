@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{averageGroupExpression}
 \alias{averageGroupExpression}
-\alias{averageGroupExpression}
 \title{averageGroupExpression}
 \usage{
 averageGroupExpression(data, classes, weighted, uncertainty = NULL)

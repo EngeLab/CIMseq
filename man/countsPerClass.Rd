@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{countsPerClass}
 \alias{countsPerClass}
-\alias{countsPerClass}
 \title{countsPerClass}
 \usage{
 countsPerClass(spCountsSng, spUnsupervised)

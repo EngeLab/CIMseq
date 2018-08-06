@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotSwarmGenes}
 \alias{plotSwarmGenes}
-\alias{plotSwarmGenes}
 \alias{plotSwarmGenes,spSwarm-method}
 \title{plotSwarmGenes}
 \usage{

@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{tsneGroupMeans}
 \alias{tsneGroupMeans}
-\alias{tsneGroupMeans}
 \title{tsneGroupMeans}
 \usage{
 tsneGroupMeans(data, classes)

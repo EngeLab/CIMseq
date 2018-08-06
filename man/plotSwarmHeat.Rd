@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotSwarmHeat}
 \alias{plotSwarmHeat}
-\alias{plotSwarmHeat}
 \alias{plotSwarmHeat,spSwarm-method}
 \title{plotSwarmHeat}
 \usage{

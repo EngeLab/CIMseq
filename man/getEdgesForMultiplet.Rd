@@ -3,13 +3,13 @@
 \docType{methods}
 \name{getEdgesForMultiplet}
 \alias{getEdgesForMultiplet}
-\alias{getEdgesForMultiplet}
 \alias{getEdgesForMultiplet,spSwarm-method}
 \title{getEdgesForMultiplet}
 \usage{
 getEdgesForMultiplet(spSwarm, ...)
 
-\S4method{getEdgesForMultiplet}{spSwarm}(spSwarm, edge.cutoff, multiplet, ...)
+\S4method{getEdgesForMultiplet}{spSwarm}(spSwarm, edge.cutoff, multiplet,
+  ...)
 }
 \arguments{
 \item{spSwarm}{An spSwarm object.}

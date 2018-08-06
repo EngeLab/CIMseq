@@ -3,7 +3,6 @@
 \docType{methods}
 \name{calculateCosts}
 \alias{calculateCosts}
-\alias{calculateCosts}
 \alias{calculateCosts,spCounts,spSwarm,numeric-method}
 \title{calculateCosts}
 \usage{

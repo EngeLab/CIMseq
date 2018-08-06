@@ -2,11 +2,10 @@
 % Please edit documentation in R/spSwarm.R
 \name{spSwarmPoisson}
 \alias{spSwarmPoisson}
-\alias{spSwarmPoisson}
 \title{spSwarmPoisson}
 \usage{
-spSwarmPoisson(spSwarm, edge.cutoff = 0, min.pval = 1, min.num.edges = 0,
-  ...)
+spSwarmPoisson(spSwarm, edge.cutoff = 0, min.pval = 1,
+  min.num.edges = 0, ...)
 }
 \arguments{
 \item{spSwarm}{An spSwarm object.}

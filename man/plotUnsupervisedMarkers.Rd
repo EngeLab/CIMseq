@@ -3,13 +3,13 @@
 \docType{methods}
 \name{plotUnsupervisedMarkers}
 \alias{plotUnsupervisedMarkers}
-\alias{plotUnsupervisedMarkers}
 \alias{plotUnsupervisedMarkers,spUnsupervised,spCounts-method}
 \title{plotUnsupervisedMarkers}
 \usage{
 plotUnsupervisedMarkers(spUnsupervised, spCountsSng, ...)
 
-\S4method{plotUnsupervisedMarkers}{spUnsupervised,spCounts}(spUnsupervised,
+
+  \S4method{plotUnsupervisedMarkers}{spUnsupervised,spCounts}(spUnsupervised,
   spCountsSng, markers = NULL, pal = col40(), ...)
 }
 \arguments{

@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotData}
 \alias{plotData}
-\alias{plotData}
 \alias{plotData,gg-method}
 \title{plotData}
 \usage{

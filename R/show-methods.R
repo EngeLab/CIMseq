@@ -63,12 +63,14 @@ setMethod("show", "spSwarm", function(object){
   for(i in 1:length(names)){
     cat(paste(i,". ", names[i], "\n",sep=""))
     mat <- slot(object, names[i])
-    if(class(mat) == "data.frame") {
+    if(is.data.frame(mat)) {
       .showMatrix(mat)
-    } else if(class(mat) == "list") {
+    } else if(is.list(mat)) {
       .showList(mat)
-    } else if(class(mat) == "matrix") {
+    } else if(is.matrix(mat)) {
       .showMatrix(mat)
+    } else if(is_tibble(mat)) {
+      .showTibble(mat)
     } else {
       .showBasics(mat)
     }
@@ -109,4 +111,9 @@ setMethod("show", "spSwarm", function(object){
     cat(paste("<", ncol(obj), " columns>", sep=""))
     cat("\n-----------\n\n")
   }
+}
+
+.showTibble <- function(obj) {
+  print(obj)
+  cat("\n-----------\n\n")
 }

@@ -6,8 +6,8 @@
 \alias{estimateCells,spCounts-method}
 \title{estimateCells}
 \usage{
-\S4method{estimateCells}{spCounts}(spCountsSng, spCountsMul, warning = TRUE,
-  ...)
+\S4method{estimateCells}{spCounts}(spCountsSng, spCountsMul,
+  warning = TRUE, ...)
 }
 \arguments{
 \item{spCountsSng}{A spCounts object with singlets.}

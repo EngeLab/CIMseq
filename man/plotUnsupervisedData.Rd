@@ -2,7 +2,6 @@
 % Please edit documentation in R/spPlotUnsupervised.R
 \name{plotUnsupervisedData}
 \alias{plotUnsupervisedData}
-\alias{plotUnsupervisedData}
 \title{plotUnsupervisedData}
 \usage{
 plotUnsupervisedData(spUnsupervised, spCountsSng, markers = NULL,

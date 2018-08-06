@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{pearsonsDist}
 \alias{pearsonsDist}
-\alias{pearsonsDist}
 \title{pearsonsDist}
 \usage{
 pearsonsDist(spCounts, select)

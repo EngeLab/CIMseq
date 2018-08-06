@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotSwarmEdgeBar}
 \alias{plotSwarmEdgeBar}
-\alias{plotSwarmEdgeBar}
 \alias{plotSwarmEdgeBar,spSwarm-method}
 \title{plotSwarmEdgeBar}
 \usage{

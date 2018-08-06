@@ -3,13 +3,13 @@
 \docType{methods}
 \name{plotSwarmGraph}
 \alias{plotSwarmGraph}
-\alias{plotSwarmGraph}
 \alias{plotSwarmGraph,spSwarm,spUnsupervised-method}
 \title{plotSwarmGraph}
 \usage{
 plotSwarmGraph(spSwarm, spUnsupervised, ...)
 
-\S4method{plotSwarmGraph}{spSwarm,spUnsupervised}(spSwarm, spUnsupervised, ...)
+\S4method{plotSwarmGraph}{spSwarm,spUnsupervised}(spSwarm, spUnsupervised,
+  ...)
 }
 \arguments{
 \item{spSwarm}{spSwarm; An spSwarm object.}

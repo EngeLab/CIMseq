@@ -224,7 +224,7 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value){
   spSwarm = "data.frame",
   costs = "numeric",
   convergence = "character",
-  stats = "list",
+  stats = "tbl_df",
   arguments = "list",
   syntheticMultiplets = "matrix"
 ))

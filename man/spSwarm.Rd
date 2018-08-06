@@ -9,24 +9,23 @@
 \alias{initialize,spSwarm-method}
 \alias{show,spSwarm-method}
 \alias{spSwarm}
-\alias{spSwarm}
 \alias{spSwarm,spCounts,spCounts,spUnsupervised-method}
 \title{spSwarm}
 \usage{
 \S4method{getData}{spSwarm}(object, n = NULL)
 
-\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costs, convergence, stats,
-  arguments, syntheticMultiplets)
+\S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costs, convergence,
+  stats, arguments, syntheticMultiplets)
 
 \S4method{show}{spSwarm}(object)
 
 spSwarm(spCountsSng, spCountsMul, spUnsupervised, ...)
 
-\S4method{spSwarm}{spCounts,spCounts,spUnsupervised}(spCountsSng, spCountsMul,
-  spUnsupervised, maxiter = 10, swarmsize = 150,
-  nSyntheticMultiplets = 200, seed = 11, norm = TRUE, report = FALSE,
-  reportRate = NULL, selectInd = NULL, vectorize = FALSE,
-  permute = FALSE, saveSingletData = TRUE, ...)
+\S4method{spSwarm}{spCounts,spCounts,spUnsupervised}(spCountsSng,
+  spCountsMul, spUnsupervised, maxiter = 10, swarmsize = 150,
+  nSyntheticMultiplets = 200, seed = 11, norm = TRUE,
+  report = FALSE, reportRate = NULL, selectInd = NULL,
+  vectorize = FALSE, permute = FALSE, saveSingletData = TRUE, ...)
 }
 \arguments{
 \item{object}{spRSwarm object.}

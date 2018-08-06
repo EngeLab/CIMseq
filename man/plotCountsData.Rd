@@ -2,7 +2,6 @@
 % Please edit documentation in R/spPlotCounts.R
 \name{plotCountsData}
 \alias{plotCountsData}
-\alias{plotCountsData}
 \title{plotCountsData}
 \usage{
 plotCountsData(spCountsSng, spCountsMul, markers = NULL, ...)

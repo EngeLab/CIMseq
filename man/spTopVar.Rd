@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{spTopVar}
 \alias{spTopVar}
-\alias{spTopVar}
 \title{spTopVar}
 \usage{
 spTopVar(spCounts, n)

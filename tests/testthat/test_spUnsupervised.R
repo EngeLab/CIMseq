@@ -196,7 +196,7 @@ test_that("check that erccPerClass outputs the expected result",{
     expected1 <- tibble::tibble(
         class = c("A1", "B1", "C1", "D1"),
         medianFracErcc = rep(1, 4),
-        meanFracErcc = c(0.5497811, 0.6841831, 0.7720717, 0.7573045)
+        meanFracErcc = c(0.5472578, 0.6879368, 0.7659526, 0.7563945)
     )
     
     #run function
@@ -206,7 +206,7 @@ test_that("check that erccPerClass outputs the expected result",{
     #test
     expect_equal(expected1[[1]], output[[1]])
     expect_equal(expected1[[2]], output[[2]])
-    expect_equal(expected1[[3]], output[[3]], tolerance = 10^-6)
+    expect_equal(expected1[[3]], output[[3]], tolerance = 10^-4)
     expect_type(output$class, "character")
     expect_type(output$medianFracErcc, "double")
     expect_false(any(is.na(output$medianFracErcc)))

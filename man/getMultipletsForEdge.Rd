@@ -3,7 +3,6 @@
 \docType{methods}
 \name{getMultipletsForEdge}
 \alias{getMultipletsForEdge}
-\alias{getMultipletsForEdge}
 \alias{getMultipletsForEdge,spSwarm-method}
 \title{getMultipletsForEdge}
 \usage{

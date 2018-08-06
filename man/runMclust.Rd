@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{runMclust}
 \alias{runMclust}
-\alias{runMclust}
 \title{runMclust}
 \usage{
 runMclust(my.tsne, Gmax = 50, seed = 11)

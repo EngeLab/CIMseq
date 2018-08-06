@@ -2,7 +2,6 @@
 % Please edit documentation in R/spSwarm.R
 \name{calcResiduals}
 \alias{calcResiduals}
-\alias{calcResiduals}
 \title{calcResiduals}
 \usage{
 calcResiduals(spCountsMul, spSwarm, ...)

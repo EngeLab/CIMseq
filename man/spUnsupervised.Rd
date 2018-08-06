@@ -33,7 +33,6 @@
 \alias{initialize,spUnsupervised-method}
 \alias{show,spUnsupervised-method}
 \alias{spUnsupervised}
-\alias{spUnsupervised}
 \alias{spUnsupervised,spCounts-method}
 \title{spUnsupervised}
 \usage{
@@ -87,8 +86,8 @@ selectInd(object) <- value
 
 \S4method{selectInd}{spUnsupervised}(object) <- value
 
-\S4method{initialize}{spUnsupervised}(.Object, ..., tsne, tsneMeans, groupMeans,
-  classification, uncertainty, selectInd)
+\S4method{initialize}{spUnsupervised}(.Object, ..., tsne, tsneMeans,
+  groupMeans, classification, uncertainty, selectInd)
 
 \S4method{show}{spUnsupervised}(object)
 
@@ -96,8 +95,8 @@ spUnsupervised(spCounts, ...)
 
 \S4method{spUnsupervised}{spCounts}(spCounts, theta = 0, k = 2,
   max_iter = 2000, perplexity = 10, initial_dims = 50, Gmax = 50,
-  seed = 11, type = "max", max = 2000, genes = NULL, weighted = TRUE,
-  ...)
+  seed = 11, type = "max", max = 2000, genes = NULL,
+  weighted = TRUE, ...)
 }
 \arguments{
 \item{object}{spUnsupervised object.}

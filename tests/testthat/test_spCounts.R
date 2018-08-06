@@ -54,10 +54,10 @@ test_that("check that estimateCells outputs the expected result", {
   )
   
   expected2 <- tibble::tibble(
-    frac.ercc = 0,
+    frac.ercc = 1,
     cellNumberMin = 1,
-    cellNumberMedian = 2,
-    cellNumberMax = 2
+    cellNumberMedian = 1,
+    cellNumberMax = 1
   )
   
   expected3 <- tibble::tibble(

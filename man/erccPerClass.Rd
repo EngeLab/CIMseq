@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{erccPerClass}
 \alias{erccPerClass}
-\alias{erccPerClass}
 \title{erccPerClass}
 \usage{
 erccPerClass(spCountsSng, spCountsMul, spUnsupervised)

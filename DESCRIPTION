@@ -62,4 +62,4 @@ Collate:
     'spUnsupervised.R'
     'testData.R'
     'tidyFunctions.R'
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
