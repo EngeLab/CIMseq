@@ -355,6 +355,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   ...
 ){
   sm <- getData(spSwarm, "syntheticMultiplets")
+  rownames(sm) <- str_replace(rownames(sm), "(.*)\\.[0-9]*", "\\1")
   cpm <- getData(spCountsMul, "counts.cpm")
   nSyntheticMultiplets <- getData(spSwarm, "arguments")$nSyntheticMultiplets
   selectInd <- getData(spSwarm, "arguments")$selectInd
@@ -436,7 +437,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   .rc <- function(data) {
     data %>%
     mutate(cost.real = map2_dbl(count, syntheticData,
-      ~costCalc(.x, matrix(unlist(.y$syntheticValues), nrow = 1))
+      ~costCalc(round(.x), matrix(unlist(.y$syntheticValues), nrow = 1))
     ))
   }
   
@@ -483,10 +484,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   #plot
   ggplot() +
   #synthetic multiplet values
-  geom_histogram(
-    aes(syntheticValues, ..density..),
-    binwidth = freq, fill = "black"
-  ) +
+  geom_rug(aes(syntheticValues)) +
   facet_grid(gene ~ sample, scales = "free") +
   #this just facilitates the histogram legend
   geom_line(
