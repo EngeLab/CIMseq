@@ -11,8 +11,8 @@ NULL
 #' @export
 .spCounts <- setClass("spCounts", representation(
   counts = "matrix",
-  counts.log = "matrix",
-  counts.cpm = "matrix",
+  counts.log = "function",
+  counts.cpm = "function",
   counts.ercc = "matrix"
 ))
 
@@ -31,7 +31,12 @@ setGeneric("getData", function(object, ...){
 #' @export
 setMethod("getData", "spCounts", function(object, n = NULL){
   if(class(n) == "character"){
-    slot(object, n)
+    if(n %in% c("counts", "counts.ercc")) {
+      slot(object, n)
+    } else {
+      fun <- slot(object, n)
+      fun(slot(object, "counts"))
+    }
   }
 })
 
@@ -225,8 +230,8 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value){
   costs = "numeric",
   convergence = "character",
   stats = "tbl_df",
-  arguments = "list",
-  syntheticMultiplets = "matrix"
+  singletIdx = "list",
+  arguments = "list"
 ))
 
 #############
@@ -239,7 +244,7 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value){
 #' @export
 setMethod("getData", "spSwarm", function(object, n = NULL){
   if(class(n) == "character"){
-      slot(object, n)
+    slot(object, n)
   }
 })
 

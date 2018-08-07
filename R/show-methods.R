@@ -15,9 +15,10 @@ setMethod("show", "spCounts", function(object){
   cat("Class:","spCounts\n")
   cat("Contains: \n")
   for(i in 1:length(names)){
-    cat(paste(i,". ", names[i], "\n",sep=""))
-    mat <- slot(object, names[i])
-    if(class(mat) == "matrix") .showMatrix(mat)
+    cat(paste(i, ". ", names[i], "\n",sep=""))
+    obj <- slot(object, names[i])
+    if(class(obj) == "matrix") .showMatrix(obj)
+    if(class(obj) == "function") .showFunction(obj)
   }
 }
 
@@ -114,6 +115,11 @@ setMethod("show", "spSwarm", function(object){
 }
 
 .showTibble <- function(obj) {
+  print(obj)
+  cat("\n-----------\n\n")
+}
+
+.showFunction <- function(obj) {
   print(obj)
   cat("\n-----------\n\n")
 }

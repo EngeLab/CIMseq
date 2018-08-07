@@ -33,11 +33,10 @@ setMethod("initialize","spUnsupervised", function(
 
 setMethod("initialize","spSwarm", function(
   .Object, ..., spSwarm, costs, convergence,
-  stats, arguments, syntheticMultiplets
+  stats, singletIdx, arguments
 ){
   callNextMethod(
     .Object, ..., spSwarm = spSwarm, costs = costs, convergence = convergence,
-    stats = stats, arguments = arguments,
-    syntheticMultiplets = syntheticMultiplets
+    stats = stats, singletIdx = singletIdx, arguments = arguments
   )
 })

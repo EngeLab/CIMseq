@@ -15,7 +15,7 @@
 \S4method{getData}{spSwarm}(object, n = NULL)
 
 \S4method{initialize}{spSwarm}(.Object, ..., spSwarm, costs, convergence,
-  stats, arguments, syntheticMultiplets)
+  stats, singletIdx, arguments)
 
 \S4method{show}{spSwarm}(object)
 
@@ -46,8 +46,6 @@ multiplet.}
 \item{stats}{The stats output from psoptim.}
 
 \item{arguments}{Arguments passed to the spSwarm function.}
-
-\item{syntheticMultiplets}{NAME WILL BE CHANGED TO BETTER IN FUTURE}
 
 \item{spCountsSng}{an spCount object with singlets.}
 
@@ -82,6 +80,8 @@ deconvolution. For use with permutation testing.}
 
 \item{saveSingletData}{Logical: indicated if the singlets matrix used to
 synthesize the syntheticMultiplets should be saved.}
+
+\item{syntheticMultiplets}{NAME WILL BE CHANGED TO BETTER IN FUTURE}
 }
 \value{
 spSwarm output.

@@ -48,11 +48,10 @@ setMethod("spCounts", "matrix", function(
     ...
 ){
     .inputCheckCounts(counts, counts.ercc)
-    cpm <- .norm.counts(counts)
     new("spCounts",
         counts = counts,
-        counts.log = log2(cpm + 1),
-        counts.cpm = cpm,
+        counts.log = .norm.log.counts,
+        counts.cpm = .norm.counts,
         counts.ercc = counts.ercc
     )
 })
@@ -64,6 +63,10 @@ setMethod("spCounts", "matrix", function(
     if(any(is.na(c(counts, counts.ercc)))) {
         message("is.na(c(counts, counts.ercc) returned TRUE")
     }
+}
+
+.norm.log.counts <- function(counts) {
+  log2(.norm.counts(counts) + 1)
 }
 
 .norm.counts <- function(counts) {
