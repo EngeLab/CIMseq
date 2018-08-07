@@ -31,33 +31,25 @@ purrr::walk(packages, library, character.only = TRUE)
 rm(packages)
 ```
 
-```{r}
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-uObj <- testUns
-sObj <- testSwa
-```
-
 ## spCounts
 
 Plot markers.
 ```{r}
-plotCountsMarkers(cObjSng, cObjMul, markers = c("s2", "j4"))
+plotCountsMarkers(test_spCountsSng, test_spCountsMul, markers = c("CD74", "ANXA3"))
 ```
 
 Plot cell number.
 ```{r}
-plotCountsERCC(cObjSng, cObjMul)
+plotCountsERCC(test_spCountsSng, test_spCountsMul)
 ```
 
 Get the plotting data so you can make a custom plot.
 ```{r}
-plotCountsMarkers(cObjSng, cObjMul, markers = c("s2", "j4")) %>%
+plotCountsMarkers(test_spCountsSng, test_spCountsMul, markers = c("CD74", "ANXA3")) %>%
   plotData() %>%
   head()
 
-plotCountsERCC(cObjSng, cObjMul) %>%
+plotCountsERCC(test_spCountsSng, test_spCountsMul) %>%
   plotData() %>%
   head()
 ```
@@ -66,18 +58,20 @@ plotCountsERCC(cObjSng, cObjMul) %>%
 
 Plot the clustering results.
 ```{r}
-plotUnsupervisedClass(uObj, cObjSng)
+plotUnsupervisedClass(test_spUnsupervised, test_spCountsSng)
 ```
 
 Plot markers in different cell types.
 ```{r}
-plotUnsupervisedMarkers(uObj, cObjSng, markers = c("b1", "q1", "b3", "t2"))
+plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("CD74", "ANXA3", "ACTG2"))
 ```
 
 Plot mean of multiple markers for the same cell type.
-```{r, message = FALSE}
+```{r, message = FALSE, eval = FALSE}
+#need to find appropriate genes to plot here
+
 #use the data instead
-plotUnsupervisedMarkers(uObj, cObjSng, markers = c("b1", "h1", "m4", "r9")) %>%
+plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("b1", "h1", "m4", "r9")) %>%
   plotData() %>%
   gather(gene, value, -(Sample:Colour)) %>%
   group_by(Sample) %>%
@@ -95,11 +89,11 @@ plotUnsupervisedMarkers(uObj, cObjSng, markers = c("b1", "h1", "m4", "r9")) %>%
 Get the plotting data so you can make a custom plot.
 
 ```{r}
-plotUnsupervisedClass(uObj, cObjSng) %>% 
+plotUnsupervisedClass(test_spUnsupervised, test_spCountsSng) %>% 
   plotData() %>%
   head()
 
-plotUnsupervisedMarkers(uObj, cObjSng, markers = c("b1", "q1", "b3", "t2")) %>% 
+plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("CD74", "ANXA3", "ACTG2")) %>% 
   plotData %>%
   head()
 ```
@@ -109,32 +103,32 @@ plotUnsupervisedMarkers(uObj, cObjSng, markers = c("b1", "q1", "b3", "t2")) %>%
 ### Graph-based plots
 
 ```{r}
-plotSwarmGraph(sObj, uObj)
+plotSwarmGraph(test_spSwarm, test_spUnsupervised)
 ```
 
 ### Non-graph-based plots
 
 Edge bar graph.
 ```{r}
-plotSwarmEdgeBar(sObj)
+plotSwarmEdgeBar(test_spSwarm)
 ```
 
 P-value bar graph.
 ```{r}
-plotSwarmPbar(sObj)
+plotSwarmPbar(test_spSwarm)
 ```
 
 Heatmap.
 ```{r}
-plotSwarmHeat(sObj)
+plotSwarmHeat(test_spSwarm)
 ```
 
 Get data to make a custom plot.
 ```{r}
-plotSwarmGraph(sObj, uObj) %>%
+plotSwarmGraph(test_spSwarm, test_spUnsupervised) %>%
   plotData()
 
-plotSwarmEdgeBar(sObj) %>%
+plotSwarmEdgeBar(test_spSwarm) %>%
   plotData() %>%
   head()
 ```

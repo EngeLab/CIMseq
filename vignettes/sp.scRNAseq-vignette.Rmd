@@ -60,7 +60,6 @@ testCounts <- as.matrix(read.table(path, header = TRUE, row.names = 1))
 
 testCounts[1:2, 1:2] #example
 dim(testCounts) #genes and sample numbers
-table(colnames(testCounts)) # sample names
 head(rownames(testCounts)) #example of gene names
 class(testCounts) #must be a matrix
 ```
@@ -79,10 +78,10 @@ cObjMul
 ```
 
 The counts object contains:
-1. The raw counts data input by the user.
-2. The log normalized counts per million.
-3. The counts per million.
-4. The counts.ercc input by the user (if these are not available they can be substituted using matrix())
+1. The raw counts data input by the user.  
+2. The log normalized counts per million.  
+3. The counts per million.  
+4. The counts.ercc input by the user (if these are not available they can be substituted using matrix())  
 
 ### Accessors
 
