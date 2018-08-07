@@ -172,6 +172,14 @@ setMethod("plotUnsupervisedMarkers", c("spUnsupervised", "spCounts"), function(
   if(is.null(markers)) {
     stop("At least one marker must be provided in the markers argument.")
   }
+  if(!all(markers %in% rownames(getData(spCountsSng, "counts")))) {
+    rn <- rownames(getData(spCountsSng, "counts"))
+    msg <- paste0(
+      "The following markers were not found in the spCountsSng object: ",
+      rn[!rn %in% markers]
+    )
+    stop(msg)
+  }
   
   names(pal) <- markers
   pal <- pal[order(names(pal))]
