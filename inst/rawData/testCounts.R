@@ -17,11 +17,11 @@ select <- order(rv, decreasing = TRUE)[1:2000]
 testCounts <- rbind(countsSortedERCC2[, lg], countsSorted2[select, lg]) %>%
   .[, rev(order(colnames(.)))]
 
-save(testCounts, file = "data/testCounts.rda")
+save(testCounts, file = "data/testCounts.rda", compress = "bzip2")
 
 #meta
 testMeta <- countsSortedMeta2 %>%
   filter(sample %in% colnames(countsSorted2)[lg]) %>%
   select(sample, cellNumber, cellTypes)
 
-save(testMeta, file = "data/testMeta.rda")
+save(testMeta, file = "data/testMeta.rda", compress = "bzip2")

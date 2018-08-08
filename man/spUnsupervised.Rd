@@ -10,8 +10,6 @@
 \alias{tsne,spUnsupervised-method}
 \alias{tsneMeans}
 \alias{tsneMeans,spUnsupervised-method}
-\alias{groupMeans}
-\alias{groupMeans,spUnsupervised-method}
 \alias{classification}
 \alias{classification,spUnsupervised-method}
 \alias{uncertainty}
@@ -22,8 +20,6 @@
 \alias{tsne<-,spUnsupervised-method}
 \alias{tsneMeans<-}
 \alias{tsneMeans<-,spUnsupervised-method}
-\alias{groupMeans<-}
-\alias{groupMeans<-,spUnsupervised-method}
 \alias{classification<-}
 \alias{classification<-,spUnsupervised-method}
 \alias{uncertainty<-}
@@ -46,10 +42,6 @@ tsneMeans(object)
 
 \S4method{tsneMeans}{spUnsupervised}(object)
 
-groupMeans(object)
-
-\S4method{groupMeans}{spUnsupervised}(object)
-
 classification(object)
 
 \S4method{classification}{spUnsupervised}(object)
@@ -70,10 +62,6 @@ tsneMeans(object) <- value
 
 \S4method{tsneMeans}{spUnsupervised}(object) <- value
 
-groupMeans(object) <- value
-
-\S4method{groupMeans}{spUnsupervised}(object) <- value
-
 classification(object) <- value
 
 \S4method{classification}{spUnsupervised}(object) <- value
@@ -87,7 +75,7 @@ selectInd(object) <- value
 \S4method{selectInd}{spUnsupervised}(object) <- value
 
 \S4method{initialize}{spUnsupervised}(.Object, ..., tsne, tsneMeans,
-  groupMeans, classification, uncertainty, selectInd)
+  classification, uncertainty, selectInd)
 
 \S4method{show}{spUnsupervised}(object)
 
@@ -113,9 +101,6 @@ spUnsupervised(spCounts, ...)
 
 \item{tsneMeans}{The mean x and y positions of each cell type in the tSNE
 results.}
-
-\item{groupMeans}{The mean gene expression values for each cell type
-(classificaiton).}
 
 \item{classification}{Post-tSNE cell type classification. Typically
 determined by the mclust package.}

@@ -132,30 +132,6 @@ test_that("check that runMclust outputs the expected result", {
   expect_identical(out_uncertainty, exp_uncertainty)
 })
 
-##run test averageGroupExpression
-test_that("check that averageGroupExpression outputs the expected result", {
-    
-  ###TEST1####
-  #prepare normal input data
-  classes <- getData(test_spUnsupervised, "classification")
-
-  #setup expected data
-  expectedFirstRow <- c(9206, 10860, 14311)
-  expectedLastRow <- c(190, 149, 121)
-    
-  names(expectedFirstRow) <- unique(classes)
-  names(expectedLastRow) <- unique(classes)
-
-  #run function
-  output <- averageGroupExpression(test_spCountsSng, classes, weighted=FALSE)
-    
-  #test
-  expect_identical(expectedFirstRow, round(output[1,]))
-  expect_identical(expectedLastRow, round(output[nrow(output),]))
-  expect_false(any(is.na(output)))
-})
-
-
 ##run test tsneGroupMeans
 test_that("check that tsneGroupMeans outputs the expected result",{
     

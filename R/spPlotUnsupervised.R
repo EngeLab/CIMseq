@@ -19,12 +19,8 @@ NULL
 #' @keywords plotUnsupervisedData
 #' @examples
 #'
-#' #use demo data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' uObj <- testUns
+#' plotUnsupervisedData(test_spUnsupervised, test_spCountsSng)
 #'
-#' \dontrun{sp.scRNAseq:::plotUnsupervisedData(uObj, cObjSng)}
 NULL
 
 #' @rdname plotUnsupervisedData
@@ -67,13 +63,8 @@ plotUnsupervisedData <-  function(
 #' @keywords plotUnsupervisedClass
 #' @examples
 #'
-#' #use demo data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' uObj <- testUns
+#' p <- plotUnsupervisedClass(test_spUnsupervised, test_spCountsSng)
 #'
-#' #Plot
-#' p <- plotUnsupervisedClass(uObj, cObjSng)
 NULL
 
 #' @rdname plotUnsupervisedClass
@@ -131,13 +122,10 @@ setMethod("plotUnsupervisedClass", c("spUnsupervised", "spCounts"), function(
 #' @keywords plotUnsupervisedMarkers
 #' @examples
 #'
-#' #use demo data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' uObj <- testUns
-#'
 #' #Plot
-#' p <- plotUnsupervisedMarkers(uObj, cObjSng, markers = "a10")
+#' p <- plotUnsupervisedMarkers(
+#'   test_spUnsupervised, test_spCountsSng, markers = "CD74"
+#' )
 NULL
 
 #' @rdname plotUnsupervisedMarkers

@@ -36,7 +36,9 @@ NULL
 #'    multiplet.
 #' @param stats The stats output from psoptim.
 #' @param arguments Arguments passed to the spSwarm function.
-#' @param syntheticMultiplets NAME WILL BE CHANGED TO BETTER IN FUTURE
+#' @param singletIdx Indexes indicating singlets that were subset to synthesize
+#'  synthetic multiplets. Facilitates recreation of the synthetic multiplets
+#'  downstream.
 #' @param object spRSwarm object.
 #' @param n Data to extract from spRSwarm object.
 #' @param .Object Internal object.
@@ -509,7 +511,7 @@ calcResiduals <- function(
 #' @keywords getMultipletsForEdge
 #' @examples
 #'
-#' e <- data.frame("A357", "HOS")
+#' e <- data.frame("A375", "HOS")
 #' output <- getMultipletsForEdge(test_spSwarm, 1/10.5, e)
 #'
 NULL

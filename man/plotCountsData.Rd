@@ -27,10 +27,11 @@ the \code{\link{plotData}} function.
 
 #use demo data
 s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+ercc <- grepl("^ERCC\\\\-[0-9]*$", rownames(testCounts))
+cObjSng <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
+cObjMul <- spCounts(testCounts[!ercc, !s], testCounts[ercc, !s])
 
-\dontrun{sp.scRNAseq:::plotCountsData(cObjSng, cObjMul)}
+d <- plotCountsData(cObjSng, cObjMul)
 }
 \author{
 Jason T. Serviss

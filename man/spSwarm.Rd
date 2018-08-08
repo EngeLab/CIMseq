@@ -45,6 +45,10 @@ multiplet.}
 
 \item{stats}{The stats output from psoptim.}
 
+\item{singletIdx}{Indexes indicating singlets that were subset to synthesize
+synthetic multiplets. Facilitates recreation of the synthetic multiplets
+downstream.}
+
 \item{arguments}{Arguments passed to the spSwarm function.}
 
 \item{spCountsSng}{an spCount object with singlets.}
@@ -80,8 +84,6 @@ deconvolution. For use with permutation testing.}
 
 \item{saveSingletData}{Logical: indicated if the singlets matrix used to
 synthesize the syntheticMultiplets should be saved.}
-
-\item{syntheticMultiplets}{NAME WILL BE CHANGED TO BETTER IN FUTURE}
 }
 \value{
 spSwarm output.

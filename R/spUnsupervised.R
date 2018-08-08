@@ -29,8 +29,6 @@ NULL
 #' @param tsne tSNE results.
 #' @param tsneMeans The mean x and y positions of each cell type in the tSNE
 #'    results.
-#' @param groupMeans The mean gene expression values for each cell type
-#'    (classificaiton).
 #' @param classification Post-tSNE cell type classification. Typically
 #'    determined by the mclust package.
 #' @param selectInd The indexes of the genes picked for use in spUnsupervised.

@@ -18,15 +18,8 @@ NULL
 #' @keywords plotSwarmGraph
 #' @examples
 #'
-#' #use demo data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#' uObj <- testUns
-#' sObj <- testSwa
+#' p <- plotSwarmGraph(test_spSwarm, test_spUnsupervised)
 #'
-#' #plot
-#' p <- plotSwarmGraph(sObj, uObj)
 NULL
 
 #' @rdname plotSwarmGraph
@@ -321,7 +314,7 @@ setMethod("plotSwarmHeat", "spSwarm", function(
 #' @rdname plotSwarmGenes
 #' @aliases plotSwarmGenes
 #' @param spSwarm spSwarm; An spSwarm object.
-#' @param spCountsMul; An spCounts object containing multiplets.
+#' @param spCountsMul spCounts; An spCounts object containing multiplets.
 #' @param genes Character; Genes to be plotted. Can not exceed 20.
 #' @param multiplets Character; Multiplets to be plotted.
 #' @param freq Numeric, Length 1 vector indicating the frequency the cost should

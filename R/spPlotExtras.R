@@ -16,16 +16,9 @@ NULL
 #' @keywords plotData
 #' @examples
 #'
-#' #use demo data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#'
-#' #make plot
-#' p <- plotCountsERCC(cObjSng, cObjMul)
-#'
-#' #get data
+#' p <- plotCountsERCC(test_spCountsSng, test_spCountsMul)
 #' plotData(p)
+#'
 NULL
 
 #' @rdname plotData

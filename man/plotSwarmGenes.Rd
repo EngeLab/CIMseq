@@ -16,14 +16,14 @@ plotSwarmGenes(spSwarm, ...)
 
 \item{...}{additional arguments to pass on.}
 
+\item{spCountsMul}{spCounts; An spCounts object containing multiplets.}
+
 \item{genes}{Character; Genes to be plotted. Can not exceed 20.}
 
 \item{multiplets}{Character; Multiplets to be plotted.}
 
 \item{freq}{Numeric, Length 1 vector indicating the frequency the cost should
 be calculated along x.}
-
-\item{spCountsMul;}{An spCounts object containing multiplets.}
 }
 \value{
 A ggplot object.

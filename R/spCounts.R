@@ -26,7 +26,7 @@ NULL
 #'
 #' s <- grepl("^s", colnames(testCounts))
 #' ercc <- grepl("^ERCC\\-[0-9]*$", rownames(testCounts))
-#' cObj <- spCounts(testCounts[!ercc, s], testErcc[ercc, s])
+#' cObj <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
 #'
 NULL
 

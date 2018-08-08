@@ -34,13 +34,10 @@ the dimensionality reduction and classification results.
 }
 \examples{
 
-#use demo data
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-uObj <- testUns
-
 #Plot
-p <- plotUnsupervisedMarkers(uObj, cObjSng, markers = "a10")
+p <- plotUnsupervisedMarkers(
+  test_spUnsupervised, test_spCountsSng, markers = "CD74"
+)
 }
 \author{
 Jason T. Serviss

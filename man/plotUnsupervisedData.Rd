@@ -27,12 +27,8 @@ Assembles all data for plotUnsupervised plots.
 }
 \examples{
 
-#use demo data
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-uObj <- testUns
+plotUnsupervisedData(test_spUnsupervised, test_spCountsSng)
 
-\dontrun{sp.scRNAseq:::plotUnsupervisedData(uObj, cObjSng)}
 }
 \author{
 Jason T. Serviss

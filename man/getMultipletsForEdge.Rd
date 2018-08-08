@@ -34,7 +34,7 @@ Description
 }
 \examples{
 
-e <- data.frame("A357", "HOS")
+e <- data.frame("A375", "HOS")
 output <- getMultipletsForEdge(test_spSwarm, 1/10.5, e)
 
 }

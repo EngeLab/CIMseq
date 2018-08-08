@@ -34,7 +34,7 @@ cObjSng <- spCounts(testCounts[, s], testErcc[, s])
 uObj <- testUns
 
 #Plot
-p <- plotUnsupervisedClass(uObj, cObjSng)
+p <- plotUnsupervisedClass(test_spUnsupervised, test_spCountsSng)
 }
 \author{
 Jason T. Serviss
