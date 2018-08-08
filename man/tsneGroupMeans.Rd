@@ -26,12 +26,10 @@ representation.
 }
 \examples{
 
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-my.dist <- pearsonsDist(cObjSng)
-tsne <- runTsne(my.dist, max_iter = 10)
-classes <- runMclust(tsne, 7, 11)[[1]]
-meanGroupPos <- tsneGroupMeans(tsne, classes)
+meanGroupPos <- tsneGroupMeans(
+  getData(test_spUnsupervised, "tsne"),
+  getData(test_spUnsupervised, "classification")
+)
 
 }
 \author{

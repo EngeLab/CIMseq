@@ -17,7 +17,8 @@ Calculates the expected interaction frequency between cell types.
 }
 \examples{
 
-expectedInteractionFreq(testUns)
+expectedInteractionFreq(test_spUnsupervised)
+
 }
 \author{
 Jason T. Serviss

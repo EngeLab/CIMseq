@@ -24,9 +24,7 @@ the counts.cpm slot is used for the calculation.
 }
 \examples{
 
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-selected <- spTopMax(cObjSng, 10)
+selected <- spTopMax(test_spCountsSng, 10)
 
 }
 \author{

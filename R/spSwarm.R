@@ -317,7 +317,7 @@ appropriateSinglets <- function(
 #' @examples
 #'
 #' #use demo data
-#' output <- spSwarmPoisson(testSwa, 1/10.5)
+#' output <- spSwarmPoisson(test_spSwarm, 1/10.5)
 #'
 #'
 NULL
@@ -509,7 +509,8 @@ calcResiduals <- function(
 #' @keywords getMultipletsForEdge
 #' @examples
 #'
-#' output <- getMultipletsForEdge(testSwa, 1/10.5, data.frame("A1", "B1"))
+#' e <- data.frame("A357", "HOS")
+#' output <- getMultipletsForEdge(test_spSwarm, 1/10.5, e)
 #'
 NULL
 
@@ -596,7 +597,7 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
 #' @keywords getEdgesForMultiplet
 #' @examples
 #'
-#' output <- getEdgesForMultiplet(testSwa, 1/10.5, "m.A1B1")
+#' output <- getEdgesForMultiplet(test_spSwarm, 1/10.5, "m.NJB00204.G04")
 #'
 NULL
 

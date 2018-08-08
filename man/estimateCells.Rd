@@ -34,13 +34,7 @@ in each sample.
 }
 \examples{
 
-#use test data
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-
-#run function
-output <- estimateCells(cObjSng, cObjMul)
+output <- estimateCells(test_spCountsSng, test_spCountsMul)
 
 }
 \author{

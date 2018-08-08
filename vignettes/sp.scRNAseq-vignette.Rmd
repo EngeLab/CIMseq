@@ -55,9 +55,6 @@ Make sp.scRNAseq counts object. The spCounts command takes 2 arguments:
 We use the testCounts dataset, included in the package, to initialize the sp.scRNAseq counts object. The testCounts variable contains singlets that comprise 10 cell types. Each cell type has 85 singlets and each singlet has 250 gene expression values. The dataset also includes 2 multuplets comprised of 4 different cell types each. The multuplets are comprised in such a way that, in the final results, there should be one connection between cell types A1, B1, C1, and D1 as well as one connection between G1, H1, I1, and J1.
 
 ```{r}
-path <- system.file('rawData/testCounts.txt', package = "sp.scRNAseq")
-testCounts <- as.matrix(read.table(path, header = TRUE, row.names = 1))
-
 testCounts[1:2, 1:2] #example
 dim(testCounts) #genes and sample numbers
 head(rownames(testCounts)) #example of gene names

@@ -31,22 +31,10 @@ group. Note that typically only singlets are input to this method.
 }
 \examples{
 
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-select <- spTopMax(cObjSng, 10)
-my.dist <- pearsonsDist(cObjSng, select)
-tsne <- runTsne(my.dist, max_iter = 2000)
-mclustOUT <- runMclust(tsne, 7, 11)
-class <- mclustOUT[[1]]
-uncertainty <- mclustOUT[[2]]
-
-#Weighted mean
-weighted <- TRUE
-averageExp <- averageGroupExpression(cObjSng, class, weighted, uncertainty)
-
-#Unweighted mean
-weighted <- FALSE
-averageExp <- averageGroupExpression(cObjSng, class, weighted)
+averageExp <- averageGroupExpression(
+  test_spCountsSng,
+  getData(test_spUnsupervised, "classification")
+)
 
 }
 \author{

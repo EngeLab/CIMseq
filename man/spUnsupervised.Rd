@@ -166,13 +166,7 @@ Description.
 }
 \examples{
 
-#use test data
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-
-#run function
-uObj <- spUnsupervised(cObjSng, max_iter = 100, Gmax = 6)
-
+uObj <- spUnsupervised(test_spCountsSng, max_iter = 100, Gmax = 6)
 
 }
 \author{

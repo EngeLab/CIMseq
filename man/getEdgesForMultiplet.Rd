@@ -31,7 +31,7 @@ Description
 }
 \examples{
 
-output <- getEdgesForMultiplet(testSwa, 1/10.5, "m.A1B1")
+output <- getEdgesForMultiplet(test_spSwarm, 1/10.5, "m.NJB00204.G04")
 
 }
 \author{

@@ -25,7 +25,8 @@ NULL
 #' @examples
 #'
 #' s <- grepl("^s", colnames(testCounts))
-#' cObj <- spCounts(testCounts[, s], testErcc[, s])
+#' ercc <- grepl("^ERCC\\-[0-9]*$", rownames(testCounts))
+#' cObj <- spCounts(testCounts[!ercc, s], testErcc[ercc, s])
 #'
 NULL
 
@@ -116,13 +117,7 @@ setMethod("spCounts", "matrix", function(
 #' @keywords spCounts
 #' @examples
 #'
-#' #use test data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#'
-#' #run function
-#' output <- estimateCells(cObjSng, cObjMul)
+#' output <- estimateCells(test_spCountsSng, test_spCountsMul)
 #'
 NULL
 

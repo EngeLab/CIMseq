@@ -28,10 +28,7 @@ representation.
 }
 \examples{
 
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-select <- spTopMax(cObjSng, 10)
-my.dist <- pearsonsDist(cObjSng, select)
+my.dist <- pearsonsDist(test_spCountsSng, 1:2000)
 tsne <- runTsne(my.dist, max_iter = 10)
 class <- runMclust(tsne, 6, 11)
 

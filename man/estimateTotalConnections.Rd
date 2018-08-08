@@ -19,7 +19,8 @@ Estimates the total number of connections in the multiplets.
 }
 \examples{
 
-expectedInteractionFreq(testUns)
+expectedInteractionFreq(test_spUnsupervised)
+
 }
 \author{
 Jason T. Serviss

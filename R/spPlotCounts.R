@@ -113,7 +113,7 @@ setMethod("plotCountsERCC", c("spCounts", "spCounts"), function(
   scale_y_continuous(
     expand = c(0, 0),
     sec.axis = sec_axis(
-      trans = ~ convertToERCC(., cObjSng, cObjMul),
+      trans = ~ convertToERCC(., spCountsSng, spCountsMul),
       name = "% ERCC"
     )
   ) +
