@@ -8,9 +8,11 @@ output:
         toc: yes
 vignette: >
     %\VignetteIndexEntry{ClusterSignificance Vignette} 
-    %\VignetteEngine{knitr::rmarkdown} 
     %\usepackage[utf8]{inputenc}
     %\SweaveUTF8
+    %\VignetteEngine{knitr::rmarkdown} 
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r, eval = FALSE, echo = FALSE}
@@ -67,11 +69,9 @@ plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("CD74
 ```
 
 Plot mean of multiple markers for the same cell type.
-```{r, message = FALSE, eval = FALSE}
-#need to find appropriate genes to plot here
-
+```{r, message = FALSE}
 #use the data instead
-plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("b1", "h1", "m4", "r9")) %>%
+plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("CD74", "HLA-DRA", "IL13RA2", "MAGEA4")) %>%
   plotData() %>%
   gather(gene, value, -(Sample:Colour)) %>%
   group_by(Sample) %>%
@@ -83,7 +83,7 @@ plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("b1",
   viridis::scale_colour_viridis(option = "E") +
   theme_few() +
   theme(legend.position = "top", legend.title.align = 0) +
-  guides(colour = guide_colourbar(title.position = "top")) 
+  guides(colour = guide_colourbar(title.position = "top"))
 ```
 
 Get the plotting data so you can make a custom plot.
