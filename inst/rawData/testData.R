@@ -3,17 +3,14 @@ packages <- c("sp.scRNAseq", "tidyverse", "future", "future.apply")
 purrr::walk(packages, library, character.only = TRUE)
 rm(packages)
 
-meta <- read_tsv('./inst/rawData/testMeta.txt')
-counts <- read_tsv('./inst/rawData/testCounts.txt') %>%
-  as.data.frame() %>%
-  column_to_rownames("gene") %>%
-  as.matrix()
+load('data/testMeta.rda')
+load('data/testCounts.rda')
 
-s <- grepl("^s", colnames(counts))
-ercc <- grepl("^ERCC\\-[0-9]*$", rownames(counts))
+s <- grepl("^s", colnames(testCounts))
+ercc <- grepl("^ERCC\\-[0-9]*$", rownames(testCounts))
 
-cObjSng <- spCounts(counts[!ercc, s], counts[ercc, s])
-cObjMul <- spCounts(counts[!ercc, !s], counts[ercc, !s])
+cObjSng <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
+cObjMul <- spCounts(testCounts[!ercc, !s], testCounts[ercc, !s])
 
 ##spUnsupervised
 uObj <- spUnsupervised(cObjSng)
