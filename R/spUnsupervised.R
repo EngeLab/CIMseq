@@ -99,10 +99,6 @@ setMethod("spUnsupervised", "spCounts", function(
   new("spUnsupervised",
     tsne = tsne,
     tsneMeans = tsneGroupMeans(tsne, class),
-    groupMeans = averageGroupExpression(
-      spCounts, class,
-      weighted, uncertainty
-    ),
     classification = class,
     uncertainty = uncertainty,
     selectInd = select

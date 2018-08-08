@@ -51,7 +51,6 @@ setMethod("getData", "spCounts", function(object, n = NULL){
 .spUnsupervised <- setClass("spUnsupervised", representation(
   tsne = "matrix",
   tsneMeans = "data.frame",
-  groupMeans = "matrix",
   classification = "character",
   uncertainty = "numeric",
   selectInd = "numeric"
@@ -92,17 +91,6 @@ setGeneric("tsneMeans", function(object){
 #' @export
 setMethod("tsneMeans", "spUnsupervised", function(object){
   object@tsneMeans
-})
-
-#' @rdname spUnsupervised
-setGeneric("groupMeans", function(object){
-  standardGeneric("groupMeans")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("groupMeans", "spUnsupervised", function(object){
-  object@groupMeans
 })
 
 #' @rdname spUnsupervised
@@ -166,18 +154,6 @@ setGeneric("tsneMeans<-", function(object, value){
 #' @export
 setMethod("tsneMeans<-", "spUnsupervised", function(object, value){
   object@tsneMeans <- value
-  if (validObject(object)) return(object)
-})
-
-#' @rdname spUnsupervised
-setGeneric("groupMeans<-", function(object, value){
-  standardGeneric("groupMeans<-")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("groupMeans<-", "spUnsupervised", function(object, value){
-  object@groupMeans <- value
   if (validObject(object)) return(object)
 })
 
