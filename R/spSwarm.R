@@ -286,16 +286,16 @@ appropriateSinglets <- function(
 }
 
 .backTransform <- function(singletSubset, n) {
-  out <- split(singletSubset, rownames(singletSubset)) %>%
-  map(~matrix(.x, nrow = 1)) %>%
-  map(function(x) {
-    base <- rep(colnames(singletSubset), each = n)
-    suffix <- 1:n
-    colnames(x) <- paste(base, suffix, sep = "_")
-    x
-  }) %>%
-  do.call("rbind", .)
-  rownames(out) <- unique(rownames(singletSubset))
+  base <- rep(colnames(singletSubset), each = n)
+  suffix <- 1:n
+  cn <- paste(base, suffix, sep = "_")
+  rn <- str_replace(rownames(singletSubset), "(.*)\\..*", "\\1")
+  
+  out <- split(singletSubset, rn) %>%
+    map(~matrix(.x, nrow = 1, dimnames = list(NULL, cn))) %>%
+    do.call("rbind", .)
+    
+  rownames(out) <- unique(rn)
   out
 }
 
