@@ -169,6 +169,7 @@ setMethod("plotUnsupervisedMarkers", c("spUnsupervised", "spCounts"), function(
     stop(msg)
   }
   
+  pal <- pal[seq_along(markers)]
   names(pal) <- markers
   pal <- pal[order(names(pal))]
   
