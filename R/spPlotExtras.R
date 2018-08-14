@@ -106,7 +106,13 @@ coloursFromTargets <- function(
   if(is.null(markers) | is.null(pal) | length(markers) == 1) {
     return(tibble('Sample' = colnames(counts)))
   }
-
+  rs <- rowSums(counts[markers, ])
+  if(any(rs) == 0) {
+    g <- paste(markers[which(rs == 0)], collapse = ", ")
+    mess <- paste0("The following genes have 0 counts for all samples ", g)
+    stop(mess)
+  }
+  
   markers <- sort(markers)
   pal <- pal[1:length(markers)]
   
