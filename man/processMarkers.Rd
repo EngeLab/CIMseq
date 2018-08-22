@@ -2,7 +2,6 @@
 % Please edit documentation in R/spPlotExtras.R
 \name{processMarkers}
 \alias{processMarkers}
-\alias{processMarkers}
 \title{processMarkers}
 \usage{
 processMarkers(counts.log, markers)

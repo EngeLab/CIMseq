@@ -1,12 +1,5 @@
 context("spSwarm")
 
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[,s], testErcc[,s])
-cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
-uObj <- testUns
-sObj <- testSwa
-
-
 #Function to check if all elements in a vector are identical
 has_zero_range <- function(x, tol = .Machine$double.eps ^ 0.5) {
   if (length(x) == 1) return(TRUE)
@@ -14,99 +7,66 @@ has_zero_range <- function(x, tol = .Machine$double.eps ^ 0.5) {
   isTRUE(all.equal(x[1], x[2], tolerance = tol))
 }
 
-##run test getMultipletsForEdge
-# test_that("check that getMultipletsForEdge outputs the expected result", {
-#   
-#     ###TEST1####
-#     #setup expected data
-#     #A1 and B1 should have an edge
-#     #I1 and J1 should have an edge
-#     expected1 <- tibble::tibble(
-#         multiplet = "m.A1B1.341",
-#         from = "A1",
-#         to = "B1"
-#     )
-#     expected2 <- tibble::tibble(
-#         multiplet = "m.C1D1.342",
-#         from = "C1",
-#         to = "D1"
-#     )
-#     expected3 <- tibble::tibble(
-#         multiplet = c("m.A1B1.341", "m.C1D1.342"),
-#         from = c("A1", "C1"),
-#         to = c("B1", "D1")
-#     )
-#     
-#     #run function
-#     output1 <- getMultipletsForEdge(sObj, 0, data.frame("A1", "B1"))
-#     output2 <- getMultipletsForEdge(sObj, 1/4, data.frame("C1", "D1"))
-#     output3 <- getMultipletsForEdge(
-#       sObj, 1/4, data.frame(c("A1", "C1"), c("B1", "D1"))
-#     )
-#     
-#     #test
-#     expect_identical(output1, expected1)
-#     expect_identical(output2, expected2)
-#     expect_identical(output3, expected3)
-#     
-#     ###TEST2####
-#     #prepare normal input data
-#     tmp <- sObj
-#     tmp@spSwarm <-
-#         data.frame(
-#             A1 = c(0.3, 0.3),
-#             B1 = c(0.3, 0.3),
-#             C1 = c(0.3, 0),
-#             D1 = c(0, 0.3),
-#             row.names=c("m.A1B1C1a", "m.A1B1C1b")
-#         )
-#     
-#     #setup expected data
-#     expected <- tibble::tibble(
-#         multiplet = rep(c("m.A1B1C1a", "m.A1B1C1b"), 3),
-#         from = c(rep("A1", 4), rep("B1", 2)),
-#         to = c(rep("B1", 2), rep(c("C1", "D1"), 2))
-#     )
-#     
-#     
-#     #run function
-#     output <- getMultipletsForEdge(
-#         tmp,
-#         1/4,
-#         data.frame(
-#             c("A1", "A1", "A1", "B1", "B1", "C1"),
-#             c("B1", "C1", "D1", "C1", "D1", "D1")
-#         )
-#     )
-#     
-#     #test
-#     expect_identical(output, expected)
-# })
-# 
-# ##run test getEdgesForMultiplet
-# test_that("check that getEdgesForMultiplet outputs the expected result", {
-#   
-#     ###TEST1####
-#     #setup expected data
-#     expected1 <- tibble::tibble(
-#         multiplet = "m.A1B1",
-#         from = "A1",
-#         to = "B1"
-#     )
-#     expected2 <- tibble::tibble(
-#         multiplet = "m.C1D1",
-#         from = "C1",
-#         to = "D1"
-#     )
-# 
-#     #run function
-#     output1 <- getEdgesForMultiplet(sObj, 1/4, 'm.A1B1')
-#     output2 <- getEdgesForMultiplet(sObj, 1/4, 'm.C1D1')
-# 
-#     #test
-#     expect_identical(output1, expected1)
-#     expect_identical(output2, expected2)
-# })
+#run test getMultipletsForEdge
+test_that("check that getMultipletsForEdge outputs the expected result", {
+
+  ###TEST1####
+  #setup expected data
+  #A1 and B1 should have an edge
+  #I1 and J1 should have an edge
+  expected1 <- tibble::tibble(
+    multiplet = "m.NJB00204.G04",
+    from = "A375",
+    to = "HOS"
+  )
+  expected2 <- tibble::tibble(
+    multiplet = "m.NJB00204.D07",
+    from = "HCT116",
+    to = "HOS"
+  )
+  expected3 <- tibble::tibble(
+    multiplet = c("m.NJB00204.A02", "m.NJB00204.G04"),
+    from = c("A375", "A375"),
+    to = c("HCT116", "HOS")
+  )
+
+    #run function
+  output1 <- getMultipletsForEdge(test_spSwarm, 0, data.frame("A375", "HOS"))
+  output2 <- getMultipletsForEdge(test_spSwarm, 0, data.frame("HCT116", "HOS"))
+  output3 <- getMultipletsForEdge(
+    test_spSwarm, 0, data.frame(c("A375", "A375"), c("HCT116", "HOS"))
+  )
+
+    #test
+  expect_identical(output1, expected1)
+  expect_identical(output2, expected2)
+  expect_identical(output3, expected3)
+})
+
+##run test getEdgesForMultiplet
+test_that("check that getEdgesForMultiplet outputs the expected result", {
+
+  ###TEST1####
+  #setup expected data
+  expected1 <- tibble::tibble(
+    multiplet = "m.NJB00204.D07",
+    from = "HCT116",
+    to = "HOS"
+  )
+  expected2 <- tibble::tibble(
+    multiplet = "m.NJB00204.G04",
+    from = "A375",
+    to = "HOS"
+  )
+
+  #run function
+  output1 <- getEdgesForMultiplet(test_spSwarm, 0, 'm.NJB00204.D07')
+  output2 <- getEdgesForMultiplet(test_spSwarm, 0, 'm.NJB00204.G04')
+
+  #test
+  expect_identical(output1, expected1)
+  expect_identical(output2, expected2)
+})
 
 ################################################################################
 #                                                                              #
@@ -357,41 +317,42 @@ test_that("check that costNegSum outputs the expected result", {
   expect_true(all.equal(output, expected))
 })
 
-##run test .subsetSinglets
-test_that("check that .subsetSinglets outputs the expected result", {
+##run test appropriateSinglets
+test_that("check that appropriateSinglets outputs the expected result", {
   
   ###TEST1####
-  #prepare normal input data
-  classes <- rep(letters[1:4], each = 5)
-  a <- rep(1, 10)
-  b <- rep(2, 10)
-  c <- rep(3, 10)
-  d <- rep(4, 10)
-  singlets <- cbind(a, a, a, a, a, b, b, b, b, b, c, c, c, c, c, d, d, d, d, d)
-  rownames(singlets) <- LETTERS[1:nrow(singlets)]
-  n <- 10
+  #extract needed variables
+  selectInd <- getData(test_spSwarm, "arguments")$selectInd
+  singlets <- getData(test_spCountsSng, "counts.cpm")
+  n <- getData(test_spSwarm, "arguments")$nSyntheticMultiplets
+  idx <- getData(test_spSwarm, "singletIdx")
   
   #setup expected data
-  nc <- length(unique(classes))
-  nr <- nrow(singlets) * n
-  rn <- paste(rep(LETTERS[1:nrow(singlets)], each = n), 1:n, sep = ".")
-  col1 <- rep(1, n * nrow(singlets))
-  col2 <- rep(2, n * nrow(singlets))
-  col3 <- rep(3, n * nrow(singlets))
-  col4 <- rep(4, n * nrow(singlets))
+  nc <- length(unique(getData(test_spUnsupervised, "classification")))
+  nr <- prod(length(selectInd), n)
+  rn <- paste(rep(rownames(singlets)[selectInd], each = n), 1:n, sep = ".")
+  singlets <- singlets[selectInd, ]
+  
+  col.first.first.gene <- singlets[1, idx[[1]] + 1]
+  col.last.first.gene <- singlets[1, idx[[length(idx)]] + 1]
+  col.first.last.gene <- singlets[nrow(singlets), idx[[1]] + 1]
+  col.last.last.gene <- singlets[nrow(singlets), idx[[length(idx)]] + 1]
   
   #run function
   set.seed(82390)
-  output <- .subsetSinglets(classes, singlets, n)
+  output <- appropriateSinglets(
+    test_spUnsupervised, test_spCountsSng,
+    idx, selectInd
+  )
   
   #test
   expect_equal(nr, nrow(output))
   expect_equal(nc, ncol(output))
-  expect_equal(col1, unname(output[, 1]))
-  expect_equal(col2, unname(output[, 2]))
-  expect_equal(col3, unname(output[, 3]))
-  expect_equal(col4, unname(output[, 4]))
   expect_identical(rn, rownames(output))
+  expect_identical(unname(col.first.first.gene), unname(output[1, ]))
+  expect_identical(unname(col.last.first.gene), unname(output[400, ]))
+  expect_identical(unname(col.first.last.gene), unname(output[nrow(output) - 399, ]))
+  expect_identical(unname(col.last.last.gene), unname(output[nrow(output), ]))
   expect_true(all(colnames(output) == sort(colnames(output))))
 })
 
@@ -399,11 +360,16 @@ test_that("check that calculateCost and cost give identical results", {
   
   ###TEST1####
   #prepare normal input data
-  singletSubset <- getData(sObj, "syntheticMultiplets")
-  m <- "m.A1B1.341"
-  oneMultiplet <- ceiling(getData(cObjMul, "counts.cpm")[, m])
-  fractions <- as.numeric(getData(sObj, "spSwarm")[m, ])
-  n <- getData(sObj, "arguments")$nSyntheticMultiplets
+  selectInd <- getData(test_spSwarm, "arguments")$selectInd
+  singletIdx <- getData(test_spSwarm, "singletIdx")
+  singletSubset <- appropriateSinglets(
+    test_spUnsupervised, test_spCountsSng,
+    singletIdx, selectInd
+  )
+  m <- "m.NJB00204.G04"
+  oneMultiplet <- ceiling(getData(test_spCountsMul, "counts.cpm")[, m])
+  fractions <- as.numeric(getData(test_spSwarm, "spSwarm")[m, ])
+  n <- getData(test_spSwarm, "arguments")$nSyntheticMultiplets
   
   adj <- adjustAccordingToFractions(fractions, singletSubset)
   rm <- multipletSums(adj)

@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{countsPerClass}
 \alias{countsPerClass}
-\alias{countsPerClass}
 \title{countsPerClass}
 \usage{
 countsPerClass(spCountsSng, spUnsupervised)
@@ -21,10 +20,8 @@ Calculates median counts per class.
 }
 \examples{
 
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-uObj <- testUns
-output <- countsPerClass(cObjSng, uObj)
+output <- countsPerClass(test_spCountsSng, test_spUnsupervised)
+
 }
 \author{
 Jason T. Serviss

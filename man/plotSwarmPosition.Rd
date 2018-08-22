@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotSwarmPosition}
 \alias{plotSwarmPosition}
-\alias{plotSwarmPosition}
 \alias{plotSwarmPosition,spSwarm-method}
 \title{plotSwarmPosition}
 \usage{

@@ -36,7 +36,9 @@ NULL
 #'    multiplet.
 #' @param stats The stats output from psoptim.
 #' @param arguments Arguments passed to the spSwarm function.
-#' @param syntheticMultiplets NAME WILL BE CHANGED TO BETTER IN FUTURE
+#' @param singletIdx Indexes indicating singlets that were subset to synthesize
+#'  synthetic multiplets. Facilitates recreation of the synthetic multiplets
+#'  downstream.
 #' @param object spRSwarm object.
 #' @param n Data to extract from spRSwarm object.
 #' @param .Object Internal object.
@@ -65,8 +67,10 @@ setGeneric("spSwarm", function(
 #' @importFrom future.apply future_lapply
 #' @importFrom pso psoptim
 #' @importFrom matrixStats rowSums2 rowMeans2
-#' @importFrom dplyr "%>%" bind_rows
-#' @importFrom purrr map
+#' @importFrom dplyr "%>%" bind_rows mutate
+#' @importFrom purrr map map_dbl
+#' @importFrom tibble tibble as_tibble add_column
+#' @importFrom tidyr unnest
 #' @rdname spSwarm
 #' @export
 
@@ -112,19 +116,21 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
       maxit = maxiter, s = swarmsize, trace = 1,
       REPORT = reportRate, trace.stats = TRUE
     )
-    stats <- list()
   } else {
     control <- list(maxit = maxiter, s = swarmsize, vectorize = vectorize)
-    stats <- list()
   }
   
   #run optimization
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
   
-  #setup synthetic multiplets
+  #setup singlets for synthetic multiplets synthesis
   set.seed(seed)
   if(permute) {singlets <- .permuteGenes(singlets)}
-  singletSubset <- .subsetSinglets(classes, singlets, nSyntheticMultiplets)
+  
+  idx <- purrr::map(1:nSyntheticMultiplets, ~sampleSinglets(classes))
+  singletSubset <- appropriateSinglets(
+    spUnsupervised, spCountsSng, idx, selectInd
+  )
   
   #deconvolution
   opt.out <- future_lapply(
@@ -136,74 +142,66 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
       )
   })
   
-  #process optimization results
-  result <- .processResults(
-    opt.out, report, norm, stats,
-    sort(unique(classes)), colnames(multiplets)
-  )
+  #process and return results
+  cn <- sort(unique(classes))
+  rn <- colnames(multiplets)
   
-  #create object
   new("spSwarm",
-    spSwarm = result[[1]], costs = result[[2]],
-    convergence = result[[3]], stats = result[[4]],
+    spSwarm = .processSwarm(opt.out, cn, rn, norm),
+    costs = map_dbl(opt.out, 2),
+    convergence = .processConvergence(opt.out),
+    stats = if(report) {.processStats(opt.out, cn, rn)} else {tibble()},
+    singletIdx = ifelse(saveSingletData, map(idx, as.integer), list()),
     arguments = list(
       maxiter = maxiter, swarmsize = swarmsize,
       nSyntheticMultiplets = nSyntheticMultiplets, seed = seed, norm = norm,
       report = report, reportRate = reportRate, selectInd = selectInd,
       vectorize = vectorize, permute = permute
-    ),
-    syntheticMultiplets = if(saveSingletData) {singletSubset} else {matrix()}
+    )
   )
 })
 
-.processResults <- function(result, report, norm, stats, cn, rn) {
+.processSwarm <- function(opt.out, cn, rn, norm) {
+  par <- map(opt.out, 1) %>%
+    do.call("rbind", .) %>%
+    as.data.frame()
   
-  #extract swarm output
-  par <- data.frame(t(sapply(result, function(j) j[[1]])))
-  cost <- sapply(result, function(j) j[[2]])
-  counts <- t(sapply(result, function(j) j[[3]]))
-  convergence <- sapply(result, function(j) j[[4]])
-  convergenceKey <- c(
-    "Maximal number of function evaluations reached." = 1,
-    "Maximal number of iterations reached." = 2,
-    "Maximal number of restarts reached." = 3,
-    "Maximal number of iterations without improvement reached." = 4
-  )
-  convergence <- names(convergenceKey)[match(convergence, convergenceKey)]
-  if(report) stats <- lapply(result, function(x) x[[6]])
-
-  #normalize swarm output
-  if(norm) {par <- par * 1/rowSums(par)}
+  if(norm) {par <- par * 1 / rowSums(par)}
   colnames(par) <- sort(cn)
   rownames(par) <- rn
-  
-  return(list(par, cost, convergence, stats))
+  par
 }
 
-.subsetSinglets <- function(classes, singlets, n, idx) {
-  sub <- purrr::map(1:n, ~sampleSinglets(classes)) %>%
-  purrr::map(., ~subsetSinglets(singlets, .x)) %>%
-  purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
-  do.call("rbind", .) %>%
-  .[order(as.numeric(rownames(.))), ]
-  
-  rownames(sub) <- paste(rep(rownames(singlets), each = n), 1:n, sep = ".")
-  colnames(sub) <- sort(unique(classes))
-  sub
+.processConvergence <- function(opt.out) {
+  convergence <- map_dbl(opt.out, 4)
+  convergenceKey <- c(
+  "Maximal number of function evaluations reached.",
+  "Maximal number of iterations reached.",
+  "Maximal number of restarts reached.",
+  "Maximal number of iterations without improvement reached."
+  )
+  convergenceKey[convergence]
 }
 
-.backTransform <- function(singletSubset, n) {
-  out <- split(singletSubset, rownames(singletSubset)) %>%
-  map(~matrix(.x, nrow = 1)) %>%
-  map(function(x) {
-    base <- rep(colnames(singletSubset), each = n)
-    suffix <- 1:n
-    colnames(x) <- paste(base, suffix, sep = "_")
-    x
-  }) %>%
-  do.call("rbind", .)
-  rownames(out) <- unique(rownames(singletSubset))
-  out
+.processStats <- function(opt.out, cn, rn) {
+  stats <- map(opt.out, 6)
+  tibble(
+    sample = rn,
+    iteration = map(stats, function(x) x$it),
+    error = map(stats, function(x) x$error),
+    fitness = map(stats, function(x) x$f),
+    position = map(stats, function(x) {
+      map(x$x, function(y) t(y) * 1/colSums(y))
+    })
+  ) %>%
+  unnest() %>%
+  mutate(position = map(position, function(x) {
+    x %>%
+    as.data.frame() %>%
+    setNames(cn) %>%
+    as_tibble() %>%
+    add_column(swarmMemberID = 1:nrow(.), .before = 1)
+  }))
 }
 
 .optim.fun <- function(
@@ -231,6 +229,78 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   `-` (.)
 }
 
+#' appropriateSinglets
+#'
+#' Subtitle
+#'
+#' Description
+#'
+#' @name appropriateSinglets
+#' @rdname appropriateSinglets
+#' @aliases appropriateSinglets
+#' @param spUnsupervised An spUnsupervised object.
+#' @param spCountsSng An spCounts object with singlets.
+#' @param idx Singlet indices to subset. Generated with the sampleSinglets 
+#'  function.
+#' @param selectInd Indices of selected features for deconvolution.
+#' @param ... additional arguments to pass on
+#' @return Appropriated singlets.
+#' @author Jason T. Serviss
+#' @keywords appropriateSinglets
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+NULL
+
+#' @rdname appropriateSinglets
+#' @importFrom purrr map
+#' @importFrom dplyr "%>%"
+#' @export
+
+appropriateSinglets <- function(
+  spUnsupervised, spCountsSng, 
+  idx, selectInd
+){
+  classes <- getData(spUnsupervised, "classification")
+  sngCPM <- getData(spCountsSng, "counts.cpm")
+  singlets <- matrix(
+    sngCPM[selectInd, ],
+    ncol = ncol(sngCPM),
+    dimnames = list(rownames(sngCPM)[selectInd], colnames(sngCPM))
+  )
+  
+  sub <- idx %>%
+  purrr::map(., ~subsetSinglets(singlets, .x)) %>%
+  purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
+  do.call("rbind", .) %>%
+  .[order(as.numeric(rownames(.))), ]
+  
+  rownames(sub) <- paste(
+    rep(rownames(singlets), each = length(idx)), 
+    1:length(idx), sep = "."
+  )
+  colnames(sub) <- sort(unique(classes))
+  sub
+}
+
+.backTransform <- function(singletSubset, n) {
+  cn <- paste(rep(colnames(singletSubset), each = n), 1:n, sep = "_")
+  genes <- str_replace(rownames(singletSubset), "(.*)\\..*", "\\1")
+  rn <- parse_factor(
+    genes,
+    levels = unique(rn)
+  )
+  
+  out <- split(singletSubset, rn) %>%
+    map(~matrix(.x, nrow = 1, dimnames = list(NULL, cn))) %>%
+    do.call("rbind", .)
+    
+  rownames(out) <- unique(genes)
+  out
+}
+
 #' spSwarmPoisson
 #'
 #' Subtitle
@@ -251,7 +321,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 #' @examples
 #'
 #' #use demo data
-#' output <- spSwarmPoisson(testSwa, 1/10.5)
+#' output <- spSwarmPoisson(test_spSwarm, 1/10.5)
 #'
 #'
 NULL
@@ -413,7 +483,7 @@ calcResiduals <- function(
     calculateCostDensity(multiplets[, i], .) %>%
     calculateLogRowMeans() %>%
     fixNegInf() %>%
-    `*` (-1) %>%
+    multiply_by(-1) %>%
     matrix_to_tibble(drop = TRUE)
   }) %>%
   set_names(colnames(multiplets)) %>%
@@ -443,7 +513,8 @@ calcResiduals <- function(
 #' @keywords getMultipletsForEdge
 #' @examples
 #'
-#' output <- getMultipletsForEdge(testSwa, 1/10.5, data.frame("A1", "B1"))
+#' e <- data.frame("A375", "HOS")
+#' output <- getMultipletsForEdge(test_spSwarm, 1/10.5, e)
 #'
 NULL
 
@@ -468,8 +539,8 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
   edges,
   ...
 ){
-  edges[,1] <- as.character(pull(edges, 1))
-  edges[,2] <- as.character(pull(edges, 2))
+  edges[, 1] <- as.character(pull(edges, 1))
+  edges[, 2] <- as.character(pull(edges, 2))
   
   mulForEdges <- lapply(1:nrow(edges), function(j) {
     cols <- c(pull(edges, 1)[j], pull(edges, 2)[j])
@@ -482,7 +553,6 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
   })
   
   names(mulForEdges) <- paste(pull(edges, 1), pull(edges, 2), sep = "-")
-  
   namedListToTibble(mulForEdges) %>%
   mutate(from = gsub("(.*)-.*", "\\1", names)) %>%
   mutate(to = gsub(".*-(.*)", "\\1", names)) %>%
@@ -531,7 +601,7 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
 #' @keywords getEdgesForMultiplet
 #' @examples
 #'
-#' output <- getEdgesForMultiplet(testSwa, 1/10.5, "m.A1B1")
+#' output <- getEdgesForMultiplet(test_spSwarm, 1/10.5, "m.NJB00204.G04")
 #'
 NULL
 

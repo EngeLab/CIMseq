@@ -10,7 +10,6 @@
 \alias{initialize,spCounts-method}
 \alias{show,spCounts-method}
 \alias{spCounts}
-\alias{spCounts}
 \alias{spCounts,matrix-method}
 \title{spCounts}
 \usage{
@@ -18,8 +17,8 @@ getData(object, ...)
 
 \S4method{getData}{spCounts}(object, n = NULL)
 
-\S4method{initialize}{spCounts}(.Object, ..., counts, counts.log, counts.cpm,
-  counts.ercc)
+\S4method{initialize}{spCounts}(.Object, ..., counts, counts.log,
+  counts.cpm, counts.ercc)
 
 \S4method{show}{spCounts}(object)
 
@@ -56,7 +55,8 @@ Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
 \examples{
 
 s <- grepl("^s", colnames(testCounts))
-cObj <- spCounts(testCounts[, s], testErcc[, s])
+ercc <- grepl("^ERCC\\\\-[0-9]*$", rownames(testCounts))
+cObj <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
 
 }
 \author{

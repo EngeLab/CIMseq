@@ -60,6 +60,3 @@ Rcpp::compileAttributes()
 
 #run devtools::document to update docs
 devtools::document()
-
-#install simplified version
-devtools::install()

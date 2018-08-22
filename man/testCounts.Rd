@@ -3,7 +3,7 @@
 \docType{data}
 \name{testCounts}
 \alias{testCounts}
-\title{Simulated counts data used to demonstrate sp.scRNAseq package.}
+\title{Counts data used to demonstrate sp.scRNAseq package.}
 \format{matrix
 \describe{
     \item{rownames}{Gene names}
@@ -19,6 +19,6 @@ Matrix of counts.
 Test counts data.
 }
 \examples{
-data(testData)
+data(testCounts)
 
 }

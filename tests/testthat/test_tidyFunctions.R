@@ -1,11 +1,5 @@
 context("tidyFunctions")
 
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-uObj <- testUns
-sObj <- testSwa
-
 test_that("check that namedListToTibble outputs the expected result", {
   expected <- tibble::tibble(names = rep(letters[1:2], each = 10), variables = 1:20)
   output <- namedListToTibble(list(a = 1:10, b = 11:20))

@@ -101,7 +101,7 @@ normalizeVec <- function(vec) {
 #' @keywords tidyUnsupervised
 #' @examples
 #'
-#' tidyUnsupervised(testUns)
+#' tidyUnsupervised(test_spUnsupervised)
 #'
 #' @export
 #' @importFrom dplyr mutate rename "%>%"
@@ -128,7 +128,7 @@ tidyUnsupervised <- function(spUnsupervised) {
 #' @keywords tidySwarm
 #' @examples
 #'
-#' tidySwarm(testSwa)
+#' tidySwarm(test_spSwarm)
 #'
 #' @export
 #' @importFrom dplyr "%>%" full_join left_join
@@ -167,30 +167,3 @@ divide_by <- `/`
 #' @export
 
 multiply_by <- `*`
-
-
-#spSwarmPoisson(spSwarm, edge.cutoff = 0) %>%
-#  full_join(
-#    getMultipletsForEdge(spSwarm, edge.cutoff = 0, edges = .),
-#    by = c("from", "to")
-#  ) %>%
-#  left_join(
-#    matrix_to_tibble(getData(spSwarm, "spSwarm"), rowname = "multiplet"),
-#    by = "multiplet"
-#  ) %>%
-#  full_join(
-#    tibble(
-#      multiplet = rownames(getData(spSwarm, "spSwarm")),
-#      cost = getData(spSwarm, "costs")
-#    ),
-#    by = "multiplet"
-#  ) %>%
-#  full_join(
-#    tibble(
-#      multiplet = rownames(getData(spSwarm, "spSwarm")),
-#      convergence = getData(spSwarm, "convergence")
-#    ),
-#    by = "multiplet"
-#  ) %>%
-#  nest(-(from:pval), .key = "Multiplet data")
-

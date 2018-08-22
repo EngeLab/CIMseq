@@ -3,7 +3,6 @@
 \docType{methods}
 \name{getMultipletsForEdge}
 \alias{getMultipletsForEdge}
-\alias{getMultipletsForEdge}
 \alias{getMultipletsForEdge,spSwarm-method}
 \title{getMultipletsForEdge}
 \usage{
@@ -35,7 +34,8 @@ Description
 }
 \examples{
 
-output <- getMultipletsForEdge(testSwa, 1/10.5, data.frame("A1", "B1"))
+e <- data.frame("A375", "HOS")
+output <- getMultipletsForEdge(test_spSwarm, 1/10.5, e)
 
 }
 \author{

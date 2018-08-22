@@ -14,7 +14,7 @@ Tidy spSwarm objects.
 }
 \examples{
 
-tidySwarm(testSwa)
+tidySwarm(test_spSwarm)
 
 }
 \author{

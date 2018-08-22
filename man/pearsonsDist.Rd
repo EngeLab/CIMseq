@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{pearsonsDist}
 \alias{pearsonsDist}
-\alias{pearsonsDist}
 \title{pearsonsDist}
 \usage{
 pearsonsDist(spCounts, select)
@@ -27,9 +26,7 @@ representation.
 }
 \examples{
 
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-my.dist <- pearsonsDist(cObjSng, 1:nrow(testCounts))
+my.dist <- pearsonsDist(test_spCountsSng, 1:2000)
 
 }
 \author{

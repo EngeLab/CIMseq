@@ -21,10 +21,11 @@ NULL
 #'
 #' #use demo data
 #' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+#' ercc <- grepl("^ERCC\\-[0-9]*$", rownames(testCounts))
+#' cObjSng <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
+#' cObjMul <- spCounts(testCounts[!ercc, !s], testCounts[ercc, !s])
 #'
-#' \dontrun{sp.scRNAseq:::plotCountsData(cObjSng, cObjMul)}
+#' d <- plotCountsData(cObjSng, cObjMul)
 NULL
 
 #' @rdname plotCountsData
@@ -78,8 +79,9 @@ plotCountsData <- function(
 #'
 #' #use demo data
 #' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+#' ercc <- grepl("^ERCC\\-[0-9]*$", rownames(testCounts))
+#' cObjSng <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
+#' cObjMul <- spCounts(testCounts[!ercc, !s], testCounts[ercc, !s])
 #'
 #' #ERCC plot
 #' p <- plotCountsERCC(cObjSng, cObjMul)
@@ -113,7 +115,7 @@ setMethod("plotCountsERCC", c("spCounts", "spCounts"), function(
   scale_y_continuous(
     expand = c(0, 0),
     sec.axis = sec_axis(
-      trans = ~ convertToERCC(., cObjSng, cObjMul),
+      trans = ~ convertToERCC(., spCountsSng, spCountsMul),
       name = "% ERCC"
     )
   ) +
@@ -141,12 +143,13 @@ setMethod("plotCountsERCC", c("spCounts", "spCounts"), function(
 #'
 #' #use demo data
 #' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+#' ercc <- grepl("^ERCC\\-[0-9]*$", rownames(testCounts))
+#' cObjSng <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
+#' cObjMul <- spCounts(testCounts[!ercc, !s], testCounts[ercc, !s])
 #'
 #' #Markers plot
-#' markers <- c("a1", "a10")
-#' p <- plotCountsMarkers(cObjSng, cObjMul, markers = markers)
+#' markers <- c("ACTB", "GAPDH")
+#' p <- plotCountsMarkers(cObjSng, cObjMul, markers)
 NULL
 
 #' @rdname plotCountsMarkers

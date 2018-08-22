@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{spTopVar}
 \alias{spTopVar}
-\alias{spTopVar}
 \title{spTopVar}
 \usage{
 spTopVar(spCounts, n)
@@ -25,9 +24,7 @@ the counts.cpm slot is used for the calculation.
 }
 \examples{
 
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-selected <- spTopVar(cObjSng, 10)
+selected <- spTopVar(test_spCountsSng, 10)
 
 }
 \author{

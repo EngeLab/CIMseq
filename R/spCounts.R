@@ -25,7 +25,8 @@ NULL
 #' @examples
 #'
 #' s <- grepl("^s", colnames(testCounts))
-#' cObj <- spCounts(testCounts[, s], testErcc[, s])
+#' ercc <- grepl("^ERCC\\-[0-9]*$", rownames(testCounts))
+#' cObj <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
 #'
 NULL
 
@@ -48,11 +49,10 @@ setMethod("spCounts", "matrix", function(
     ...
 ){
     .inputCheckCounts(counts, counts.ercc)
-    cpm <- .norm.counts(counts)
     new("spCounts",
         counts = counts,
-        counts.log = log2(cpm + 1),
-        counts.cpm = cpm,
+        counts.log = .norm.log.counts,
+        counts.cpm = .norm.counts,
         counts.ercc = counts.ercc
     )
 })
@@ -64,6 +64,10 @@ setMethod("spCounts", "matrix", function(
     if(any(is.na(c(counts, counts.ercc)))) {
         message("is.na(c(counts, counts.ercc) returned TRUE")
     }
+}
+
+.norm.log.counts <- function(counts) {
+  log2(.norm.counts(counts) + 1)
 }
 
 .norm.counts <- function(counts) {
@@ -113,13 +117,7 @@ setMethod("spCounts", "matrix", function(
 #' @keywords spCounts
 #' @examples
 #'
-#' #use test data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#'
-#' #run function
-#' output <- estimateCells(cObjSng, cObjMul)
+#' output <- estimateCells(test_spCountsSng, test_spCountsMul)
 #'
 NULL
 

@@ -7,3 +7,4 @@
 \description{
 "gg" class
 }
+\concept{gg}

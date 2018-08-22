@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{expectedInteractionFreq}
 \alias{expectedInteractionFreq}
-\alias{expectedInteractionFreq}
 \title{expectedInteractionFreq}
 \usage{
 expectedInteractionFreq(spUnsupervised)
@@ -18,7 +17,8 @@ Calculates the expected interaction frequency between cell types.
 }
 \examples{
 
-expectedInteractionFreq(testUns)
+expectedInteractionFreq(test_spUnsupervised)
+
 }
 \author{
 Jason T. Serviss

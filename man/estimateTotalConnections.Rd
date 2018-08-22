@@ -2,7 +2,6 @@
 % Please edit documentation in R/spUnsupervised.R
 \name{estimateTotalConnections}
 \alias{estimateTotalConnections}
-\alias{estimateTotalConnections}
 \title{estimateTotalConnections}
 \usage{
 estimateTotalConnections(spCountsSng, spCountsMul)
@@ -20,7 +19,8 @@ Estimates the total number of connections in the multiplets.
 }
 \examples{
 
-expectedInteractionFreq(testUns)
+expectedInteractionFreq(test_spUnsupervised)
+
 }
 \author{
 Jason T. Serviss

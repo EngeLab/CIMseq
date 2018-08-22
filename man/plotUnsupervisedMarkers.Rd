@@ -3,13 +3,13 @@
 \docType{methods}
 \name{plotUnsupervisedMarkers}
 \alias{plotUnsupervisedMarkers}
-\alias{plotUnsupervisedMarkers}
 \alias{plotUnsupervisedMarkers,spUnsupervised,spCounts-method}
 \title{plotUnsupervisedMarkers}
 \usage{
 plotUnsupervisedMarkers(spUnsupervised, spCountsSng, ...)
 
-\S4method{plotUnsupervisedMarkers}{spUnsupervised,spCounts}(spUnsupervised,
+
+  \S4method{plotUnsupervisedMarkers}{spUnsupervised,spCounts}(spUnsupervised,
   spCountsSng, markers = NULL, pal = col40(), ...)
 }
 \arguments{
@@ -34,13 +34,10 @@ the dimensionality reduction and classification results.
 }
 \examples{
 
-#use demo data
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-uObj <- testUns
-
 #Plot
-p <- plotUnsupervisedMarkers(uObj, cObjSng, markers = "a10")
+p <- plotUnsupervisedMarkers(
+  test_spUnsupervised, test_spCountsSng, markers = "CD74"
+)
 }
 \author{
 Jason T. Serviss

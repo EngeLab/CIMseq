@@ -2,7 +2,6 @@
 % Please edit documentation in R/spPlotExtras.R
 \name{coloursFromTargets}
 \alias{coloursFromTargets}
-\alias{coloursFromTargets}
 \title{coloursFromTargets}
 \usage{
 coloursFromTargets(pal, counts, markers, ...)

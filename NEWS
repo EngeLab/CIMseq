@@ -1,5 +1,11 @@
+v0.1.0.1
+* spCounts now does not store counts.cpm or counts.log and, instead, computes them when requested.
+* testData is updated to use real data from the countsSorted2 dataset
+* The syntheticMultiplets spSwarm obj slot now holds the indices of the singlets used to synthesise synthetic multiplets instead of the subsetted singlets (lower weight).
+* Furthermore, the above named slot has been renamed to 'singletIdx'.
+* unit tests updated accordingly for above changes
 
-v.0.1.0.0
+v0.1.0.0
 * Deconvolution also now using poisson method. Old method moved to legacy branch.
 
 v0.0.2.0

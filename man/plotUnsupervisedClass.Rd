@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotUnsupervisedClass}
 \alias{plotUnsupervisedClass}
-\alias{plotUnsupervisedClass}
 \alias{plotUnsupervisedClass,spUnsupervised,spCounts-method}
 \title{plotUnsupervisedClass}
 \usage{
@@ -29,13 +28,8 @@ and classification results.
 }
 \examples{
 
-#use demo data
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-uObj <- testUns
+p <- plotUnsupervisedClass(test_spUnsupervised, test_spCountsSng)
 
-#Plot
-p <- plotUnsupervisedClass(uObj, cObjSng)
 }
 \author{
 Jason T. Serviss

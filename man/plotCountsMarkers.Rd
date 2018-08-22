@@ -3,7 +3,6 @@
 \docType{methods}
 \name{plotCountsMarkers}
 \alias{plotCountsMarkers}
-\alias{plotCountsMarkers}
 \alias{plotCountsMarkers,spCounts,spCounts-method}
 \title{plotCountsMarkers}
 \usage{
@@ -33,12 +32,13 @@ thought to be discreetly expressed in one cell type, in all samples.
 
 #use demo data
 s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
+ercc <- grepl("^ERCC\\\\-[0-9]*$", rownames(testCounts))
+cObjSng <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
+cObjMul <- spCounts(testCounts[!ercc, !s], testCounts[ercc, !s])
 
 #Markers plot
-markers <- c("a1", "a10")
-p <- plotCountsMarkers(cObjSng, cObjMul, markers = markers)
+markers <- c("ACTB", "GAPDH")
+p <- plotCountsMarkers(cObjSng, cObjMul, markers)
 }
 \author{
 Jason T. Serviss

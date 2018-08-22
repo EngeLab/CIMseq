@@ -18,15 +18,8 @@ NULL
 #' @keywords plotSwarmGraph
 #' @examples
 #'
-#' #use demo data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#' uObj <- testUns
-#' sObj <- testSwa
+#' p <- plotSwarmGraph(test_spSwarm, test_spUnsupervised)
 #'
-#' #plot
-#' p <- plotSwarmGraph(sObj, uObj)
 NULL
 
 #' @rdname plotSwarmGraph
@@ -321,7 +314,7 @@ setMethod("plotSwarmHeat", "spSwarm", function(
 #' @rdname plotSwarmGenes
 #' @aliases plotSwarmGenes
 #' @param spSwarm spSwarm; An spSwarm object.
-#' @param spCountsMul; An spCounts object containing multiplets.
+#' @param spCountsMul spCounts; An spCounts object containing multiplets.
 #' @param genes Character; Genes to be plotted. Can not exceed 20.
 #' @param multiplets Character; Multiplets to be plotted.
 #' @param freq Numeric, Length 1 vector indicating the frequency the cost should
@@ -355,6 +348,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   ...
 ){
   sm <- getData(spSwarm, "syntheticMultiplets")
+  rownames(sm) <- str_replace(rownames(sm), "(.*)\\.[0-9]*", "\\1")
   cpm <- getData(spCountsMul, "counts.cpm")
   nSyntheticMultiplets <- getData(spSwarm, "arguments")$nSyntheticMultiplets
   selectInd <- getData(spSwarm, "arguments")$selectInd
@@ -397,11 +391,23 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   reduce(bind_rows)
   
   #process real data and bind synthetic
-  data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
-    matrix_to_tibble("gene") %>% #will fail if only one multiplet is provided since line above returns a numeric
-    gather(sample, count, -gene) %>%
-    inner_join(synthetic, by = c("sample", "gene")) %>%
-    nest(syntheticMultipletID, syntheticValues, .key = "syntheticData")
+  if(length(multiplets) == 1) {
+    data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
+      as.data.frame() %>%
+      setNames(multiplets) %>%
+      rownames_to_column("gene") %>%
+      as_tibble() %>%
+      gather(sample, count, -gene) %>%
+      inner_join(synthetic, by = c("sample", "gene")) %>%
+      nest(syntheticMultipletID, syntheticValues, .key = "syntheticData")
+  } else {
+    data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
+      matrix_to_tibble("gene") %>%
+      gather(sample, count, -gene) %>%
+      inner_join(synthetic, by = c("sample", "gene")) %>%
+      nest(syntheticMultipletID, syntheticValues, .key = "syntheticData")
+  }
+  
   
   #poisson distribution of each synthetic multiplet value
   .pd <- function(data, freq) {
@@ -436,7 +442,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   .rc <- function(data) {
     data %>%
     mutate(cost.real = map2_dbl(count, syntheticData,
-      ~costCalc(.x, matrix(unlist(.y$syntheticValues), nrow = 1))
+      ~costCalc(round(.x), matrix(unlist(.y$syntheticValues), nrow = 1))
     ))
   }
   
@@ -483,10 +489,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   #plot
   ggplot() +
   #synthetic multiplet values
-  geom_histogram(
-    aes(syntheticValues, ..density..),
-    binwidth = freq, fill = "black"
-  ) +
+  geom_rug(aes(syntheticValues)) +
   facet_grid(gene ~ sample, scales = "free") +
   #this just facilitates the histogram legend
   geom_line(

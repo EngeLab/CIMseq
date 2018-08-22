@@ -52,22 +52,22 @@ Make sp.scRNAseq counts object. The spCounts command takes 2 arguments:
 1. matrix; The raw counts data with gene IDs as rownames and sample IDs as colnames. 
 2. matrix; The ERCC spike-in counts data with gene IDs as rownames and sample IDs as colnames. 
 
-We use the testCounts and testErcc datasets, included in the package, to initialize the sp.scRNAseq counts object. The testCounts variable contains singlets that comprise 10 cell types. Each cell type has 85 singlets and each singlet has 250 gene expression values. The dataset also includes 2 multuplets comprised of 4 different cell types each. The multuplets are comprised in such a way that, in the final results, there should be one connection between cell types A1, B1, C1, and D1 as well as one connection between G1, H1, I1, and J1.
+We use the testCounts dataset, included in the package, to initialize the sp.scRNAseq counts object. The testCounts variable contains singlets that comprise 10 cell types. Each cell type has 85 singlets and each singlet has 250 gene expression values. The dataset also includes 2 multuplets comprised of 4 different cell types each. The multuplets are comprised in such a way that, in the final results, there should be one connection between cell types A1, B1, C1, and D1 as well as one connection between G1, H1, I1, and J1.
 
 ```{r}
 testCounts[1:2, 1:2] #example
 dim(testCounts) #genes and sample numbers
-table(colnames(testCounts)) # sample names
 head(rownames(testCounts)) #example of gene names
 class(testCounts) #must be a matrix
 ```
 
-We first divide the counts data into singlets and multiplets and make an spCounts object for each. In the test data, the colnames of all singlet samples are prefixed with an "s" and all multiplets are prefixed with an "m".
+We first extract the ERCC reads and divide the counts data into singlets and multiplets and make an spCounts object for each. In the test data, ERCC reads can be identified with the regular expression "^ERCC\\-[0-9]*$" and the colnames of all singlet samples are prefixed with an "s" and all multiplets are prefixed with an "m".
 
 ```{r, eval = TRUE}
 s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[,s], testErcc[,s])
-cObjMul <- spCounts(testCounts[,!s], testErcc[,!s])
+ercc <- grepl("^ERCC\\-[0-9]*$", rownames(testCounts))
+cObjSng <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
+cObjMul <- spCounts(testCounts[!ercc, !s], testCounts[ercc, !s])
 
 #show counts objects
 cObjSng
@@ -75,10 +75,10 @@ cObjMul
 ```
 
 The counts object contains:
-1. The raw counts data input by the user.
-2. The log normalized counts per million.
-3. The counts per million.
-4. The counts.ercc input by the user (if these are not available they can be substituted using matrix())
+1. The raw counts data input by the user.  
+2. The log normalized counts per million.  
+3. The counts per million.  
+4. The counts.ercc input by the user (if these are not available they can be substituted using matrix())  
 
 ### Accessors
 
@@ -100,7 +100,7 @@ plotCountsERCC(cObjSng, cObjMul)
 Sometimes it may be desireable to view the expression of marker genes in the counts object. At the moment, this can only be accomplished with 2 markers at a time.
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-plotCountsMarkers(cObjSng, cObjMul, markers = c("c1", "b1"))
+plotCountsMarkers(cObjSng, cObjMul, markers = c("CD74", "ANXA3"))
 ```
 
 ## spUnsupervised method
@@ -120,8 +120,12 @@ The dimensionality reduction and classification stage can be regulated by passin
 11. genes=NULL: The genes to include when type = manual.
 12. weighted = TRUE: A logical indicating if the classified group means should be weighted with the uncertainty reported from mclust.
 
-```{r, eval = TRUE}
+```{r, eval = FALSE}
 uObj <- spUnsupervised(cObjSng, max_iter = 1000, max = 250, weighted = TRUE)
+```
+
+```{r, echo = FALSE}
+uObj <- test_spUnsupervised
 ```
 
 ###Substitution
@@ -145,7 +149,7 @@ plotUnsupervisedClass(uObj, cObjSng)
 The sp.scRNAseq unsupervised object also has an associated markers plot where the markers can be visualized overlayed with the unsupervised clustering results.
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-plotUnsupervisedMarkers(uObj, cObjSng, markers = c("c1", "b1"))
+plotUnsupervisedMarkers(uObj, cObjSng, markers = c("CD74", "ANXA3"))
 ```
 
 ## spSwarm method
@@ -161,12 +165,16 @@ Finally, the deconvolution of the multuplets take place in this stage. Again, th
 7. cutoff = 0.2: This is used to specify a fraction under which the contribution of a specific cellType is viewed as background. (should be approximatley 1/max(cells in a multuplet))
 8. cores=1: This step is able to run in parallel by specifying the number of desired cores here.
 
-```{r, eval = TRUE}
+```{r, eval = FALSE}
 plan(sequential)
 sObj <- spSwarm(
   cObjSng, cObjMul, uObj, swarmsize = 500, 
   nSyntheticMultiplets = 50, maxiter = 10
 )
+```
+
+```{r, echo = FALSE}
+sObj <- test_spSwarm
 ```
 
 ### spSwarm results

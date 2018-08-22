@@ -1,9 +1,5 @@
 context("spCounts")
 
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-
 test_that("check that the .norm.counts function outputs the expected result", {
     
   ###TEST1####
@@ -50,25 +46,25 @@ test_that("check that estimateCells outputs the expected result", {
   ###TEST1####
   #setup expected data
   expected1 <- tibble::tibble(
-    sampleType=c(rep("Singlet", 340), rep("Multiplet", 2))
+    sampleType=c(rep("Singlet", 81), rep("Multiplet", 3))
   )
   
   expected2 <- tibble::tibble(
+    frac.ercc = 0,
+    cellNumberMin = 1,
+    cellNumberMedian = 1,
+    cellNumberMax = 1
+  )
+  
+  expected3 <- tibble::tibble(
     frac.ercc = 0,
     cellNumberMin = 1,
     cellNumberMedian = 2,
     cellNumberMax = 2
   )
   
-  expected3 <- tibble::tibble(
-    frac.ercc = 0,
-    cellNumberMin = 2,
-    cellNumberMedian = 3,
-    cellNumberMax = 3
-  )
-  
   #run function
-  output <- estimateCells(cObjSng, cObjMul)
+  output <- estimateCells(test_spCountsSng, test_spCountsMul)
   firstRow <- output %>%
     dplyr::slice(1) %>%
     dplyr::select(frac.ercc:cellNumberMax) %>%
@@ -91,8 +87,8 @@ test_that("check that estimateCells outputs the expected result", {
 })
 
 test_that("check that estimateCells gives error with all 0 ercc", {
-  ercc <- getData(cObjSng, "counts.ercc")
+  ercc <- getData(test_spCountsSng, "counts.ercc")
   ercc[ ,1] <- rep(0, nrow(ercc))
-  cObjSng@counts.ercc <- ercc
-  expect_warning(estimateCells(cObjSng, cObjMul))
+  test_spCountsSng@counts.ercc <- ercc
+  expect_warning(estimateCells(test_spCountsSng, test_spCountsMul))
 })

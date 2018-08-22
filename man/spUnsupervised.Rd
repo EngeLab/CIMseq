@@ -10,8 +10,6 @@
 \alias{tsne,spUnsupervised-method}
 \alias{tsneMeans}
 \alias{tsneMeans,spUnsupervised-method}
-\alias{groupMeans}
-\alias{groupMeans,spUnsupervised-method}
 \alias{classification}
 \alias{classification,spUnsupervised-method}
 \alias{uncertainty}
@@ -22,8 +20,6 @@
 \alias{tsne<-,spUnsupervised-method}
 \alias{tsneMeans<-}
 \alias{tsneMeans<-,spUnsupervised-method}
-\alias{groupMeans<-}
-\alias{groupMeans<-,spUnsupervised-method}
 \alias{classification<-}
 \alias{classification<-,spUnsupervised-method}
 \alias{uncertainty<-}
@@ -32,7 +28,6 @@
 \alias{selectInd<-,spUnsupervised-method}
 \alias{initialize,spUnsupervised-method}
 \alias{show,spUnsupervised-method}
-\alias{spUnsupervised}
 \alias{spUnsupervised}
 \alias{spUnsupervised,spCounts-method}
 \title{spUnsupervised}
@@ -46,10 +41,6 @@ tsne(object)
 tsneMeans(object)
 
 \S4method{tsneMeans}{spUnsupervised}(object)
-
-groupMeans(object)
-
-\S4method{groupMeans}{spUnsupervised}(object)
 
 classification(object)
 
@@ -71,10 +62,6 @@ tsneMeans(object) <- value
 
 \S4method{tsneMeans}{spUnsupervised}(object) <- value
 
-groupMeans(object) <- value
-
-\S4method{groupMeans}{spUnsupervised}(object) <- value
-
 classification(object) <- value
 
 \S4method{classification}{spUnsupervised}(object) <- value
@@ -87,7 +74,7 @@ selectInd(object) <- value
 
 \S4method{selectInd}{spUnsupervised}(object) <- value
 
-\S4method{initialize}{spUnsupervised}(.Object, ..., tsne, tsneMeans, groupMeans,
+\S4method{initialize}{spUnsupervised}(.Object, ..., tsne, tsneMeans,
   classification, uncertainty, selectInd)
 
 \S4method{show}{spUnsupervised}(object)
@@ -96,8 +83,8 @@ spUnsupervised(spCounts, ...)
 
 \S4method{spUnsupervised}{spCounts}(spCounts, theta = 0, k = 2,
   max_iter = 2000, perplexity = 10, initial_dims = 50, Gmax = 50,
-  seed = 11, type = "max", max = 2000, genes = NULL, weighted = TRUE,
-  ...)
+  seed = 11, type = "max", max = 2000, genes = NULL,
+  weighted = TRUE, ...)
 }
 \arguments{
 \item{object}{spUnsupervised object.}
@@ -114,9 +101,6 @@ spUnsupervised(spCounts, ...)
 
 \item{tsneMeans}{The mean x and y positions of each cell type in the tSNE
 results.}
-
-\item{groupMeans}{The mean gene expression values for each cell type
-(classificaiton).}
 
 \item{classification}{Post-tSNE cell type classification. Typically
 determined by the mclust package.}
@@ -167,13 +151,7 @@ Description.
 }
 \examples{
 
-#use test data
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-
-#run function
-uObj <- spUnsupervised(cObjSng, max_iter = 100, Gmax = 6)
-
+uObj <- spUnsupervised(test_spCountsSng, max_iter = 100, Gmax = 6)
 
 }
 \author{

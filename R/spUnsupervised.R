@@ -29,8 +29,6 @@ NULL
 #' @param tsne tSNE results.
 #' @param tsneMeans The mean x and y positions of each cell type in the tSNE
 #'    results.
-#' @param groupMeans The mean gene expression values for each cell type
-#'    (classificaiton).
 #' @param classification Post-tSNE cell type classification. Typically
 #'    determined by the mclust package.
 #' @param selectInd The indexes of the genes picked for use in spUnsupervised.
@@ -49,13 +47,7 @@ NULL
 #' @keywords spUnsupervised
 #' @examples
 #'
-#' #use test data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#'
-#' #run function
-#' uObj <- spUnsupervised(cObjSng, max_iter = 100, Gmax = 6)
-#'
+#' uObj <- spUnsupervised(test_spCountsSng, max_iter = 100, Gmax = 6)
 #'
 NULL
 
@@ -105,10 +97,6 @@ setMethod("spUnsupervised", "spCounts", function(
   new("spUnsupervised",
     tsne = tsne,
     tsneMeans = tsneGroupMeans(tsne, class),
-    groupMeans = averageGroupExpression(
-      spCounts, class,
-      weighted, uncertainty
-    ),
     classification = class,
     uncertainty = uncertainty,
     selectInd = select
@@ -169,9 +157,7 @@ setMethod("spUnsupervised", "spCounts", function(
 #' @keywords spTopVar
 #' @examples
 #'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' selected <- spTopVar(cObjSng, 10)
+#' selected <- spTopVar(test_spCountsSng, 10)
 #'
 NULL
 
@@ -203,9 +189,7 @@ spTopVar <- function(spCounts, n) {
 #' @keywords spTopMax
 #' @examples
 #'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' selected <- spTopMax(cObjSng, 10)
+#' selected <- spTopMax(test_spCountsSng, 10)
 #'
 NULL
 
@@ -243,9 +227,7 @@ spTopMax <- function(spCounts, n) {
 #' @keywords pearsonsDist
 #' @examples
 #'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' my.dist <- pearsonsDist(cObjSng, 1:nrow(testCounts))
+#' my.dist <- pearsonsDist(test_spCountsSng, 1:2000)
 #'
 NULL
 
@@ -296,12 +278,8 @@ pearsonsDist <- function(spCounts, select) {
 #' @keywords runTsne
 #' @examples
 #'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[ ,s], testErcc[, s])
-#' select <- spTopMax(cObjSng, 10)
-#' my.dist <- pearsonsDist(cObjSng, select)
+#' my.dist <- pearsonsDist(test_spCountsSng, 1:2000)
 #' tsne <- runTsne(my.dist, max_iter = 10)
-#'
 #'
 NULL
 
@@ -354,10 +332,7 @@ runTsne <- function(
 #' @keywords runMclust
 #' @examples
 #'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' select <- spTopMax(cObjSng, 10)
-#' my.dist <- pearsonsDist(cObjSng, select)
+#' my.dist <- pearsonsDist(test_spCountsSng, 1:2000)
 #' tsne <- runTsne(my.dist, max_iter = 10)
 #' class <- runMclust(tsne, 6, 11)
 #'
@@ -388,77 +363,6 @@ runMclust <- function(
   return(list(classification, uncertainty))
 }
 
-#' averageGroupExpression
-#'
-#' This output from this function is utilized to represent each group classified
-#' group during swarm optimization.
-#'
-#' Calculate the average expression of each gene within each classification
-#' group. Note that typically only singlets are input to this method.
-#'
-#' @name averageGroupExpression
-#' @rdname averageGroupExpression
-#' @aliases averageGroupExpression
-#' @param data Singlet expression matrix.
-#' @param classes A character vector indicating the class of each singlet.
-#' @param weighted Logical indicating if the group means shoule be weighted with
-#'    the uncertainty.
-#' @param uncertainty A numeric vector indicating the uncertainty if weighted is
-#'    TRUE.
-#' @return A matrix containing the mean value for each gene for each
-#' classification group.
-#' @author Jason T. Serviss
-#' @keywords averageGroupExpression
-#' @examples
-#'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' select <- spTopMax(cObjSng, 10)
-#' my.dist <- pearsonsDist(cObjSng, select)
-#' tsne <- runTsne(my.dist, max_iter = 2000)
-#' mclustOUT <- runMclust(tsne, 7, 11)
-#' class <- mclustOUT[[1]]
-#' uncertainty <- mclustOUT[[2]]
-#'
-#' #Weighted mean
-#' weighted <- TRUE
-#' averageExp <- averageGroupExpression(cObjSng, class, weighted, uncertainty)
-#'
-#' #Unweighted mean
-#' weighted <- FALSE
-#' averageExp <- averageGroupExpression(cObjSng, class, weighted)
-#'
-NULL
-
-#' @rdname averageGroupExpression
-#' @export
-
-averageGroupExpression <- function(
-  data,
-  classes,
-  weighted,
-  uncertainty = NULL
-){
-  c <- unique(classes)
-  exp <- getData(data, "counts.cpm")
-  
-  if(weighted) {
-    u <- 1 - uncertainty
-    w <- t(t(exp) * u)
-    means <- lapply(c, function(x) {
-      rowSums(w[, classes == x]) / sum(u[classes == x])
-    })
-  } else {
-    means <- lapply(c, function(x) {
-      rowMeans(exp[, classes == x])
-    })
-  }
-  
-  means <- as.matrix(as.data.frame(means))
-  colnames(means) <- c
-  return(means)
-}
-
 #' tsneGroupMeans
 #'
 #'
@@ -481,12 +385,10 @@ averageGroupExpression <- function(
 #' @keywords tsneGroupMeans
 #' @examples
 #'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' my.dist <- pearsonsDist(cObjSng)
-#' tsne <- runTsne(my.dist, max_iter = 10)
-#' classes <- runMclust(tsne, 7, 11)[[1]]
-#' meanGroupPos <- tsneGroupMeans(tsne, classes)
+#' meanGroupPos <- tsneGroupMeans(
+#'   getData(test_spUnsupervised, "tsne"),
+#'   getData(test_spUnsupervised, "classification")
+#' )
 #'
 NULL
 
@@ -526,11 +428,8 @@ tsneGroupMeans <- function(data, classes) {
 #' @keywords erccPerClass
 #' @examples
 #'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#' uObj <- testUns
-#' output <- erccPerClass(cObjSng, cObjMul, uObj)
+#' out <- erccPerClass(test_spCountsSng, test_spCountsMul, test_spUnsupervised)
+#'
 NULL
 
 #' @rdname erccPerClass
@@ -576,10 +475,8 @@ erccPerClass <- function(
 #' @keywords countsPerClass
 #' @examples
 #'
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' uObj <- testUns
-#' output <- countsPerClass(cObjSng, uObj)
+#' output <- countsPerClass(test_spCountsSng, test_spUnsupervised)
+#'
 NULL
 
 #' @rdname countsPerClass
@@ -616,7 +513,8 @@ countsPerClass <- function(
 #' @keywords expectedInteractionFreq
 #' @examples
 #'
-#' expectedInteractionFreq(testUns)
+#' expectedInteractionFreq(test_spUnsupervised)
+#'
 NULL
 
 #' @rdname expectedInteractionFreq
@@ -643,7 +541,8 @@ expectedInteractionFreq <- function(spUnsupervised) {
 #' @keywords estimateTotalConnections
 #' @examples
 #'
-#' expectedInteractionFreq(testUns)
+#' expectedInteractionFreq(test_spUnsupervised)
+#'
 NULL
 
 #' @rdname estimateTotalConnections

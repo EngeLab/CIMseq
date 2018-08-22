@@ -3,13 +3,13 @@
 \docType{methods}
 \name{getEdgesForMultiplet}
 \alias{getEdgesForMultiplet}
-\alias{getEdgesForMultiplet}
 \alias{getEdgesForMultiplet,spSwarm-method}
 \title{getEdgesForMultiplet}
 \usage{
 getEdgesForMultiplet(spSwarm, ...)
 
-\S4method{getEdgesForMultiplet}{spSwarm}(spSwarm, edge.cutoff, multiplet, ...)
+\S4method{getEdgesForMultiplet}{spSwarm}(spSwarm, edge.cutoff, multiplet,
+  ...)
 }
 \arguments{
 \item{spSwarm}{An spSwarm object.}
@@ -31,7 +31,7 @@ Description
 }
 \examples{
 
-output <- getEdgesForMultiplet(testSwa, 1/10.5, "m.A1B1")
+output <- getEdgesForMultiplet(test_spSwarm, 1/10.5, "m.NJB00204.G04")
 
 }
 \author{

@@ -18,11 +18,11 @@ setMethod("initialize","spCounts", function(
 #' @export
 
 setMethod("initialize","spUnsupervised", function(
-  .Object, ..., tsne, tsneMeans, groupMeans,
-  classification, uncertainty, selectInd
+  .Object, ..., tsne, tsneMeans, classification,
+  uncertainty, selectInd
 ){
   callNextMethod(
-    .Object, ..., tsne = tsne, tsneMeans = tsneMeans, groupMeans = groupMeans,
+    .Object, ..., tsne = tsne, tsneMeans = tsneMeans,
     classification = classification, uncertainty=uncertainty, 
     selectInd = selectInd
   )
@@ -33,11 +33,10 @@ setMethod("initialize","spUnsupervised", function(
 
 setMethod("initialize","spSwarm", function(
   .Object, ..., spSwarm, costs, convergence,
-  stats, arguments, syntheticMultiplets
+  stats, singletIdx, arguments
 ){
   callNextMethod(
     .Object, ..., spSwarm = spSwarm, costs = costs, convergence = convergence,
-    stats = stats, arguments = arguments,
-    syntheticMultiplets = syntheticMultiplets
+    stats = stats, singletIdx = singletIdx, arguments = arguments
   )
 })

@@ -16,16 +16,9 @@ NULL
 #' @keywords plotData
 #' @examples
 #'
-#' #use demo data
-#' s <- grepl("^s", colnames(testCounts))
-#' cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-#' cObjMul <- spCounts(testCounts[, !s], testErcc[, !s])
-#'
-#' #make plot
-#' p <- plotCountsERCC(cObjSng, cObjMul)
-#'
-#' #get data
+#' p <- plotCountsERCC(test_spCountsSng, test_spCountsMul)
 #' plotData(p)
+#'
 NULL
 
 #' @rdname plotData
@@ -113,7 +106,13 @@ coloursFromTargets <- function(
   if(is.null(markers) | is.null(pal) | length(markers) == 1) {
     return(tibble('Sample' = colnames(counts)))
   }
-
+  rs <- rowSums(counts[markers, ])
+  if(any(rs) == 0) {
+    g <- paste(markers[which(rs == 0)], collapse = ", ")
+    mess <- paste0("The following genes have 0 counts for all samples ", g)
+    stop(mess)
+  }
+  
   markers <- sort(markers)
   pal <- pal[1:length(markers)]
   

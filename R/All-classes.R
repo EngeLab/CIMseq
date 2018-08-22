@@ -11,8 +11,8 @@ NULL
 #' @export
 .spCounts <- setClass("spCounts", representation(
   counts = "matrix",
-  counts.log = "matrix",
-  counts.cpm = "matrix",
+  counts.log = "function",
+  counts.cpm = "function",
   counts.ercc = "matrix"
 ))
 
@@ -31,7 +31,12 @@ setGeneric("getData", function(object, ...){
 #' @export
 setMethod("getData", "spCounts", function(object, n = NULL){
   if(class(n) == "character"){
-    slot(object, n)
+    if(n %in% c("counts", "counts.ercc")) {
+      slot(object, n)
+    } else {
+      fun <- slot(object, n)
+      fun(slot(object, "counts"))
+    }
   }
 })
 
@@ -46,7 +51,6 @@ setMethod("getData", "spCounts", function(object, n = NULL){
 .spUnsupervised <- setClass("spUnsupervised", representation(
   tsne = "matrix",
   tsneMeans = "data.frame",
-  groupMeans = "matrix",
   classification = "character",
   uncertainty = "numeric",
   selectInd = "numeric"
@@ -87,17 +91,6 @@ setGeneric("tsneMeans", function(object){
 #' @export
 setMethod("tsneMeans", "spUnsupervised", function(object){
   object@tsneMeans
-})
-
-#' @rdname spUnsupervised
-setGeneric("groupMeans", function(object){
-  standardGeneric("groupMeans")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("groupMeans", "spUnsupervised", function(object){
-  object@groupMeans
 })
 
 #' @rdname spUnsupervised
@@ -165,18 +158,6 @@ setMethod("tsneMeans<-", "spUnsupervised", function(object, value){
 })
 
 #' @rdname spUnsupervised
-setGeneric("groupMeans<-", function(object, value){
-  standardGeneric("groupMeans<-")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("groupMeans<-", "spUnsupervised", function(object, value){
-  object@groupMeans <- value
-  if (validObject(object)) return(object)
-})
-
-#' @rdname spUnsupervised
 setGeneric("classification<-", function(object, value){
   standardGeneric("classification<-")
 })
@@ -224,9 +205,9 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value){
   spSwarm = "data.frame",
   costs = "numeric",
   convergence = "character",
-  stats = "list",
-  arguments = "list",
-  syntheticMultiplets = "matrix"
+  stats = "tbl_df",
+  singletIdx = "list",
+  arguments = "list"
 ))
 
 #############
@@ -239,7 +220,7 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value){
 #' @export
 setMethod("getData", "spSwarm", function(object, n = NULL){
   if(class(n) == "character"){
-      slot(object, n)
+    slot(object, n)
   }
 })
 
