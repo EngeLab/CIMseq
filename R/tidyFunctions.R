@@ -101,7 +101,7 @@ normalizeVec <- function(vec) {
 #' @keywords tidyUnsupervised
 #' @examples
 #'
-#' tidyUnsupervised(testUns)
+#' tidyUnsupervised(test_spUnsupervised)
 #'
 #' @export
 #' @importFrom dplyr mutate rename "%>%"
@@ -128,7 +128,7 @@ tidyUnsupervised <- function(spUnsupervised) {
 #' @keywords tidySwarm
 #' @examples
 #'
-#' tidySwarm(testSwa)
+#' tidySwarm(test_spSwarm)
 #'
 #' @export
 #' @importFrom dplyr "%>%" full_join left_join

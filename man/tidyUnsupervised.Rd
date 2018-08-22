@@ -14,7 +14,7 @@ Tidy spUnsupervised objects.
 }
 \examples{
 
-tidyUnsupervised(testUns)
+tidyUnsupervised(test_spUnsupervised)
 
 }
 \author{

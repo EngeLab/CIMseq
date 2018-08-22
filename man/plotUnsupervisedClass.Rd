@@ -28,13 +28,8 @@ and classification results.
 }
 \examples{
 
-#use demo data
-s <- grepl("^s", colnames(testCounts))
-cObjSng <- spCounts(testCounts[, s], testErcc[, s])
-uObj <- testUns
-
-#Plot
 p <- plotUnsupervisedClass(test_spUnsupervised, test_spCountsSng)
+
 }
 \author{
 Jason T. Serviss
