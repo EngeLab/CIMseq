@@ -75,16 +75,17 @@ selectInd(object) <- value
 \S4method{selectInd}{spUnsupervised}(object) <- value
 
 \S4method{initialize}{spUnsupervised}(.Object, ..., tsne, tsneMeans,
-  classification, uncertainty, selectInd)
+  classification, selectInd)
 
 \S4method{show}{spUnsupervised}(object)
 
 spUnsupervised(spCounts, ...)
 
 \S4method{spUnsupervised}{spCounts}(spCounts, theta = 0, k = 2,
-  max_iter = 2000, perplexity = 10, initial_dims = 50, Gmax = 50,
-  seed = 11, type = "max", max = 2000, genes = NULL,
-  weighted = TRUE, ...)
+  max_iter = 2000, perplexity = 10, initial_dims = 50, pca = NULL,
+  pcs = NULL, pcVarPercent = 1, mask = NULL, NN = NULL, kNN = 50,
+  distCut, classCut, seed = 11, type = "max", max = 2000,
+  genes = NULL, weighted = TRUE, ...)
 }
 \arguments{
 \item{object}{spUnsupervised object.}
@@ -105,10 +106,6 @@ results.}
 \item{classification}{Post-tSNE cell type classification. Typically
 determined by the mclust package.}
 
-\item{uncertainty}{Contains the uncertainty in converting a conditional
-probablility from EM to a classification in model-based clustering.
-Reported from mclust.}
-
 \item{selectInd}{The indexes of the genes picked for use in spUnsupervised.}
 
 \item{spCounts}{spCounts object with singlets only.}
@@ -123,7 +120,24 @@ Reported from mclust.}
 
 \item{initial_dims}{The initial dimensions argument. Passed to tsne function.}
 
-\item{Gmax}{A numeric vector of 1:Gmax passed as the "G" argument to Mclust.}
+\item{pca}{matrix; Optional precomputed representation of the data in PCA
+space.}
+
+\item{pcVarPercent}{numeric; Specifies the minimum amount of variance
+contained in a principal component in order for it to be retained.}
+
+\item{mask}{integer; Principal components to mask.}
+
+\item{NN}{data.frame; Optional precalculated nearest neighbors. Should
+contain columns "from" and "to" indicating neighbors, "dist" indicating a
+distance between neighbors, and "mutual" a logical column indicating if the
+neighbors have a mutual connection.}
+
+\item{kNN}{integer; Number of nearest neighbors to identify.}
+
+\item{distCut}{numeric; The quantile at which to cut the distance.}
+
+\item{classCut}{integer; Classes with members < classCut will be "undefined".}
 
 \item{seed}{Sets the seed before running tSNE.}
 
@@ -139,6 +153,16 @@ character vector. These must match the rownames in the counts variable.}
 
 \item{weighted}{boolean indicating if the group means should be weighted with
 uncertainty.}
+
+\item{pca}{integer; Optional value of the largest principal component to
+include from the PCA dimensionality reduction.}
+
+\item{pcVarPercent}{numeric; Specifies the minimum amount of variance
+contained in a principal component in order for it to be retained.}
+
+\item{uncertainty}{Contains the uncertainty in converting a conditional
+probablility from EM to a classification in model-based clustering.
+Reported from mclust.}
 }
 \value{
 spUnsupervised object.

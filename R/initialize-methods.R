@@ -18,13 +18,12 @@ setMethod("initialize","spCounts", function(
 #' @export
 
 setMethod("initialize","spUnsupervised", function(
-  .Object, ..., tsne, tsneMeans, classification,
-  uncertainty, selectInd
+  .Object, ..., tsne, tsneMeans,
+  classification, selectInd
 ){
   callNextMethod(
     .Object, ..., tsne = tsne, tsneMeans = tsneMeans,
-    classification = classification, uncertainty=uncertainty, 
-    selectInd = selectInd
+    classification = classification, selectInd = selectInd
   )
 })
 

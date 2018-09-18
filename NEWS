@@ -1,3 +1,6 @@
+v0.1.0.2
+* spUnsupervised now uses kNN classification.
+
 v0.1.0.1
 * spCounts now does not store counts.cpm or counts.log and, instead, computes them when requested.
 * testData is updated to use real data from the countsSorted2 dataset

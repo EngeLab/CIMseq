@@ -55,7 +55,7 @@ namedListToTibble <- function(l) {
 
 matrix_to_tibble <- function(data, rowname = "rowname", drop = FALSE) {
   if(!is.matrix(data)) stop("The 'data' argument is not a matrix")
-  if(drop) as_tibble(data)
+  if(drop) return(as_tibble(data))
   rn.quo <- enquo(rowname)
   rn <- rownames(data)
   if(is.null(rn)) rn <- 1:nrow(data)
@@ -108,7 +108,6 @@ tidyUnsupervised <- function(spUnsupervised) {
   getData(spUnsupervised, "tsne") %>%
   matrix_to_tibble(.) %>%
   mutate('Classification' = getData(spUnsupervised, "classification")) %>%
-  mutate('Uncertainty' = getData(spUnsupervised, "uncertainty")) %>%
   rename(
     `t-SNE dim 1` = .data$V1, `t-SNE dim 2` = .data$V2, Sample = .data$rowname
   )

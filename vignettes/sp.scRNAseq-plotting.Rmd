@@ -15,7 +15,7 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r, message = FALSE, eval = FALSE}
+```{r, message = FALSE}
 packages <- c(
   "sp.scRNAseq", "printr", "ggthemes", "dplyr", 
   "tidyr", "ggplot2", "viridis"
@@ -27,17 +27,17 @@ rm(packages)
 ## spCounts
 
 Plot markers.
-```{r, eval = FALSE}
+```{r}
 plotCountsMarkers(test_spCountsSng, test_spCountsMul, markers = c("CD74", "ANXA3"))
 ```
 
 Plot cell number.
-```{r, eval = FALSE}
+```{r}
 plotCountsERCC(test_spCountsSng, test_spCountsMul)
 ```
 
 Get the plotting data so you can make a custom plot.
-```{r, eval = FALSE}
+```{r}
 plotCountsMarkers(test_spCountsSng, test_spCountsMul, markers = c("CD74", "ANXA3")) %>%
   plotData() %>%
   head()
@@ -49,18 +49,18 @@ plotCountsERCC(test_spCountsSng, test_spCountsMul) %>%
 
 ## spUnsupervised
 
-Plot the clustering results.
-```{r, eval = FALSE}
+Plot the clustering and classification results.
+```{r}
 plotUnsupervisedClass(test_spUnsupervised, test_spCountsSng)
 ```
 
 Plot markers in different cell types.
-```{r, eval = FALSE}
+```{r}
 plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("CD74", "ANXA3", "ACTG2"))
 ```
 
 Plot mean of multiple markers for the same cell type.
-```{r, message = FALSE, eval = FALSE}
+```{r, message = FALSE}
 #use the data instead
 plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("CD74", "HLA-DRA", "IL13RA2", "MAGEA4")) %>%
   plotData() %>%
@@ -79,7 +79,7 @@ plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("CD74
 
 Get the plotting data so you can make a custom plot.
 
-```{r, eval = FALSE}
+```{r}
 plotUnsupervisedClass(test_spUnsupervised, test_spCountsSng) %>% 
   plotData() %>%
   head()
@@ -93,29 +93,29 @@ plotUnsupervisedMarkers(test_spUnsupervised, test_spCountsSng, markers = c("CD74
 
 ### Graph-based plots
 
-```{r, eval = FALSE}
+```{r}
 plotSwarmGraph(test_spSwarm, test_spUnsupervised)
 ```
 
 ### Non-graph-based plots
 
 Edge bar graph.
-```{r, eval = FALSE}
+```{r}
 plotSwarmEdgeBar(test_spSwarm)
 ```
 
 P-value bar graph.
-```{r, eval = FALSE}
+```{r}
 plotSwarmPbar(test_spSwarm)
 ```
 
 Heatmap.
-```{r, eval = FALSE}
+```{r}
 plotSwarmHeat(test_spSwarm)
 ```
 
 Get data to make a custom plot.
-```{r, eval = FALSE}
+```{r}
 plotSwarmGraph(test_spSwarm, test_spUnsupervised) %>%
   plotData()
 

@@ -195,14 +195,6 @@ The resulting "connectome" can be plotted via the commands below. Here we need t
 plotSwarmGraph(sObj, uObj)
 ```
 
-Several other plotting options exist such as:
-```{r, fig.align='center', fig.height=8, fig.width=10}
-plotSwarmEdgeBar(sObj)
-plotSwarmPbar(sObj)
-plotSwarmHeat(sObj)
-```
-
-
 ### Residual plot
 Residuals (define residuals) for multiplets and edges can also be plotted using the spSwarm object as shown below:
 

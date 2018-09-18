@@ -52,7 +52,6 @@ setMethod("getData", "spCounts", function(object, n = NULL){
   tsne = "matrix",
   tsneMeans = "data.frame",
   classification = "character",
-  uncertainty = "numeric",
   selectInd = "numeric"
 ))
 

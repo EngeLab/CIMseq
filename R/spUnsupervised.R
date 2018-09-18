@@ -17,7 +17,22 @@ NULL
 #' @param max_iter The max number of tSNE iterations. Passed to tsne function.
 #' @param perplexity The perplexity argument to tsne. Passed to tsne function.
 #' @param initial_dims The initial dimensions argument. Passed to tsne function.
-#' @param Gmax A numeric vector of 1:Gmax passed as the "G" argument to Mclust.
+#' @param pca matrix; Optional precomputed representation of the data in PCA
+#' space.
+#' @param pca integer; Optional value of the largest principal component to
+#' include from the PCA dimensionality reduction.
+#' @param pcVarPercent numeric; Specifies the minimum amount of variance
+#' contained in a principal component in order for it to be retained.
+#' @param mask integer; Principal components to mask.
+#' @param NN data.frame; Optional precalculated nearest neighbors. Should
+#' contain columns "from" and "to" indicating neighbors, "dist" indicating a
+#' distance between neighbors, and "mutual" a logical column indicating if the
+#' neighbors have a mutual connection.
+#' @param kNN integer; Number of nearest neighbors to identify.
+#' @param distCut numeric; The quantile at which to cut the distance.
+#' @param classCut integer; Classes with members < classCut will be "undefined".
+#' @param pcVarPercent numeric; Specifies the minimum amount of variance
+#' contained in a principal component in order for it to be retained.
 #' @param seed Sets the seed before running tSNE.
 #' @param type Decides if genes included are picked by their maximum expression
 #'  or maximum variance. Can be either "max", "var", "maxMean", or "manual". If
@@ -70,7 +85,16 @@ setGeneric("spUnsupervised", function(
 
 setMethod("spUnsupervised", "spCounts", function(
   spCounts, theta = 0, k = 2, max_iter = 2000, perplexity = 10,
-  initial_dims = 50, Gmax = 50, seed = 11, type = "max",
+  initial_dims = 50,
+  pca = NULL,
+  pcs = NULL,
+  pcVarPercent = 1,
+  mask = NULL,
+  NN = NULL,
+  kNN = 50,
+  distCut,
+  classCut,
+  seed = 11, type = "max",
   max = 2000, genes = NULL, weighted = TRUE, ...
 ){
   #filter genes to be included in analysis
@@ -86,9 +110,14 @@ setMethod("spUnsupervised", "spCounts", function(
   )
   
   #run Mclust
-  tmp <- runMclust(tsne, Gmax, seed)
-  class <- tmp[[1]]
-  uncertainty <- tmp[[2]]
+  if(is.null(pca)) pca <- runPCA(spCounts, select)
+  if(is.null(pcs)) pcs <- pcByVarPercent(pca, pcVarPercent)
+  if(is.null(NN)) NN <- getKNN(pca, pcs, kNN, mask = mask)
+  g <- constructGraph(NN, quantile(NN$dist, probs = distCut))
+  g <- jaccardSimilarity(g, 0, seed)
+  g <- classify_louvain(g, ji)
+  g <- removeOutliers(g, "louvain", threshold = classCut)
+  class <-  as.data.frame(g)$louvain
   
   #check for classification problems
   .classificationChecks(class)
@@ -98,7 +127,6 @@ setMethod("spUnsupervised", "spCounts", function(
     tsne = tsne,
     tsneMeans = tsneGroupMeans(tsne, class),
     classification = class,
-    uncertainty = uncertainty,
     selectInd = select
   )
 })
@@ -136,8 +164,6 @@ setMethod("spUnsupervised", "spCounts", function(
     You probably need to adjust the Gmax argument and run again.")
   }
 }
-
-
 
 #' spTopVar
 #'
@@ -559,4 +585,236 @@ estimateTotalConnections <- function(spCountsSng, spCountsMul) {
     })) %>%
     pull(connections) %>%
     sum()
+}
+
+################################################################################
+#                                                                              #
+#                             knnClassification                                #
+#                                                                              #
+################################################################################
+
+#' runPCA
+#'
+#' Runs a principal component analysis using \code{\link[gmodels]{fast.prcomp}}.
+#'
+#' @name runPCA
+#' @rdname runPCA
+#' @author Jason T. Serviss
+#' @param spCounts spCounts object with singlets only.
+#' @param select A numeric vector indicating the indexes of genes to include.
+#' @importFrom gmodels fast.prcomp
+#' @export
+
+runPCA <- function(spCounts, select) {
+  counts.log <- getData(cObjSng, "counts.log")
+  gmodels::fast.prcomp(t(counts.log[select, ]), center = TRUE)
+}
+
+#' pcByVarPercent
+#'
+#' Runs a principal component analysis using \code{\link[gmodels]{fast.prcomp}}.
+#'
+#' @name pcByVarPercent
+#' @rdname pcByVarPercent
+#' @author Jason T. Serviss
+#' @param pca Output from \code{\link[gmodels]{fast.prcomp}} or
+#' \code{\link[stats]{prcomp}}.
+#' @param cutoff numeric; Select PCs containing variance greater or equal to
+#' this cutoff.
+#' @return The maximum PC that contains variance specified by the cutoff
+#' argument.
+#' @export
+
+pcByVarPercent <- function(pca, cutoff) {
+  var <- pca$sdev^2
+  var.percent <- var / sum(var) * 100
+  which(var.percent <= gt)[1] - 1
+}
+
+#' constructGraph
+#'
+#' Constructs a graph from a data frame or tibble.
+#'
+#' @name constructGraph
+#' @rdname constructGraph
+#' @author Jason T. Serviss
+#' @param data Tibble; Expected columns are "from" and "to", indicating the
+#' edges and "dist" indicating the distance between the samples.
+#' @param distCut numeric; A Euclidean distance at which NN are removed.
+#' @importFrom tidygraph as_tbl_graph activate .N
+#' @importFrom igraph graph_from_data_frame
+#' @importFrom dplyr mutate "%>%"
+#' @export
+
+constructGraph <- function(data, distCut) {
+  edges <- from <- to <- nodes <- NULL
+
+  g <- igraph::graph_from_data_frame(data, directed = FALSE) %>%
+    #The function below simplifies the edges such that if node1 -> node2 and node2 -> node1, only one edge represents the connection.
+    #Although, it is worth while to consider what happens if node1 -> node2 but not node2 -> node1. In a mutual kNN graph both node1 -> node2 and node2 -> node1 need to be true for an edge to be drawn between them.
+    #(http://www.tml.cs.uni-tuebingen.de/team/luxburg/publications/MaiHeiLux07.pdf).
+    #Consider this, if we observe the distances between NN of a small population, with a k high enough to permit NN to another class,
+    #once the neighbors start to be of another class we should see a change in the distribution of the distance metric.
+    igraph::simplify(edge.attr.comb = list(
+      mutual = "first",
+      rank = "concat",
+      dist = function(d) {
+        if(length(unique(d)) == 1) {unique(d)} else {d}
+      }
+    )) %>%
+    tidygraph::as_tbl_graph() %>%
+    tidygraph::activate(edges) %>%
+    dplyr::mutate(distOK = if_else(dist < distCut, TRUE, FALSE)) %>%
+    dplyr::mutate(
+      from.name = tidygraph::.N()$name[from],
+      to.name = tidygraph::.N()$name[to]
+    ) %>%
+    tidygraph::activate(nodes)
+}
+
+#' getKNN
+#'
+#' Calculates Euclidean distance in PCA space.
+#'
+#' @name getKNN
+#' @rdname getKNN
+#' @author Jason T. Serviss
+#' @param pca Matrix; Principal components as columns, samples as rows.
+#' @param pcs Integer; Length 1 vector indicating the max principal component to
+#' retain.
+#' @param k Integer; Number of nearest neighbors.
+#' @param mask Integer, Principal components to mask.
+#' @importFrom RANN nn2
+#' @importFrom tidyr gather
+#' @importFrom dplyr mutate select distinct "%>%"
+#' @importFrom stringr str_replace
+#' @importFrom purrr map2_chr
+#' @export
+
+getKNN <- function(pca, pcs, k, mask) {
+  k2 <- k + 1
+  p <- pca$x
+  keep.pcs <- 1:pcs
+  if(!is.null(mask)) keep.pcs <- keep.pcs[-mask]
+  near_data <- RANN::nn2(p[, keep.pcs], k = k2, searchtype = 'standard', eps = 0)
+  index <- near_data$nn.idx
+  dists <- near_data$nn.dists
+  rownames(index) <- rownames(p)
+  rownames(dists) <- rownames(p)
+
+  ds <- matrix_to_tibble(dists[, -1], "sample") %>%
+    gather(rank, dist, -sample) %>%
+    mutate(rank = as.numeric(str_replace(rank, "^.(.*)", "\\1")))
+
+  matrix_to_tibble(index, drop = TRUE) %>%
+    setNames(c("from", 1:k)) %>%
+    tidyr::gather(rank, index, -from) %>%
+    mutate(rank = as.numeric(rank)) %>%
+    dplyr::mutate(to = rownames(p)[index]) %>%
+    dplyr::mutate(from = rownames(p)[from]) %>%
+    dplyr::select(from, to, rank) %>%
+    inner_join(ds, by = c("from" = "sample", "rank" = "rank")) %>%
+    #make mutual kNN
+    unite(x, from, to, sep = "-", remove = FALSE) %>%
+    unite(y, to, from, sep = "-", remove = FALSE) %>%
+    #filter(x %in% y) %>%
+    mutate(mutual = if_else(x %in% y, TRUE, FALSE)) %>%
+    select(-x, -y)
+}
+
+#' jaccardSimilarity
+#'
+#' Calculates the Jaccard index pairwise for graph nodes..
+#'
+#' @name jaccardSimilarity
+#' @rdname jaccardSimilarity
+#' @author Jason T. Serviss
+#' @param g tbl_graph; A tidygraph graph.
+#' @param seed integer; a seed to set before running the community detection.
+#' @importFrom tidyr gather
+#' @importFrom dplyr mutate "%>%"
+#' @importFrom stats dist
+#' @export
+
+jaccardSimilarity <- function(g, prune = 1/15, seed = 7823) {
+  set.seed(seed)
+  j <- igraph::similarity(g, method = "jaccard", mode = "all")
+  g <- tidygraph::activate(g, nodes)
+  rownames(j) <- pull(g, name)
+  colnames(j) <- pull(g, name)
+  ji <- j %>%
+    matrix_to_tibble("from") %>%
+    gather(to, ji, -from)
+
+  g %>%
+    tidygraph::activate(edges) %>%
+    inner_join(ji, by = c("from.name" = "from", "to.name" = "to")) %>%
+    mutate(pruneOK = if_else(ji > prune, TRUE, FALSE)) %>%
+    tidygraph::activate(nodes)
+}
+
+#' classify_louvain
+#'
+#' Runs the louvain community detection algorithm on the input graph.
+#'
+#' @name classify_louvain
+#' @rdname classify_louvain
+#' @author Jason T. Serviss
+#' @param g tbl_graph; A tidygraph graph.
+#' @param weights.col Bare word; indicating the column name of the column
+#' including the weights.
+#' @importFrom tidygraph group_louvain
+#' @importFrom readr parse_factor
+#' @importFrom dplyr mutate enquo
+#' @importFrom rlang "!!"
+#' @export
+
+classify_louvain <- function(g, weights.col) {
+  g %>%
+    tidygraph::activate(edges) %>%
+    filter(pruneOK & distOK & mutual) %>%
+    tidygraph::activate(nodes) %>%
+    dplyr::mutate(
+      louvain = tidygraph::group_louvain(weight = !! enquo(weights.col)),
+      louvain = as.character(louvain)
+    ) %>%
+    tidygraph::activate(edges) %>%
+    tidygraph::graph_join(g %>% tidygraph::activate(edges) %>% filter(!pruneOK | !distOK)) %>%
+    tidygraph::activate(nodes)
+}
+
+#' removeOutliers
+#'
+#' Calculates Euclidean distance in PCA space.
+#'
+#' @name removeOutliers
+#' @rdname removeOutliers
+#' @author Jason T. Serviss
+#' @param g tbl_graph; A tidygraph graph.
+#' @param classificationMethod Bare word; Name of the column containing the
+#' classification results
+#' @param threshold Integer; Where classes containing a number of cells equal to
+#'  or less than the threshold will be grouped with the most similar class.
+#' @importFrom dplyr enquo count filter inner_join quo_name mutate if_else slice select pull
+#' @importFrom rlang "!!"
+#' @importFrom purrr map2_chr map2_lgl
+#' @importFrom tidygraph activate
+#' @importFrom tibble as_tibble
+#' @importFrom tidyr gather
+#' @export
+
+removeOutliers <- function(g, classificationMethod, threshold = 1) {
+  g <- tidygraph::activate(g, nodes)
+  tabl <- g %>% as_tibble() %>% count(!! rlang::sym(classificationMethod))
+
+  ok <- filter(tabl, n > threshold) %>% inner_join(as_tibble(g), by = classificationMethod)
+
+  undefined <- tabl %>%
+    filter(n <= threshold) %>%
+    inner_join(as_tibble(g), by = classificationMethod) %>%
+    pull(name)
+
+  dplyr::mutate(g, louvain = map2_chr(name, !! rlang::sym(classificationMethod), function(n, c) {
+    if_else(!n %in% undefined, c, "undefined")
+  }))
 }

@@ -10,7 +10,7 @@ test_that("check that plotUnsupervisedData outputs the expected result", {
   #test
   expect_is(output, c("tbl_df", "tbl", "data.frame"))
   expect_type(output, "list")
-  expect_true(ncol(output) == 5)
+  expect_true(ncol(output) == 4)
   expect_true(nrow(output) == ncol(getData(test_spCountsSng, "counts")))
 })
 
