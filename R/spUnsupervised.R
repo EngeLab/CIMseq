@@ -19,7 +19,7 @@ NULL
 #' @param initial_dims The initial dimensions argument. Passed to tsne function.
 #' @param pca matrix; Optional precomputed representation of the data in PCA
 #' space.
-#' @param pca integer; Optional value of the largest principal component to
+#' @param pcs integer; Optional value of the largest principal component to
 #' include from the PCA dimensionality reduction.
 #' @param pcVarPercent numeric; Specifies the minimum amount of variance
 #' contained in a principal component in order for it to be retained.
@@ -31,8 +31,6 @@ NULL
 #' @param kNN integer; Number of nearest neighbors to identify.
 #' @param distCut numeric; The quantile at which to cut the distance.
 #' @param classCut integer; Classes with members < classCut will be "undefined".
-#' @param pcVarPercent numeric; Specifies the minimum amount of variance
-#' contained in a principal component in order for it to be retained.
 #' @param seed Sets the seed before running tSNE.
 #' @param type Decides if genes included are picked by their maximum expression
 #'  or maximum variance. Can be either "max", "var", "maxMean", or "manual". If
@@ -62,7 +60,7 @@ NULL
 #' @keywords spUnsupervised
 #' @examples
 #'
-#' uObj <- spUnsupervised(test_spCountsSng, max_iter = 100, Gmax = 6)
+#' uObj <- spUnsupervised(test_spCountsSng, max_iter = 100, distCut = 0.7, classCut = 1)
 #'
 NULL
 
@@ -97,6 +95,7 @@ setMethod("spUnsupervised", "spCounts", function(
   seed = 11, type = "max",
   max = 2000, genes = NULL, weighted = TRUE, ...
 ){
+  ji <- NULL
   #filter genes to be included in analysis
   select <- .featureSelection(spCounts, type, max, genes)
   
@@ -515,6 +514,7 @@ countsPerClass <- function(
   spCountsSng,
   spUnsupervised
 ){
+  sampleName <- NULL
   counts <- getData(spCountsSng, "counts")
   tibble(
     class = getData(spUnsupervised, "classification"),
@@ -576,6 +576,7 @@ NULL
 #' @export
 
 estimateTotalConnections <- function(spCountsSng, spCountsMul) {
+  sampleType <- cellNumberMedian <- cellNumber <- connections <- NULL
   estimateCells(spCountsSng, spCountsMul) %>%
     filter(sampleType == "Multiplet") %>%
     mutate(cellNumber = round(cellNumberMedian)) %>%
@@ -606,7 +607,7 @@ estimateTotalConnections <- function(spCountsSng, spCountsMul) {
 #' @export
 
 runPCA <- function(spCounts, select) {
-  counts.log <- getData(cObjSng, "counts.log")
+  counts.log <- getData(spCounts, "counts.log")
   gmodels::fast.prcomp(t(counts.log[select, ]), center = TRUE)
 }
 
@@ -692,6 +693,7 @@ constructGraph <- function(data, distCut) {
 #' @export
 
 getKNN <- function(pca, pcs, k, mask) {
+  from <- to <- x <- y <- NULL
   k2 <- k + 1
   p <- pca$x
   keep.pcs <- 1:pcs
@@ -730,13 +732,16 @@ getKNN <- function(pca, pcs, k, mask) {
 #' @rdname jaccardSimilarity
 #' @author Jason T. Serviss
 #' @param g tbl_graph; A tidygraph graph.
+#' @param prune numeric; Jaccard index less than prune are marked for non inclusion
+#'  in community detection.
 #' @param seed integer; a seed to set before running the community detection.
 #' @importFrom tidyr gather
 #' @importFrom dplyr mutate "%>%"
 #' @importFrom stats dist
 #' @export
 
-jaccardSimilarity <- function(g, prune = 1/15, seed = 7823) {
+jaccardSimilarity <- function(g, prune = 0, seed = 7823) {
+  name <- to <- from <- NULL
   set.seed(seed)
   j <- igraph::similarity(g, method = "jaccard", mode = "all")
   g <- tidygraph::activate(g, nodes)
@@ -770,6 +775,7 @@ jaccardSimilarity <- function(g, prune = 1/15, seed = 7823) {
 #' @export
 
 classify_louvain <- function(g, weights.col) {
+  pruneOK <- distOK <- mutual <- louvain <- NULL
   g %>%
     tidygraph::activate(edges) %>%
     filter(pruneOK & distOK & mutual) %>%
@@ -796,7 +802,7 @@ classify_louvain <- function(g, weights.col) {
 #' @param threshold Integer; Where classes containing a number of cells equal to
 #'  or less than the threshold will be grouped with the most similar class.
 #' @importFrom dplyr enquo count filter inner_join quo_name mutate if_else slice select pull
-#' @importFrom rlang "!!"
+#' @importFrom rlang "!!" sym
 #' @importFrom purrr map2_chr map2_lgl
 #' @importFrom tidygraph activate
 #' @importFrom tibble as_tibble
@@ -804,6 +810,7 @@ classify_louvain <- function(g, weights.col) {
 #' @export
 
 removeOutliers <- function(g, classificationMethod, threshold = 1) {
+  name <- NULL
   g <- tidygraph::activate(g, nodes)
   tabl <- g %>% as_tibble() %>% count(!! rlang::sym(classificationMethod))
 

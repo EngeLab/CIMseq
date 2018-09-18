@@ -52,6 +52,8 @@ namedListToTibble <- function(l) {
 #'
 #' @export
 #' @importFrom tibble as_tibble rownames_to_column
+#' @importFrom rlang ":=" "!!"
+#' @importFrom dplyr enquo quo_name
 
 matrix_to_tibble <- function(data, rowname = "rowname", drop = FALSE) {
   if(!is.matrix(data)) stop("The 'data' argument is not a matrix")

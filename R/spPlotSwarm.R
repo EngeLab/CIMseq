@@ -338,6 +338,10 @@ setGeneric("plotSwarmGenes", function(
 #' @export
 #' @import ggplot2
 #' @importFrom dplyr desc
+#' @importFrom purrr reduce map2 map2_dbl
+#' @importFrom tidyr nest
+#' @importFrom stats dpois
+#' @importFrom dplyr case_when
 
 setMethod("plotSwarmGenes", "spSwarm", function(
   spSwarm,
@@ -347,6 +351,8 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   freq = 10,
   ...
 ){
+  gene <- syntheticMultipletID <- syntheticValues <- pos <- ind.dpois.norm <- NULL
+  dpois.x <- cost.norm <- cost.real <- NULL
   sm <- getData(spSwarm, "syntheticMultiplets")
   rownames(sm) <- str_replace(rownames(sm), "(.*)\\.[0-9]*", "\\1")
   cpm <- getData(spCountsMul, "counts.cpm")
@@ -411,6 +417,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   
   #poisson distribution of each synthetic multiplet value
   .pd <- function(data, freq) {
+    syntheticValues <- syntheticValues <- pos <- gene <- NULL
     m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
 
     data %>%
@@ -440,6 +447,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   #calculate dpois only for the real synthetic multiplet values to be able to
   #show the real mean cost per gene.
   .rc <- function(data) {
+    syntheticData <- NULL
     data %>%
     mutate(cost.real = map2_dbl(count, syntheticData,
       ~costCalc(round(.x), matrix(unlist(.y$syntheticValues), nrow = 1))
@@ -455,6 +463,7 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   
   #calculate the entire cost space (blue line)
   .ec <- function(data, freq) {
+    dpois.x <- syntheticValues <- gene <- dpois <- mean.log <- NULL
     m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
     
     data %>%

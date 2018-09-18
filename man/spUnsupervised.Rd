@@ -123,6 +123,9 @@ determined by the mclust package.}
 \item{pca}{matrix; Optional precomputed representation of the data in PCA
 space.}
 
+\item{pcs}{integer; Optional value of the largest principal component to
+include from the PCA dimensionality reduction.}
+
 \item{pcVarPercent}{numeric; Specifies the minimum amount of variance
 contained in a principal component in order for it to be retained.}
 
@@ -154,12 +157,6 @@ character vector. These must match the rownames in the counts variable.}
 \item{weighted}{boolean indicating if the group means should be weighted with
 uncertainty.}
 
-\item{pca}{integer; Optional value of the largest principal component to
-include from the PCA dimensionality reduction.}
-
-\item{pcVarPercent}{numeric; Specifies the minimum amount of variance
-contained in a principal component in order for it to be retained.}
-
 \item{uncertainty}{Contains the uncertainty in converting a conditional
 probablility from EM to a classification in model-based clustering.
 Reported from mclust.}
@@ -175,7 +172,7 @@ Description.
 }
 \examples{
 
-uObj <- spUnsupervised(test_spCountsSng, max_iter = 100, Gmax = 6)
+uObj <- spUnsupervised(test_spCountsSng, max_iter = 100, distCut = 0.7, classCut = 1)
 
 }
 \author{

@@ -4,10 +4,13 @@
 \alias{jaccardSimilarity}
 \title{jaccardSimilarity}
 \usage{
-jaccardSimilarity(g, prune = 1/15, seed = 7823)
+jaccardSimilarity(g, prune = 0, seed = 7823)
 }
 \arguments{
 \item{g}{tbl_graph; A tidygraph graph.}
+
+\item{prune}{numeric; Jaccard index less than prune are marked for non inclusion
+in community detection.}
 
 \item{seed}{integer; a seed to set before running the community detection.}
 }

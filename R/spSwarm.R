@@ -184,6 +184,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 }
 
 .processStats <- function(opt.out, cn, rn) {
+  position <- NULL
   stats <- map(opt.out, 6)
   tibble(
     sample = rn,
@@ -221,6 +222,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 }
 
 .costCalculationR <- function(oneMultiplet, syntheticMultiplets) {
+  dpois <- NULL
   dpois(round(oneMultiplet), lambda = syntheticMultiplets) %>%
   matrixStats::rowMeans2() %>%
   log10() %>%
@@ -397,6 +399,7 @@ spSwarmPoisson <- function(
   logic,
   ...
 ){
+  value <- NULL
   homo <- paste(sort(colnames(mat)), sort(colnames(mat)), sep = "-")
   hetero <- apply(combn(colnames(mat), 2), 2, function(x) {
       paste(sort(x), collapse = "-")
@@ -456,13 +459,14 @@ NULL
 
 #' @rdname calcResiduals
 #' @export
+#' @importFrom purrr map_dfc set_names
 
 calcResiduals <- function(
   spCountsMul,
   spSwarm,
   ...
 ){
-  
+  gene <- residual <- NULL
   frac <- getData(spSwarm, "spSwarm")
   sm <- getData(spSwarm, "syntheticMultiplets")
   selectInd <- getData(spSwarm, "arguments")[['selectInd']]
