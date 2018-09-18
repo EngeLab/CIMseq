@@ -628,7 +628,7 @@ runPCA <- function(spCounts, select) {
 pcByVarPercent <- function(pca, cutoff) {
   var <- pca$sdev^2
   var.percent <- var / sum(var) * 100
-  which(var.percent <= gt)[1] - 1
+  which(var.percent <= cutoff)[1] - 1
 }
 
 #' constructGraph
