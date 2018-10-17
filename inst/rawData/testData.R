@@ -8,37 +8,31 @@ load('data/testCounts.rda')
 
 s <- grepl("^s", colnames(testCounts))
 ercc <- grepl("^ERCC\\-[0-9]*$", rownames(testCounts))
+singlets <- testCounts[!ercc, s]
+singletsERCC <- testCounts[ercc, s]
 
-cObjSng <- spCounts(testCounts[!ercc, s], testCounts[ercc, s])
-cObjMul <- spCounts(testCounts[!ercc, !s], testCounts[ercc, !s])
-
-##spUnsupervised
-uObj <- spUnsupervised(cObjSng)
-
-#rename classes
-midx <- match(rownames(getData(uObj, "tsne")), meta$sample)
-classification(uObj) <- meta$cellTypes[midx]
-groupMeans(uObj) <- averageGroupExpression(
-  cObjSng, getData(uObj, "classification"), FALSE
+#feature selection and dim red.
+select <- selectTopMax(singlets, 2000)
+pdist <- pearsonsDist(singlets, select)
+tsne <- runTsne(pdist)
+cObjSng <- CIMseqSinglets(
+  singlets, singletsERCC, tsne, 
+  testMeta$cellTypes[match(colnames(singlets), testMeta$sample)]
 )
-tsneMeans(uObj) <- tsneGroupMeans(
-  getData(uObj, "tsne"), getData(uObj, "classification")
-)
+cObjMul <- CIMseqMultiplets(testCounts[!ercc, !s], testCounts[ercc, !s], select)
 
 ##spSwarm
 future::plan(multiprocess)
-sObj <- spSwarm(
-  cObjSng, cObjMul, uObj, maxiter = 10, swarmsize = 150,
-  nSyntheticMultiplets = 400, saveSingletData = TRUE, report = TRUE,
-  reportRate = 1
+sObj <- CIMseqSwarm(
+  cObjSng, cObjMul, maxiter = 10, swarmsize = 150,
+  nSyntheticMultiplets = 400, report = TRUE, reportRate = 1
 )
 
 #rename
-test_spCountsSng <- cObjSng
-test_spCountsMul <- cObjMul
-test_spUnsupervised <- uObj
-test_spSwarm <- sObj
+CIMseqSinglets_test <- cObjSng
+CIMseqMultiplets_test <- cObjMul
+CIMseqSwarm_test <- sObj
 save(
-  test_spCountsSng, test_spCountsMul, test_spUnsupervised, test_spSwarm,
+  CIMseqSinglets_test, CIMseqMultiplets_test, CIMseqSwarm_test,
   file = "data/testData.rda"
 )

@@ -3,15 +3,16 @@
 \docType{methods}
 \name{plotSwarmPosition}
 \alias{plotSwarmPosition}
-\alias{plotSwarmPosition,spSwarm-method}
+\alias{plotSwarmPosition,CIMseqSwarm-method}
 \title{plotSwarmPosition}
 \usage{
-plotSwarmPosition(x, ...)
+plotSwarmPosition(swarm, ...)
 
-\S4method{plotSwarmPosition}{spSwarm}(x, multiplet, interval = NULL, ...)
+\S4method{plotSwarmPosition}{CIMseqSwarm}(swarm, multiplet,
+  interval = NULL, ...)
 }
 \arguments{
-\item{x}{An spSwarm object.}
+\item{swarm}{A CIMseqSwarm object.}
 
 \item{...}{additional arguments to pass on.}
 

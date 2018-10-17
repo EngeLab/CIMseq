@@ -2,169 +2,7 @@
 #'@include All-classes.R
 NULL
 
-#' spUnsupervised
-#'
-#' Subtitle
-#'
-#' Description.
-#'
-#' @name spUnsupervised
-#' @rdname spUnsupervised
-#' @aliases spUnsupervised
-#' @param spCounts spCounts object with singlets only.
-#' @param theta Passed to Rtsne.
-#' @param k The dimensions of the resulting tsne. Passed to tsne function.
-#' @param max_iter The max number of tSNE iterations. Passed to tsne function.
-#' @param perplexity The perplexity argument to tsne. Passed to tsne function.
-#' @param initial_dims The initial dimensions argument. Passed to tsne function.
-#' @param pca matrix; Optional precomputed representation of the data in PCA
-#' space.
-#' @param pcs integer; Optional value of the largest principal component to
-#' include from the PCA dimensionality reduction.
-#' @param pcVarPercent numeric; Specifies the minimum amount of variance
-#' contained in a principal component in order for it to be retained.
-#' @param mask integer; Principal components to mask.
-#' @param NN data.frame; Optional precalculated nearest neighbors. Should
-#' contain columns "from" and "to" indicating neighbors, "dist" indicating a
-#' distance between neighbors, and "mutual" a logical column indicating if the
-#' neighbors have a mutual connection.
-#' @param kNN integer; Number of nearest neighbors to identify.
-#' @param distCut numeric; The quantile at which to cut the distance.
-#' @param classCut integer; Classes with members < classCut will be "undefined".
-#' @param seed Sets the seed before running tSNE.
-#' @param type Decides if genes included are picked by their maximum expression
-#'  or maximum variance. Can be either "max", "var", "maxMean", or "manual". If
-#'  "manual" the genes argument must also be specified.
-#' @param max The max number of genes to include based either on maximum
-#'    expression or maximum variance which is decided by the "type" paramater.
-#' @param genes If type = manual, genes to be included are specified here as a
-#'    character vector. These must match the rownames in the counts variable.
-#' @param tsne tSNE results.
-#' @param tsneMeans The mean x and y positions of each cell type in the tSNE
-#'    results.
-#' @param classification Post-tSNE cell type classification. Typically
-#'    determined by the mclust package.
-#' @param selectInd The indexes of the genes picked for use in spUnsupervised.
-#' @param weighted boolean indicating if the group means should be weighted with
-#'    uncertainty.
-#' @param uncertainty Contains the uncertainty in converting a conditional
-#'    probablility from EM to a classification in model-based clustering.
-#'    Reported from mclust.
-#' @param object spUnsupervised object.
-#' @param n Data to extract from spUnsupervised object.
-#' @param value Data to replace in spUnsupervised object.
-#' @param .Object Internal object.
-#' @param ... Additional arguments to pass on.
-#' @return spUnsupervised object.
-#' @author Jason T. Serviss
-#' @keywords spUnsupervised
-#' @examples
-#'
-#' uObj <- spUnsupervised(test_spCountsSng, max_iter = 100, distCut = 0.7, classCut = 1)
-#'
-NULL
-
-#' @rdname spUnsupervised
-#' @export
-
-setGeneric("spUnsupervised", function(
-  spCounts,
-  ...
-){
-  standardGeneric("spUnsupervised")
-})
-
-
-#' @rdname spUnsupervised
-#' @export
-#' @importFrom Rtsne Rtsne
-#' @importFrom mclust Mclust mclustBIC
-#' @importFrom stats as.dist
-
-setMethod("spUnsupervised", "spCounts", function(
-  spCounts, theta = 0, k = 2, max_iter = 2000, perplexity = 10,
-  initial_dims = 50,
-  pca = NULL,
-  pcs = NULL,
-  pcVarPercent = 1,
-  mask = NULL,
-  NN = NULL,
-  kNN = 50,
-  distCut,
-  classCut,
-  seed = 11, type = "max",
-  max = 2000, genes = NULL, weighted = TRUE, ...
-){
-  ji <- NULL
-  #filter genes to be included in analysis
-  select <- .featureSelection(spCounts, type, max, genes)
-  
-  #calculate distances
-  my.dist <- pearsonsDist(spCounts, select)
-  
-  #run tSNE
-  tsne <- runTsne(
-    my.dist, k, theta, initial_dims,
-    max_iter, perplexity, seed
-  )
-  
-  #run Mclust
-  if(is.null(pca)) pca <- runPCA(spCounts, select)
-  if(is.null(pcs)) pcs <- pcByVarPercent(pca, pcVarPercent)
-  if(is.null(NN)) NN <- getKNN(pca, pcs, kNN, mask = mask)
-  g <- constructGraph(NN, quantile(NN$dist, probs = distCut))
-  g <- jaccardSimilarity(g, 0, seed)
-  g <- classify_louvain(g, ji)
-  g <- removeOutliers(g, "louvain", threshold = classCut)
-  class <-  as.data.frame(g)$louvain
-  
-  #check for classification problems
-  .classificationChecks(class)
-  
-  #create object
-  new("spUnsupervised",
-    tsne = tsne,
-    tsneMeans = tsneGroupMeans(tsne, class),
-    classification = class,
-    selectInd = select
-  )
-})
-
-.featureSelection <- function(spCounts, type, max, genes) {
-  if(type == "var") {
-    select <- spTopVar(spCounts, max)
-  }
-  
-  if(type == "max") {
-    select <- spTopMax(spCounts, max)
-  }
-    
-  if(type == "manual" & is.character(genes) == TRUE) {
-    select <- which(rownames(getData(spCounts, "counts.log")) %in% genes)
-  }
-    
-  if(type == "all") {
-    bool1 <- duplicated(getData(spCounts, "counts.log"))
-    bool2 <- duplicated(getData(spCounts, "counts.log"), fromLast = TRUE)
-    select <- which((bool1 | bool2) == FALSE)
-  }
-  return(select)
-}
-#checks for results from classification that will throw a downstream error.
-.classificationChecks <- function(class) {
-  if(length(unique(class)) == 1) {
-    stop("Only one group could be classified.
-    Please adjust the tSNE-related arguments and
-    try again or manually supply group classifications.")
-  }
-  
-  if(any(table(class) == 1)) {
-    stop("One/more cells have been classified as an individual cell type.
-    You probably need to adjust the Gmax argument and run again.")
-  }
-}
-
-#' spTopVar
+#' selectTopVar
 #'
 #' Facilitates gene selection prior to unsupervised clustering.
 #'
@@ -172,31 +10,27 @@ setMethod("spUnsupervised", "spCounts", function(
 #' variance in the spCounts object. The expression matrix in
 #' the counts.cpm slot is used for the calculation.
 #'
-#' @name spTopVar
-#' @rdname spTopVar
-#' @aliases spTopVar
-#' @param spCounts An spCounts object.
+#' @name selectTopVar
+#' @rdname selectTopVar
+#' @param cpm matrix; Counts per million.
 #' @param n Number of genes to select.
 #' @return A numeric vector containing the indices of selected genes.
 #' @author Jason T. Serviss
-#' @keywords spTopVar
 #' @examples
-#'
-#' selected <- spTopVar(test_spCountsSng, 10)
-#'
+#' s <- selectTopVar(getData(CIMseqSinglets_test, "counts.cpm"), 10)
 NULL
 
-#' @rdname spTopVar
+#' @rdname selectTopVar
 #' @importFrom matrixStats rowVars
 #' @export
 
-spTopVar <- function(spCounts, n) {
-  rv <- matrixStats::rowVars(getData(spCounts, "counts.cpm"))
+selectTopVar <- function(cpm, n) {
+  rv <- matrixStats::rowVars(cpm)
   select <- order(rv, decreasing = TRUE)[1:n]
   return(select)
 }
 
-#' spTopMax
+#' selectTopMax
 #'
 #' Facilitates gene selection prior to unsupervised clustering.
 #'
@@ -204,28 +38,23 @@ spTopVar <- function(spCounts, n) {
 #' expression in the spCounts object. The expression matrix in
 #' the counts.cpm slot is used for the calculation.
 #'
-#' @name spTopMax
-#' @rdname spTopMax
-#' @aliases spTopMax
-#' @param spCounts An spCounts object.
+#' @name selectTopMax
+#' @rdname selectTopMax
+#' @param cpm matrix; Counts per million.
 #' @param n Number of genes to select. If n > dim(data)[1] all data is returned.
 #' @return A numeric vector containing the indices of selected genes.
 #' @author Jason T. Serviss
-#' @keywords spTopMax
 #' @examples
-#'
-#' selected <- spTopMax(test_spCountsSng, 10)
-#'
+#' s <- selectTopMax(getData(CIMseqSinglets_test, "counts.cpm"), 10)
 NULL
 
-#' @rdname spTopMax
+#' @rdname selectTopMax
 #' @importFrom matrixStats rowMaxs
 #' @export
 
-spTopMax <- function(spCounts, n) {
-  data <- getData(spCounts, "counts.cpm")
-  n <- min(n, dim(data)[1])
-  rv <- matrixStats::rowMaxs(data)
+selectTopMax <- function(cpm, n) {
+  n <- min(n, dim(cpm)[1])
+  rv <- matrixStats::rowMaxs(cpm)
   select <- order(rv, decreasing = TRUE)[1:n]
   return(select)
 }
@@ -244,7 +73,7 @@ spTopMax <- function(spCounts, n) {
 #' @name pearsonsDist
 #' @rdname pearsonsDist
 #' @aliases pearsonsDist
-#' @param spCounts An spCounts object.
+#' @param cpm matrix; Counts per million.
 #' @param select A numeric vector indicating the indexes of genes to include.
 #' @return A matrix containing the mean value for each gene for each
 #'    classification group.
@@ -252,18 +81,18 @@ spTopMax <- function(spCounts, n) {
 #' @keywords pearsonsDist
 #' @examples
 #'
-#' my.dist <- pearsonsDist(test_spCountsSng, 1:2000)
+#' d <- pearsonsDist(getData(CIMseqSinglets_test, "counts.cpm"), 1:2000)
 #'
 NULL
 
 #' @rdname pearsonsDist
-#' @importFrom stats cor
+#' @importFrom stats cor as.dist
 #' @export
 
-pearsonsDist <- function(spCounts, select) {
+pearsonsDist <- function(cpm, select) {
   as.dist(
     1 - cor(
-      getData(spCounts, "counts.log")[select, ],
+      cpm[select, ],
       method = "p"
     )
   )
@@ -303,7 +132,7 @@ pearsonsDist <- function(spCounts, select) {
 #' @keywords runTsne
 #' @examples
 #'
-#' my.dist <- pearsonsDist(test_spCountsSng, 1:2000)
+#' my.dist <- pearsonsDist(getData(CIMseqSinglets_test, "counts.cpm"), 1:2000)
 #' tsne <- runTsne(my.dist, max_iter = 10)
 #'
 NULL
@@ -313,15 +142,8 @@ NULL
 #' @export
 
 runTsne <- function(
-  my.dist,
-  dims = 2,
-  theta = 0,
-  initial_dims = 50,
-  max_iter = 2000,
-  perplexity = 10,
-  seed = 11,
-  is_distance = TRUE,
-  ...
+  my.dist, dims = 2, theta = 0, initial_dims = 50, max_iter = 2000,
+  perplexity = 10, seed = 11, is_distance = TRUE, ...
 ){
   set.seed(seed)
   
@@ -334,64 +156,11 @@ runTsne <- function(
   return(my.tsne)
 }
 
-#' runMclust
+#' means.dim.red
 #'
 #'
-#' Calculates the x and y coordinates of the mean of each classified group.
-#'
-#'
-#' This method is typically only used in conjunction with plotting. It
-#' calculates the 2 dimensional location of the mean of each classified group
-#' in the supplied unsupervised dimensionality reduction (t-SNE) data
-#' representation.
-#'
-#' @name runMclust
-#' @rdname runMclust
-#' @aliases runMclust
-#' @param my.tsne A tsne result.
-#' @param Gmax A integer indicating the maximum number of clusters to evaluate.
-#' @param seed The desired seed to set before running.
-#' @return A matrix containing the mean value for each gene for each
-#'    classification group.
-#' @author Jason T. Serviss
-#' @keywords runMclust
-#' @examples
-#'
-#' my.dist <- pearsonsDist(test_spCountsSng, 1:2000)
-#' tsne <- runTsne(my.dist, max_iter = 10)
-#' class <- runMclust(tsne, 6, 11)
-#'
-NULL
-
-#' @rdname runMclust
-#' @importFrom mclust Mclust mclustBIC
-#' @export
-
-runMclust <- function(
-  my.tsne,
-  Gmax = 50,
-  seed = 11
-){
-  set.seed(seed)
-  mod1 <- Mclust(my.tsne, G = 1:Gmax)
-  
-  #rename classification classes
-  x <- unique(mod1$classification)
-  n <- ceiling(length(x)/26)
-  names <- unlist(lapply(1:n, function(u)
-    paste(LETTERS, u, sep = ""))
-  )[1:length(x)]
-  mod1$classification <- names[match(mod1$classification, x)]
-  
-  classification <- mod1$classification
-  uncertainty <- mod1$uncertainty
-  return(list(classification, uncertainty))
-}
-
-#' tsneGroupMeans
-#'
-#'
-#' Calculates the x and y coordinates of the mean of each classified group.
+#' Calculates the x and y coordinates of the mean of each classified group in 
+#' the dimensionality reduced data.
 #'
 #'
 #' This method is typically only used in conjunction with plotting. It
@@ -399,34 +168,33 @@ runMclust <- function(
 #' in the supplied unsupervised dimensionality reduction (t-SNE) data
 #' representation.
 #'
-#' @name tsneGroupMeans
-#' @rdname tsneGroupMeans
-#' @aliases tsneGroupMeans
+#' @name means.dim.red
+#' @rdname means.dim.red
 #' @param data Singlet 2D tsne.
 #' @param classes A character vector indicating the class of each singlet.
 #' @return A matrix containing the mean value for each gene for each
 #'    classification group.
 #' @author Jason T. Serviss
-#' @keywords tsneGroupMeans
 #' @examples
 #'
-#' meanGroupPos <- tsneGroupMeans(
-#'   getData(test_spUnsupervised, "tsne"),
-#'   getData(test_spUnsupervised, "classification")
+#' means <- means.dim.red(
+#'   getData(CIMseqSinglets_test, "dim.red"),
+#'   getData(CIMseqSinglets_test, "classification")
 #' )
 #'
 NULL
 
-#' @rdname tsneGroupMeans
+#' @rdname means.dim.red
 #' @importFrom dplyr "%>%" group_by summarise
+#' @importFrom rlang .data
 #' @export
 
-tsneGroupMeans <- function(data, classes) {
+means.dim.red <- function(data, classes) {
   d <- data.frame(data[ ,1], data[ ,2], classes)
   colnames(d) <- c("x", "y", "classification")
   
   d %>%
-  group_by(classification) %>%
+  group_by(.data$classification) %>%
   summarise(
     x = mean(.data$x),
     y = mean(.data$y)
@@ -436,24 +204,18 @@ tsneGroupMeans <- function(data, classes) {
 
 #' erccPerClass
 #'
-#'
 #' Calculates median ercc reads per class.
-#'
-#'
 #'
 #' @name erccPerClass
 #' @rdname erccPerClass
-#' @aliases erccPerClass
-#' @param spCountsSng An spCounts object containing singlets.
-#' @param spCountsMul An spCounts object containing multiplets.
-#' @param spUnsupervised An spUnsupervised object.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @return A matrix containing the median value for each gene for each
-#'    classification group.
+#'  classification group.
 #' @author Jason T. Serviss
-#' @keywords erccPerClass
 #' @examples
 #'
-#' out <- erccPerClass(test_spCountsSng, test_spCountsMul, test_spUnsupervised)
+#' out <- erccPerClass(CIMseqSinglets_test, CIMseqMultiplets_test)
 #'
 NULL
 
@@ -464,43 +226,35 @@ NULL
 #' @export
 
 erccPerClass <- function(
-  spCountsSng,
-  spCountsMul,
-  spUnsupervised
+  singlets, multiplets
 ){
   class <- tibble(
-    class = getData(spUnsupervised, "classification"),
-    sampleName = colnames(getData(spCountsSng, "counts"))
+    class = getData(singlets, "classification"),
+    sampleName = colnames(getData(singlets, "counts"))
   )
   
-  estimateCells(spCountsSng, spCountsMul) %>%
-  right_join(class, by = "sampleName") %>%
-  group_by(class) %>%
-  summarise(
-    medianFracErcc = median(.data$frac.ercc, na.rm = TRUE),
-    meanFracErcc = mean(.data$frac.ercc, na.rm = TRUE)
-  )
+  estimateCells(singlets, multiplets) %>%
+    right_join(class, by = "sampleName") %>%
+    group_by(class) %>%
+    summarise(
+      medianFracErcc = median(.data$frac.ercc, na.rm = TRUE),
+      meanFracErcc = mean(.data$frac.ercc, na.rm = TRUE)
+    )
 }
 
 #' countsPerClass
 #'
-#'
 #' Calculates median counts per class.
-#'
-#'
 #'
 #' @name countsPerClass
 #' @rdname countsPerClass
-#' @aliases countsPerClass
-#' @param spCountsSng An spCounts object containing singlets.
-#' @param spUnsupervised An spUnsupervised object.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
 #' @return A matrix containing the median value for each gene for each
-#'    classification group.
+#'  classification group.
 #' @author Jason T. Serviss
-#' @keywords countsPerClass
 #' @examples
 #'
-#' output <- countsPerClass(test_spCountsSng, test_spUnsupervised)
+#' output <- countsPerClass(CIMseqSinglets_test)
 #'
 NULL
 
@@ -511,14 +265,13 @@ NULL
 #' @export
 
 countsPerClass <- function(
-  spCountsSng,
-  spUnsupervised
+  singlets
 ){
   sampleName <- NULL
-  counts <- getData(spCountsSng, "counts")
+  counts <- getData(singlets, "counts")
   tibble(
-    class = getData(spUnsupervised, "classification"),
-    sampleName = colnames(getData(spCountsSng, "counts"))
+    class = getData(singlets, "classification"),
+    sampleName = colnames(getData(singlets, "counts"))
   ) %>%
   group_by(class) %>%
   summarize(
@@ -532,14 +285,13 @@ countsPerClass <- function(
 #'
 #' @name expectedInteractionFreq
 #' @rdname expectedInteractionFreq
-#' @aliases expectedInteractionFreq
-#' @param spUnsupervised An spUnsupervised object.
-#' @return A table with the expected frequencies..
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @return A table with the expected frequencies.
 #' @author Jason T. Serviss
 #' @keywords expectedInteractionFreq
 #' @examples
 #'
-#' expectedInteractionFreq(test_spUnsupervised)
+#' exfreq <- expectedInteractionFreq(CIMseqSinglets_test)
 #'
 NULL
 
@@ -547,8 +299,8 @@ NULL
 #' @importFrom dplyr "%>%"
 #' @export
 
-expectedInteractionFreq <- function(spUnsupervised) {
-  getData(spUnsupervised, "classification") %>%
+expectedInteractionFreq <- function(singlets) {
+  getData(singlets, "classification") %>%
     table() %>% 
     divide_by(sum(.))
 }
@@ -560,14 +312,14 @@ expectedInteractionFreq <- function(spUnsupervised) {
 #' @name estimateTotalConnections
 #' @rdname estimateTotalConnections
 #' @aliases estimateTotalConnections
-#' @param spCountsSng An spCounts object containing singlets.
-#' @param spCountsMul An spCounts object containing multiplets.
-#' @return A table with the expected frequencies..
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
+#' @return The number of estimated connections.
 #' @author Jason T. Serviss
 #' @keywords estimateTotalConnections
 #' @examples
 #'
-#' expectedInteractionFreq(test_spUnsupervised)
+#' estimateTotalConnections(CIMseqSinglets_test, CIMseqMultiplets_test)
 #'
 NULL
 
@@ -575,9 +327,9 @@ NULL
 #' @importFrom dplyr "%>%"
 #' @export
 
-estimateTotalConnections <- function(spCountsSng, spCountsMul) {
+estimateTotalConnections <- function(singlets, multiplets) {
   sampleType <- cellNumberMedian <- cellNumber <- connections <- NULL
-  estimateCells(spCountsSng, spCountsMul) %>%
+  estimateCells(singlets, multiplets) %>%
     filter(sampleType == "Multiplet") %>%
     mutate(cellNumber = round(cellNumberMedian)) %>%
     filter(cellNumber > 1) %>%
@@ -601,13 +353,13 @@ estimateTotalConnections <- function(spCountsSng, spCountsMul) {
 #' @name runPCA
 #' @rdname runPCA
 #' @author Jason T. Serviss
-#' @param spCounts spCounts object with singlets only.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
 #' @param select A numeric vector indicating the indexes of genes to include.
 #' @importFrom gmodels fast.prcomp
 #' @export
 
-runPCA <- function(spCounts, select) {
-  counts.log <- getData(spCounts, "counts.log")
+runPCA <- function(singlets, select) {
+  counts.log <- getData(singlets, "counts.log")
   gmodels::fast.prcomp(t(counts.log[select, ]), center = TRUE)
 }
 
@@ -686,7 +438,7 @@ constructGraph <- function(data, distCut) {
 #' @param k Integer; Number of nearest neighbors.
 #' @param mask Integer, Principal components to mask.
 #' @importFrom RANN nn2
-#' @importFrom tidyr gather
+#' @importFrom tidyr gather unite
 #' @importFrom dplyr mutate select distinct "%>%"
 #' @importFrom stringr str_replace
 #' @importFrom purrr map2_chr

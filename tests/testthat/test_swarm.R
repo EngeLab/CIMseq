@@ -31,10 +31,10 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
   )
 
     #run function
-  output1 <- getMultipletsForEdge(test_spSwarm, 0, data.frame("A375", "HOS"))
-  output2 <- getMultipletsForEdge(test_spSwarm, 0, data.frame("HCT116", "HOS"))
+  output1 <- getMultipletsForEdge(CIMseqSwarm_test, 0, data.frame("A375", "HOS"))
+  output2 <- getMultipletsForEdge(CIMseqSwarm_test, 0, data.frame("HCT116", "HOS"))
   output3 <- getMultipletsForEdge(
-    test_spSwarm, 0, data.frame(c("A375", "A375"), c("HCT116", "HOS"))
+    CIMseqSwarm_test, 0, data.frame(c("A375", "A375"), c("HCT116", "HOS"))
   )
 
     #test
@@ -60,8 +60,8 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
   )
 
   #run function
-  output1 <- getEdgesForMultiplet(test_spSwarm, 0, 'm.NJB00204.D07')
-  output2 <- getEdgesForMultiplet(test_spSwarm, 0, 'm.NJB00204.G04')
+  output1 <- getEdgesForMultiplet(CIMseqSwarm_test, 0, 'm.NJB00204.D07')
+  output2 <- getEdgesForMultiplet(CIMseqSwarm_test, 0, 'm.NJB00204.G04')
 
   #test
   expect_identical(output1, expected1)
@@ -322,13 +322,13 @@ test_that("check that appropriateSinglets outputs the expected result", {
   
   ###TEST1####
   #extract needed variables
-  selectInd <- getData(test_spSwarm, "arguments")$selectInd
-  singlets <- getData(test_spCountsSng, "counts.cpm")
-  n <- getData(test_spSwarm, "arguments")$nSyntheticMultiplets
-  idx <- getData(test_spSwarm, "singletIdx")
+  selectInd <- getData(CIMseqSwarm_test, "arguments")$features
+  singlets <- getData(CIMseqSinglets_test, "counts.cpm")
+  n <- getData(CIMseqSwarm_test, "arguments")$nSyntheticMultiplets
+  idx <- getData(CIMseqSwarm_test, "singletIdx")
   
   #setup expected data
-  nc <- length(unique(getData(test_spUnsupervised, "classification")))
+  nc <- length(unique(getData(CIMseqSinglets_test, "classification")))
   nr <- prod(length(selectInd), n)
   rn <- paste(rep(rownames(singlets)[selectInd], each = n), 1:n, sep = ".")
   singlets <- singlets[selectInd, ]
@@ -340,10 +340,7 @@ test_that("check that appropriateSinglets outputs the expected result", {
   
   #run function
   set.seed(82390)
-  output <- appropriateSinglets(
-    test_spUnsupervised, test_spCountsSng,
-    idx, selectInd
-  )
+  output <- appropriateSinglets(CIMseqSinglets_test, idx, selectInd)
   
   #test
   expect_equal(nr, nrow(output))
@@ -360,16 +357,14 @@ test_that("check that calculateCost and cost give identical results", {
   
   ###TEST1####
   #prepare normal input data
-  selectInd <- getData(test_spSwarm, "arguments")$selectInd
-  singletIdx <- getData(test_spSwarm, "singletIdx")
-  singletSubset <- appropriateSinglets(
-    test_spUnsupervised, test_spCountsSng,
-    singletIdx, selectInd
-  )
+  selectInd <- getData(CIMseqSwarm_test, "arguments")$features
+  singletIdx <- getData(CIMseqSwarm_test, "singletIdx")
+  singletSubset <- appropriateSinglets(CIMseqSinglets_test, singletIdx, selectInd)
+  
   m <- "m.NJB00204.G04"
-  oneMultiplet <- ceiling(getData(test_spCountsMul, "counts.cpm")[, m])
-  fractions <- as.numeric(getData(test_spSwarm, "spSwarm")[m, ])
-  n <- getData(test_spSwarm, "arguments")$nSyntheticMultiplets
+  oneMultiplet <- ceiling(getData(CIMseqMultiplets_test, "counts.cpm")[, m])
+  fractions <- as.numeric(getData(CIMseqSwarm_test, "fractions")[m, ])
+  n <- getData(CIMseqSwarm_test, "arguments")$nSyntheticMultiplets
   
   adj <- adjustAccordingToFractions(fractions, singletSubset)
   rm <- multipletSums(adj)
@@ -423,6 +418,3 @@ test_that("check that calculateCost and cost give identical results", {
   #test
   expect_equal(cost.cpp, cost)
 })
-
-
-

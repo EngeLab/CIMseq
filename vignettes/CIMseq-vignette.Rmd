@@ -1,0 +1,214 @@
+---
+title: "CIMseq Vignette"
+author: "Jason T. Serviss, Nathanael Andrews, and Martin Enge"
+date: '`r Sys.Date()`'
+output:
+    html_document:
+        theme: flatly
+        toc: yes
+vignette: >
+    %\VignetteIndexEntry{ClusterSignificance Vignette} 
+    %\usepackage[utf8]{inputenc}
+    %\SweaveUTF8
+    %\VignetteEngine{knitr::rmarkdown} 
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+    .col2 {
+        columns: 2 200px;         /* number of columns and width in pixels*/
+        -webkit-columns: 2 200px; /* chrome, safari */
+        -moz-columns: 2 200px;    /* firefox */
+    }
+</style>
+
+```{r style, echo = FALSE, results = 'asis', eval = TRUE}
+BiocStyle::markdown()
+packages <- c("sp.scRNAseq", "printr", "future")
+purrr::walk(packages, library, character.only = TRUE)
+rm(packages)
+```
+
+## Introduction
+
+CIMseq works in 2 stages with each stage being supported by plotting 
+functions. The stages are as follows:
+
+1. Creating the CIMseqSinglets object and CIMseqMultiplets objects for singlets 
+and multiplets. 
+   * Counts and ercc counts are input and stored. As well, counts per 
+   million (cpm) and log2 cpm are calculated.
+   * The CIMseqSinglets object also holds a dimensionality reduced 
+   representation of the data (used for plotting) and the classification 
+   information.
+   * The CIMseqMultiplets object also holds information concerning which 
+   features to select during deconvolution.  
+
+2. Multuplet deconvolution via swarm optimization. 
+   * Here we utilize swarm optimization to deconvolute the multuplets and, thus,
+   provide an overview of the tissue "connectome".
+        
+## CIMseqSinglets and CIMseqMultiplets method
+
+Make CIMseqSinglets counts object. The CIMseqSinglets command takes 4 arguments:
+
+1. matrix; The raw counts data with gene IDs as rownames and sample IDs as 
+colnames. 
+2. matrix; The ERCC spike-in counts data with gene IDs as rownames and sample 
+IDs as colnames.
+3. matrix; The dimensionality reduced representation of the data.
+4. character; A class for each of the individual singlets.
+
+We use the testCounts dataset, included in the package, to initialize the 
+CIMseqSinglets and CIMseqMultiplets objects. testCounts contains singlets that 
+comprise 3 cell types, 80 in total, and 3 multiplets. These multiplets were 
+FACS sorted before sequencing such that their composition is known and we expect
+to detect exactly one connection between each of the cell types in the dataset.
+
+```{r}
+testCounts[1:2, 1:2] #example
+dim(testCounts) #genes and sample numbers
+class(testCounts) #must be a matrix
+```
+
+We first extract the ERCC reads and divide the counts data into singlets and 
+multiplets. In the test data, ERCC reads can be identified with the regular 
+expression "^ERCC\\-[0-9]*$" and the colnames of all singlet samples are 
+prefixed with an "s" and all multiplets are prefixed with an "m".
+
+```{r, eval = TRUE}
+s <- grepl("^s", colnames(testCounts))
+ercc <- grepl("^ERCC\\-[0-9]*$", rownames(testCounts))
+singlets <- testCounts[!ercc, s]
+singletERCC <- testCounts[ercc, s]
+multiplets <- testCounts[!ercc, !s]
+multipletERCC <- testCounts[ercc, !s]
+```
+
+We next want to perform feature selection, dimensionality reduction, and 
+classification for the singlets. For the testData we have already pre-calculated 
+this information. Once we have performed these calculations, we can build the 
+CIMseqSinglets and CIMseqMultiplets objects that will be input into the 
+deconvolution method.
+
+```{r}
+#extract pre-calculated data
+dim.red <- getData(CIMseqSinglets_test, "dim.red")
+classes <- getData(CIMseqSinglets_test, "classification")
+selected <- getData(CIMseqMultiplets_test, "features")
+
+#build CIMseq objects
+cObjSng <- CIMseqSinglets(singlets, singletERCC, dim.red, classes)
+cObjMul <- CIMseqMultiplets(multiplets, multipletERCC, selected)
+```
+
+The CIMseqSinglets object contains:  
+1. The raw counts data input by the user.  
+2. A function to calculate log normalized counts per million on the fly.  
+3. A function to calculate counts per million on the fly.  
+4. The counts.ercc input by the user (if these are not available they can be 
+substituted using matrix())  
+5. The dimensionality reduced representation of the data.  
+6. The classification for each single cell.  
+
+The CIMseqMultiplets object contains:  
+1. The raw counts data input by the user.  
+2. A function to calculate log normalized counts per million on the fly.  
+3. A function to calculate counts per million on the fly.  
+4. The counts.ercc input by the user (if these are not available they can be 
+substituted using matrix())  
+5. The index of selected genes to use in the deconvolution.
+
+### Accessors
+
+Individual slots within the CIMseq objects can be accessed with the "getData" 
+function. Note that all other CIMseq object slots can be accessed in the same 
+way. See below:
+
+```{r, eval = TRUE}
+counts <- getData(cObjSng, "counts")
+```
+
+## Setters
+
+It is also possible to initiate a empty object and set slots or exchance data
+in the slots in the following manner:
+
+```{r}
+empty <- CIMseqSinglets()
+getData(empty, "counts") <- getData(cObjSng, "counts")
+```
+
+### ERCC fraction plot
+
+The fractions of ERCC spike-ins and the number of approximated cells can be 
+viewed in a plot using the plotCountsERCC function.
+
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+plotCountsERCC(cObjSng, cObjMul)
+```
+
+### Markers plot
+
+Sometimes it may be desireable to view the expression of 2 marker genes in the 
+counts data. This can be accomplished with the plotCountsMarkers function.
+
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+plotCountsMarkers(cObjSng, cObjMul, markers = c("CD74", "ANXA3"))
+```
+
+## Swarm method
+
+The deconvolution of the multuplets take place in this stage. The CIMseqSinglets
+and CIMseqMultiplets objects must be provided as arguments. In addition, there 
+are multiple parameters that may be tuned. See `help(CIMseqSwarm)`.
+
+```{r, eval = FALSE}
+plan(sequential)
+sObj <- CIMseqSwarm(
+  cObjSng, cObjMul, swarmsize = 500, 
+  nSyntheticMultiplets = 50, maxiter = 10
+)
+```
+
+```{r, echo = FALSE}
+sObj <- CIMseqSwarm_test
+```
+
+### spSwarm results
+
+We can exmaine the resulting connections with the `spSwarmPoisson` command:
+
+```{r, eval = TRUE}
+spSwarmPoisson(sObj, edge.cutoff = 1/100, min.num.edges = 0, min.pval = 1)
+```
+
+This reports all of the detected edges. The edge.cutoff argument specifies the 
+fraction above which an edge is considered to be valid. Since the optimization 
+vector is essentially a fraction, for an edge to be considered we can set the 
+edge.cutoff to 1 / (number of cell types + error margin). We can specify the 
+number of edges a connection must have to be reported with the *min.num.edges* 
+argument and also filter results for a specific significance level with the 
+*min.pval* argument.
+
+### spSwarm plot
+
+The resulting "connectome" can be plotted via the command below.
+
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+plotSwarmGraph(sObj, cObjSng)
+```
+
+Multiple additional plot types are possible for the deconvolution results and 
+are described in the plotting vignette.
+
+## Helper functions
+
+Write about the various helper functions to pluck information from the objects, 
+mostly the CIMseqSwarm objects.
+
+```{r}
+sessionInfo()
+```
+

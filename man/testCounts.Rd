@@ -20,5 +20,4 @@ Test counts data.
 }
 \examples{
 data(testCounts)
-
 }

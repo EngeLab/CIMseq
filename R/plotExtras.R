@@ -8,15 +8,13 @@ NULL
 #'
 #' @name plotData
 #' @rdname plotData
-#' @aliases plotData
 #' @param plot A ggplot object of class "gg" "ggplot".
 #' @param ... additional arguments to pass on.
 #' @return A tibble containing the plot data.
 #' @author Jason T. Serviss
-#' @keywords plotData
 #' @examples
 #'
-#' p <- plotCountsERCC(test_spCountsSng, test_spCountsMul)
+#' p <- plotCountsERCC(CIMseqSinglets_test, CIMseqMultiplets_test)
 #' plotData(p)
 #'
 NULL
@@ -55,15 +53,15 @@ setMethod("plotData", "gg", function(
 #' @rdname convertToERCC
 #' @author Jason T. Serviss
 #' @param ercc The left axis values. Passes as ".".
-#' @param spCountsSng spCounts; An spCounts object with singlets.
-#' @param spCountsMul spCounts; An spCounts object with multiplets.
+#' @param singlets CIMseqSinglets; An CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; An CIMseqMultiplets object.
 #' @keywords convertToERCC
 #' @export
 #' @importFrom dplyr select filter pull "%>%"
 #' @importFrom stats median
 
-convertToERCC <- function(ercc, spCountsSng, spCountsMul) {
-  estimateCells(spCountsSng, spCountsMul, warning = FALSE) %>%
+convertToERCC <- function(ercc, singlets, multiplets) {
+  estimateCells(singlets, multiplets, warning = FALSE) %>%
   select(.data$sampleType, .data$frac.ercc) %>%
   filter(.data$sampleType == "Singlet") %>%
   pull(.data$frac.ercc) %>%
@@ -234,4 +232,3 @@ processMarkers <- function(counts.log, markers) {
   #tidy markers
   matrix_to_tibble(markExpressNorm, rowname = "Sample")
 }
-

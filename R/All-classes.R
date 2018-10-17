@@ -3,17 +3,20 @@ NULL
 
 #####################
 #                   #
-#     spCounts      #
+#   CIMseqSinglets  #
 #                   #
 #####################
 
-#' @rdname spCounts
+#' @rdname CIMseqSinglets
 #' @export
-.spCounts <- setClass("spCounts", representation(
+
+setClass("CIMseqSinglets", representation(
   counts = "matrix",
   counts.log = "function",
   counts.cpm = "function",
-  counts.ercc = "matrix"
+  counts.ercc = "matrix",
+  dim.red = "matrix",
+  classification = "character"
 ))
 
 #############
@@ -22,107 +25,25 @@ NULL
 #           #
 #############
 
-#' @rdname spCounts
+#' @rdname CIMseqSinglets
+#' @export
+
 setGeneric("getData", function(object, ...){
   standardGeneric("getData") 
 })
 
-#' @rdname spCounts
+#' @rdname CIMseqSinglets
 #' @export
-setMethod("getData", "spCounts", function(object, n = NULL){
-  if(class(n) == "character"){
-    if(n %in% c("counts", "counts.ercc")) {
-      slot(object, n)
+
+setMethod("getData", "CIMseqSinglets", function(object, n = NULL){
+  if(is.character(n) & .hasSlot(object, n)){
+    slt <- slot(object, n)
+    if(!is.function(slt)) {
+      return(slt)
     } else {
-      fun <- slot(object, n)
-      fun(slot(object, "counts"))
+      return(slt(slot(object, "counts")))
     }
   }
-})
-
-#####################
-#                   #
-#  spUnsupervised   #
-#                   #
-#####################
-
-#' @rdname spUnsupervised
-#' @export
-.spUnsupervised <- setClass("spUnsupervised", representation(
-  tsne = "matrix",
-  tsneMeans = "data.frame",
-  classification = "character",
-  selectInd = "numeric"
-))
-
-#############
-#           #
-# Accessors #
-#           #
-#############
-#slot access is achieved with for ex. classification(uObj) <- newClassification
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("getData", "spUnsupervised", function(object, n = NULL){
-  if(class(n) == "character"){
-    slot(object, n)
-  }
-})
-
-#' @rdname spUnsupervised
-setGeneric("tsne", function(object){
-  standardGeneric("tsne")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("tsne", "spUnsupervised", function(object){
-  object@tsne
-})
-
-#' @rdname spUnsupervised
-setGeneric("tsneMeans", function(object){
-  standardGeneric("tsneMeans")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("tsneMeans", "spUnsupervised", function(object){
-  object@tsneMeans
-})
-
-#' @rdname spUnsupervised
-setGeneric("classification", function(object){
-  standardGeneric("classification")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("classification", "spUnsupervised", function(object){
-  object@classification
-})
-
-#' @rdname spUnsupervised
-setGeneric("uncertainty", function(object){
-  standardGeneric("uncertainty")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("uncertainty", "spUnsupervised", function(object){
-  object@uncertainty
-})
-
-#' @rdname spUnsupervised
-setGeneric("selectInd", function(object){
-  standardGeneric("selectInd")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("selectInd", "spUnsupervised", function(object){
-  object@selectInd
 })
 
 ###############
@@ -132,81 +53,38 @@ setMethod("selectInd", "spUnsupervised", function(object){
 ###############
 #https://www.bioconductor.org/help/course-materials/2013/CSAMA2013/friday/afternoon/S4-tutorial.pdf
 
-#' @rdname spUnsupervised
-setGeneric("tsne<-", function(object, value){
-  standardGeneric("tsne<-")
-})
-
-#' @rdname spUnsupervised
+#' @rdname CIMseqSinglets
 #' @export
-setMethod("tsne<-", "spUnsupervised", function(object, value){
-  object@tsne <- value
-  if (validObject(object)) return(object)
+
+setGeneric("getData<-", function(object, n, value){
+  standardGeneric("getData<-") 
 })
 
-#' @rdname spUnsupervised
-setGeneric("tsneMeans<-", function(object, value){
-  standardGeneric("tsneMeans<-")
-})
-
-#' @rdname spUnsupervised
+#' @rdname CIMseqSinglets
 #' @export
-setMethod("tsneMeans<-", "spUnsupervised", function(object, value){
-  object@tsneMeans <- value
-  if (validObject(object)) return(object)
+
+setMethod("getData<-", "CIMseqSinglets", function(object, n = NULL, value){
+  if(class(n) == "character" & .hasSlot(object, n)){
+    slot(object, n) <- value
+    return(object)
+  }
 })
 
-#' @rdname spUnsupervised
-setGeneric("classification<-", function(object, value){
-  standardGeneric("classification<-")
-})
+######################
+#                    #
+#  CIMseqMultiplets  #
+#                    #
+######################
 
-#' @rdname spUnsupervised
+#' @rdname CIMseqMultiplets
 #' @export
-setMethod("classification<-", "spUnsupervised", function(object, value){
-  object@classification <- value
-  if (validObject(object)) return(object)
-})
 
-#' @rdname spUnsupervised
-setGeneric("uncertainty<-", function(object, value){
-  standardGeneric("uncertainty<-")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("uncertainty<-", "spUnsupervised", function(object, value){
-  object@uncertainty <- value
-  if (validObject(object)) return(object)
-})
-
-#' @rdname spUnsupervised
-setGeneric("selectInd<-", function(object, value){
-  standardGeneric("selectInd<-")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("selectInd<-", "spUnsupervised", function(object, value){
-  object@selectInd <- value
-  if (validObject(object)) return(object)
-})
-
-#####################
-#                   #
-#      spSwarm      #
-#                   #
-#####################
-
-#' @rdname spSwarm
-#' @export
-.spSwarm <- setClass("spSwarm", representation(
-  spSwarm = "data.frame",
-  costs = "numeric",
-  convergence = "character",
-  stats = "tbl_df",
-  singletIdx = "list",
-  arguments = "list"
+setClass("CIMseqMultiplets", representation(
+  counts = "matrix",
+  counts.log = "function",
+  counts.cpm = "function",
+  counts.ercc = "matrix",
+  features = "integer"
 ))
 
 #############
@@ -215,10 +93,66 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value){
 #           #
 #############
 
-#' @rdname spSwarm
+#' @rdname CIMseqMultiplets
 #' @export
-setMethod("getData", "spSwarm", function(object, n = NULL){
-  if(class(n) == "character"){
+
+setMethod("getData", "CIMseqMultiplets", function(object, n = NULL){
+  if(is.character(n) & .hasSlot(object, n)){
+    slt <- slot(object, n)
+    if(!is.function(slt)) {
+      return(slt)
+    } else {
+      return(slt(slot(object, "counts")))
+    }
+  }
+})
+
+###############
+#             #
+# Replacement #
+#             #
+###############
+#https://www.bioconductor.org/help/course-materials/2013/CSAMA2013/friday/afternoon/S4-tutorial.pdf
+
+#' @rdname CIMseqMultiplets
+#' @export
+
+setMethod("getData<-", "CIMseqMultiplets", function(object, n = NULL, value){
+  if(class(n) == "character" & .hasSlot(object, n)){
+    slot(object, n) <- value
+    return(object)
+  }
+})
+
+#####################
+#                   #
+#    CIMseqSwarm    #
+#                   #
+#####################
+
+#' @rdname CIMseqSwarm
+#' @export
+
+setClass("CIMseqSwarm", representation(
+  fractions = "matrix",
+  costs = "numeric",
+  convergence = "character",
+  stats = "tbl_df",
+  singletIdx = "list",
+  arguments = "tbl_df"
+))
+
+#############
+#           #
+# Accessors #
+#           #
+#############
+
+#' @rdname CIMseqSwarm
+#' @export
+
+setMethod("getData", "CIMseqSwarm", function(object, n = NULL){
+  if(class(n) == "character" & .hasSlot(object, n)){
     slot(object, n)
   }
 })

@@ -1,67 +1,59 @@
 #'@include All-classes.R
 NULL
 
-#' spSwarm
+#' CIMseqSwarm
 #'
 #' Subtitle
 #'
 #' Description
 #'
-#' @name spSwarm
-#' @rdname spSwarm
-#' @aliases spSwarm
-#' @param spCountsSng an spCount object with singlets.
-#' @param spCountsMul an spCount object with multiplets.
-#' @param spUnsupervised an spCount object.
-#' @param maxiter pySwarm argument indicating maximum optimization iterations.
-#' @param swarmsize pySwarm argument indicating the number of swarm particals.
-#' @param nSyntheticMultiplets Numeric value indicating the number of synthetic
+#' @name CIMseqSwarm
+#' @rdname CIMseqSwarm
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
+#' @param maxiter integer; The maximum optimization iterations.
+#' @param swarmsize integer; The number of swarm particals.
+#' @param nSyntheticMultiplets Numeric; Value indicating the number of synthetic
 #'  multiplets to generate during deconvolution.
-#' @param seed The desired seed to set before running.
-#' @param norm Logical indicating if the sum of fractions should equal 1.
-#' @param report Logical indicating if additional reporting from the
+#' @param seed integer; Seed to set before running.
+#' @param norm logical; Indicates if the sum of fractions should equal 1.
+#' @param report logical; Indicates if additional reporting from the
 #'   optimization should be included.
-#' @param reportRate If report is TRUE, the iteration interval that a report
-#'    should be generated.
-#' @param selectInd Numeric; Gene indexes to select for swarm optimization. If
-#'  NULL the selectInd slot from the spUnsupervised object is used.
-#' @param vectorize Argument to \link[pso]{psoptim}.
-#' @param permute Logical; indicates if genes should be permuted before
+#' @param reportRate integer; If report is TRUE, the iteration interval for 
+#' which a report should be generated.
+#' @param vectorize logical, Argument to \link[pso]{psoptim}.
+#' @param permute logical; indicates if genes should be permuted before
 #'  deconvolution. For use with permutation testing.
-#' @param saveSingletData Logical: indicated if the singlets matrix used to
-#'  synthesize the syntheticMultiplets should be saved.
-#' @param spSwarm The spSwarm results.
-#' @param costs The costs after optimization.
-#' @param convergence The convergence output from psoptim. One value per
-#'    multiplet.
-#' @param stats The stats output from psoptim.
-#' @param arguments Arguments passed to the spSwarm function.
-#' @param singletIdx Indexes indicating singlets that were subset to synthesize
-#'  synthetic multiplets. Facilitates recreation of the synthetic multiplets
-#'  downstream.
-#' @param object spRSwarm object.
-#' @param n Data to extract from spRSwarm object.
+#' @param fractions matrix; The deconvolution results.
+#' @param costs numeric; The costs after optimization.
+#' @param convergence character; The convergence output from \link[pso]{psoptim}.
+#' One value per multiplet.
+#' @param stats tbl_df; The stats output from \link[pso]{psoptim}
+#' @param arguments list; Arguments passed to the CIMseqSwarm function.
+#' @param singletIdx list; Indexes indicating singlets that were subset to 
+#' synthesize synthetic multiplets. Facilitates recreation of the synthetic 
+#' multiplets downstream.
+#' @param object A CIMseqSwarm object.
+#' @param n character; Data to extract from CIMseqSwarm object.
 #' @param .Object Internal object.
-#' @param ... additional arguments to pass on
-#' @return spSwarm output.
+#' @param ... additional arguments to pass on.
+#' @return CIMseqSwarm output.
 #' @author Jason T. Serviss
-#' @keywords spSwarm
 #' @examples
 #'
 #' #use demo data
 #'
 NULL
 
-#' @rdname spSwarm
+#' @rdname CIMseqSwarm
 #' @export
 
-setGeneric("spSwarm", function(
-  spCountsSng,
-  spCountsMul,
-  spUnsupervised,
+setGeneric("CIMseqSwarm", function(
+  singlets,
+  multiplets,
   ...
 ){
-  standardGeneric("spSwarm")
+  standardGeneric("CIMseqSwarm")
 })
 
 #' @importFrom future.apply future_lapply
@@ -71,16 +63,14 @@ setGeneric("spSwarm", function(
 #' @importFrom purrr map map_dbl
 #' @importFrom tibble tibble as_tibble add_column
 #' @importFrom tidyr unnest
-#' @rdname spSwarm
+#' @rdname CIMseqSwarm
 #' @export
 
-setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
-  spCountsSng, spCountsMul, spUnsupervised,
-  maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200,
-  seed = 11, norm = TRUE,
-  report = FALSE, reportRate = NULL, selectInd = NULL, vectorize = FALSE,
-  permute = FALSE, saveSingletData = TRUE,
-  ...
+setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
+  singlets, multiplets,
+  maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11, 
+  norm = TRUE, report = FALSE, reportRate = NA, vectorize = FALSE,
+  permute = FALSE, ...
 ){
     
   #put a check here to make sure all slots in the spUnsupervised object are
@@ -88,23 +78,23 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   #should probably double check that it works as expected via unit tests.
     
   #input and input checks
-  sngCPM <- getData(spCountsSng, "counts.cpm")
-  mulCPM <- getData(spCountsMul, "counts.cpm")
+  sngCPM <- getData(singlets, "counts.cpm")
+  mulCPM <- getData(multiplets, "counts.cpm")
     
   #calculate fractions
-  classes <- getData(spUnsupervised, "classification")
+  classes <- getData(singlets, "classification")
   fractions <- rep(1.0 / length(unique(classes)), length(unique(classes)))
     
   #subset top genes for use with optimization
   #sholud also check user input selectInd
-  if(is.null(selectInd)) selectInd <- getData(spUnsupervised, "selectInd")
+  selectInd <- getData(multiplets, "features")
   
-  multiplets <- matrix(
+  mul <- matrix(
     mulCPM[selectInd, ],
     ncol = ncol(mulCPM),
     dimnames = list(rownames(mulCPM)[selectInd], colnames(mulCPM))
   )
-  singlets <- matrix(
+  sng <- matrix(
     sngCPM[selectInd, ],
     ncol = ncol(sngCPM),
     dimnames = list(rownames(sngCPM)[selectInd], colnames(sngCPM))
@@ -121,22 +111,20 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   }
   
   #run optimization
-  to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
+  to <- if(ncol(mul) == 1) {to <- 1} else {to <- dim(mul)[2]}
   
   #setup singlets for synthetic multiplets synthesis
   set.seed(seed)
-  if(permute) {singlets <- .permuteGenes(singlets)}
+  if(permute) {sng <- .permuteGenes(sng)}
   
   idx <- purrr::map(1:nSyntheticMultiplets, ~sampleSinglets(classes))
-  singletSubset <- appropriateSinglets(
-    spUnsupervised, spCountsSng, idx, selectInd
-  )
+  singletSubset <- appropriateSinglets(singlets, idx, selectInd)
   
   #deconvolution
   opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
       .optim.fun(
-        i, fractions = fractions, multiplets = multiplets,
+        i, fractions = fractions, multiplets = mul,
         singletSubset = singletSubset, n = nSyntheticMultiplets,
         control = control, ...
       )
@@ -144,18 +132,18 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
   
   #process and return results
   cn <- sort(unique(classes))
-  rn <- colnames(multiplets)
+  rn <- colnames(mul)
   
-  new("spSwarm",
-    spSwarm = .processSwarm(opt.out, cn, rn, norm),
+  new("CIMseqSwarm",
+    fractions = .processSwarm(opt.out, cn, rn, norm),
     costs = map_dbl(opt.out, 2),
     convergence = .processConvergence(opt.out),
     stats = if(report) {.processStats(opt.out, cn, rn)} else {tibble()},
-    singletIdx = ifelse(saveSingletData, map(idx, as.integer), list()),
-    arguments = list(
+    singletIdx = map(idx, as.integer),
+    arguments = tibble(
       maxiter = maxiter, swarmsize = swarmsize,
       nSyntheticMultiplets = nSyntheticMultiplets, seed = seed, norm = norm,
-      report = report, reportRate = reportRate, selectInd = selectInd,
+      report = report, reportRate = reportRate, features = list(selectInd),
       vectorize = vectorize, permute = permute
     )
   )
@@ -163,8 +151,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 
 .processSwarm <- function(opt.out, cn, rn, norm) {
   par <- map(opt.out, 1) %>%
-    do.call("rbind", .) %>%
-    as.data.frame()
+    do.call("rbind", .)
   
   if(norm) {par <- par * 1 / rowSums(par)}
   colnames(par) <- sort(cn)
@@ -186,6 +173,7 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 .processStats <- function(opt.out, cn, rn) {
   position <- NULL
   stats <- map(opt.out, 6)
+
   tibble(
     sample = rn,
     iteration = map(stats, function(x) x$it),
@@ -195,14 +183,14 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
       map(x$x, function(y) t(y) * 1/colSums(y))
     })
   ) %>%
-  unnest() %>%
-  mutate(position = map(position, function(x) {
-    x %>%
-    as.data.frame() %>%
-    setNames(cn) %>%
-    as_tibble() %>%
-    add_column(swarmMemberID = 1:nrow(.), .before = 1)
-  }))
+    unnest() %>%
+    mutate(position = map(position, function(x) {
+      x %>%
+      as.data.frame() %>%
+      setNames(cn) %>%
+      as_tibble() %>%
+      add_column(swarmMemberID = 1:nrow(.), .before = 1)
+    }))
 }
 
 .optim.fun <- function(
@@ -239,16 +227,13 @@ setMethod("spSwarm", c("spCounts", "spCounts", "spUnsupervised"), function(
 #'
 #' @name appropriateSinglets
 #' @rdname appropriateSinglets
-#' @aliases appropriateSinglets
-#' @param spUnsupervised An spUnsupervised object.
-#' @param spCountsSng An spCounts object with singlets.
-#' @param idx Singlet indices to subset. Generated with the sampleSinglets 
-#'  function.
-#' @param selectInd Indices of selected features for deconvolution.
+#' @param singlets A CIMseqSinglets object.
+#' @param idx numeric; Singlet indices to subset. Generated with the 
+#' \code{\link{sampleSinglets}} function.
+#' @param features numeric; Indices of selected features used for deconvolution.
 #' @param ... additional arguments to pass on
 #' @return Appropriated singlets.
 #' @author Jason T. Serviss
-#' @keywords appropriateSinglets
 #' @examples
 #'
 #' #use demo data
@@ -262,22 +247,21 @@ NULL
 #' @export
 
 appropriateSinglets <- function(
-  spUnsupervised, spCountsSng, 
-  idx, selectInd
+  singlets, idx, features
 ){
-  classes <- getData(spUnsupervised, "classification")
-  sngCPM <- getData(spCountsSng, "counts.cpm")
+  classes <- getData(singlets, "classification")
+  sngCPM <- getData(singlets, "counts.cpm")
   singlets <- matrix(
-    sngCPM[selectInd, ],
+    sngCPM[features, ],
     ncol = ncol(sngCPM),
-    dimnames = list(rownames(sngCPM)[selectInd], colnames(sngCPM))
+    dimnames = list(rownames(sngCPM)[features], colnames(sngCPM))
   )
   
   sub <- idx %>%
-  purrr::map(., ~subsetSinglets(singlets, .x)) %>%
-  purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
-  do.call("rbind", .) %>%
-  .[order(as.numeric(rownames(.))), ]
+    purrr::map(., ~subsetSinglets(singlets, .x)) %>%
+    purrr::map(., function(x) {rownames(x) <- 1:nrow(x); x}) %>%
+    do.call("rbind", .) %>%
+    .[order(as.numeric(rownames(.))), ]
   
   rownames(sub) <- paste(
     rep(rownames(singlets), each = length(idx)), 
@@ -311,19 +295,18 @@ appropriateSinglets <- function(
 #'
 #' @name spSwarmPoisson
 #' @rdname spSwarmPoisson
-#' @aliases spSwarmPoisson
-#' @param spSwarm An spSwarm object.
-#' @param edge.cutoff The minimum fraction to consider (?).
-#' @param min.pval Minimum p-value to report.
-#' @param min.num.edges Minimum number of observed edges to report a connection.
+#' @param swarm A CIMseqSwarm object.
+#' @param edge.cutoff numeric; The minimum fraction to consider (?).
+#' @param min.pval numeric; Minimum p-value to report.
+#' @param min.num.edges numeric; Minimum number of observed edges to report a 
+#' connection.
 #' @param ... additional arguments to pass on
-#' @return spSwarm connection strengths and p-values.
+#' @return CIMseqSwarm connection weights and p-values.
 #' @author Jason T. Serviss
-#' @keywords spSwarmPoisson
 #' @examples
 #'
 #' #use demo data
-#' output <- spSwarmPoisson(test_spSwarm, 1/10.5)
+#' output <- spSwarmPoisson(CIMseqSwarm_test, 1/10.5)
 #'
 #'
 NULL
@@ -338,13 +321,13 @@ NULL
 #' @export
 
 spSwarmPoisson <- function(
-  spSwarm,
+  swarm,
   edge.cutoff = 0,
   min.pval = 1,
   min.num.edges = 0,
   ...
 ){
-  mat <- getData(spSwarm, "spSwarm")
+  mat <- getData(swarm, "fractions")
   logic <- .fractionCutoff(mat, edge.cutoff)
 
   #calcluate weight
@@ -447,13 +430,11 @@ spSwarmPoisson <- function(
 #'
 #' @name calcResiduals
 #' @rdname calcResiduals
-#' @aliases calcResiduals
-#' @param spCountsMul An spCounts object with multiplets.
-#' @param spSwarm An spSwarm object.
+#' @param multiplets A CIMseqMultiplets object.
+#' @param swarm A CIMseqSwarm object.
 #' @param ... additional arguments to pass on
-#' @return spSwarm connection strengths and p-values.
+#' @return Residuals (add more description).
 #' @author Jason T. Serviss
-#' @keywords calcResiduals
 #'
 NULL
 
@@ -462,17 +443,17 @@ NULL
 #' @importFrom purrr map_dfc set_names
 
 calcResiduals <- function(
-  spCountsMul,
-  spSwarm,
+  multiplets,
+  swarm,
   ...
 ){
   gene <- residual <- NULL
-  frac <- getData(spSwarm, "spSwarm")
-  sm <- getData(spSwarm, "syntheticMultiplets")
-  selectInd <- getData(spSwarm, "arguments")[['selectInd']]
-  n <- getData(spSwarm, "arguments")[['nSyntheticMultiplets']]
+  frac <- getData(swarm, "fractions")
+  sm <- getData(swarm, "syntheticMultiplets")
+  n <- getData(swarm, "arguments")[['nSyntheticMultiplets']]
+  selectInd <- getData(multiplets, "features")
   
-  mulCPM <- getData(spCountsMul, "counts.cpm")
+  mulCPM <- getData(multiplets, "counts.cpm")
   multiplets <- matrix(
     mulCPM[selectInd, ],
     ncol = ncol(mulCPM),
@@ -503,22 +484,19 @@ calcResiduals <- function(
 #'
 #' @name getMultipletsForEdge
 #' @rdname getMultipletsForEdge
-#' @aliases getMultipletsForEdge
-#' @param spSwarm An spSwarm object.
-#' @param edge.cutoff The minimum fraction to consider (?).
-#' @param edges A data frame indicating the edges of interest. Edges are
-#'    indicated by the nodes they connect with one node in column one and the
-#'    other node in column 2.
+#' @param swarm A CIMseqSwarm object.
+#' @param edge.cutoff numeric; The minimum fraction to consider (?).
+#' @param edges data.frame; Edges of interest. Edges are indicated by the nodes
+#' they connect with one node in column one and the other node in column 2.
 #' @param ... additional arguments to pass on
-#' @return If the edges argument only includes on row, a vector of multiplet
+#' @return If the edges argument only includes one row, a vector of multiplet
 #'    names is returned. If several edges are interogated a list is returned
 #'    with one element per edge containing the names of the multiplets.
 #' @author Jason T. Serviss
-#' @keywords getMultipletsForEdge
 #' @examples
 #'
 #' e <- data.frame("A375", "HOS")
-#' output <- getMultipletsForEdge(test_spSwarm, 1/10.5, e)
+#' output <- getMultipletsForEdge(CIMseqSwarm_test, 1/10.5, e)
 #'
 NULL
 
@@ -526,7 +504,7 @@ NULL
 #' @export
 
 setGeneric("getMultipletsForEdge", function(
-  spSwarm,
+  swarm,
   ...
 ){
     standardGeneric("getMultipletsForEdge")
@@ -534,34 +512,34 @@ setGeneric("getMultipletsForEdge", function(
 
 #' @rdname getMultipletsForEdge
 #' @importFrom rlang .data
-#' @importFrom dplyr mutate select rename pull
+#' @importFrom dplyr mutate mutate_if select rename pull
 #' @export
 
-setMethod("getMultipletsForEdge", "spSwarm", function(
-  spSwarm,
+setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
+  swarm,
   edge.cutoff,
   edges,
   ...
 ){
-  edges[, 1] <- as.character(pull(edges, 1))
-  edges[, 2] <- as.character(pull(edges, 2))
+  
+  edges <- mutate_if(edges, is.factor, as.character)
   
   mulForEdges <- lapply(1:nrow(edges), function(j) {
     cols <- c(pull(edges, 1)[j], pull(edges, 2)[j])
     
     if(identical(cols[1], cols[2])) {
-      .self(j, cols, edges, spSwarm, edge.cutoff)
+      .self(j, cols, edges, swarm, edge.cutoff)
     } else {
-      .nonSelf(j, cols, edges, spSwarm, edge.cutoff)
+      .nonSelf(j, cols, edges, swarm, edge.cutoff)
     }
   })
   
   names(mulForEdges) <- paste(pull(edges, 1), pull(edges, 2), sep = "-")
   namedListToTibble(mulForEdges) %>%
-  mutate(from = gsub("(.*)-.*", "\\1", names)) %>%
-  mutate(to = gsub(".*-(.*)", "\\1", names)) %>%
-  select(.data$variables, .data$from, .data$to, -.data$names) %>%
-  rename(multiplet = .data$variables)
+    mutate(from = gsub("(.*)-.*", "\\1", names)) %>%
+    mutate(to = gsub(".*-(.*)", "\\1", names)) %>%
+    select(.data$variables, .data$from, .data$to, -.data$names) %>%
+    rename(multiplet = .data$variables)
 })
 
 #note to self: when considering self-connections in multiplets it is important
@@ -572,17 +550,17 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
 #A1, A1, A1, then a self-connection will be reported.
 
 .self <- function(j, cols, edges, spSwarm, edge.cutoff) {
-    mat <- getData(spSwarm, "spSwarm")
+    mat <- getData(spSwarm, "fractions")
     logic <- mat > edge.cutoff
     rs <- rowSums(logic)
     
-    frac <- getData(spSwarm, "spSwarm")[, unique(cols)]
+    frac <- getData(spSwarm, "fractions")[, unique(cols)]
     o <- which(frac > edge.cutoff & rs == 1)
-    rownames(getData(spSwarm, "spSwarm"))[o]
+    rownames(getData(spSwarm, "fractions"))[o]
 }
 
 .nonSelf <- function(j, cols, edges, spSwarm, edge.cutoff) {
-    frac <- getData(spSwarm, "spSwarm")[, cols]
+    frac <- getData(spSwarm, "fractions")[, cols]
     o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
     rownames(frac)[o]
 }
@@ -596,16 +574,15 @@ setMethod("getMultipletsForEdge", "spSwarm", function(
 #' @name getEdgesForMultiplet
 #' @rdname getEdgesForMultiplet
 #' @aliases getEdgesForMultiplet
-#' @param spSwarm An spSwarm object.
-#' @param edge.cutoff The minimum fraction to consider (?).
-#' @param multiplet The name of the multiplet of interest.
+#' @param swarm A CIMseqSwarm object.
+#' @param edge.cutoff numeric; The minimum fraction to consider (?).
+#' @param multiplet character; The name of the multiplet of interest.
 #' @param ... additional arguments to pass on
 #' @return Edge names.
 #' @author Jason T. Serviss
-#' @keywords getEdgesForMultiplet
 #' @examples
 #'
-#' output <- getEdgesForMultiplet(test_spSwarm, 1/10.5, "m.NJB00204.G04")
+#' output <- getEdgesForMultiplet(CIMseqSwarm_test, 1/10.5, "m.NJB00204.G04")
 #'
 NULL
 
@@ -619,7 +596,7 @@ NULL
 #' @importFrom utils combn
 
 setGeneric("getEdgesForMultiplet", function(
-  spSwarm,
+  swarm,
   ...
 ){
   standardGeneric("getEdgesForMultiplet")
@@ -628,21 +605,25 @@ setGeneric("getEdgesForMultiplet", function(
 #' @rdname getEdgesForMultiplet
 #' @export
 
-setMethod("getEdgesForMultiplet", "spSwarm", function(
-  spSwarm,
+setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
+  swarm,
   edge.cutoff,
   multiplet,
   ...
 ){
-  s <- spSwarmPoisson(spSwarm, edge.cutoff = edge.cutoff)
-  frac <- getData(spSwarm, "spSwarm")[multiplet, ]
+  s <- spSwarmPoisson(swarm, edge.cutoff = edge.cutoff)
+  frac <- getData(swarm, "fractions")[multiplet, ]
   map_dfr(multiplet, .edgeFunx, edge.cutoff, frac, s)
 })
 
 .edgeFunx <- function(x, edge.cutoff, frac, s) {
-  keep <- as.logical(frac[x, ] > edge.cutoff)
+  if(is.null(dim(frac))) {
+    keep <- frac > edge.cutoff
+  } else {
+    keep <- as.logical(frac[x, ] > edge.cutoff)
+  }
     
-  if(length(which(keep)) > 1) {
+  if(sum(keep) > 1) {
     combs <- combn(names(frac)[keep], 2)
     sapply(1:ncol(combs), function(y) {
         bool1 <- s$from == combs[1, y] & s$to == combs[2, y]
@@ -654,8 +635,8 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
     setNames(c("from", "to")) %>%
     add_column("multiplet" = x) %>%
     select(.data$multiplet, .data$from, .data$to)
-    
-  } else if(length(which(keep)) == 1) {
+
+  } else if(sum(keep) == 1) {
     n <- names(frac)[keep]
     filter(s, .data$to == n & .data$from == n) %>%
     add_column("multiplet" = x) %>%
@@ -672,8 +653,8 @@ setMethod("getEdgesForMultiplet", "spSwarm", function(
 #' @name calculateCosts
 #' @rdname calculateCosts
 #' @aliases calculateCosts
-#' @param spCountsMul An spCounts object with multiplets.
-#' @param spSwarm An spSwarm object.
+#' @param multiplets A CIMseqMultiplets object.
+#' @param swarm A CIMseqSwarm object.
 #' @param fractions WILL PROBABLY BE REMOVED
 #' @param ... additional arguments to pass on
 #' @return Costs
@@ -689,8 +670,8 @@ NULL
 #' @export
 
 setGeneric("calculateCosts", function(
-  spCountsMul,
-  spSwarm,
+  multiplets,
+  swarm,
   fractions,
   ...
 ){
@@ -700,15 +681,15 @@ setGeneric("calculateCosts", function(
 #' @rdname calculateCosts
 #' @export
 
-setMethod("calculateCosts", c("spCounts", "spSwarm", "numeric"), function(
-  spCountsMul,
-  spSwarm,
+setMethod("calculateCosts", c("CIMseqSinglets", "CIMseqSwarm", "numeric"), function(
+  multiplets,
+  swarm,
   fractions = NULL,
   ...
 ){
-  if(is.null(fractions)) fractions <- getData(spSwarm, "spSwarm")
-  mulCPM <- getData(spCountsMul, "counts.cpm")
-  selectInd <- getData(spSwarm, "arguments")$selectInd
+  if(is.null(fractions)) fractions <- getData(swarm, "fractions")
+  mulCPM <- getData(multiplets, "counts.cpm")
+  selectInd <- getData(swarm, "arguments")$features
   
   multiplets <- matrix(
     mulCPM[selectInd, ],
@@ -720,8 +701,8 @@ setMethod("calculateCosts", c("spCounts", "spSwarm", "numeric"), function(
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
   
   #setup synthetic multiplets
-  singletSubset <- getData(spSwarm, "syntheticMultiplets")
-  n <- getData(spSwarm, "arguments")$nSyntheticMultiplets
+  singletSubset <- getData(swarm, "syntheticMultiplets")
+  n <- getData(swarm, "arguments")$nSyntheticMultiplets
   
   #calculate costs
   opt.out <- future_lapply(

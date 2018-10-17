@@ -4,17 +4,17 @@
 \alias{tidySwarm}
 \title{tidySwarm}
 \usage{
-tidySwarm(spSwarm)
+tidySwarm(swarm)
 }
 \arguments{
-\item{spSwarm}{spSwarm; An spSwarm object.}
+\item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
 }
 \description{
-Tidy spSwarm objects.
+Tidy CIMseqSwarm objects.
 }
 \examples{
 
-tidySwarm(test_spSwarm)
+tidySwarm(CIMseqSwarm_test)
 
 }
 \author{

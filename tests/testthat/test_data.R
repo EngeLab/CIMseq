@@ -46,7 +46,7 @@ test_that("check that estimateCells outputs the expected result", {
   ###TEST1####
   #setup expected data
   expected1 <- tibble::tibble(
-    sampleType=c(rep("Singlet", 81), rep("Multiplet", 3))
+    sampleType=c(rep("Singlet", 80), rep("Multiplet", 3))
   )
   
   expected2 <- tibble::tibble(
@@ -64,7 +64,7 @@ test_that("check that estimateCells outputs the expected result", {
   )
   
   #run function
-  output <- estimateCells(test_spCountsSng, test_spCountsMul)
+  output <- estimateCells(CIMseqSinglets_test, CIMseqMultiplets_test)
   firstRow <- output %>%
     dplyr::slice(1) %>%
     dplyr::select(frac.ercc:cellNumberMax) %>%
@@ -87,8 +87,8 @@ test_that("check that estimateCells outputs the expected result", {
 })
 
 test_that("check that estimateCells gives error with all 0 ercc", {
-  ercc <- getData(test_spCountsSng, "counts.ercc")
+  ercc <- getData(CIMseqSinglets_test, "counts.ercc")
   ercc[ ,1] <- rep(0, nrow(ercc))
-  test_spCountsSng@counts.ercc <- ercc
-  expect_warning(estimateCells(test_spCountsSng, test_spCountsMul))
+  getData(CIMseqSinglets_test, "counts.ercc") <- ercc
+  expect_warning(estimateCells(CIMseqSinglets_test, CIMseqMultiplets_test))
 })

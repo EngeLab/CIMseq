@@ -4,7 +4,7 @@ context("spPlotSwarm")
 test_that("check that plotSwarmGraph outputs the expected result", {
   
   #run function
-  output <- plotSwarmGraph(test_spSwarm, test_spUnsupervised)
+  output <- plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test)
   
   #test
   expect_type(output, "list")
@@ -15,7 +15,7 @@ test_that("check that plotSwarmGraph outputs the expected result", {
 test_that("check that plotSwarmBarBase outputs the expected result", {
   
   #run function
-  output <- plotSwarmBarBase(test_spSwarm)
+  output <- plotSwarmBarBase(CIMseqSwarm_test)
   
   #test
   expect_type(output, "list")
@@ -26,7 +26,7 @@ test_that("check that plotSwarmBarBase outputs the expected result", {
 test_that("check that plotSwarmEdgeBar outputs the expected result", {
   
   #run function
-  output <- plotSwarmEdgeBar(test_spSwarm)
+  output <- plotSwarmEdgeBar(CIMseqSwarm_test)
   
   #test
   expect_type(output, "list")
@@ -37,7 +37,7 @@ test_that("check that plotSwarmEdgeBar outputs the expected result", {
 test_that("check that plotSwarmPbar outputs the expected result", {
   
   #run function
-  output <- plotSwarmPbar(test_spSwarm)
+  output <- plotSwarmPbar(CIMseqSwarm_test)
   
   #test
   expect_type(output, "list")
@@ -48,7 +48,7 @@ test_that("check that plotSwarmPbar outputs the expected result", {
 test_that("check that plotSwarmHeat outputs the expected result", {
   
   #run function
-  output <- plotSwarmHeat(test_spSwarm)
+  output <- plotSwarmHeat(CIMseqSwarm_test)
   
   #test
   expect_type(output, "list")

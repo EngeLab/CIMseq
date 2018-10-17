@@ -10,15 +10,15 @@ NULL
 #' @name plotSwarmGraph
 #' @rdname plotSwarmGraph
 #' @aliases plotSwarmGraph
-#' @param spSwarm spSwarm; An spSwarm object.
-#' @param spUnsupervised spUnsupervised; An spUnsupervised object.
+#' @param swarm CIMseqSwarm; A CIMseqSwarm object.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
 #' @param ... additional arguments to pass on.
 #' @return The spPlot function returns an object of class spCounts.
 #' @author Jason T. Serviss
 #' @keywords plotSwarmGraph
 #' @examples
 #'
-#' p <- plotSwarmGraph(test_spSwarm, test_spUnsupervised)
+#' p <- plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test)
 #'
 NULL
 
@@ -26,9 +26,7 @@ NULL
 #' @export
 
 setGeneric("plotSwarmGraph", function(
-  spSwarm,
-  spUnsupervised,
-  ...
+  swarm, singlets, ...
 ){
     standardGeneric("plotSwarmGraph")
 })
@@ -44,67 +42,58 @@ setGeneric("plotSwarmGraph", function(
 #' @importFrom rlang .data
 #' @importFrom tidyr unite
 
-setMethod("plotSwarmGraph", c("spSwarm", "spUnsupervised"), function(
-  spSwarm,
-  spUnsupervised,
-  ...
+setMethod("plotSwarmGraph", c("CIMseqSwarm", "CIMseqSinglets"), function(
+  swarm, singlets, ...
 ){
+  tsneMeans <- means.dim.red(
+    getData(singlets, "dim.red"), 
+    getData(singlets, "classification")
+  )
   
   #move data to graph
-  spSwarmPoisson(spSwarm, edge.cutoff = 0) %>%
-  unite('connection', .data$from, .data$to, sep = "-", remove = FALSE) %>%
-  select(.data$from, .data$to, .data$connection, .data$weight, .data$pval) %>%
-  graph_from_data_frame(directed = FALSE) %>%
-  as_tbl_graph() %>% #better if this could be done directly; avoids importing igraph
-  activate(nodes) %>%
-  rename('Class' = .data$name) %>%
-  #remove edges with 0 weight and coerce to factor
-  activate(edges) %>%
-  filter(.data$weight > 0) %>%
-  mutate('weight' = parse_factor(
-    .data$weight,
-    levels = unique(.data$weight)
-  )) %>%
-  #plot base plot with custom layout according to tsne
-  ggraph(
-    layout = 'manual',
-    node.positions = create_layout(
-      ., 'manual',
-      node.positions = getData(spUnsupervised, "tsneMeans")
+  spSwarmPoisson(swarm, edge.cutoff = 0) %>%
+    unite('connection', .data$from, .data$to, sep = "-", remove = FALSE) %>%
+    select(.data$from, .data$to, .data$connection, .data$weight, .data$pval) %>%
+    graph_from_data_frame(directed = FALSE) %>%
+    as_tbl_graph() %>% #better if this could be done directly; avoids importing igraph
+    activate(nodes) %>%
+    rename('Class' = .data$name) %>%
+    #remove edges with 0 weight and coerce to factor
+    activate(edges) %>%
+    filter(.data$weight > 0) %>%
+    mutate(
+      'weight' = parse_factor(.data$weight, levels = unique(.data$weight)
+    )) %>%
+    #plot base plot with custom layout according to tsne
+    ggraph(
+      layout = 'manual',
+      node.positions = create_layout(., 'manual', node.positions = tsneMeans)
+    ) +
+    #plot edges
+    geom_edge_link(
+      edge_colour = "black", aes_string(edge_width = 'weight'), 
+      edge_alpha = 0.3, lineend = "round"
+    ) +
+    # add all cells
+    geom_node_point(
+      data = tidySinglets(singlets),
+      aes_string(
+        x = '`dim.red dim 1`', y = '`dim.red dim 2`', colour = 'classification'
+      ),
+      alpha = 0.3
+    ) +
+    #add mean point for each class
+    geom_node_point(
+      data = tsneMeans, aes_string(colour = 'classification'), size = 5
+    ) +
+    #change the color scale
+    scale_colour_manual(name = "classification", values = col40()) +
+    theme_few() +
+    theme(legend.position = "top", legend.title.align = 0.5) +
+    guides(
+      colour = guide_legend(title = "Classification", title.position = "top"),
+      edge_width = guide_legend(title = "Weight", title.position = "top")
     )
-  ) +
-  #plot edges
-  geom_edge_link(
-    edge_colour = "black",
-    aes_string(edge_width = 'weight'),
-    edge_alpha = 0.3,
-    lineend = "round"
-  ) +
-  # add all cells
-  geom_node_point(
-    data = tidyUnsupervised(spUnsupervised),
-    aes_string(
-      x = '`t-SNE dim 1`', y = '`t-SNE dim 2`', colour = 'Classification'
-    ),
-    alpha = 0.3
-  ) +
-  #add mean point for each class
-  geom_node_point(
-    data = getData(spUnsupervised, "tsneMeans"),
-    aes_string(colour = 'classification'),
-    size = 5
-  ) +
-  #change the color scale
-  scale_colour_manual(
-    name = "classification",
-    values = col40()
-  ) +
-  theme_few() +
-  theme(legend.position = "top", legend.title.align = 0.5) +
-  guides(
-    colour = guide_legend(title = "Classification", title.position = "top"),
-    edge_width = guide_legend(title = "Weight", title.position = "top")
-  )
 })
 
 #' plotSwarmBarBase
@@ -113,19 +102,16 @@ setMethod("plotSwarmGraph", c("spSwarm", "spUnsupervised"), function(
 #'
 #' @name plotSwarmBarBase
 #' @rdname plotSwarmBarBase
-#' @aliases plotSwarmBarBase
-#' @param spSwarm spSwarm; An spSwarm object.
+#' @param swarm CIMseqSwarm; A CIMseqSwarm object.
 #' @param ... additional arguments to pass on.
 #' @return A ggplot object with the base data.
 #' @author Jason T. Serviss
-#' @keywords plotSwarmBarBase
 NULL
 
 #' @rdname plotSwarmBarBase
 
 setGeneric("plotSwarmBarBase", function(
-    spSwarm,
-    ...
+  swarm, ...
 ){
     standardGeneric("plotSwarmBarBase")
 })
@@ -136,20 +122,19 @@ setGeneric("plotSwarmBarBase", function(
 #' @importFrom dplyr "%>%" inner_join bind_rows distinct
 #' @importFrom ggthemes theme_few
 
-setMethod("plotSwarmBarBase", "spSwarm", function(
-    spSwarm,
-    ...
+setMethod("plotSwarmBarBase", "CIMseqSwarm", function(
+  swarm, ...
 ){
   #since all of the bar plots show all cell types vs all other cell types and
   #spSwarmPoisson dosen't include duplicate connections, we refomat the data
   #before plotting to include these.
   
-  types <- colnames(getData(spSwarm, "spSwarm"))
+  types <- colnames(getData(swarm, "fractions"))
   from <- rep(types, each = length(types))
   to <- rep(types, length(types))
   d <- tibble(from = from, to = to)
   
-  results <- spSwarmPoisson(spSwarm = spSwarm, edge.cutoff = 0)
+  results <- spSwarmPoisson(swarm, edge.cutoff = 0)
   
   join1 <- inner_join(d, results, by = c("from", "to"))
   join2 <- inner_join(d, results, by= c("from" = "to", "to" = "from"))
@@ -165,19 +150,16 @@ setMethod("plotSwarmBarBase", "spSwarm", function(
 #'
 #' @name plotSwarmEdgeBar
 #' @rdname plotSwarmEdgeBar
-#' @aliases plotSwarmEdgeBar
-#' @param spSwarm spSwarm; An spSwarm object.
+#' @param swarm CIMseqSwarm; A CIMseqSwarm object.
 #' @param ... additional arguments to pass on.
 #' @return A ggplot object.
 #' @author Jason T. Serviss
-#' @keywords plotSwarmEdgeBar
 NULL
 
 #' @rdname plotSwarmEdgeBar
 
 setGeneric("plotSwarmEdgeBar", function(
-    spSwarm,
-    ...
+  swarm, ...
 ){
     standardGeneric("plotSwarmEdgeBar")
 })
@@ -186,20 +168,20 @@ setGeneric("plotSwarmEdgeBar", function(
 #' @export
 #' @import ggplot2
 
-setMethod("plotSwarmEdgeBar", "spSwarm", function(
-    spSwarm,
-    ...
+setMethod("plotSwarmEdgeBar", "CIMseqSwarm", function(
+  swarm, ...
 ){
-  plotSwarmBarBase(spSwarm) +
+  plotSwarmBarBase(swarm) +
   geom_bar(
     aes_string(x = 'to', y = 'weight', fill = 'to'),
     stat = "identity",
     position = position_dodge(width = 1),
     show.legend = FALSE
   ) +
+  #the y axis should be dynamically adjusted. Trying 1/10 weight
   geom_label(
-  aes_string(x = 'to', y = 'weight + 5', label = 'round(pval, digits = 2)'), #the y axis should be dynamically adjusted
-    label.size = 0,
+    aes_string(x = 'to', y = 'weight + (weight / 10)', label = 'round(pval, digits = 2)'),
+    label.size = 0
   ) +
   facet_grid(from ~ to, scales = "free_x") +
   scale_fill_manual(values = col40()) +
@@ -217,7 +199,7 @@ setMethod("plotSwarmEdgeBar", "spSwarm", function(
 #' @name plotSwarmPbar
 #' @rdname plotSwarmPbar
 #' @aliases plotSwarmPbar
-#' @param spSwarm spSwarm; An spSwarm object.
+#' @param swarm CIMseqSwarm; A CIMseqSwarm object.
 #' @param ... additional arguments to pass on.
 #' @return A ggplot object.
 #' @author Jason T. Serviss
@@ -227,8 +209,7 @@ NULL
 #' @rdname plotSwarmPbar
 
 setGeneric("plotSwarmPbar", function(
-    spSwarm,
-    ...
+  swarm, ...
 ){
     standardGeneric("plotSwarmPbar")
 })
@@ -237,11 +218,10 @@ setGeneric("plotSwarmPbar", function(
 #' @export
 #' @import ggplot2
 
-setMethod("plotSwarmPbar", "spSwarm", function(
-    spSwarm,
-    ...
+setMethod("plotSwarmPbar", "CIMseqSwarm", function(
+  swarm, ...
 ){
-  plotSwarmBarBase(spSwarm) +
+  plotSwarmBarBase(swarm) +
   geom_bar(
     aes_string(x = 'to', y = '-log10(pval)', fill = 'to'),
     stat = "identity",
@@ -264,7 +244,7 @@ setMethod("plotSwarmPbar", "spSwarm", function(
 #' @name plotSwarmHeat
 #' @rdname plotSwarmHeat
 #' @aliases plotSwarmHeat
-#' @param spSwarm spSwarm; An spSwarm object.
+#' @param swarm CIMseqSwarm; A CIMseqSwarm object.
 #' @param ... additional arguments to pass on.
 #' @return A ggplot object.
 #' @author Jason T. Serviss
@@ -274,8 +254,7 @@ NULL
 #' @rdname plotSwarmHeat
 
 setGeneric("plotSwarmHeat", function(
-    spSwarm,
-    ...
+  swarm, ...
 ){
     standardGeneric("plotSwarmHeat")
 })
@@ -285,11 +264,10 @@ setGeneric("plotSwarmHeat", function(
 #' @import ggplot2
 #' @importFrom dplyr desc
 
-setMethod("plotSwarmHeat", "spSwarm", function(
-    spSwarm,
-    ...
+setMethod("plotSwarmHeat", "CIMseqSwarm", function(
+  swarm, ...
 ){
-  plotSwarmBarBase(spSwarm) +
+  plotSwarmBarBase(swarm) +
   geom_tile(aes_string(x = 'from', y = 'to', fill = 'weight')) +
   geom_text(
     aes_string(x = 'from', y = 'to', label = 'round(pval, digits = 2)'),
@@ -299,7 +277,6 @@ setMethod("plotSwarmHeat", "spSwarm", function(
   theme(
     legend.position = "top",
     legend.title.align = 0.5,
-    axis.text  = element_blank(),
     axis.ticks = element_blank(),
     axis.title = element_blank()
   ) +
@@ -313,10 +290,11 @@ setMethod("plotSwarmHeat", "spSwarm", function(
 #' @name plotSwarmGenes
 #' @rdname plotSwarmGenes
 #' @aliases plotSwarmGenes
-#' @param spSwarm spSwarm; An spSwarm object.
-#' @param spCountsMul spCounts; An spCounts object containing multiplets.
+#' @param swarm CIMseqSwarm; A CIMseqSwarm object.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param genes Character; Genes to be plotted. Can not exceed 20.
-#' @param multiplets Character; Multiplets to be plotted.
+#' @param multipletsToPlot Character; Multiplets to be plotted.
 #' @param freq Numeric, Length 1 vector indicating the frequency the cost should
 #'  be calculated along x.
 #' @param ... additional arguments to pass on.
@@ -328,8 +306,7 @@ NULL
 #' @rdname plotSwarmGenes
 
 setGeneric("plotSwarmGenes", function(
-  spSwarm,
-  ...
+  swarm, ...
 ){
   standardGeneric("plotSwarmGenes")
 })
@@ -343,42 +320,34 @@ setGeneric("plotSwarmGenes", function(
 #' @importFrom stats dpois
 #' @importFrom dplyr case_when
 
-setMethod("plotSwarmGenes", "spSwarm", function(
-  spSwarm,
-  spCountsMul,
-  genes,
-  multiplets,
-  freq = 10,
-  ...
+setMethod("plotSwarmGenes", "CIMseqSwarm", function(
+  swarm, singlets, multiplets, genes, multipletsToPlot, freq = 10, ...
 ){
-  gene <- syntheticMultipletID <- syntheticValues <- pos <- ind.dpois.norm <- NULL
-  dpois.x <- cost.norm <- cost.real <- NULL
-  sm <- getData(spSwarm, "syntheticMultiplets")
-  rownames(sm) <- str_replace(rownames(sm), "(.*)\\.[0-9]*", "\\1")
-  cpm <- getData(spCountsMul, "counts.cpm")
-  nSyntheticMultiplets <- getData(spSwarm, "arguments")$nSyntheticMultiplets
-  selectInd <- getData(spSwarm, "arguments")$selectInd
-  fractions <- getData(spSwarm, "spSwarm")
+  gene <- syntheticMultipletID <- syntheticValues <- pos <- NULL
+  ind.dpois.norm <- dpois.x <- cost.norm <- cost.real <- NULL
   
-  if(all(is.na(sm))) {
-    mess <- paste0(
-      "The syntheticMultiplets slot matrix only contains NA values. ",
-      "The 'saveSingletData' arg must be TRUE when running spSwarm for this",
-      " plot to work."
-    )
-    stop(mess)
-  }
+  sm <- appropriateSinglets(
+    singlets, getData(swarm, "singletIdx"), 
+    1:nrow(getData(singlets, "counts.cpm"))
+  )
+  rownames(sm) <- str_replace(rownames(sm), "(.*)\\.[0-9]*", "\\1")
+  
+  cpm <- getData(multiplets, "counts.cpm")
+  nSyntheticMultiplets <- getData(swarm, "arguments")$nSyntheticMultiplets
+  selectInd <- getData(multiplets, "features")
+  fractions <- getData(swarm, "fractions")
+  
   if(length(genes) > 10) {
     stop("Plotting more than 10 genes at a time is not possible.")
   }
   if(!all(genes %in% rownames(sm))) {
     idx <- which(!genes %in% rownames(sm))
-    mess <- paste0(rownames(sm)[idx], " genes were not found in the data")
+    mess <- paste0(genes[idx], " not found in the data")
     stop(mess)
   }
   
   #process synthetic data
-  synthetic <- map(multiplets, function(m) {
+  synthetic <- map(multipletsToPlot, function(m) {
     f <- as.numeric(fractions[m, ])
     gNames <- unique(rownames(sm)[rownames(sm) %in% rownames(cpm)[selectInd]])
     
@@ -397,17 +366,17 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   reduce(bind_rows)
   
   #process real data and bind synthetic
-  if(length(multiplets) == 1) {
-    data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
+  if(length(multipletsToPlot) == 1) {
+    data <- cpm[rownames(cpm) %in% genes, multipletsToPlot] %>%
       as.data.frame() %>%
-      setNames(multiplets) %>%
+      setNames(multipletsToPlot) %>%
       rownames_to_column("gene") %>%
       as_tibble() %>%
       gather(sample, count, -gene) %>%
       inner_join(synthetic, by = c("sample", "gene")) %>%
       nest(syntheticMultipletID, syntheticValues, .key = "syntheticData")
   } else {
-    data <- cpm[rownames(cpm) %in% genes, multiplets] %>%
+    data <- cpm[rownames(cpm) %in% genes, multipletsToPlot] %>%
       matrix_to_tibble("gene") %>%
       gather(sample, count, -gene) %>%
       inner_join(synthetic, by = c("sample", "gene")) %>%
@@ -416,11 +385,94 @@ setMethod("plotSwarmGenes", "spSwarm", function(
   
   
   #poisson distribution of each synthetic multiplet value
-  .pd <- function(data, freq) {
-    syntheticValues <- syntheticValues <- pos <- gene <- NULL
-    m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
+  poissonDistSM <- .pd(data, freq)
+  realCost <- .rc(data)
+  
+  #isolate the real multiplet value
+  realMultiplet <- data %>%
+    select(gene, count, sample) %>%
+    distinct()
+  
+  #calculate the entire cost space (blue line)
+  entireCost <- .ec(data, freq)
+  max.cost <- max(entireCost$cost)
+  
+  p <- data %>%
+    unnest() %>%
+    #plot
+    ggplot() +
+    #synthetic multiplet values
+    geom_rug(aes(syntheticValues)) +
+    facet_grid(gene ~ sample, scales = "free") +
+    #this just facilitates the histogram legend
+    geom_line(
+      aes(x = 0, y = 0, linetype = "Synthetic multiplet values  ")
+    ) +
+    #poisson distribution of individual synthetic multiplets
+    geom_line(
+      data = poissonDistSM,
+      aes(
+        pos, ind.dpois.norm,
+        group = interaction(gene, sample, syntheticValues),
+        linetype = "Distribution  "
+      ),
+      size = 0.1, colour = "lightgrey"
+    ) +
+    #costs
+    geom_line(
+      data = entireCost,
+      aes(dpois.x, cost.norm, linetype = "Costs  "),
+      colour = "#3366FF"
+    ) +
+    #real multiplet value
+    geom_segment(
+      data = realMultiplet,
+      aes(
+        x = count, xend = count, y = 0, yend = 1.05,
+        linetype = "Real multiplet values  "
+      ),
+      size = 0.5, colour = "red"
+    ) +
+    #adds mean cost
+    geom_text(
+      data = realCost,
+      aes(
+        x = 0, y = 1.1,
+        label = paste0("Mean cost: ", round(cost.real, digits = 2)
+      )
+      ), colour = "gray13", hjust = 0, size = 3.5
+    ) +
+    theme_few() +
+    labs(y = "Density", x = "CPM") +
+    scale_y_continuous(
+      breaks = seq(0, 1, 0.2),
+      sec.axis = sec_axis(~. * max.cost, name = "Cost")
+    ) +
+    scale_linetype_manual(values = c(1, 1, 2, 1)) +
+    guides(linetype = guide_legend(
+        title = "",
+        override.aes = list(
+          fill = rep("white", 4),
+          colour = c("#3366FF", "lightgrey", "red", "black")
+        )
+    )) +
+    theme(
+      legend.position = "top",
+      legend.key = element_blank(),
+      legend.title = element_blank()
+    )
+  
+  p
+  
+  return(p)
+})
 
-    data %>%
+#poisson distribution of each synthetic multiplet value
+.pd <- function(data, freq) {
+  syntheticValues <- syntheticValues <- pos <- gene <- NULL
+  m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
+  
+  data %>%
     unnest() %>%
     mutate(pos = list(seq(-10, m + 200, freq))) %>%
     unnest() %>%
@@ -434,39 +486,31 @@ setMethod("plotSwarmGenes", "spSwarm", function(
       TRUE ~ normalizeVec(ind.pois)
     )) %>%
     ungroup()
-  }
-  
-  poissonDistSM <- .pd(data, freq)
-  
-  #check 
-  #poissonDistSM %>% 
-  #  ggplot() +
-  #  geom_line(aes(pos, ind.dpois.norm, group = syntheticMultipletID)) +
-  #  facet_grid(gene~sample)
-  
-  #calculate dpois only for the real synthetic multiplet values to be able to
-  #show the real mean cost per gene.
-  .rc <- function(data) {
-    syntheticData <- NULL
-    data %>%
+}
+
+#check 
+#poissonDistSM %>% 
+#  ggplot() +
+#  geom_line(aes(pos, ind.dpois.norm, group = syntheticMultipletID)) +
+#  facet_grid(gene~sample)
+
+#calculate dpois only for the real synthetic multiplet values to be able to
+#show the real mean cost per gene.
+
+.rc <- function(data) {
+  syntheticData <- NULL
+  data %>%
     mutate(cost.real = map2_dbl(count, syntheticData,
       ~costCalc(round(.x), matrix(unlist(.y$syntheticValues), nrow = 1))
     ))
-  }
+}
+
+#calculate the entire cost space (blue line)
+.ec <- function(data, freq) {
+  dpois.x <- syntheticValues <- gene <- dpois <- mean.log <- NULL
+  m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
   
-  realCost <- .rc(data)
-  
-  #isolate the real multiplet value
-  realMultiplet <- data %>%
-    select(gene, count, sample) %>%
-    distinct()
-  
-  #calculate the entire cost space (blue line)
-  .ec <- function(data, freq) {
-    dpois.x <- syntheticValues <- gene <- dpois <- mean.log <- NULL
-    m <- max(map_dbl(data$syntheticData, function(x) max(x$syntheticValues)))
-    
-    data %>%
+  data %>%
     unnest() %>%
     mutate(dpois.x = list(round(seq(0, m + 200, freq)))) %>%
     unnest() %>%
@@ -477,93 +521,16 @@ setMethod("plotSwarmGenes", "spSwarm", function(
     mutate(cost = if_else(is.infinite(mean.log), 323.005, mean.log * (-1))) %>%
     ungroup() %>%
     mutate(cost.norm = normalizeVec(cost))
-  }
-  
-  entireCost <- .ec(data, freq)
-  
-  #check
-  #entireCost %>%
-  #  ggplot() +
-  #  geom_line(aes(dpois.x, cost.norm), size = 0.5) +
-  #  facet_grid(gene ~ sample) +
-  #  geom_segment(data = realMultiplet, aes(
-  #      x = count, xend = count, y = 0, yend = 1.05
-  #  ), size = 0.5, colour = "red")
-    
+}
 
-  max.cost <- max(entireCost$cost)
-  
-  p <- data %>%
-  unnest() %>%
-  #plot
-  ggplot() +
-  #synthetic multiplet values
-  geom_rug(aes(syntheticValues)) +
-  facet_grid(gene ~ sample, scales = "free") +
-  #this just facilitates the histogram legend
-  geom_line(
-    aes(x = 0, y = 0, linetype = "Synthetic multiplet values  ")
-  ) +
-  #poisson distribution of individual synthetic multiplets
-  geom_line(
-    data = poissonDistSM,
-    aes(
-      pos, ind.dpois.norm,
-      group = interaction(gene, sample, syntheticValues),
-      linetype = "Distribution  "
-    ),
-    size = 0.1, colour = "lightgrey"
-  ) +
-  #costs
-  geom_line(
-    data = entireCost,
-    aes(dpois.x, cost.norm, linetype = "Costs  "),
-    colour = "#3366FF"
-  ) +
-  #real multiplet value
-  geom_segment(
-    data = realMultiplet,
-    aes(
-      x = count, xend = count, y = 0, yend = 1.05,
-      linetype = "Real multiplet values  "
-    ),
-    size = 0.5, colour = "red"
-  ) +
-  #adds mean cost
-  geom_text(
-    data = realCost,
-    aes(
-      x = 0, y = 1.1,
-      label = paste0("Mean cost: ", round(cost.real, digits = 2)
-    )
-    ), colour = "gray13", hjust = 0, size = 3.5
-  ) +
-  theme_few() +
-  labs(y = "Density", x = "CPM") +
-  scale_y_continuous(
-    breaks = seq(0, 1, 0.2),
-    sec.axis = sec_axis(~. * max.cost, name = "Cost")
-  ) +
-  scale_linetype_manual(values = c(1, 1, 2, 1)) +
-  guides(linetype = guide_legend(
-      title = "",
-      override.aes = list(
-        fill = rep("white", 4),
-        colour = c("#3366FF", "lightgrey", "red", "black")
-      )
-  )) +
-  theme(
-    legend.position = "top",
-    legend.key = element_blank(),
-    legend.title = element_blank()
-  )
-  
-  p
-  
-  return(p)
-})
-
-
+#check
+#entireCost %>%
+#  ggplot() +
+#  geom_line(aes(dpois.x, cost.norm), size = 0.5) +
+#  facet_grid(gene ~ sample) +
+#  geom_segment(data = realMultiplet, aes(
+#      x = count, xend = count, y = 0, yend = 1.05
+#  ), size = 0.5, colour = "red")
 
 ################################################################################
 #                                                                              #

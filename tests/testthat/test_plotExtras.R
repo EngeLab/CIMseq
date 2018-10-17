@@ -5,7 +5,7 @@ test_that("check that coloursFromTargets outputs the expected result", {
   
   ###TEST1####
   #run function
-  singlets <- getData(test_spCountsSng, "counts.cpm")
+  singlets <- getData(CIMseqSinglets_test, "counts.cpm")
   output <- coloursFromTargets(col40(), singlets, rownames(singlets)[1:3])
   
   #test

@@ -1,80 +1,59 @@
 #'@include All-classes.R
 NULL
 
-#' @rdname spCounts
+#' @rdname CIMseqSinglets
 #' @importFrom S4Vectors show
 #' @importFrom utils head
 #' @export
-setMethod("show", "spCounts", function(object){
-  .showCounts(object)
+
+setMethod("show", "CIMseqSinglets", function(object){
+  .showCIMseqData(object)
+})
+
+#' @rdname CIMseqMultiplets
+#' @importFrom S4Vectors show
+#' @importFrom utils head
+#' @export
+
+setMethod("show", "CIMseqMultiplets", function(object){
+  .showCIMseqData(object)
 })
 
 #internal show function
-.showCounts <- function(object){
+.showCIMseqData <- function(object){
   names <- slotNames(object)
-  cat("Class:","spCounts\n")
-  cat("Contains: \n")
+  cat("Class:", class(object)[[1]], "\n")
+  cat("Contains: \n\n")
   for(i in 1:length(names)){
-    cat(paste(i, ". ", names[i], "\n",sep=""))
+    cat(paste(i, ". ", names[i], "\n", sep = ""))
     obj <- slot(object, names[i])
-    if(class(obj) == "matrix") .showMatrix(obj)
-    if(class(obj) == "function") .showFunction(obj)
+    if(is.matrix(obj)) .showMatrix(obj)
+    if(is.function(obj)) .showFunction(obj)
+    if((is.character(obj) | is.numeric(obj)) & !is.matrix(obj)) .showBasics(obj)
   }
 }
 
-#' @rdname spUnsupervised
+#' @rdname CIMseqSwarm
 #' @importFrom S4Vectors show
 #' @importFrom utils head
 #' @export
 
-setMethod("show", "spUnsupervised", function(object){
-  .showUnsupervised(object)
+setMethod("show", "CIMseqSwarm", function(object){
+  .showCIMseqSwarm(object)
 })
 
 #internal show function
-.showUnsupervised <- function(object){
+.showCIMseqSwarm <- function(object){
   names <- slotNames(object)
-  cat("Class:","spUnsupervised\n")
-  cat("Contains: \n")
-  for(i in 1:length(names)){
-    cat(paste(i, ". ", names[i], "\n",sep=""))
-    mat <- slot(object, names[i])
-    if(class(mat) == "matrix" | class(mat) == "data.frame") {
-      .showMatrix(mat)
-    } else {
-      .showBasics(mat)
-    }
-  }
-}
-
-#' @rdname spSwarm
-#' @importFrom S4Vectors show
-#' @importFrom utils head
-#' @export
-
-setMethod("show", "spSwarm", function(object){
-    .showSpSwarm(object)
-})
-
-#internal show function
-.showSpSwarm <- function(object){
-  names <- slotNames(object)
-  cat("Class:","spSwarm\n")
-  cat("Contains: \n")
+  cat("Class:", class(object)[[1]], "\n")
+  cat("Contains: \n\n")
   for(i in 1:length(names)){
     cat(paste(i,". ", names[i], "\n",sep=""))
     mat <- slot(object, names[i])
-    if(is.data.frame(mat)) {
-      .showMatrix(mat)
-    } else if(is.list(mat)) {
-      .showList(mat)
-    } else if(is.matrix(mat)) {
-      .showMatrix(mat)
-    } else if(is_tibble(mat)) {
-      .showTibble(mat)
-    } else {
-      .showBasics(mat)
-    }
+    if(is.list(mat)) .showList(mat)
+    if(is.matrix(mat)) .showMatrix(mat)
+    if(is_tibble(mat)) .showTibble(mat)
+    if((is.character(mat) | is.numeric(mat)) & !is.matrix(mat)) .showBasics(mat)
   }
 }
 
@@ -110,6 +89,8 @@ setMethod("show", "spSwarm", function(object){
   } else {
     cat(paste("<", nrow(obj), " elements>", sep=""))
     cat(paste("<", ncol(obj), " columns>", sep=""))
+    cat("\n")
+    print(obj[1:2, 1:2])
     cat("\n-----------\n\n")
   }
 }

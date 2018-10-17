@@ -89,55 +89,57 @@ normalizeVec <- function(vec) {
   (vec - min(vec)) / (max(vec) - min(vec))
 }
 
-#' tidyUnsupervised
+#' tidySinglets
 #'
-#' Tidy spUnsupervised objects.
+#' Tidy CIMseqSinglets objects. Drops all associated counts data.
 #'
-#' @name tidyUnsupervised
-#' @rdname tidyUnsupervised
+#' @name tidySinglets
+#' @rdname tidySinglets
 #' @author Jason T. Serviss
-#' @param spUnsupervised spUnsupervised; An spUnsupervised object.
-#' @keywords tidyUnsupervised
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @keywords tidySinglets
 #' @examples
 #'
-#' tidyUnsupervised(test_spUnsupervised)
+#' tidySinglets(CIMseqSinglets_test)
 #'
 #' @export
 #' @importFrom dplyr mutate rename "%>%"
 #' @importFrom rlang .data
 
-tidyUnsupervised <- function(spUnsupervised) {
-  getData(spUnsupervised, "tsne") %>%
-  matrix_to_tibble(.) %>%
-  mutate('Classification' = getData(spUnsupervised, "classification")) %>%
-  rename(
-    `t-SNE dim 1` = .data$V1, `t-SNE dim 2` = .data$V2, Sample = .data$rowname
-  )
+tidySinglets <- function(singlets) {
+  getData(singlets, "dim.red") %>%
+    matrix_to_tibble(., "sample") %>%
+    mutate('classification' = getData(singlets, "classification")) %>%
+    rename(
+      `dim.red dim 1` = .data$V1, `dim.red dim 2` = .data$V2
+    )
 }
 
 #' tidySwarm
 #'
-#' Tidy spSwarm objects.
+#' Tidy CIMseqSwarm objects.
 #'
 #' @name tidySwarm
 #' @rdname tidySwarm
 #' @author Jason T. Serviss
-#' @param spSwarm spSwarm; An spSwarm object.
+#' @param swarm CIMseqSwarm; A CIMseqSwarm object.
 #' @keywords tidySwarm
 #' @examples
 #'
-#' tidySwarm(test_spSwarm)
+#' tidySwarm(CIMseqSwarm_test)
 #'
 #' @export
 #' @importFrom dplyr "%>%" full_join left_join
 #' @importFrom tibble tibble
 
-tidySwarm <- function(spSwarm) {
-  getData(spSwarm, "spSwarm") %>%
-  rownames_to_column("Sample") %>%
-  as_tibble() %>%
-  mutate('Costs' = getData(spSwarm, "costs")) %>%
-  mutate('Convergence' = getData(spSwarm, "convergence"))
+tidySwarm <- function(swarm) {
+  fractions <- getData(swarm, "fractions")
+  names <- colnames(fractions)
+  fractions %>%
+    matrix_to_tibble("sample") %>%
+    mutate('costs' = getData(swarm, "costs")) %>%
+    mutate('convergence' = getData(swarm, "convergence")) %>%
+    nest(names, .key = "fractions")
 }
 
 #' divide_by
