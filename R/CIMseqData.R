@@ -5,7 +5,8 @@ NULL
 #'
 #' Subtitle
 #'
-#' Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
+#' Imports count, count.ercc, dimensionality reduction, and classification data
+#' to a CIMseqSinglets object for sequenced singlets.
 #'
 #' @name CIMseqSinglets
 #' @rdname CIMseqSinglets
@@ -109,7 +110,8 @@ setMethod("CIMseqSinglets", "matrix", function(
 #'
 #' Subtitle
 #'
-#' Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
+#' Imports count, count.ercc, and feature data
+#' to a CIMseqSinglets object for sequenced multiplets.
 #'
 #' @name CIMseqMultiplets
 #' @rdname CIMseqMultiplets

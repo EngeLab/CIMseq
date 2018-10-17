@@ -17,7 +17,7 @@ editor_options:
 
 ```{r, message = FALSE}
 packages <- c(
-  "sp.scRNAseq", "printr", "ggthemes", "dplyr", 
+  "CIMseq", "printr", "ggthemes", "dplyr", 
   "tidyr", "ggplot2", "viridis"
 )
 purrr::walk(packages, library, character.only = TRUE)

@@ -1,5 +1,5 @@
 #run from package root with: source('inst/rawData/testData.R')
-packages <- c("sp.scRNAseq", "tidyverse", "future", "future.apply")
+packages <- c("CIMseq", "tidyverse", "future", "future.apply")
 purrr::walk(packages, library, character.only = TRUE)
 rm(packages)
 

@@ -65,7 +65,8 @@ CIMseqSinglets object.
 Subtitle
 }
 \details{
-Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
+Imports count, count.ercc, dimensionality reduction, and classification data
+to a CIMseqSinglets object for sequenced singlets.
 }
 \examples{
 

@@ -2,7 +2,7 @@
 #run from package root with: source('inst/rawData/testCounts.R')
 
 #counts
-packages <- c("sp.scRNAseq", "sp.scRNAseqData", "tidyverse")
+packages <- c("CIMseq", "sp.scRNAseqData", "tidyverse")
 purrr::walk(packages, library, character.only = TRUE)
 rm(packages)
 

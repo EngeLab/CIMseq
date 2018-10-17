@@ -1,6 +1,6 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 
-#include "../inst/include/sp.scRNAseq.h"
+#include "../inst/include/CIMseq.h"
 #include <RcppArmadillo.h>
 
 // [[Rcpp::depends(RcppArmadillo)]]

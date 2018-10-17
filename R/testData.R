@@ -1,6 +1,6 @@
 #' Test counts data.
 #'
-#' @title Counts data used to demonstrate sp.scRNAseq package.
+#' @title Counts data used to demonstrate CIMseq package.
 #' @docType data
 #' @name testCounts
 #' @format matrix

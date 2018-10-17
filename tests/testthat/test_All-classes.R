@@ -1,5 +1,4 @@
 context("All-classes")
-library(sp.scRNAseq)
 
 test_that("check that accessors output the expected result", {
   expect_is(getData(CIMseqSinglets_test, "counts"), "matrix")

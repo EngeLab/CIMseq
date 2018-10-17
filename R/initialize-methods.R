@@ -1,4 +1,4 @@
-#'@include sp.scRNAseq-package.R
+#'@include CIMseq-package.R
 NULL
 
 #' @rdname CIMseqSinglets

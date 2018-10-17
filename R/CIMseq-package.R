@@ -2,11 +2,11 @@
 #'
 #' Description
 #'
-#' \tabular{ll}{ Package: \tab sp.scRNAseq\cr Type: \tab Package\cr
+#' \tabular{ll}{ Package: \tab CIMseq\cr Type: \tab Package\cr
 #' Version: \tab 1.0\cr Date: \tab 2016-02-28\cr License: \tab GPL-3\cr }
 #'
-#' @name sp.scRNAseq-package
-#' @aliases sp.scRNAseq-package sp.scRNAseq
+#' @name CIMseq-package
+#' @aliases CIMseq-package CIMseq
 #' @docType package
 #' @author Author: Jason T. Serviss
 #' @references Reference to published application note (work in progress)
@@ -14,7 +14,7 @@
 #'
 #' @import methods
 #' @import ggplot2
-#' @useDynLib sp.scRNAseq
+#' @useDynLib CIMseq
 #' @importFrom Rcpp evalCpp
 #' @exportPattern "^[[:alpha:]]+"
 NULL

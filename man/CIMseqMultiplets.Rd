@@ -57,7 +57,8 @@ CIMseqMultiplets object.
 Subtitle
 }
 \details{
-Imports count, sampleType, and count.ercc data to a sp.scRNAseq object.
+Imports count, count.ercc, and feature data
+to a CIMseqSinglets object for sequenced multiplets.
 }
 \examples{
 

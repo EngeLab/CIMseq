@@ -12,7 +12,7 @@
 #' @author Jason T. Serviss
 #' @export
 sampleSinglets <- function(classes) {
-    .Call('_sp_scRNAseq_sampleSinglets', PACKAGE = 'sp.scRNAseq', classes)
+    .Call('_CIMseq_sampleSinglets', PACKAGE = 'CIMseq', classes)
 }
 
 #' subsetSinglets
@@ -26,7 +26,7 @@ sampleSinglets <- function(classes) {
 #' @author Jason T. Serviss
 #' @export
 subsetSinglets <- function(singlets, idxToSubset) {
-    .Call('_sp_scRNAseq_subsetSinglets', PACKAGE = 'sp.scRNAseq', singlets, idxToSubset)
+    .Call('_CIMseq_subsetSinglets', PACKAGE = 'CIMseq', singlets, idxToSubset)
 }
 
 #' calculateCost
@@ -45,7 +45,7 @@ subsetSinglets <- function(singlets, idxToSubset) {
 #' @author Jason T. Serviss
 #' @export
 calculateCost <- function(oneMultiplet, singletSubset, fractions, n) {
-    .Call('_sp_scRNAseq_calculateCost', PACKAGE = 'sp.scRNAseq', oneMultiplet, singletSubset, fractions, n)
+    .Call('_CIMseq_calculateCost', PACKAGE = 'CIMseq', oneMultiplet, singletSubset, fractions, n)
 }
 
 #' normalizeFractions
@@ -56,7 +56,7 @@ calculateCost <- function(oneMultiplet, singletSubset, fractions, n) {
 #' @author Jason T. Serviss
 #' @export
 normalizeFractions <- function(fractions) {
-    .Call('_sp_scRNAseq_normalizeFractions', PACKAGE = 'sp.scRNAseq', fractions)
+    .Call('_CIMseq_normalizeFractions', PACKAGE = 'CIMseq', fractions)
 }
 
 #' adjustAccordingToFractions
@@ -72,7 +72,7 @@ normalizeFractions <- function(fractions) {
 #' @author Jason T. Serviss
 #' @export
 adjustAccordingToFractions <- function(fractions, singlets) {
-    .Call('_sp_scRNAseq_adjustAccordingToFractions', PACKAGE = 'sp.scRNAseq', fractions, singlets)
+    .Call('_CIMseq_adjustAccordingToFractions', PACKAGE = 'CIMseq', fractions, singlets)
 }
 
 #' multipletSums
@@ -85,7 +85,7 @@ adjustAccordingToFractions <- function(fractions, singlets) {
 #' @author Jason T. Serviss
 #' @export
 multipletSums <- function(adjusted) {
-    .Call('_sp_scRNAseq_multipletSums', PACKAGE = 'sp.scRNAseq', adjusted)
+    .Call('_CIMseq_multipletSums', PACKAGE = 'CIMseq', adjusted)
 }
 
 #' vecToMat
@@ -100,7 +100,7 @@ multipletSums <- function(adjusted) {
 #' @author Jason T. Serviss
 #' @export
 vecToMat <- function(vec, nr, nc) {
-    .Call('_sp_scRNAseq_vecToMat', PACKAGE = 'sp.scRNAseq', vec, nr, nc)
+    .Call('_CIMseq_vecToMat', PACKAGE = 'CIMseq', vec, nr, nc)
 }
 
 #' calculateCostDensity
@@ -116,7 +116,7 @@ vecToMat <- function(vec, nr, nc) {
 #' with samples as columns and genes as rows.
 #' @author Jason T. Serviss
 calculateCostDensity <- function(oneMultiplet, syntheticMultiplets) {
-    .Call('_sp_scRNAseq_calculateCostDensity', PACKAGE = 'sp.scRNAseq', oneMultiplet, syntheticMultiplets)
+    .Call('_CIMseq_calculateCostDensity', PACKAGE = 'CIMseq', oneMultiplet, syntheticMultiplets)
 }
 
 #' calculateLogRowMeans
@@ -127,7 +127,7 @@ calculateCostDensity <- function(oneMultiplet, syntheticMultiplets) {
 #' @param densities Numeric; a numeric vector of densities.
 #' @author Jason T. Serviss
 calculateLogRowMeans <- function(densities) {
-    .Call('_sp_scRNAseq_calculateLogRowMeans', PACKAGE = 'sp.scRNAseq', densities)
+    .Call('_CIMseq_calculateLogRowMeans', PACKAGE = 'CIMseq', densities)
 }
 
 #' fixNegInf
@@ -139,7 +139,7 @@ calculateLogRowMeans <- function(densities) {
 #' @param means Numeric; a numeric vector of log10 row means.
 #' @author Jason T. Serviss
 fixNegInf <- function(means) {
-    .Call('_sp_scRNAseq_fixNegInf', PACKAGE = 'sp.scRNAseq', means)
+    .Call('_CIMseq_fixNegInf', PACKAGE = 'CIMseq', means)
 }
 
 #' costNegSum
@@ -149,7 +149,7 @@ fixNegInf <- function(means) {
 #' @param means Numeric; a numeric vector of log10 row means.
 #' @author Jason T. Serviss
 costNegSum <- function(means) {
-    .Call('_sp_scRNAseq_costNegSum', PACKAGE = 'sp.scRNAseq', means)
+    .Call('_CIMseq_costNegSum', PACKAGE = 'CIMseq', means)
 }
 
 #' costCalc
@@ -166,7 +166,7 @@ costNegSum <- function(means) {
 #' @author Jason T. Serviss
 #' @export
 costCalc <- function(oneMultiplet, syntheticMultiplets) {
-    .Call('_sp_scRNAseq_costCalc', PACKAGE = 'sp.scRNAseq', oneMultiplet, syntheticMultiplets)
+    .Call('_CIMseq_costCalc', PACKAGE = 'CIMseq', oneMultiplet, syntheticMultiplets)
 }
 
 #' cost
@@ -185,6 +185,6 @@ costCalc <- function(oneMultiplet, syntheticMultiplets) {
 #' @author Jason T. Serviss
 #' @export
 cost <- function(oneMultiplet, singletSubset, fractions, n) {
-    .Call('_sp_scRNAseq_cost', PACKAGE = 'sp.scRNAseq', oneMultiplet, singletSubset, fractions, n)
+    .Call('_CIMseq_cost', PACKAGE = 'CIMseq', oneMultiplet, singletSubset, fractions, n)
 }
 

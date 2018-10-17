@@ -1,4 +1,4 @@
-#' @include sp.scRNAseq-package.R
+#' @include CIMseq-package.R
 NULL
 
 #####################
@@ -163,11 +163,11 @@ setMethod("getData", "CIMseqSwarm", function(object, n = NULL){
 #                   #
 #####################
 
-#' "gg" class
-#'
-#' @name gg-class
-#' @aliases gg
-#' @family gg
-#'
-#' @exportClass gg
-setOldClass("gg")
+##' "gg" class
+##'
+##' @name gg-class
+##' @aliases gg
+##' @family gg
+##'
+##' @exportClass gg
+#setOldClass("gg")
