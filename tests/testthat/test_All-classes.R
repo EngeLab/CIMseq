@@ -19,7 +19,7 @@ test_that("check that accessors output the expected result", {
   expect_is(getData(CIMseqSwarm_test, "convergence"), "character")
   expect_is(getData(CIMseqSwarm_test, "stats"), "tbl_df")
   expect_is(getData(CIMseqSwarm_test, "singletIdx"), "list")
-  expect_is(getData(CIMseqSwarm_test, "arguments"), "list")
+  expect_is(getData(CIMseqSwarm_test, "arguments"), "tbl_df")
 })
 
 test_that("check that replacement outputs the expected result", {
@@ -59,5 +59,44 @@ test_that("check that replacement outputs the expected result", {
   expect_is(CIMseqMultiplets_test, "CIMseqMultiplets")
   getData(CIMseqMultiplets_test, "features") <- getData(CIMseqMultiplets_test, "features")
   expect_is(CIMseqMultiplets_test, "CIMseqMultiplets")
+})
+
+test_that("check that conatenation outputs the expected result", {
+  #setup expected data
+  fractions <- rbind(
+    getData(CIMseqSwarm_test, "fractions"),
+    getData(CIMseqSwarm_test, "fractions")
+  )
+  costs <- c(
+    getData(CIMseqSwarm_test, "costs"), 
+    getData(CIMseqSwarm_test, "costs")
+  )
+  convergence <- c(
+    getData(CIMseqSwarm_test, "convergence"), 
+    getData(CIMseqSwarm_test, "convergence")
+  )
+  stats <- rbind(
+    getData(CIMseqSwarm_test, "stats"),
+    getData(CIMseqSwarm_test, "stats")
+  )
+  singletIdx <- c(
+    getData(CIMseqSwarm_test, "singletIdx"), 
+    getData(CIMseqSwarm_test, "singletIdx")
+  )
+  arguments <- rbind(
+    getData(CIMseqSwarm_test, "arguments"),
+    getData(CIMseqSwarm_test, "arguments")
+  )
+  
+  expected <- new("CIMseqSwarm",
+    fractions = fractions, costs = costs, convergence = convergence,
+    stats = stats, singletIdx = singletIdx, arguments = arguments
+  )
+  
+  #generate output
+  output <- c(CIMseqSwarm_test, CIMseqSwarm_test)
+  
+  #test
+  expect_identical(expected, output)
 })
 

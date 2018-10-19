@@ -28,20 +28,20 @@ setClass("CIMseqSinglets", representation(
 #' @rdname CIMseqSinglets
 #' @export
 
-setGeneric("getData", function(object, ...){
+setGeneric("getData", function(x, ...){
   standardGeneric("getData") 
 })
 
 #' @rdname CIMseqSinglets
 #' @export
 
-setMethod("getData", "CIMseqSinglets", function(object, n = NULL){
-  if(is.character(n) & .hasSlot(object, n)){
-    slt <- slot(object, n)
+setMethod("getData", "CIMseqSinglets", function(x, n = NULL){
+  if(is.character(n) & .hasSlot(x, n)){
+    slt <- slot(x, n)
     if(!is.function(slt)) {
       return(slt)
     } else {
-      return(slt(slot(object, "counts")))
+      return(slt(slot(x, "counts")))
     }
   }
 })
@@ -56,17 +56,17 @@ setMethod("getData", "CIMseqSinglets", function(object, n = NULL){
 #' @rdname CIMseqSinglets
 #' @export
 
-setGeneric("getData<-", function(object, n, value){
+setGeneric("getData<-", function(x, n, value){
   standardGeneric("getData<-") 
 })
 
 #' @rdname CIMseqSinglets
 #' @export
 
-setMethod("getData<-", "CIMseqSinglets", function(object, n = NULL, value){
-  if(class(n) == "character" & .hasSlot(object, n)){
-    slot(object, n) <- value
-    return(object)
+setMethod("getData<-", "CIMseqSinglets", function(x, n = NULL, value){
+  if(class(n) == "character" & .hasSlot(x, n)){
+    slot(x, n) <- value
+    return(x)
   }
 })
 
@@ -96,13 +96,13 @@ setClass("CIMseqMultiplets", representation(
 #' @rdname CIMseqMultiplets
 #' @export
 
-setMethod("getData", "CIMseqMultiplets", function(object, n = NULL){
-  if(is.character(n) & .hasSlot(object, n)){
-    slt <- slot(object, n)
+setMethod("getData", "CIMseqMultiplets", function(x, n = NULL){
+  if(is.character(n) & .hasSlot(x, n)){
+    slt <- slot(x, n)
     if(!is.function(slt)) {
       return(slt)
     } else {
-      return(slt(slot(object, "counts")))
+      return(slt(slot(x, "counts")))
     }
   }
 })
@@ -117,10 +117,10 @@ setMethod("getData", "CIMseqMultiplets", function(object, n = NULL){
 #' @rdname CIMseqMultiplets
 #' @export
 
-setMethod("getData<-", "CIMseqMultiplets", function(object, n = NULL, value){
-  if(class(n) == "character" & .hasSlot(object, n)){
-    slot(object, n) <- value
-    return(object)
+setMethod("getData<-", "CIMseqMultiplets", function(x, n = NULL, value){
+  if(class(n) == "character" & .hasSlot(x, n)){
+    slot(x, n) <- value
+    return(x)
   }
 })
 
@@ -151,11 +151,28 @@ setClass("CIMseqSwarm", representation(
 #' @rdname CIMseqSwarm
 #' @export
 
-setMethod("getData", "CIMseqSwarm", function(object, n = NULL){
-  if(class(n) == "character" & .hasSlot(object, n)){
-    slot(object, n)
+setMethod("getData", "CIMseqSwarm", function(x, n = NULL){
+  if(class(n) == "character" & .hasSlot(x, n)){
+    slot(x, n)
   }
 })
+
+#' @rdname CIMseqSwarm
+#' @export
+
+setMethod("c", c("CIMseqSwarm"), function(x, ...){
+  objs <- c(list(x), list(...))
+  #you probably want to do some checks here
+  new("CIMseqSwarm",
+    fractions = lapply(objs, getData, "fractions") %>% do.call("rbind", .),
+    costs = lapply(objs, getData, "costs") %>% do.call("c", .),
+    convergence = lapply(objs, getData, "convergence") %>% do.call("c", .),
+    stats = lapply(objs, getData, "stats") %>% do.call("rbind", .),
+    singletIdx = lapply(objs, getData, "singletIdx") %>% do.call("c", .),
+    arguments = lapply(objs, getData, "arguments") %>% do.call("rbind", .)
+  )
+})
+
 
 #####################
 #                   #
@@ -163,11 +180,11 @@ setMethod("getData", "CIMseqSwarm", function(object, n = NULL){
 #                   #
 #####################
 
-##' "gg" class
-##'
-##' @name gg-class
-##' @aliases gg
-##' @family gg
-##'
-##' @exportClass gg
-#setOldClass("gg")
+#' "gg" class
+#'
+#' @name gg-class
+#' @aliases gg
+#' @family gg
+#'
+#' @exportClass gg
+setOldClass("gg")

@@ -1,3 +1,11 @@
+v.0.2.0.1
+* adding concatenate function for CIMseqSwarm objects
+* CIMseqSwarm arguments slot now a tibble
+
+v0.2.0.0
+* removed spUnsupervised. Classification, dim.red, and features now user provided.
+* lots of renaming of classes, etc. and even the package. See updated vignette for workflow
+
 v0.1.0.2
 * spUnsupervised now uses kNN classification.
 

@@ -16,7 +16,8 @@ NULL
 #' @param counts.log matrix; Log2 normalized counts per million.
 #' @param dim.red matrix; Dimensionality reduced representation of the data.
 #' @param classification character; Sample classes.
-#' @param object CIMseqSinglets object.
+#' @param x CIMseqSinglets; CIMseqSinglets object.
+#' @param object CIMseqSinglets; A CIMseqSinglets to show.
 #' @param value Replacment value.
 #' @param n Data to extract from CIMseqSinglets object.
 #' @param .Object Internal object.
@@ -121,7 +122,8 @@ setMethod("CIMseqSinglets", "matrix", function(
 #' @param counts.log matrix; Log2 normalized counts per million.
 #' @param features numeric; The indexes of the features/genes for use in 
 #' deconvolution.
-#' @param object CIMseqMultiplets object.
+#' @param x CIMseqMultiplets; CIMseqMultiplets object.
+#' @param object CIMseqMultiplets; A CIMseqMultiplets to show.
 #' @param value Replacment value.
 #' @param n Data to extract from CIMseqMultiplets object.
 #' @param .Object Internal object.

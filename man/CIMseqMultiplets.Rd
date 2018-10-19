@@ -13,9 +13,9 @@
 \alias{show,CIMseqMultiplets-method}
 \title{CIMseqMultiplets}
 \usage{
-\S4method{getData}{CIMseqMultiplets}(object, n = NULL)
+\S4method{getData}{CIMseqMultiplets}(x, n = NULL)
 
-\S4method{getData}{CIMseqMultiplets}(object, n = NULL) <- value
+\S4method{getData}{CIMseqMultiplets}(x, n = NULL) <- value
 
 CIMseqMultiplets(counts, ...)
 
@@ -29,7 +29,7 @@ CIMseqMultiplets(counts, ...)
 \S4method{show}{CIMseqMultiplets}(object)
 }
 \arguments{
-\item{object}{CIMseqMultiplets object.}
+\item{x}{CIMseqMultiplets; CIMseqMultiplets object.}
 
 \item{n}{Data to extract from CIMseqMultiplets object.}
 
@@ -49,6 +49,8 @@ deconvolution.}
 \item{counts.log}{matrix; Log2 normalized counts per million.}
 
 \item{counts.cpm}{matrix; Normalized counts per million.}
+
+\item{object}{CIMseqMultiplets; A CIMseqMultiplets to show.}
 }
 \value{
 CIMseqMultiplets object.

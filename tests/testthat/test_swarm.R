@@ -322,7 +322,7 @@ test_that("check that appropriateSinglets outputs the expected result", {
   
   ###TEST1####
   #extract needed variables
-  selectInd <- getData(CIMseqSwarm_test, "arguments")$features
+  selectInd <- getData(CIMseqSwarm_test, "arguments")$features[[1]]
   singlets <- getData(CIMseqSinglets_test, "counts.cpm")
   n <- getData(CIMseqSwarm_test, "arguments")$nSyntheticMultiplets
   idx <- getData(CIMseqSwarm_test, "singletIdx")
@@ -357,7 +357,7 @@ test_that("check that calculateCost and cost give identical results", {
   
   ###TEST1####
   #prepare normal input data
-  selectInd <- getData(CIMseqSwarm_test, "arguments")$features
+  selectInd <- getData(CIMseqSwarm_test, "arguments")$features[[1]]
   singletIdx <- getData(CIMseqSwarm_test, "singletIdx")
   singletSubset <- appropriateSinglets(CIMseqSinglets_test, singletIdx, selectInd)
   

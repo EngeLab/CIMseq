@@ -105,16 +105,16 @@ setMethod("plotCountsERCC", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   singlets, multiplets, ...
 ){
   plotCountsData(singlets, multiplets) %>%
-  ggplot(aes_string(x = "`Sample type`", y = "`Cell number`")) +
-  scale_y_continuous(
-    expand = c(0, 0),
-    sec.axis = sec_axis(
-      trans = ~ convertToERCC(., singlets, multiplets),
-      name = "% ERCC"
-    )
-  ) +
-  geom_jitter() +
-  theme_few()
+    ggplot(aes_string(x = "`Sample type`", y = "`Cell number`")) +
+    scale_y_continuous(
+      expand = c(0, 0),
+      sec.axis = sec_axis(
+        trans = ~ convertToERCC(., singlets, multiplets),
+        name = "% ERCC"
+      )
+    ) +
+    geom_jitter() +
+    theme_few()
 })
 
 #' plotCountsMarkers
@@ -151,21 +151,18 @@ setGeneric("plotCountsMarkers", function(
 #' @importFrom ggthemes theme_few scale_colour_economist
 
 setMethod("plotCountsMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), function(
-    singlets,
-    multiplets,
-    markers = NULL,
-    ...
+  singlets, multiplets, markers = NULL, ...
 ){
   if((!is.null(markers)) & length(markers) != 2) {
     stop("Markers must be a character vector of length = 2.")
   }
   
   plotCountsData(singlets, multiplets, markers) %>%
-  ggplot(aes_string(markers[1], markers[2], colour = "`Sample type`")) +
-  geom_point(alpha = 0.85) +
-  scale_colour_manual(values = c("#1c54a8", "#f63b32")) +
-  theme_few() +
-  theme(legend.position = "top")
+    ggplot(aes_string(markers[1], markers[2], colour = "`Sample type`")) +
+    geom_point(alpha = 0.85) +
+    scale_colour_manual(values = c("#1c54a8", "#f63b32")) +
+    theme_few() +
+    theme(legend.position = "top")
 })
 
 #' plotUnsupervisedClass

@@ -15,13 +15,13 @@
 \alias{show,CIMseqSinglets-method}
 \title{CIMseqSinglets}
 \usage{
-getData(object, ...)
+getData(x, ...)
 
-\S4method{getData}{CIMseqSinglets}(object, n = NULL)
+\S4method{getData}{CIMseqSinglets}(x, n = NULL)
 
-getData(object, n) <- value
+getData(x, n) <- value
 
-\S4method{getData}{CIMseqSinglets}(object, n = NULL) <- value
+\S4method{getData}{CIMseqSinglets}(x, n = NULL) <- value
 
 CIMseqSinglets(counts, ...)
 
@@ -36,7 +36,7 @@ CIMseqSinglets(counts, ...)
 \S4method{show}{CIMseqSinglets}(object)
 }
 \arguments{
-\item{object}{CIMseqSinglets object.}
+\item{x}{CIMseqSinglets; CIMseqSinglets object.}
 
 \item{...}{additional arguments to pass on}
 
@@ -57,6 +57,8 @@ CIMseqSinglets(counts, ...)
 \item{counts.log}{matrix; Log2 normalized counts per million.}
 
 \item{counts.cpm}{matrix; Normalized counts per million.}
+
+\item{object}{CIMseqSinglets; A CIMseqSinglets to show.}
 }
 \value{
 CIMseqSinglets object.

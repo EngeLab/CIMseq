@@ -24,6 +24,9 @@ NULL
 #' @param vectorize logical, Argument to \link[pso]{psoptim}.
 #' @param permute logical; indicates if genes should be permuted before
 #'  deconvolution. For use with permutation testing.
+#'  @param singletIdx list; Singlet indexes to be used to choose singlets and
+#'  synthesize synthetic multiplets. Facilitates using the same synthetic set 
+#'  e.g. with repeated runs or permutation. 
 #' @param fractions matrix; The deconvolution results.
 #' @param costs numeric; The costs after optimization.
 #' @param convergence character; The convergence output from \link[pso]{psoptim}.
@@ -33,7 +36,8 @@ NULL
 #' @param singletIdx list; Indexes indicating singlets that were subset to 
 #' synthesize synthetic multiplets. Facilitates recreation of the synthetic 
 #' multiplets downstream.
-#' @param object A CIMseqSwarm object.
+#' @param x CIMseqSwarm; A CIMseqSwarm object.
+#' @param object CIMseqSwarm; A CIMseqSwarm to show.
 #' @param n character; Data to extract from CIMseqSwarm object.
 #' @param .Object Internal object.
 #' @param ... additional arguments to pass on.
@@ -70,7 +74,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   singlets, multiplets,
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11, 
   norm = TRUE, report = FALSE, reportRate = NA, vectorize = FALSE,
-  permute = FALSE, ...
+  permute = FALSE, singletIdx = NULL, ...
 ){
     
   #put a check here to make sure all slots in the spUnsupervised object are
@@ -117,8 +121,11 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   set.seed(seed)
   if(permute) {sng <- .permuteGenes(sng)}
   
-  idx <- purrr::map(1:nSyntheticMultiplets, ~sampleSinglets(classes))
-  singletSubset <- appropriateSinglets(singlets, idx, selectInd)
+  if(is.null(singletIdx)) {
+    singletIdx <- purrr::map(1:nSyntheticMultiplets, ~sampleSinglets(classes))
+  }
+  
+  singletSubset <- appropriateSinglets(singlets, singletIdx, selectInd)
   
   #deconvolution
   opt.out <- future_lapply(
@@ -139,7 +146,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
     costs = map_dbl(opt.out, 2),
     convergence = .processConvergence(opt.out),
     stats = if(report) {.processStats(opt.out, cn, rn)} else {tibble()},
-    singletIdx = map(idx, as.integer),
+    singletIdx = map(singletIdx, as.integer),
     arguments = tibble(
       maxiter = maxiter, swarmsize = swarmsize,
       nSyntheticMultiplets = nSyntheticMultiplets, seed = seed, norm = norm,

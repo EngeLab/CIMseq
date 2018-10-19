@@ -5,13 +5,16 @@
 \name{CIMseqSwarm-class}
 \alias{CIMseqSwarm-class}
 \alias{getData,CIMseqSwarm-method}
+\alias{c,CIMseqSwarm-method}
 \alias{CIMseqSwarm}
 \alias{CIMseqSwarm,CIMseqSinglets,CIMseqMultiplets-method}
 \alias{initialize,CIMseqSwarm-method}
 \alias{show,CIMseqSwarm-method}
 \title{CIMseqSwarm}
 \usage{
-\S4method{getData}{CIMseqSwarm}(object, n = NULL)
+\S4method{getData}{CIMseqSwarm}(x, n = NULL)
+
+\S4method{c}{CIMseqSwarm}(x, ...)
 
 CIMseqSwarm(singlets, multiplets, ...)
 
@@ -19,7 +22,7 @@ CIMseqSwarm(singlets, multiplets, ...)
   multiplets, maxiter = 10, swarmsize = 150,
   nSyntheticMultiplets = 200, seed = 11, norm = TRUE,
   report = FALSE, reportRate = NA, vectorize = FALSE,
-  permute = FALSE, ...)
+  permute = FALSE, singletIdx = NULL, ...)
 
 \S4method{initialize}{CIMseqSwarm}(.Object, ..., fractions, costs,
   convergence, stats, singletIdx, arguments)
@@ -27,15 +30,15 @@ CIMseqSwarm(singlets, multiplets, ...)
 \S4method{show}{CIMseqSwarm}(object)
 }
 \arguments{
-\item{object}{A CIMseqSwarm object.}
+\item{x}{CIMseqSwarm; A CIMseqSwarm object.}
 
 \item{n}{character; Data to extract from CIMseqSwarm object.}
+
+\item{...}{additional arguments to pass on.}
 
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
 
 \item{multiplets}{CIMseqMultiplets; A CIMseqMultiplets object.}
-
-\item{...}{additional arguments to pass on.}
 
 \item{maxiter}{integer; The maximum optimization iterations.}
 
@@ -57,7 +60,14 @@ which a report should be generated.}
 \item{vectorize}{logical, Argument to \link[pso]{psoptim}.}
 
 \item{permute}{logical; indicates if genes should be permuted before
-deconvolution. For use with permutation testing.}
+deconvolution. For use with permutation testing.
+@param singletIdx list; Singlet indexes to be used to choose singlets and
+synthesize synthetic multiplets. Facilitates using the same synthetic set 
+e.g. with repeated runs or permutation.}
+
+\item{singletIdx}{list; Indexes indicating singlets that were subset to 
+synthesize synthetic multiplets. Facilitates recreation of the synthetic 
+multiplets downstream.}
 
 \item{.Object}{Internal object.}
 
@@ -70,11 +80,9 @@ One value per multiplet.}
 
 \item{stats}{tbl_df; The stats output from \link[pso]{psoptim}}
 
-\item{singletIdx}{list; Indexes indicating singlets that were subset to 
-synthesize synthetic multiplets. Facilitates recreation of the synthetic 
-multiplets downstream.}
-
 \item{arguments}{list; Arguments passed to the CIMseqSwarm function.}
+
+\item{object}{CIMseqSwarm; A CIMseqSwarm to show.}
 }
 \value{
 CIMseqSwarm output.
