@@ -243,10 +243,14 @@ setMethod("estimateCells", "CIMseqSinglets", function(
   all0 <- apply(counts.ercc, 2, function(x) all(x == 0))
   if(any(all0, na.rm = TRUE) & warning) {
     zeroIDs <- colnames(counts.ercc)[which(all0)]
+    if(length(zeroIDs) > 5) {
+      zeroIDs <- paste0(paste(zeroIDs[1:5], collapse = ", "), ", ...")
+    } else {
+      zeroIDs <- paste(zeroIDs, collapse = ", ")
+    }
     warning(paste0(
-      "Results will not be accurate. ",
-      "These samples ERCC reads are all 0's: ",
-      paste(zeroIDs, collapse = ", ")
+      "Results will not be accurate. ", 
+      "These samples ERCC reads are all 0's: ", zeroIDs
     ))
   }
   
