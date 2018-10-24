@@ -66,6 +66,34 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
   #test
   expect_identical(output1, expected1)
   expect_identical(output2, expected2)
+  
+  ###TEST2####
+  #setup expected data
+  expected1 <- tibble::tibble(
+    multiplet = "m.NJB00204.G04", from = "A375", to = "A375"
+  )
+  
+  #run function
+  output1 <- getEdgesForMultiplet(CIMseqSwarm_test, 0.4, 'm.NJB00204.G04')
+  
+  #test
+  expect_identical(output1, expected1)
+  
+  ###TEST3####
+  #setup expected data
+  expected1 <- tibble::tibble(
+    multiplet = c("m.NJB00204.G04", "m.NJB00204.D07"),
+    from = c("A375", "HCT116"), 
+    to = c("HOS", "HOS")
+  )
+  
+  #run function
+  output1 <- getEdgesForMultiplet(
+    CIMseqSwarm_test, 0.0, c('m.NJB00204.G04', 'm.NJB00204.D07')
+  )
+  
+  #test
+  expect_identical(output1, expected1)
 })
 
 ################################################################################

@@ -53,9 +53,7 @@ NULL
 #' @export
 
 setGeneric("CIMseqSwarm", function(
-  singlets,
-  multiplets,
-  ...
+  singlets, multiplets, ...
 ){
   standardGeneric("CIMseqSwarm")
 })
@@ -523,10 +521,7 @@ setGeneric("getMultipletsForEdge", function(
 #' @export
 
 setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
-  swarm,
-  edge.cutoff,
-  edges,
-  ...
+  swarm, edge.cutoff, edges, ...
 ){
   
   edges <- mutate_if(edges, is.factor, as.character)
@@ -597,14 +592,11 @@ NULL
 #' @export
 #' @importFrom rlang .data
 #' @importFrom purrr map_dfr
-#' @importFrom tibble as_tibble add_column
-#' @importFrom dplyr select
-#' @importFrom stats setNames
+#' @importFrom tibble  tibble
 #' @importFrom utils combn
 
 setGeneric("getEdgesForMultiplet", function(
-  swarm,
-  ...
+  swarm, ...
 ){
   standardGeneric("getEdgesForMultiplet")
 })
@@ -613,42 +605,29 @@ setGeneric("getEdgesForMultiplet", function(
 #' @export
 
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
-  swarm,
-  edge.cutoff,
-  multiplet,
-  ...
+  swarm, edge.cutoff, multiplet, ...
 ){
   s <- spSwarmPoisson(swarm, edge.cutoff = edge.cutoff)
   frac <- getData(swarm, "fractions")[multiplet, ]
-  map_dfr(multiplet, .edgeFunx, edge.cutoff, frac, s)
+  if(length(multiplet) == 1) {
+    .edgeFunSingle(multiplet, edge.cutoff, frac, s)
+  } else {
+    map_dfr(1:length(multiplet), function(i) {
+      .edgeFunSingle(multiplet[i], edge.cutoff, frac[i, ], s)
+    })
+  }
 })
 
-.edgeFunx <- function(x, edge.cutoff, frac, s) {
-  if(is.null(dim(frac))) {
-    keep <- frac > edge.cutoff
+.edgeFunSingle <- function(multiplet, edge.cutoff, frac, s) {
+  keep <- frac > edge.cutoff
+  n <- names(frac)[keep]
+  if(length(n) == 1) {
+    output <- tibble(multiplet = multiplet, from = n, to = n)
+    return(output)
   } else {
-    keep <- as.logical(frac[x, ] > edge.cutoff)
-  }
-    
-  if(sum(keep) > 1) {
-    combs <- combn(names(frac)[keep], 2)
-    sapply(1:ncol(combs), function(y) {
-        bool1 <- s$from == combs[1, y] & s$to == combs[2, y]
-        bool2 <- s$from == combs[2, y] & s$to == combs[1, y]
-        as.character(distinct(filter(s, bool1 | bool2)[, 1:2]))
-    }) %>%
-    t() %>%
-    as_tibble() %>%
-    setNames(c("from", "to")) %>%
-    add_column("multiplet" = x) %>%
-    select(.data$multiplet, .data$from, .data$to)
-
-  } else if(sum(keep) == 1) {
-    n <- names(frac)[keep]
-    filter(s, .data$to == n & .data$from == n) %>%
-    add_column("multiplet" = x) %>%
-    select(-.data$weight, -.data$pval)
-    
+    c <- combn(n, 2)
+    output <- tibble(multiplet = multiplet, from = c[1, ], to = c[2, ])
+    return(output)
   }
 }
 
