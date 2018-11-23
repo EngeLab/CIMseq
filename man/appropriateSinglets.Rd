@@ -10,7 +10,8 @@ appropriateSinglets(singlets, idx, features)
 \item{singlets}{A CIMseqSinglets object.}
 
 \item{idx}{numeric; Singlet indices to subset. Generated with the 
-\code{\link{sampleSinglets}} function.}
+\code{\link{sampleSinglets}} function. THIS IS ZERO BASED since upstream 
+calculations are done in C++.}
 
 \item{features}{numeric; Indices of selected features used for deconvolution.}
 

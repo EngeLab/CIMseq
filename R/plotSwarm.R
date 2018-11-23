@@ -51,7 +51,7 @@ setMethod("plotSwarmGraph", c("CIMseqSwarm", "CIMseqSinglets"), function(
   )
   
   #move data to graph
-  spSwarmPoisson(swarm, edge.cutoff = 0) %>%
+  p <- spSwarmPoisson(swarm, edge.cutoff = 0) %>%
     unite('connection', .data$from, .data$to, sep = "-", remove = FALSE) %>%
     select(.data$from, .data$to, .data$connection, .data$weight, .data$pval) %>%
     graph_from_data_frame(directed = FALSE) %>%
@@ -61,9 +61,9 @@ setMethod("plotSwarmGraph", c("CIMseqSwarm", "CIMseqSinglets"), function(
     #remove edges with 0 weight and coerce to factor
     activate(edges) %>%
     filter(.data$weight > 0) %>%
-    mutate(
-      'weight' = parse_factor(.data$weight, levels = unique(.data$weight)
-    )) %>%
+    #mutate(
+    #  'weight' = parse_factor(.data$weight, levels = unique(.data$weight)
+    #)) %>%
     #plot base plot with custom layout according to tsne
     ggraph(
       layout = 'manual',
@@ -94,6 +94,9 @@ setMethod("plotSwarmGraph", c("CIMseqSwarm", "CIMseqSinglets"), function(
       colour = guide_legend(title = "Classification", title.position = "top"),
       edge_width = guide_legend(title = "Weight", title.position = "top")
     )
+    
+    p
+    return(p)
 })
 
 #' plotSwarmBarBase

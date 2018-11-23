@@ -234,7 +234,8 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 #' @rdname appropriateSinglets
 #' @param singlets A CIMseqSinglets object.
 #' @param idx numeric; Singlet indices to subset. Generated with the 
-#' \code{\link{sampleSinglets}} function.
+#' \code{\link{sampleSinglets}} function. THIS IS ZERO BASED since upstream 
+#' calculations are done in C++.
 #' @param features numeric; Indices of selected features used for deconvolution.
 #' @param ... additional arguments to pass on
 #' @return Appropriated singlets.
@@ -318,8 +319,9 @@ NULL
 
 #' @rdname spSwarmPoisson
 #' @importFrom stats ppois
-#' @importFrom dplyr filter pull rowwise do ungroup full_join select bind_cols
+#' @importFrom dplyr filter pull rowwise do ungroup full_join select bind_cols mutate
 #' @importFrom tibble rownames_to_column as_tibble
+#' @importFrom purrr map2_dbl
 #' @importFrom tidyr separate
 #' @importFrom utils combn
 #' @importFrom rlang .data
@@ -358,72 +360,75 @@ spSwarmPoisson <- function(
   }
 }
 
-.calculateP <- function(
-  edges,
-  min.pval,
-  min.num.edges,
-  ...
-){
-  ps <- function(edges, f, t, weight) {
-    mean <- edges %>%
-    filter(.data$from %in% c(f, t) | .data$to %in% c(f, t)) %>%
-    pull(weight) %>%
-    mean()
-        
-    ppois(weight, mean, lower.tail = FALSE) %>%
-    as_tibble() %>%
-    rename(pval = .data$value)
-  }
-    
-  edges %>%
-  rowwise() %>%
-  do(bind_cols(.data, ps(edges, .data$from, .data$to, .data$weight))) %>%
-  ungroup %>%
-  filter(.data$pval <= min.pval & .data$weight >= min.num.edges)
-}
-
 .calculateWeight <- function(
-  mat,
-  logic,
-  ...
+  mat, logic, ...
 ){
   value <- NULL
-  homo <- paste(sort(colnames(mat)), sort(colnames(mat)), sep = "-")
-  hetero <- apply(combn(colnames(mat), 2), 2, function(x) {
-      paste(sort(x), collapse = "-")
+  comb <- expand.grid(colnames(mat), colnames(mat), stringsAsFactors = FALSE)
+  totcomb <- paste(comb$Var1, comb$Var2, sep = "-")
+  
+  com <- apply(logic, 1, function(row) {
+    pick <- names(row)[which(row)]
+    if(length(pick) == 1) {
+      totcomb %in% paste(pick, pick, sep = "-")
+    } else {
+      picked <- apply(
+        expand.grid(pick, pick, stringsAsFactors = FALSE), 1, function(x) {
+          paste(x, collapse = "-")
+        }
+      )
+      totcomb %in% picked
+    }
   })
-  totcomb <- unique(c(homo, hetero))
-    
-  com <- apply(logic, 1, .funx, totcomb)
   rownames(com) <- totcomb
   
   res <- apply(com, 1, sum) %>%
-  as.data.frame(stringsAsFactors = FALSE) %>%
-  rownames_to_column(var = "value") %>%
-  setNames(c("value", "weight"))
+    as.data.frame(stringsAsFactors = FALSE) %>%
+    rownames_to_column(var = "value") %>%
+    setNames(c("value", "weight"))
   
   totcomb %>%
-    as_tibble %>%
+    as_tibble() %>%
     separate(value, c("from", "to"), sep = "-", remove = FALSE) %>%
     full_join(res, by = "value") %>%
     select(-value) %>%
     as.data.frame(stringsAsFactors = FALSE)
 }
 
-.funx <- function(
-  row,
-  totcomb
+.calculateP <- function(
+  edges, min.pval, min.num.edges, ...
 ){
-  pick <- names(row)[which(row)]
-  if(length(pick) == 1) {
-    totcomb %in% paste(pick, pick, sep = "-")
-  } else {
-    picked <- apply(
-      combn(pick, 2), 2, function(x) {
-        paste(sort(x), collapse = "-")
-    })
-    totcomb %in% picked
-  }
+  classes <- unique(c(edges$from, edges$to))
+  
+  #calculate total number of edges
+  #don't account for self connections since they are underestimated in deconvolution
+  total.edges <- sum(edges[edges$from != edges$to, "weight"]) * 2
+  
+  #calculate expected edges
+  #don't account for self connections
+  ct.freq <- as.numeric(table(classes) / length(classes))
+  names(ct.freq) <- names(table(classes))
+  allProbs <- expand.grid(names(ct.freq), names(ct.freq))
+  allProbs$jp <- ct.freq[allProbs$Var1] * ct.freq[allProbs$Var2]
+  allProbs <- allProbs[allProbs$Var1 != allProbs$Var2, ]
+  allProbs$jp <- allProbs$jp / sum(allProbs$jp)
+  edges <- mutate(
+    edges, expected.edges = map2_dbl(from, to, function(f, t) {
+      if(f == t) {
+        NA #self conections underestimated in the deconvolution
+      } else {
+        total.edges * allProbs[allProbs$Var2 == f & allProbs$Var1 == t, "jp"]
+      }
+  }))
+  
+  #calculate p-value based on observed (weight) vs. expected (expected.edges)
+  edges$pval <- ppois(
+    q = edges$weight, lambda = edges$expected.edges, lower.tail = FALSE
+  )
+  
+  #calculate score = observed / expected
+  edges$score <- edges$weight / edges$expected.edges
+  edges
 }
 
 #' calcResiduals
