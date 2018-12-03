@@ -4,11 +4,13 @@
 \alias{spSwarmPoisson}
 \title{spSwarmPoisson}
 \usage{
-spSwarmPoisson(swarm, edge.cutoff = 0, min.pval = 1,
+spSwarmPoisson(swarm, singlets, edge.cutoff = 0, min.pval = 1,
   min.num.edges = 0, ...)
 }
 \arguments{
 \item{swarm}{A CIMseqSwarm object.}
+
+\item{singlets}{A CIMseqSinglets object.}
 
 \item{edge.cutoff}{numeric; The minimum fraction to consider (?).}
 

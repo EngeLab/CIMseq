@@ -302,6 +302,7 @@ appropriateSinglets <- function(
 #' @name spSwarmPoisson
 #' @rdname spSwarmPoisson
 #' @param swarm A CIMseqSwarm object.
+#' @param singlets A CIMseqSinglets object.
 #' @param edge.cutoff numeric; The minimum fraction to consider (?).
 #' @param min.pval numeric; Minimum p-value to report.
 #' @param min.num.edges numeric; Minimum number of observed edges to report a 
@@ -329,19 +330,21 @@ NULL
 
 spSwarmPoisson <- function(
   swarm,
+  singlets,
   edge.cutoff = 0,
   min.pval = 1,
   min.num.edges = 0,
   ...
 ){
   mat <- getData(swarm, "fractions")
+  classes <- getData(singlets, "classification")
   logic <- .fractionCutoff(mat, edge.cutoff)
 
   #calcluate weight
   edges <- .calculateWeight(mat, logic)
 
   #calculate p-value
-  out <- .calculateP(edges, min.pval, min.num.edges)
+  out <- .calculateP(edges, classes, min.pval, min.num.edges)
 
   return(out)
 }
@@ -396,28 +399,28 @@ spSwarmPoisson <- function(
 }
 
 .calculateP <- function(
-  edges, min.pval, min.num.edges, ...
+  edges, classes, min.pval, min.num.edges, ...
 ){
-  classes <- unique(c(edges$from, edges$to))
-  
   #calculate total number of edges
   #don't account for self connections since they are underestimated in deconvolution
-  total.edges <- sum(edges[edges$from != edges$to, "weight"]) * 2
+  total.edges <- sum(edges[edges$from != edges$to, "weight"])
   
   #calculate expected edges
   #don't account for self connections
   ct.freq <- as.numeric(table(classes) / length(classes))
   names(ct.freq) <- names(table(classes))
-  allProbs <- expand.grid(names(ct.freq), names(ct.freq))
-  allProbs$jp <- ct.freq[allProbs$Var1] * ct.freq[allProbs$Var2]
-  allProbs <- allProbs[allProbs$Var1 != allProbs$Var2, ]
+  allProbs <- expand.grid(
+    from = names(ct.freq), to = names(ct.freq), stringsAsFactors = FALSE
+  )
+  allProbs$jp <- ct.freq[allProbs$from] * ct.freq[allProbs$to]
+  allProbs <- allProbs[allProbs$from != allProbs$to, ]
   allProbs$jp <- allProbs$jp / sum(allProbs$jp)
   edges <- mutate(
     edges, expected.edges = map2_dbl(from, to, function(f, t) {
       if(f == t) {
         NA #self conections underestimated in the deconvolution
       } else {
-        total.edges * allProbs[allProbs$Var2 == f & allProbs$Var1 == t, "jp"]
+        total.edges * allProbs[allProbs$from == f & allProbs$to == t, "jp"]
       }
   }))
   
@@ -440,8 +443,14 @@ spSwarmPoisson <- function(
 #'
 #' @name calcResiduals
 #' @rdname calcResiduals
+#' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
 #' @param swarm A CIMseqSwarm object.
+#' @param include character;  If residuals should only be calculated for a 
+#' subset of the multiplets, include their names here. Default is to calculate 
+#' for all multiplets.
+#' @param fractions matrix; A matrix of fractions. By default the fractions in 
+#' the CIMseqSwarm object are used.
 #' @param ... additional arguments to pass on
 #' @return Residuals (add more description).
 #' @author Jason T. Serviss
@@ -453,37 +462,55 @@ NULL
 #' @importFrom purrr map_dfc set_names
 
 calcResiduals <- function(
+  singlets,
   multiplets,
   swarm,
+  include = NULL,
+  fractions = NULL,
   ...
 ){
   gene <- residual <- NULL
-  frac <- getData(swarm, "fractions")
-  sm <- getData(swarm, "syntheticMultiplets")
-  n <- getData(swarm, "arguments")[['nSyntheticMultiplets']]
+  if(is.null(fractions)) {
+    frac <- getData(swarm, "fractions") 
+  } else {
+    frac <- fractions
+  }
   selectInd <- getData(multiplets, "features")
+  n <- getData(swarm, "arguments")[['nSyntheticMultiplets']]
+  idx <- getData(swarm, "singletIdx")
+  sm <- appropriateSinglets(singlets, idx, selectInd)
   
   mulCPM <- getData(multiplets, "counts.cpm")
+  if(!is.null(include) & length(include) > 1) mulCPM <- mulCPM[, include]
+  if(!is.null(include) & length(include) == 1) {
+    mulCPM <- matrix(
+      mulCPM[, include], 
+      nrow = nrow(mulCPM), 
+      dimnames = list(rownames(mulCPM), include))
+  }
+  
   multiplets <- matrix(
     mulCPM[selectInd, ],
     ncol = ncol(mulCPM),
     dimnames = list(rownames(mulCPM)[selectInd], colnames(mulCPM))
   )
   
-  map_dfc(1:ncol(multiplets), function(i) {
-    as.numeric(frac[rownames(frac) == colnames(multiplets)[i], ]) %>%
-    adjustAccordingToFractions(sm) %>%
-    multipletSums() %>%
-    vecToMat(nrow(multiplets), n) %>% #double check that this is happening as expected
-    calculateCostDensity(multiplets[, i], .) %>%
-    calculateLogRowMeans() %>%
-    fixNegInf() %>%
-    multiply_by(-1) %>%
-    matrix_to_tibble(drop = TRUE)
+  future_lapply(
+    X = 1:ncol(multiplets), FUN = function(i) {
+      as.numeric(frac[rownames(frac) == colnames(multiplets)[i], ]) %>%
+        adjustAccordingToFractions(., sm) %>%
+        multipletSums() %>%
+        vecToMat(nrow(multiplets), n) %>% #double check that this is happening as expected
+        calculateCostDensity(round(multiplets[, i]), .) %>%
+        calculateLogRowMeans() %>%
+        fixNegInf() %>%
+        multiply_by(-1) %>%
+        matrix_to_tibble(drop = TRUE)
   }) %>%
-  set_names(colnames(multiplets)) %>%
-  add_column(gene = rownames(multiplets), .before = 1) %>%
-  gather(sample, residual, -gene)
+    reduce(., bind_cols) %>%
+    set_names(colnames(multiplets)) %>%
+    add_column(gene = rownames(multiplets), .before = 1) %>%
+    gather(sample, residual, -gene)
 }
 
 #' getMultipletsForEdge
@@ -582,6 +609,7 @@ setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
 #' @rdname getEdgesForMultiplet
 #' @aliases getEdgesForMultiplet
 #' @param swarm A CIMseqSwarm object.
+#' @param singlets A CIMseqSinglets object.
 #' @param edge.cutoff numeric; The minimum fraction to consider (?).
 #' @param multiplet character; The name of the multiplet of interest.
 #' @param ... additional arguments to pass on
@@ -610,9 +638,9 @@ setGeneric("getEdgesForMultiplet", function(
 #' @export
 
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
-  swarm, edge.cutoff, multiplet, ...
+  swarm, singlets, edge.cutoff, multiplet, ...
 ){
-  s <- spSwarmPoisson(swarm, edge.cutoff = edge.cutoff)
+  s <- spSwarmPoisson(swarm, singlets, edge.cutoff)
   frac <- getData(swarm, "fractions")[multiplet, ]
   if(length(multiplet) == 1) {
     .edgeFunSingle(multiplet, edge.cutoff, frac, s)
@@ -644,6 +672,7 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
 #' @name calculateCosts
 #' @rdname calculateCosts
 #' @aliases calculateCosts
+#' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
 #' @param swarm A CIMseqSwarm object.
 #' @param fractions WILL PROBABLY BE REMOVED
@@ -661,9 +690,9 @@ NULL
 #' @export
 
 setGeneric("calculateCosts", function(
+  singlets,
   multiplets,
   swarm,
-  fractions,
   ...
 ){
   standardGeneric("calculateCosts")
@@ -672,15 +701,17 @@ setGeneric("calculateCosts", function(
 #' @rdname calculateCosts
 #' @export
 
-setMethod("calculateCosts", c("CIMseqSinglets", "CIMseqSwarm", "numeric"), function(
+setMethod("calculateCosts", c("CIMseqSinglets", "CIMseqMultiplets", "CIMseqSwarm"), function(
+  singlets,
   multiplets,
   swarm,
   fractions = NULL,
   ...
 ){
   if(is.null(fractions)) fractions <- getData(swarm, "fractions")
+  if(is.null(dim(fractions))) fractions <- matrix(fractions, ncol = length(fractions))
   mulCPM <- getData(multiplets, "counts.cpm")
-  selectInd <- getData(swarm, "arguments")$features
+  selectInd <- getData(swarm, "arguments")$features[[1]]
   
   multiplets <- matrix(
     mulCPM[selectInd, ],
@@ -692,14 +723,15 @@ setMethod("calculateCosts", c("CIMseqSinglets", "CIMseqSwarm", "numeric"), funct
   to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
   
   #setup synthetic multiplets
-  singletSubset <- getData(swarm, "syntheticMultiplets")
-  n <- getData(swarm, "arguments")$nSyntheticMultiplets
+  sngIdx <- getData(swarm, "singletIdx")
+  sngSubset <- appropriateSinglets(singlets, sngIdx, selectInd)
+  nSynthMul <- getData(sObj, "arguments")$nSyntheticMultiplets[[1]]
   
   #calculate costs
   opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
       oneMultiplet <- ceiling(multiplets[, i])
-      calculateCost(oneMultiplet, singletSubset, as.numeric(fractions[i, ]), n)
+      calculateCost(oneMultiplet, sngSubset, as.numeric(fractions[i, ]), nSynthMul)
   })
   names(opt.out) <- colnames(multiplets)
   opt.out

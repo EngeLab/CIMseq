@@ -3,22 +3,25 @@
 \docType{methods}
 \name{calculateCosts}
 \alias{calculateCosts}
-\alias{calculateCosts,CIMseqSinglets,CIMseqSwarm,numeric-method}
+\alias{calculateCosts,CIMseqSinglets,CIMseqMultiplets,CIMseqSwarm-method}
 \title{calculateCosts}
 \usage{
-calculateCosts(multiplets, swarm, fractions, ...)
+calculateCosts(singlets, multiplets, swarm, ...)
 
-\S4method{calculateCosts}{CIMseqSinglets,CIMseqSwarm,numeric}(multiplets,
-  swarm, fractions = NULL, ...)
+
+  \S4method{calculateCosts}{CIMseqSinglets,CIMseqMultiplets,CIMseqSwarm}(singlets,
+  multiplets, swarm, fractions = NULL, ...)
 }
 \arguments{
+\item{singlets}{A CIMseqSinglets object.}
+
 \item{multiplets}{A CIMseqMultiplets object.}
 
 \item{swarm}{A CIMseqSwarm object.}
 
-\item{fractions}{WILL PROBABLY BE REMOVED}
-
 \item{...}{additional arguments to pass on}
+
+\item{fractions}{WILL PROBABLY BE REMOVED}
 }
 \value{
 Costs

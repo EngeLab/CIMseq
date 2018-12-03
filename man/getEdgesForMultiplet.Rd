@@ -8,13 +8,15 @@
 \usage{
 getEdgesForMultiplet(swarm, ...)
 
-\S4method{getEdgesForMultiplet}{CIMseqSwarm}(swarm, edge.cutoff, multiplet,
-  ...)
+\S4method{getEdgesForMultiplet}{CIMseqSwarm}(swarm, singlets, edge.cutoff,
+  multiplet, ...)
 }
 \arguments{
 \item{swarm}{A CIMseqSwarm object.}
 
 \item{...}{additional arguments to pass on}
+
+\item{singlets}{A CIMseqSinglets object.}
 
 \item{edge.cutoff}{numeric; The minimum fraction to consider (?).}
 
