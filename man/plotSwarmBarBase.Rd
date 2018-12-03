@@ -3,12 +3,13 @@
 \docType{methods}
 \name{plotSwarmBarBase}
 \alias{plotSwarmBarBase}
-\alias{plotSwarmBarBase,CIMseqSwarm-method}
+\alias{plotSwarmBarBase,CIMseqSwarm,CIMseqSinglets-method}
 \title{plotSwarmBarBase}
 \usage{
-plotSwarmBarBase(swarm, ...)
+plotSwarmBarBase(swarm, singlets, ...)
 
-\S4method{plotSwarmBarBase}{CIMseqSwarm}(swarm, ...)
+\S4method{plotSwarmBarBase}{CIMseqSwarm,CIMseqSinglets}(swarm, singlets,
+  ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}

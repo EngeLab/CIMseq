@@ -3,12 +3,12 @@
 \docType{methods}
 \name{plotSwarmHeat}
 \alias{plotSwarmHeat}
-\alias{plotSwarmHeat,CIMseqSwarm-method}
+\alias{plotSwarmHeat,CIMseqSwarm,CIMseqSinglets-method}
 \title{plotSwarmHeat}
 \usage{
-plotSwarmHeat(swarm, ...)
+plotSwarmHeat(swarm, singlets, ...)
 
-\S4method{plotSwarmHeat}{CIMseqSwarm}(swarm, ...)
+\S4method{plotSwarmHeat}{CIMseqSwarm,CIMseqSinglets}(swarm, singlets, ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}

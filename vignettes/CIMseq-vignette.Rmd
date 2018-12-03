@@ -181,7 +181,7 @@ sObj <- CIMseqSwarm_test
 We can exmaine the resulting connections with the `spSwarmPoisson` command:
 
 ```{r, eval = TRUE}
-spSwarmPoisson(sObj, edge.cutoff = 1/100, min.num.edges = 0, min.pval = 1)
+spSwarmPoisson(sObj, cObjSng, edge.cutoff = 1/100, min.num.edges = 0, min.pval = 1)
 ```
 
 This reports all of the detected edges. The edge.cutoff argument specifies the 

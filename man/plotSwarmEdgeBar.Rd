@@ -3,12 +3,13 @@
 \docType{methods}
 \name{plotSwarmEdgeBar}
 \alias{plotSwarmEdgeBar}
-\alias{plotSwarmEdgeBar,CIMseqSwarm-method}
+\alias{plotSwarmEdgeBar,CIMseqSwarm,CIMseqSinglets-method}
 \title{plotSwarmEdgeBar}
 \usage{
-plotSwarmEdgeBar(swarm, ...)
+plotSwarmEdgeBar(swarm, singlets, ...)
 
-\S4method{plotSwarmEdgeBar}{CIMseqSwarm}(swarm, ...)
+\S4method{plotSwarmEdgeBar}{CIMseqSwarm,CIMseqSinglets}(swarm, singlets,
+  ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}

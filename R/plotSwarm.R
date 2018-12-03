@@ -51,7 +51,7 @@ setMethod("plotSwarmGraph", c("CIMseqSwarm", "CIMseqSinglets"), function(
   )
   
   #move data to graph
-  p <- spSwarmPoisson(swarm, edge.cutoff = 0) %>%
+  p <- spSwarmPoisson(swarm, singlets, edge.cutoff = 0) %>%
     unite('connection', .data$from, .data$to, sep = "-", remove = FALSE) %>%
     select(.data$from, .data$to, .data$connection, .data$weight, .data$pval) %>%
     graph_from_data_frame(directed = FALSE) %>%
@@ -114,7 +114,7 @@ NULL
 #' @rdname plotSwarmBarBase
 
 setGeneric("plotSwarmBarBase", function(
-  swarm, ...
+  swarm, singlets, ...
 ){
     standardGeneric("plotSwarmBarBase")
 })
@@ -125,8 +125,8 @@ setGeneric("plotSwarmBarBase", function(
 #' @importFrom dplyr "%>%" inner_join bind_rows distinct
 #' @importFrom ggthemes theme_few
 
-setMethod("plotSwarmBarBase", "CIMseqSwarm", function(
-  swarm, ...
+setMethod("plotSwarmBarBase", c("CIMseqSwarm", "CIMseqSinglets"), function(
+  swarm, singlets, ...
 ){
   #since all of the bar plots show all cell types vs all other cell types and
   #spSwarmPoisson dosen't include duplicate connections, we refomat the data
@@ -137,7 +137,7 @@ setMethod("plotSwarmBarBase", "CIMseqSwarm", function(
   to <- rep(types, length(types))
   d <- tibble(from = from, to = to)
   
-  results <- spSwarmPoisson(swarm, edge.cutoff = 0)
+  results <- spSwarmPoisson(swarm, singlets, edge.cutoff = 0)
   
   join1 <- inner_join(d, results, by = c("from", "to"))
   join2 <- inner_join(d, results, by= c("from" = "to", "to" = "from"))
@@ -162,7 +162,7 @@ NULL
 #' @rdname plotSwarmEdgeBar
 
 setGeneric("plotSwarmEdgeBar", function(
-  swarm, ...
+  swarm, singlets, ...
 ){
     standardGeneric("plotSwarmEdgeBar")
 })
@@ -171,10 +171,10 @@ setGeneric("plotSwarmEdgeBar", function(
 #' @export
 #' @import ggplot2
 
-setMethod("plotSwarmEdgeBar", "CIMseqSwarm", function(
-  swarm, ...
+setMethod("plotSwarmEdgeBar", c("CIMseqSwarm", "CIMseqSinglets"), function(
+  swarm, singlets, ...
 ){
-  plotSwarmBarBase(swarm) +
+  plotSwarmBarBase(swarm, singlets) +
   geom_bar(
     aes_string(x = 'to', y = 'weight', fill = 'to'),
     stat = "identity",
@@ -212,7 +212,7 @@ NULL
 #' @rdname plotSwarmPbar
 
 setGeneric("plotSwarmPbar", function(
-  swarm, ...
+  swarm, singlets, ...
 ){
     standardGeneric("plotSwarmPbar")
 })
@@ -221,10 +221,10 @@ setGeneric("plotSwarmPbar", function(
 #' @export
 #' @import ggplot2
 
-setMethod("plotSwarmPbar", "CIMseqSwarm", function(
-  swarm, ...
+setMethod("plotSwarmPbar", c("CIMseqSwarm", "CIMseqSinglets"), function(
+  swarm, singlets, ...
 ){
-  plotSwarmBarBase(swarm) +
+  plotSwarmBarBase(swarm, singlets) +
   geom_bar(
     aes_string(x = 'to', y = '-log10(pval)', fill = 'to'),
     stat = "identity",
@@ -257,7 +257,7 @@ NULL
 #' @rdname plotSwarmHeat
 
 setGeneric("plotSwarmHeat", function(
-  swarm, ...
+  swarm, singlets, ...
 ){
     standardGeneric("plotSwarmHeat")
 })
@@ -267,10 +267,10 @@ setGeneric("plotSwarmHeat", function(
 #' @import ggplot2
 #' @importFrom dplyr desc
 
-setMethod("plotSwarmHeat", "CIMseqSwarm", function(
-  swarm, ...
+setMethod("plotSwarmHeat", c("CIMseqSwarm", "CIMseqSinglets"), function(
+  swarm, singlets, ...
 ){
-  plotSwarmBarBase(swarm) +
+  plotSwarmBarBase(swarm, singlets) +
   geom_tile(aes_string(x = 'from', y = 'to', fill = 'weight')) +
   geom_text(
     aes_string(x = 'from', y = 'to', label = 'round(pval, digits = 2)'),

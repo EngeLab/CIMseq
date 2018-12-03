@@ -118,17 +118,17 @@ plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test)
 
 Edge bar graph.
 ```{r}
-plotSwarmEdgeBar(CIMseqSwarm_test)
+plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test)
 ```
 
 P-value bar graph.
 ```{r}
-plotSwarmPbar(CIMseqSwarm_test)
+plotSwarmPbar(CIMseqSwarm_test, CIMseqSinglets_test)
 ```
 
 Heatmap.
 ```{r}
-plotSwarmHeat(CIMseqSwarm_test)
+plotSwarmHeat(CIMseqSwarm_test, CIMseqSinglets_test)
 ```
 
 Get data to make a custom plot.
@@ -136,7 +136,7 @@ Get data to make a custom plot.
 plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test) %>%
   plotData()
 
-plotSwarmEdgeBar(CIMseqSwarm_test) %>%
+plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test) %>%
   plotData() %>%
   head()
 ```
