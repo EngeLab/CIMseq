@@ -8,15 +8,17 @@
 \usage{
 getMultipletsForEdge(swarm, ...)
 
-\S4method{getMultipletsForEdge}{CIMseqSwarm}(swarm, edge.cutoff, edges,
-  ...)
+\S4method{getMultipletsForEdge}{CIMseqSwarm}(swarm, singlets, multiplets,
+  edges, ...)
 }
 \arguments{
-\item{swarm}{A CIMseqSwarm object.}
+\item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
 
 \item{...}{additional arguments to pass on}
 
-\item{edge.cutoff}{numeric; The minimum fraction to consider (?).}
+\item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
+
+\item{multiplets}{CIMseqMultiplets; A CIMseqMultiplets object.}
 
 \item{edges}{data.frame; Edges of interest. Edges are indicated by the nodes
 they connect with one node in column one and the other node in column 2.}
@@ -34,8 +36,12 @@ Description
 }
 \examples{
 
-e <- data.frame("A375", "HOS")
-output <- getMultipletsForEdge(CIMseqSwarm_test, 1/10.5, e)
+output <- getMultipletsForEdge(
+CIMseqSwarm_test, 
+CIMseqSinglets_test, 
+CIMseqMultiplets_test, 
+data.frame("A375", "HOS")
+)
 
 }
 \author{

@@ -3,16 +3,21 @@
 \docType{methods}
 \name{plotSwarmBarBase}
 \alias{plotSwarmBarBase}
-\alias{plotSwarmBarBase,CIMseqSwarm,CIMseqSinglets-method}
+\alias{plotSwarmBarBase,CIMseqSwarm,CIMseqSinglets,CIMseqMultiplets-method}
 \title{plotSwarmBarBase}
 \usage{
-plotSwarmBarBase(swarm, singlets, ...)
+plotSwarmBarBase(swarm, singlets, multiplets, ...)
 
-\S4method{plotSwarmBarBase}{CIMseqSwarm,CIMseqSinglets}(swarm, singlets,
-  ...)
+
+  \S4method{plotSwarmBarBase}{CIMseqSwarm,CIMseqSinglets,CIMseqMultiplets}(swarm,
+  singlets, multiplets, ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
+
+\item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
+
+\item{multiplets}{CIMseqMultiplets; A CIMseqMultiplets object.}
 
 \item{...}{additional arguments to pass on.}
 }

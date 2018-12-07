@@ -8,8 +8,8 @@
 \usage{
 getEdgesForMultiplet(swarm, ...)
 
-\S4method{getEdgesForMultiplet}{CIMseqSwarm}(swarm, singlets, edge.cutoff,
-  multiplet, ...)
+\S4method{getEdgesForMultiplet}{CIMseqSwarm}(swarm, singlets, multiplets,
+  multipletName, ...)
 }
 \arguments{
 \item{swarm}{A CIMseqSwarm object.}
@@ -18,9 +18,9 @@ getEdgesForMultiplet(swarm, ...)
 
 \item{singlets}{A CIMseqSinglets object.}
 
-\item{edge.cutoff}{numeric; The minimum fraction to consider (?).}
+\item{multiplets}{A CIMseqMultiplets object.}
 
-\item{multiplet}{character; The name of the multiplet of interest.}
+\item{multipletName}{character; The name of the multiplet of interest.}
 }
 \value{
 Edge names.
@@ -33,7 +33,10 @@ Description
 }
 \examples{
 
-output <- getEdgesForMultiplet(CIMseqSwarm_test, 1/10.5, "m.NJB00204.G04")
+output <- getEdgesForMultiplet(
+CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test,
+"m.NJB00204.G04"
+)
 
 }
 \author{

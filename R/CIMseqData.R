@@ -64,7 +64,7 @@ setMethod("CIMseqSinglets", "missing", function(
     counts = matrix(nrow = 0, ncol = 0),
     counts.log = .norm.log.counts,
     counts.cpm = .norm.counts,
-    counts.ercc = matrix(nrow=0, ncol = 0),
+    counts.ercc = matrix(nrow = 0, ncol = 0),
     dim.red = matrix(nrow = 0, ncol = 0),
     classification = character(),
     ...
@@ -77,7 +77,7 @@ setMethod("CIMseqSinglets", "missing", function(
 setMethod("CIMseqSinglets", "matrix", function(
   counts, counts.ercc, dim.red, classification, ...
 ){
-  .inputCheckCounts(counts, counts.ercc) #also test nrow(dim.red) and length(classification)
+  .inputCheckSinglets(counts, counts.ercc, dim.red, classification)
   new(
     "CIMseqSinglets",
     counts = counts,
@@ -90,13 +90,19 @@ setMethod("CIMseqSinglets", "matrix", function(
   )
 })
 
-.inputCheckCounts <- function(counts, counts.ercc) {
-    if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
-        message("ncol(counts) != ncol(counts.ercc).")
-    }
-    if(any(is.na(c(counts, counts.ercc)))) {
-        message("is.na(c(counts, counts.ercc) returned TRUE")
-    }
+.inputCheckSinglets <- function(counts, counts.ercc, dim.red, classification) {
+  if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
+    message("ncol(counts) != ncol(counts.ercc).")
+  }
+  if(any(is.na(c(counts, counts.ercc)))) {
+    message("is.na(c(counts, counts.ercc) returned TRUE")
+  }
+  if(ncol(counts) != length(classification)) {
+    message("length(classification) != ncol(counts)")
+  }
+  if(nrow(dim.red) != ncol(counts)) {
+    message("nrow(dim.red) != ncol(counts)")
+  }
 }
 
 .norm.log.counts <- function(counts) {
@@ -171,7 +177,7 @@ setMethod("CIMseqMultiplets", "missing", function(
 setMethod("CIMseqMultiplets", "matrix", function(
   counts, counts.ercc, features, ...
 ){
-  .inputCheckCounts(counts, counts.ercc)
+  .inputCheckMultiplets(counts, counts.ercc)
   new(
     "CIMseqMultiplets",
     counts = counts,
@@ -182,6 +188,15 @@ setMethod("CIMseqMultiplets", "matrix", function(
     ...
   )
 })
+
+.inputCheckMultiplets <- function(counts, counts.ercc) {
+  if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
+    message("ncol(counts) != ncol(counts.ercc).")
+  }
+  if(any(is.na(c(counts, counts.ercc)))) {
+    message("is.na(c(counts, counts.ercc) returned TRUE")
+  }
+}
 
 #' estimateCells
 #'
@@ -220,28 +235,39 @@ setGeneric("estimateCells", function(
 
 #' @rdname estimateCells
 #' @import tibble tibble
-#' @importFrom stats median quantile
+#' @importFrom stats median
 #' @importFrom rlang .data
-#' @importFrom dplyr pull
 #' @export
 
 setMethod("estimateCells", "CIMseqSinglets", function(
   singlets, multiplets, warning = TRUE, ...
 ){
+  frac.ercc <- NULL
+  sng.counts <- getData(singlets, "counts")
+  mul.counts <- getData(multiplets, "counts")
+  sng.ercc <- getData(singlets, "counts.ercc")
+  mul.ercc <- getData(multiplets, "counts.ercc")
   
-  counts <- cbind(
-    getData(singlets, "counts"),
-    getData(multiplets, "counts")
+  counts <- cbind(sng.counts, mul.counts)
+  counts.ercc <- cbind(sng.ercc, mul.ercc)
+  
+  #check if any samples have ERCC that are all 0
+  if(warning) .checkEstimateCellsInput(counts.ercc)
+  
+  tibble(
+    sample = c(colnames(sng.counts), colnames(mul.counts)),
+    sampleType = c(
+      rep("Singlet", ncol(sng.counts)),
+      rep("Multiplet", ncol(mul.counts))
+    ),
+    frac.ercc = colSums(counts.ercc) / (colSums(counts.ercc) + colSums(counts)),
+    estimatedCellNumber = median(frac.ercc) / frac.ercc
   )
-  
-  counts.ercc <- cbind(
-    getData(singlets, "counts.ercc"),
-    getData(multiplets, "counts.ercc")
-  )
-  
-  #check if any samples have ERCC are all 0
+})
+
+.checkEstimateCellsInput <- function(counts.ercc) {
   all0 <- apply(counts.ercc, 2, function(x) all(x == 0))
-  if(any(all0, na.rm = TRUE) & warning) {
+  if(any(all0, na.rm = TRUE)) {
     zeroIDs <- colnames(counts.ercc)[which(all0)]
     if(length(zeroIDs) > 5) {
       zeroIDs <- paste0(paste(zeroIDs[1:5], collapse = ", "), ", ...")
@@ -253,41 +279,4 @@ setMethod("estimateCells", "CIMseqSinglets", function(
       "These samples ERCC reads are all 0's: ", zeroIDs
     ))
   }
-  
-  d <- tibble(
-    sampleName = c(
-      colnames(getData(singlets, "counts")),
-      colnames(getData(multiplets, "counts"))
-    ),
-    sampleType = c(
-      rep("Singlet", ncol(getData(singlets, "counts"))),
-      rep("Multiplet", ncol(getData(multiplets, "counts")))
-    ),
-    frac.ercc = colSums(counts.ercc) / (colSums(counts.ercc) + colSums(counts))
-  )
-  
-  d$cellNumberMin <-
-    d %>%
-      filter(.data$sampleType == "Singlet") %>%
-      pull(.data$frac.ercc) %>%
-      quantile(., na.rm = TRUE) %>%
-      `[` (2) %>%
-      `/` (d$frac.ercc)
-  
-  d$cellNumberMedian <-
-    d %>%
-      filter(.data$sampleType == "Singlet") %>%
-      pull(.data$frac.ercc) %>%
-      median(., na.rm = TRUE) %>%
-      `/` (d$frac.ercc)
-  
-  d$cellNumberMax <-
-    d %>%
-      filter(.data$sampleType == "Singlet") %>%
-      pull(.data$frac.ercc) %>%
-      quantile(., na.rm = TRUE) %>%
-      `[` (4) %>%
-      `/` (d$frac.ercc)
-  
-  return(d)
-})
+}

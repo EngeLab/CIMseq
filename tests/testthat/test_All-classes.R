@@ -36,32 +36,52 @@ test_that("check that replacement outputs the expected result", {
   expect_error(getData(CIMseqMultiplets_test, "counts.ercc") <- "a")
   expect_error(getData(CIMseqMultiplets_test, "features") <- "a")
   
-  getData(CIMseqSinglets_test, "counts") <- getData(CIMseqSinglets_test, "counts")
-  expect_is(CIMseqSinglets_test, "CIMseqSinglets")
-  getData(CIMseqSinglets_test, "counts.log") <- function(){}
-  expect_is(CIMseqSinglets_test, "CIMseqSinglets")
-  getData(CIMseqSinglets_test, "counts.cpm") <- function(){}
-  expect_is(CIMseqSinglets_test, "CIMseqSinglets")
-  getData(CIMseqSinglets_test, "counts.ercc") <- getData(CIMseqSinglets_test, "counts.ercc")
-  expect_is(CIMseqSinglets_test, "CIMseqSinglets")
-  getData(CIMseqSinglets_test, "dim.red") <- getData(CIMseqSinglets_test, "dim.red")
-  expect_is(CIMseqSinglets_test, "CIMseqSinglets")
-  getData(CIMseqSinglets_test, "classification") <- getData(CIMseqSinglets_test, "classification")
-  expect_is(CIMseqSinglets_test, "CIMseqSinglets")
-  
-  getData(CIMseqMultiplets_test, "counts") <- getData(CIMseqMultiplets_test, "counts")
-  expect_is(CIMseqMultiplets_test, "CIMseqMultiplets")
-  getData(CIMseqMultiplets_test, "counts.log") <- function(){}
-  expect_is(CIMseqMultiplets_test, "CIMseqMultiplets")
-  getData(CIMseqMultiplets_test, "counts.cpm") <- function(){}
-  expect_is(CIMseqMultiplets_test, "CIMseqMultiplets")
-  getData(CIMseqMultiplets_test, "counts.ercc") <- getData(CIMseqMultiplets_test, "counts.ercc")
-  expect_is(CIMseqMultiplets_test, "CIMseqMultiplets")
-  getData(CIMseqMultiplets_test, "features") <- getData(CIMseqMultiplets_test, "features")
-  expect_is(CIMseqMultiplets_test, "CIMseqMultiplets")
+  tmp <- CIMseqSinglets_test
+  getData(tmp, "counts") <- getData(CIMseqSinglets_test, "counts")
+  expect_is(tmp, "CIMseqSinglets")
+
+  tmp <- CIMseqSinglets_test
+  getData(tmp, "counts.log") <- function(){}
+  expect_is(tmp, "CIMseqSinglets")
+
+  tmp <- CIMseqSinglets_test
+  getData(tmp, "counts.cpm") <- function(){}
+  expect_is(tmp, "CIMseqSinglets")
+
+  tmp <- CIMseqSinglets_test
+  getData(tmp, "counts.ercc") <- getData(CIMseqSinglets_test, "counts.ercc")
+  expect_is(tmp, "CIMseqSinglets")
+
+  tmp <- CIMseqSinglets_test
+  getData(tmp, "dim.red") <- getData(CIMseqSinglets_test, "dim.red")
+  expect_is(tmp, "CIMseqSinglets")
+
+  tmp <- CIMseqSinglets_test
+  getData(tmp, "classification") <- getData(CIMseqSinglets_test, "classification")
+  expect_is(tmp, "CIMseqSinglets")
+
+  tmp <- CIMseqMultiplets_test
+  getData(tmp, "counts") <- getData(CIMseqMultiplets_test, "counts")
+  expect_is(tmp, "CIMseqMultiplets")
+
+  tmp <- CIMseqMultiplets_test
+  getData(tmp, "counts.log") <- function(){}
+  expect_is(tmp, "CIMseqMultiplets")
+
+  tmp <- CIMseqMultiplets_test
+  getData(tmp, "counts.cpm") <- function(){}
+  expect_is(tmp, "CIMseqMultiplets")
+
+  tmp <- CIMseqMultiplets_test
+  getData(tmp, "counts.ercc") <- getData(CIMseqMultiplets_test, "counts.ercc")
+  expect_is(tmp, "CIMseqMultiplets")
+
+  tmp <- CIMseqMultiplets_test
+  getData(tmp, "features") <- getData(CIMseqMultiplets_test, "features")
+  expect_is(tmp, "CIMseqMultiplets")
 })
 
-test_that("check that conatenation outputs the expected result", {
+test_that("check that concatenation outputs the expected result", {
   #setup expected data
   fractions <- rbind(
     getData(CIMseqSwarm_test, "fractions"),

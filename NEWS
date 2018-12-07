@@ -1,3 +1,11 @@
+v.0.2.0.2
+* fixing CIMseqSwarm show methods so tibbles do not show as lists
+* adding adjustFractions function
+* adding cellNumberPerClass function
+* adding checks for classification and dim.red slots in CIMseqSinglets objects
+* removing calculation for cellNumberMin and cellNumberMax from estimateCells function
+* renaming spSwarmPoisson to calculateEdgeStats and re-writing to use adjusted fractions
+
 v.0.2.0.1
 * adding concatenate function for CIMseqSwarm objects
 * CIMseqSwarm arguments slot now a tibble

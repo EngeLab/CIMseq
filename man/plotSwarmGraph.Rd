@@ -3,17 +3,21 @@
 \docType{methods}
 \name{plotSwarmGraph}
 \alias{plotSwarmGraph}
-\alias{plotSwarmGraph,CIMseqSwarm,CIMseqSinglets-method}
+\alias{plotSwarmGraph,CIMseqSwarm,CIMseqSinglets,CIMseqMultiplets-method}
 \title{plotSwarmGraph}
 \usage{
-plotSwarmGraph(swarm, singlets, ...)
+plotSwarmGraph(swarm, singlets, multiplets, ...)
 
-\S4method{plotSwarmGraph}{CIMseqSwarm,CIMseqSinglets}(swarm, singlets, ...)
+
+  \S4method{plotSwarmGraph}{CIMseqSwarm,CIMseqSinglets,CIMseqMultiplets}(swarm,
+  singlets, multiplets, ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
 
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
+
+\item{multiplets}{CIMseqMultiplets; A CIMseqMultiplets object.}
 
 \item{...}{additional arguments to pass on.}
 }
@@ -28,7 +32,9 @@ Details.
 }
 \examples{
 
-p <- plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test)
+p <- plotSwarmGraph(
+CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test
+)
 
 }
 \author{

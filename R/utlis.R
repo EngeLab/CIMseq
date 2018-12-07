@@ -204,13 +204,13 @@ means.dim.red <- function(data, classes) {
 
 #' erccPerClass
 #'
-#' Calculates median ercc reads per class.
+#' Calculates median and mean ercc reads per class.
 #'
 #' @name erccPerClass
 #' @rdname erccPerClass
 #' @param singlets CIMseqSinglets; A CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
-#' @return A matrix containing the median value for each gene for each
+#' @return A matrix containing the median and mean ERCC fractions for each
 #'  classification group.
 #' @author Jason T. Serviss
 #' @examples
@@ -228,17 +228,54 @@ NULL
 erccPerClass <- function(
   singlets, multiplets
 ){
-  class <- tibble(
-    class = getData(singlets, "classification"),
-    sampleName = colnames(getData(singlets, "counts"))
-  )
-  
   estimateCells(singlets, multiplets) %>%
-    right_join(class, by = "sampleName") %>%
+    right_join(tibble(
+      class = getData(singlets, "classification"),
+      sample = colnames(getData(singlets, "counts"))
+    ), by = "sample") %>%
     group_by(class) %>%
     summarise(
       medianFracErcc = median(.data$frac.ercc, na.rm = TRUE),
       meanFracErcc = mean(.data$frac.ercc, na.rm = TRUE)
+    )
+}
+
+#' cellNumberPerClass
+#'
+#' Calculates median and mean cell estimated cell number per class.
+#'
+#' @name cellNumberPerClass
+#' @rdname cellNumberPerClass
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
+#' @return A matrix containing the median and mean cell numbers (estimated via
+#' the ERCC fractions) for each classification group.
+#' @author Jason T. Serviss
+#' @examples
+#'
+#' out <- erccPerClass(CIMseqSinglets_test, CIMseqMultiplets_test)
+#'
+NULL
+
+#' @rdname cellNumberPerClass
+#' @importFrom dplyr group_by summarise right_join
+#' @importFrom tibble tibble
+#' @importFrom rlang .data
+#' @export
+
+cellNumberPerClass <- function(
+  singlets, multiplets
+){
+  estimatedCellNumber <- NULL
+  estimateCells(singlets, multiplets) %>%
+    right_join(tibble(
+      class = getData(singlets, "classification"),
+      sample = colnames(getData(singlets, "counts"))
+    ), by = "sample") %>%
+    group_by(class) %>%
+    summarise(
+      medianCellNumber = median(estimatedCellNumber),
+      meanCellNumber = mean(estimatedCellNumber)
     )
 }
 
@@ -329,9 +366,11 @@ NULL
 
 estimateTotalConnections <- function(singlets, multiplets) {
   sampleType <- cellNumberMedian <- cellNumber <- connections <- NULL
+  estimatedCellNumber <- NULL
+  
   estimateCells(singlets, multiplets) %>%
     filter(sampleType == "Multiplet") %>%
-    mutate(cellNumber = round(cellNumberMedian)) %>%
+    mutate(cellNumber = round(estimatedCellNumber)) %>%
     filter(cellNumber > 1) %>%
     mutate(connections = map_dbl(cellNumber, function(n) {
       ncol(combn(1:n, 2))

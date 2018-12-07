@@ -15,26 +15,33 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
   #A1 and B1 should have an edge
   #I1 and J1 should have an edge
   expected1 <- tibble::tibble(
-    multiplet = "m.NJB00204.G04",
+    sample = "m.NJB00204.G04",
     from = "A375",
     to = "HOS"
   )
   expected2 <- tibble::tibble(
-    multiplet = "m.NJB00204.D07",
+    sample = "m.NJB00204.D07",
     from = "HCT116",
     to = "HOS"
   )
   expected3 <- tibble::tibble(
-    multiplet = c("m.NJB00204.A02", "m.NJB00204.G04"),
+    sample = c("m.NJB00204.A02", "m.NJB00204.G04"),
     from = c("A375", "A375"),
     to = c("HCT116", "HOS")
   )
 
     #run function
-  output1 <- getMultipletsForEdge(CIMseqSwarm_test, 0, data.frame("A375", "HOS"))
-  output2 <- getMultipletsForEdge(CIMseqSwarm_test, 0, data.frame("HCT116", "HOS"))
+  output1 <- getMultipletsForEdge(
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, 
+    data.frame("A375", "HOS")
+  )
+  output2 <- getMultipletsForEdge(
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, 
+    data.frame("HCT116", "HOS")
+  )
   output3 <- getMultipletsForEdge(
-    CIMseqSwarm_test, 0, data.frame(c("A375", "A375"), c("HCT116", "HOS"))
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test,
+    data.frame(c("A375", "A375"), c("HCT116", "HOS"))
   )
 
     #test
@@ -49,19 +56,23 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
   ###TEST1####
   #setup expected data
   expected1 <- tibble::tibble(
-    multiplet = "m.NJB00204.D07",
+    sample = "m.NJB00204.D07",
     from = "HCT116",
     to = "HOS"
   )
   expected2 <- tibble::tibble(
-    multiplet = "m.NJB00204.G04",
+    sample = "m.NJB00204.G04",
     from = "A375",
     to = "HOS"
   )
 
   #run function
-  output1 <- getEdgesForMultiplet(CIMseqSwarm_test, 0, 'm.NJB00204.D07')
-  output2 <- getEdgesForMultiplet(CIMseqSwarm_test, 0, 'm.NJB00204.G04')
+  output1 <- getEdgesForMultiplet(
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, 'm.NJB00204.D07'
+  )
+  output2 <- getEdgesForMultiplet(
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, 'm.NJB00204.G04'
+  )
 
   #test
   expect_identical(output1, expected1)
@@ -70,30 +81,53 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
   ###TEST2####
   #setup expected data
   expected1 <- tibble::tibble(
-    multiplet = "m.NJB00204.G04", from = "A375", to = "A375"
-  )
-  
-  #run function
-  output1 <- getEdgesForMultiplet(CIMseqSwarm_test, 0.4, 'm.NJB00204.G04')
-  
-  #test
-  expect_identical(output1, expected1)
-  
-  ###TEST3####
-  #setup expected data
-  expected1 <- tibble::tibble(
-    multiplet = c("m.NJB00204.G04", "m.NJB00204.D07"),
+    sample = c("m.NJB00204.G04", "m.NJB00204.D07"),
     from = c("A375", "HCT116"), 
     to = c("HOS", "HOS")
   )
   
   #run function
   output1 <- getEdgesForMultiplet(
-    CIMseqSwarm_test, 0.0, c('m.NJB00204.G04', 'm.NJB00204.D07')
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, 
+    c('m.NJB00204.G04', 'm.NJB00204.D07')
   )
   
   #test
   expect_identical(output1, expected1)
+})
+
+test_that("check that adjustFractions outputs the expected result", {
+  
+  ###TEST1####
+  #setup expected data
+  fractions <- getData(CIMseqSwarm_test, "fractions")
+  
+  cnc <- cellNumberPerClass(CIMseqSinglets_test, CIMseqMultiplets_test) %>%
+  {setNames(pull(., medianCellNumber), pull(., class))}
+  cnc <- cnc[match(colnames(fractions), names(cnc))]
+  
+  cnm <- estimateCells(CIMseqSinglets_test, CIMseqMultiplets_test) %>%
+    filter(sampleType == "Multiplet") %>%
+    {setNames(pull(., estimatedCellNumber), pull(., sample))}
+  cnm <- cnm[match(names(cnm), rownames(fractions))]
+  
+  frac.renorm <- t(t(fractions) / cnc)
+  expected1 <- round(frac.renorm * cnm)
+  expected2 <- expected1
+  expected1[expected1 > 0] <- 1
+  
+  #run function
+  output1 <- adjustFractions(
+    CIMseqSinglets_test, CIMseqMultiplets_test, CIMseqSwarm_test, binary = TRUE
+  )
+  
+  output2 <- adjustFractions(
+    CIMseqSinglets_test, CIMseqMultiplets_test, CIMseqSwarm_test, binary = FALSE
+  )
+  
+  #test
+  expect_identical(expected1, output1)
+  expect_identical(expected2, output2)
 })
 
 ################################################################################

@@ -12,13 +12,16 @@ NULL
 #' @aliases plotSwarmGraph
 #' @param swarm CIMseqSwarm; A CIMseqSwarm object.
 #' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param ... additional arguments to pass on.
 #' @return The spPlot function returns an object of class spCounts.
 #' @author Jason T. Serviss
 #' @keywords plotSwarmGraph
 #' @examples
 #'
-#' p <- plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test)
+#' p <- plotSwarmGraph(
+#' CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test
+#' )
 #'
 NULL
 
@@ -26,7 +29,7 @@ NULL
 #' @export
 
 setGeneric("plotSwarmGraph", function(
-  swarm, singlets, ...
+  swarm, singlets, multiplets, ...
 ){
     standardGeneric("plotSwarmGraph")
 })
@@ -42,8 +45,10 @@ setGeneric("plotSwarmGraph", function(
 #' @importFrom rlang .data
 #' @importFrom tidyr unite
 
-setMethod("plotSwarmGraph", c("CIMseqSwarm", "CIMseqSinglets"), function(
-  swarm, singlets, ...
+setMethod(
+  "plotSwarmGraph", c("CIMseqSwarm", "CIMseqSinglets", "CIMseqMultiplets"), 
+  function(
+    swarm, singlets, multiplets, ...
 ){
   tsneMeans <- means.dim.red(
     getData(singlets, "dim.red"), 
@@ -51,7 +56,7 @@ setMethod("plotSwarmGraph", c("CIMseqSwarm", "CIMseqSinglets"), function(
   )
   
   #move data to graph
-  p <- spSwarmPoisson(swarm, singlets, edge.cutoff = 0) %>%
+  p <- calculateEdgeStats(swarm, singlets, multiplets) %>%
     unite('connection', .data$from, .data$to, sep = "-", remove = FALSE) %>%
     select(.data$from, .data$to, .data$connection, .data$weight, .data$pval) %>%
     graph_from_data_frame(directed = FALSE) %>%
@@ -106,6 +111,8 @@ setMethod("plotSwarmGraph", c("CIMseqSwarm", "CIMseqSinglets"), function(
 #' @name plotSwarmBarBase
 #' @rdname plotSwarmBarBase
 #' @param swarm CIMseqSwarm; A CIMseqSwarm object.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param ... additional arguments to pass on.
 #' @return A ggplot object with the base data.
 #' @author Jason T. Serviss
@@ -114,7 +121,7 @@ NULL
 #' @rdname plotSwarmBarBase
 
 setGeneric("plotSwarmBarBase", function(
-  swarm, singlets, ...
+  swarm, singlets, multiplets, ...
 ){
     standardGeneric("plotSwarmBarBase")
 })
@@ -125,19 +132,22 @@ setGeneric("plotSwarmBarBase", function(
 #' @importFrom dplyr "%>%" inner_join bind_rows distinct
 #' @importFrom ggthemes theme_few
 
-setMethod("plotSwarmBarBase", c("CIMseqSwarm", "CIMseqSinglets"), function(
-  swarm, singlets, ...
+setMethod(
+  "plotSwarmBarBase", c("CIMseqSwarm", "CIMseqSinglets", "CIMseqMultiplets"), 
+  function(
+    swarm, singlets, multiplets, ...
 ){
   #since all of the bar plots show all cell types vs all other cell types and
-  #spSwarmPoisson dosen't include duplicate connections, we refomat the data
+  #calculateEdgeStats dosen't include duplicate connections, we refomat the data
   #before plotting to include these.
+  #THIS IS ACTUALLY NOT TRUE ANYMORE. ADJUST
   
   types <- colnames(getData(swarm, "fractions"))
   from <- rep(types, each = length(types))
   to <- rep(types, length(types))
   d <- tibble(from = from, to = to)
   
-  results <- spSwarmPoisson(swarm, singlets, edge.cutoff = 0)
+  results <- calculateEdgeStats(swarm, singlets, multiplets)
   
   join1 <- inner_join(d, results, by = c("from", "to"))
   join2 <- inner_join(d, results, by= c("from" = "to", "to" = "from"))
@@ -154,6 +164,8 @@ setMethod("plotSwarmBarBase", c("CIMseqSwarm", "CIMseqSinglets"), function(
 #' @name plotSwarmEdgeBar
 #' @rdname plotSwarmEdgeBar
 #' @param swarm CIMseqSwarm; A CIMseqSwarm object.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param ... additional arguments to pass on.
 #' @return A ggplot object.
 #' @author Jason T. Serviss
@@ -162,7 +174,7 @@ NULL
 #' @rdname plotSwarmEdgeBar
 
 setGeneric("plotSwarmEdgeBar", function(
-  swarm, singlets, ...
+  swarm, singlets, multiplets, ...
 ){
     standardGeneric("plotSwarmEdgeBar")
 })
@@ -171,10 +183,12 @@ setGeneric("plotSwarmEdgeBar", function(
 #' @export
 #' @import ggplot2
 
-setMethod("plotSwarmEdgeBar", c("CIMseqSwarm", "CIMseqSinglets"), function(
-  swarm, singlets, ...
+setMethod(
+  "plotSwarmEdgeBar", c("CIMseqSwarm", "CIMseqSinglets", "CIMseqMultiplets"), 
+  function(
+    swarm, singlets, multiplets, ...
 ){
-  plotSwarmBarBase(swarm, singlets) +
+  plotSwarmBarBase(swarm, singlets, multiplets) +
   geom_bar(
     aes_string(x = 'to', y = 'weight', fill = 'to'),
     stat = "identity",
@@ -203,6 +217,8 @@ setMethod("plotSwarmEdgeBar", c("CIMseqSwarm", "CIMseqSinglets"), function(
 #' @rdname plotSwarmPbar
 #' @aliases plotSwarmPbar
 #' @param swarm CIMseqSwarm; A CIMseqSwarm object.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param ... additional arguments to pass on.
 #' @return A ggplot object.
 #' @author Jason T. Serviss
@@ -212,7 +228,7 @@ NULL
 #' @rdname plotSwarmPbar
 
 setGeneric("plotSwarmPbar", function(
-  swarm, singlets, ...
+  swarm, singlets, multiplets, ...
 ){
     standardGeneric("plotSwarmPbar")
 })
@@ -221,10 +237,12 @@ setGeneric("plotSwarmPbar", function(
 #' @export
 #' @import ggplot2
 
-setMethod("plotSwarmPbar", c("CIMseqSwarm", "CIMseqSinglets"), function(
-  swarm, singlets, ...
+setMethod(
+  "plotSwarmPbar", c("CIMseqSwarm", "CIMseqSinglets", "CIMseqMultiplets"), 
+  function(
+    swarm, singlets, multiplets, ...
 ){
-  plotSwarmBarBase(swarm, singlets) +
+  plotSwarmBarBase(swarm, singlets, multiplets) +
   geom_bar(
     aes_string(x = 'to', y = '-log10(pval)', fill = 'to'),
     stat = "identity",
@@ -248,6 +266,8 @@ setMethod("plotSwarmPbar", c("CIMseqSwarm", "CIMseqSinglets"), function(
 #' @rdname plotSwarmHeat
 #' @aliases plotSwarmHeat
 #' @param swarm CIMseqSwarm; A CIMseqSwarm object.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param ... additional arguments to pass on.
 #' @return A ggplot object.
 #' @author Jason T. Serviss
@@ -257,7 +277,7 @@ NULL
 #' @rdname plotSwarmHeat
 
 setGeneric("plotSwarmHeat", function(
-  swarm, singlets, ...
+  swarm, singlets, multiplets, ...
 ){
     standardGeneric("plotSwarmHeat")
 })
@@ -267,10 +287,12 @@ setGeneric("plotSwarmHeat", function(
 #' @import ggplot2
 #' @importFrom dplyr desc
 
-setMethod("plotSwarmHeat", c("CIMseqSwarm", "CIMseqSinglets"), function(
-  swarm, singlets, ...
+setMethod(
+  "plotSwarmHeat", c("CIMseqSwarm", "CIMseqSinglets", "CIMseqMultiplets"), 
+  function(
+    swarm, singlets, multiplets, ...
 ){
-  plotSwarmBarBase(swarm, singlets) +
+  plotSwarmBarBase(swarm, singlets, multiplets) +
   geom_tile(aes_string(x = 'from', y = 'to', fill = 'weight')) +
   geom_text(
     aes_string(x = 'from', y = 'to', label = 'round(pval, digits = 2)'),
@@ -652,7 +674,7 @@ setMethod("plotSwarmGenes", "CIMseqSwarm", function(
   edges <- getMultipletsForEdge(
     spSwarm,
     edge.cutoff = edge.cutoff,
-    edges = spSwarmPoisson(
+    edges = calculateEdgeStats(
       spSwarm, edge.cutoff = edge.cutoff, min.num.edges = min.num.edges,
       min.pval = min.pval
     ) %>% filter(.data$weight != 0)

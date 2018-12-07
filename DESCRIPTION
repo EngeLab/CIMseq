@@ -1,7 +1,7 @@
 Package: CIMseq
 Title: CIMseq is a software suite for analysis of scRNAseq data that has
     been produced using the cellular interactions by multiplet sequencing method
-Version: 0.2.0.1
+Version: 0.2.0.2
 Authors@R: c(
     person("Jason T.", "Serviss", email = "Jason.serviss@ki.se", role = c("aut", "cre"), comment = c(ORCID = 0000-0002-5778-7014)),
     person("Martin", "Enge", email = "Martin.Enge@ki.se", role = c("aut"))

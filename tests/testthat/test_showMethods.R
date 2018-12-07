@@ -5,23 +5,28 @@ test_that("check that the .showCIMseqData function outputs the expected result",
   output <- evaluate_promise(.showCIMseqData(CIMseqSinglets_test))
   
   expected <- paste0(
-    "Class: CIMseqSinglets \nContains: \n\n1. counts\n<2000 elements><3 ",
-    "columns>\n         m.NJB00204.G04 m.NJB00204.D07\nRNR2               ",
-    "1266           1432\nHSP90AB1            341            441\n",
-    "\n-----------\n\n2. counts.log\nfunction(){}\n\n-----------\n\n3. ",
-    "counts.cpm\nfunction(){}\n\n-----------\n\n4. counts.ercc\n<92 elements>",
-    "<3 columns>\n           m.NJB00204.G04 m.NJB00204.D07\n",
-    "ERCC-00002             42             38\nERCC-00003              ",
-    "1              2\n\n-----------\n\n5. dim.red\n<80 elements><2 ",
-    "columns>\n                    [,1]      [,2]\ns.NJB00201.G12 10.862440 ",
-    "-26.97081\ns.NJB00201.G11  8.662592 -31.52306\n\n-----------\n\n6. ",
-    "classification\nA375 A375 A375 A375 HCT116 HCT116...\n<75 more ",
+    "Class: CIMseqSinglets \nContains: \n\n1. counts\n<2000 elements><78 ",
+    "columns>\n         s.NJB00201.G12 s.NJB00201.G11 s.NJB00201.G10\n",
+    "RNR2               1205           1468           1258\nHSP90AB",
+    "1            434            599            420\nACTB                9",
+    "57           1007            795\n\n-----------\n\n2. counts.log\n",
+    "function(counts) {\n  log2(.norm.counts(counts) + 1)\n}\n<bytecode: ",
+    "0x1142befd0>\n<environment: namespace:CIMseq>\n\n-----------\n\n3. ",
+    "counts.cpm\nfunction(counts) {\n  t(t(counts) / colSums(counts) * 10^6)",
+    "\n}\n<bytecode: 0x1142be860>\n<environment: namespace:CIMseq>\n",
+    "\n-----------\n\n4. counts.ercc\n<92 elements><78 columns>",
+    "\n           s.NJB00201.G12 s.NJB00201.G11 s.NJB00201.G10\nERCC-0000",
+    "2            106            176             78\nERCC-00003              ",
+    "8              6             12\nERCC-00004             51             ",
+    "93             37\n\n-----------\n\n5. dim.red\n<78 elements><2 columns>",
+    "\n                   [,1]      [,2]\ns.NJB00201.G12 17.48636 -30.1080",
+    "1\ns.NJB00201.G11 21.41802 -33.25314\ns.NJB00201.G10 18.24652 -26.50993",
+    "\n\n-----------\n\n6. classification\nA375 A375 A375...\n<73 more ",
     "elements>\n-----------\n"
   )
   
   diff <- Reduce(setdiff, strsplit(c(output$output, expected), split = ""))
-  if(length(diff) != 0) print(diff)
-  #expect_true(length(diff) == 0)
+  expect_true(length(diff) == 0)
   expect_error(invisible(capture.output(.showCounts("a"))))
   expect_error(invisible(capture.output(.showCounts(1))))
   expect_error(invisible(capture.output(.showCounts(TRUE))))
@@ -73,7 +78,7 @@ test_that("check that the .showBasics function outputs the expected result", {
   output2 <- evaluate_promise(.showBasics(LETTERS[1:6]))
   
   expected1 <- "A B C\n-----------\n"
-  expected2 <- "A B C D E F...\n<1 more elements>\n-----------\n"
+  expected2 <- "A B C...\n<1 more elements>\n-----------\n"
   
   expect_identical(output1$output, expected1)
   expect_identical(output2$output, expected2)
@@ -89,8 +94,8 @@ test_that("check that the .showList function outputs the expected result", {
 test_that("check that the .showMatrix function outputs the expected result", {
   output <- evaluate_promise(.showMatrix(matrix(c(1:10), ncol = 2)))
   expected <- paste0(
-    "<5 elements><2 columns>\n     [,1] [,2]\n[1,]    1    6\n[2,]    2    ",
-    "7\n\n-----------\n"
+    "<5 elements><2 columns>\n     [,1] [,2]\n[1,]    1    6\n[2,]    2    7",
+    "\n[3,]    3    8\n\n-----------\n"
   )
   expect_identical(output$output, expected)
   

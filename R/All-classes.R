@@ -65,10 +65,31 @@ setGeneric("getData<-", function(x, n, value){
 
 setMethod("getData<-", "CIMseqSinglets", function(x, n = NULL, value){
   if(class(n) == "character" & .hasSlot(x, n)){
+    .checkCIMseqSingletsReplacement(x, n, value)
     slot(x, n) <- value
     return(x)
   }
 })
+
+.checkCIMseqSingletsReplacement <- function(x, n, value) {
+  counts <- getData(x, "counts")
+  counts.ercc <- getData(x, "counts.ercc")
+  classification <- getData(x, "classification")
+  dim.red <- getData(x, "dim.red")
+  
+  if(n == "classification" & length(counts) > 0) {
+    stopifnot(length(classification) == ncol(counts))
+  }
+  if(n == "dim.red" & length(counts) > 0) {
+    stopifnot(nrow(dim.red) == ncol(counts))
+  }
+  if(n == "counts.ercc" & length(counts) > 0) {
+    stopifnot(ncol(counts.ercc) == ncol(counts))
+  }
+  if(n == "counts" & length(counts.ercc) > 0) {
+    stopifnot(ncol(counts.ercc) == ncol(counts))
+  }
+}
 
 ######################
 #                    #
@@ -119,10 +140,23 @@ setMethod("getData", "CIMseqMultiplets", function(x, n = NULL){
 
 setMethod("getData<-", "CIMseqMultiplets", function(x, n = NULL, value){
   if(class(n) == "character" & .hasSlot(x, n)){
+    .checkCIMseqMultipletsReplacement(x, n, value)
     slot(x, n) <- value
     return(x)
   }
 })
+
+.checkCIMseqMultipletsReplacement <- function(x, n, value) {
+  counts <- getData(x, "counts")
+  counts.ercc <- getData(x, "counts.ercc")
+  
+  if(n == "counts.ercc" & length(counts) > 0) {
+    stopifnot(ncol(counts.ercc) == ncol(counts))
+  }
+  if(n == "counts" & length(counts.ercc) > 0) {
+    stopifnot(ncol(counts.ercc) == ncol(counts))
+  }
+}
 
 #####################
 #                   #

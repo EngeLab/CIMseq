@@ -50,7 +50,7 @@ setMethod("show", "CIMseqSwarm", function(object){
   for(i in 1:length(names)){
     cat(paste(i,". ", names[i], "\n",sep=""))
     mat <- slot(object, names[i])
-    if(is.list(mat)) .showList(mat)
+    if(is.list(mat) & !is_tibble(mat)) .showList(mat)
     if(is.matrix(mat)) .showMatrix(mat)
     if(is_tibble(mat)) .showTibble(mat)
     if((is.character(mat) | is.numeric(mat)) & !is.matrix(mat)) .showBasics(mat)
@@ -70,7 +70,7 @@ setMethod("show", "CIMseqSwarm", function(object){
     cat("\n-----------\n\n")
   } else {
     additionalElements <- length(obj) - 5
-    cat(head(obj))
+    cat(head(obj, n = 3))
     cat("...\n")
     cat(paste("<", additionalElements, " more elements>", sep=""))
     cat("\n-----------\n\n")
@@ -87,10 +87,12 @@ setMethod("show", "CIMseqSwarm", function(object){
     print("NA")
     cat("\n-----------\n\n")
   } else {
+    nc <- min(3, ncol(obj))
+    nr <- min(3, nrow(obj))
     cat(paste("<", nrow(obj), " elements>", sep=""))
     cat(paste("<", ncol(obj), " columns>", sep=""))
     cat("\n")
-    print(obj[1:2, 1:2])
+    print(obj[1:nr, 1:nc])
     cat("\n-----------\n\n")
   }
 }

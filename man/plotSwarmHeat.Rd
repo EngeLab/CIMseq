@@ -3,15 +3,21 @@
 \docType{methods}
 \name{plotSwarmHeat}
 \alias{plotSwarmHeat}
-\alias{plotSwarmHeat,CIMseqSwarm,CIMseqSinglets-method}
+\alias{plotSwarmHeat,CIMseqSwarm,CIMseqSinglets,CIMseqMultiplets-method}
 \title{plotSwarmHeat}
 \usage{
-plotSwarmHeat(swarm, singlets, ...)
+plotSwarmHeat(swarm, singlets, multiplets, ...)
 
-\S4method{plotSwarmHeat}{CIMseqSwarm,CIMseqSinglets}(swarm, singlets, ...)
+
+  \S4method{plotSwarmHeat}{CIMseqSwarm,CIMseqSinglets,CIMseqMultiplets}(swarm,
+  singlets, multiplets, ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
+
+\item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
+
+\item{multiplets}{CIMseqMultiplets; A CIMseqMultiplets object.}
 
 \item{...}{additional arguments to pass on.}
 }

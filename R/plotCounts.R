@@ -46,7 +46,7 @@ setMethod("plotCountsData", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   processMarkers(cbind(s, m), markers) %>%
   full_join(
     estimateCells(singlets, multiplets),
-    by = c("Sample" = "sampleName")
+    by = c("Sample" = "sample")
   ) %>%
   mutate(sampleType = parse_factor(
     .data$sampleType,
@@ -60,13 +60,12 @@ setMethod("plotCountsData", c("CIMseqSinglets", "CIMseqMultiplets"), function(
     ., matrix_to_tibble(getData(singlets, "dim.red"), "Sample"), by = "Sample"
   ) %>%
   rename(
-    `Cell number` = .data$cellNumberMedian,
+    `Estimated cell number` = .data$estimatedCellNumber,
     `Sample type` = .data$sampleType,
     `Fraction ERCC` = .data$frac.ercc,
     `dim.red dim 1` = .data$V1,
     `dim.red dim 2` = .data$V2
-  ) %>%
-  select(-.data$cellNumberMin, -.data$cellNumberMax)
+  )
 })
 
 #' plotCountsERCC

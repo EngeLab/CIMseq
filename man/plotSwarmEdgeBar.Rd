@@ -3,16 +3,21 @@
 \docType{methods}
 \name{plotSwarmEdgeBar}
 \alias{plotSwarmEdgeBar}
-\alias{plotSwarmEdgeBar,CIMseqSwarm,CIMseqSinglets-method}
+\alias{plotSwarmEdgeBar,CIMseqSwarm,CIMseqSinglets,CIMseqMultiplets-method}
 \title{plotSwarmEdgeBar}
 \usage{
-plotSwarmEdgeBar(swarm, singlets, ...)
+plotSwarmEdgeBar(swarm, singlets, multiplets, ...)
 
-\S4method{plotSwarmEdgeBar}{CIMseqSwarm,CIMseqSinglets}(swarm, singlets,
-  ...)
+
+  \S4method{plotSwarmEdgeBar}{CIMseqSwarm,CIMseqSinglets,CIMseqMultiplets}(swarm,
+  singlets, multiplets, ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
+
+\item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
+
+\item{multiplets}{CIMseqMultiplets; A CIMseqMultiplets object.}
 
 \item{...}{additional arguments to pass on.}
 }

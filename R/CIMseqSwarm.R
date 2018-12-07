@@ -141,8 +141,8 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   
   new("CIMseqSwarm",
     fractions = .processSwarm(opt.out, cn, rn, norm),
-    costs = map_dbl(opt.out, 2),
-    convergence = .processConvergence(opt.out),
+    costs = setNames(map_dbl(opt.out, 2), colnames(mul)),
+    convergence = setNames(.processConvergence(opt.out), colnames(mul)),
     stats = if(report) {.processStats(opt.out, cn, rn)} else {tibble()},
     singletIdx = map(singletIdx, as.integer),
     arguments = tibble(
@@ -293,144 +293,160 @@ appropriateSinglets <- function(
   out
 }
 
-#' spSwarmPoisson
+#' adjustFractions
 #'
 #' Subtitle
 #'
 #' Description
 #'
-#' @name spSwarmPoisson
-#' @rdname spSwarmPoisson
+#' @name adjustFractions
+#' @rdname adjustFractions
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
+#' @param swarm CIMseqSwarm or matrix; A CIMseqSwarm object or a matrix of 
+#' fractions.
+#' @param binary logical; Indicates if adjusted fractions should be returned as
+#' binary values. 
+#' @param ... additional arguments to pass on
+#' @return Adjusted fractions matrix.
+#' @author Jason T. Serviss
+#' @examples
+#'
+#' #use demo data
+#'
+#'
+NULL
+
+#' @rdname adjustFractions
+#' @importFrom tibble tibble
+#' @importFrom dplyr "%>%" filter full_join group_by summarize pull
+#' @importFrom stats median setNames
+#' @importFrom rlang .data
+#' @export
+
+adjustFractions <- function(
+  singlets, multiplets, swarm, binary = TRUE, ...
+){
+  medianCellNumber <- sampleType <- estimatedCellNumber <- NULL
+  if(!is.matrix(swarm)) {
+    fractions <- getData(swarm, "fractions")
+  } else {
+    fractions <- swarm
+  }
+  
+  #calculate median cell number per singlet class
+  cnc <- cellNumberPerClass(singlets, multiplets) %>%
+    {setNames(pull(., medianCellNumber), pull(., class))}
+  
+  cnc <- cnc[match(colnames(fractions), names(cnc))]
+  if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
+  
+  #calculate cell number per multiplet
+  cnm <- estimateCells(singlets, multiplets) %>%
+    filter(sampleType == "Multiplet") %>%
+    {setNames(pull(., estimatedCellNumber), pull(., sample))}
+  
+  cnm <- cnm[match(names(cnm), rownames(fractions))]
+  if(!identical(names(cnm), rownames(fractions))) stop("cnm name mismatch")
+  
+  #adjust fractions
+  frac.renorm <- t(t(fractions) / cnc)
+  adjusted <- round(frac.renorm * cnm)
+  if(binary) adjusted[adjusted > 0] <- 1
+  return(adjusted)
+}
+
+#' calculateEdgeStats
+#'
+#' Subtitle
+#'
+#' Description
+#'
+#' @name calculateEdgeStats
+#' @rdname calculateEdgeStats
 #' @param swarm A CIMseqSwarm object.
 #' @param singlets A CIMseqSinglets object.
-#' @param edge.cutoff numeric; The minimum fraction to consider (?).
-#' @param min.pval numeric; Minimum p-value to report.
-#' @param min.num.edges numeric; Minimum number of observed edges to report a 
-#' connection.
+#' @param multiplets A CIMseqMultiplets object.
 #' @param ... additional arguments to pass on
 #' @return CIMseqSwarm connection weights and p-values.
 #' @author Jason T. Serviss
 #' @examples
 #'
-#' #use demo data
-#' output <- spSwarmPoisson(CIMseqSwarm_test, 1/10.5)
-#'
+#' output <- calculateEdgeStats(
+#' CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test
+#' )
 #'
 NULL
 
-#' @rdname spSwarmPoisson
+#' @rdname calculateEdgeStats
 #' @importFrom stats ppois
-#' @importFrom dplyr filter pull rowwise do ungroup full_join select bind_cols mutate
-#' @importFrom tibble rownames_to_column as_tibble
-#' @importFrom purrr map2_dbl
-#' @importFrom tidyr separate
-#' @importFrom utils combn
+#' @importFrom dplyr filter mutate
+#' @importFrom purrr map_int map2_dbl map2_int
+#' @importFrom matrixStats rowSums2
 #' @importFrom rlang .data
 #' @export
 
-spSwarmPoisson <- function(
-  swarm,
-  singlets,
-  edge.cutoff = 0,
-  min.pval = 1,
-  min.num.edges = 0,
-  ...
+calculateEdgeStats <- function(
+  swarm, singlets, multiplets, ...
 ){
-  mat <- getData(swarm, "fractions")
+  mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
   classes <- getData(singlets, "classification")
-  logic <- .fractionCutoff(mat, edge.cutoff)
 
   #calcluate weight
-  edges <- .calculateWeight(mat, logic)
+  edges <- .calculateWeight(mat)
 
   #calculate p-value
-  out <- .calculateP(edges, classes, min.pval, min.num.edges)
+  out <- .calculateP(edges, classes)
 
   return(out)
 }
 
-.fractionCutoff <- function(mat, cutoff) {
-  if(length(cutoff) == 1) {
-    return(mat > cutoff)
-  } else {
-    logic <- t(sapply(1:nrow(mat), function(j) {
-      mat[j,] >= as.numeric(
-        sort(mat[j,], decreasing=TRUE)[ceiling(cutoff[j])]
-      )
+.calculateWeight <- function(mat, ...) {
+  from <- to <- NULL
+  expand.grid(
+    from = colnames(mat), to = colnames(mat),
+    stringsAsFactors = FALSE
+  ) %>%
+    filter(from != to) %>% #doesn't calculate self edges
+    mutate(weight = map2_int(from, to, function(f, t) {
+      sub <- mat[, colnames(mat) %in% c(f, t)]
+      length(which(rowSums2(sub) == 2))
     }))
-    colnames(logic) <- colnames(mat)
-    return(logic)
-  }
-}
-
-.calculateWeight <- function(
-  mat, logic, ...
-){
-  value <- NULL
-  comb <- expand.grid(colnames(mat), colnames(mat), stringsAsFactors = FALSE)
-  totcomb <- paste(comb$Var1, comb$Var2, sep = "-")
-  
-  com <- apply(logic, 1, function(row) {
-    pick <- names(row)[which(row)]
-    if(length(pick) == 1) {
-      totcomb %in% paste(pick, pick, sep = "-")
-    } else {
-      picked <- apply(
-        expand.grid(pick, pick, stringsAsFactors = FALSE), 1, function(x) {
-          paste(x, collapse = "-")
-        }
-      )
-      totcomb %in% picked
-    }
-  })
-  rownames(com) <- totcomb
-  
-  res <- apply(com, 1, sum) %>%
-    as.data.frame(stringsAsFactors = FALSE) %>%
-    rownames_to_column(var = "value") %>%
-    setNames(c("value", "weight"))
-  
-  totcomb %>%
-    as_tibble() %>%
-    separate(value, c("from", "to"), sep = "-", remove = FALSE) %>%
-    full_join(res, by = "value") %>%
-    select(-value) %>%
-    as.data.frame(stringsAsFactors = FALSE)
 }
 
 .calculateP <- function(
-  edges, classes, min.pval, min.num.edges, ...
+  edges, classes, ...
 ){
+  from <- to <- jp <- weight <- expected.edges <- NULL
   #calculate total number of edges
-  #don't account for self connections since they are underestimated in deconvolution
-  total.edges <- sum(edges[edges$from != edges$to, "weight"])
+  total.edges <- sum(edges[, "weight"])
   
-  #calculate expected edges
-  #don't account for self connections
+  #calculate joint probabilities
   ct.freq <- as.numeric(table(classes) / length(classes))
   names(ct.freq) <- names(table(classes))
+  
   allProbs <- expand.grid(
     from = names(ct.freq), to = names(ct.freq), stringsAsFactors = FALSE
-  )
-  allProbs$jp <- ct.freq[allProbs$from] * ct.freq[allProbs$to]
-  allProbs <- allProbs[allProbs$from != allProbs$to, ]
-  allProbs$jp <- allProbs$jp / sum(allProbs$jp)
+  ) %>%
+    mutate(jp = map2_dbl(from, to, function(f, t) {
+      ct.freq[f] * ct.freq[t]
+    })) %>%
+    filter(from != to) %>%
+    mutate(jp = jp / sum(jp))
+  
+  #calculate expected edges
   edges <- mutate(
     edges, expected.edges = map2_dbl(from, to, function(f, t) {
-      if(f == t) {
-        NA #self conections underestimated in the deconvolution
-      } else {
-        total.edges * allProbs[allProbs$from == f & allProbs$to == t, "jp"]
-      }
+      total.edges * allProbs[allProbs$from == f & allProbs$to == t, "jp"]
   }))
   
   #calculate p-value based on observed (weight) vs. expected (expected.edges)
-  edges$pval <- ppois(
-    q = edges$weight, lambda = edges$expected.edges, lower.tail = FALSE
-  )
+  edges <- mutate(edges, pval = ppois(
+    q = weight, lambda = expected.edges, lower.tail = FALSE
+  ))
   
   #calculate score = observed / expected
-  edges$score <- edges$weight / edges$expected.edges
+  edges <- mutate(edges, score = weight / expected.edges)
   edges
 }
 
@@ -459,17 +475,16 @@ NULL
 
 #' @rdname calcResiduals
 #' @export
-#' @importFrom purrr map_dfc set_names
+#' @importFrom purrr reduce set_names
+#' @importFrom future.apply future_lapply
+#' @importFrom dplyr bind_cols
+#' @importFrom tibble add_column
+#' @importFrom tidyr gather
 
 calcResiduals <- function(
-  singlets,
-  multiplets,
-  swarm,
-  include = NULL,
-  fractions = NULL,
-  ...
+  singlets, multiplets, swarm, include = NULL, fractions = NULL, ...
 ){
-  gene <- residual <- NULL
+  residual <- gene <- NULL
   if(is.null(fractions)) {
     frac <- getData(swarm, "fractions") 
   } else {
@@ -521,8 +536,9 @@ calcResiduals <- function(
 #'
 #' @name getMultipletsForEdge
 #' @rdname getMultipletsForEdge
-#' @param swarm A CIMseqSwarm object.
-#' @param edge.cutoff numeric; The minimum fraction to consider (?).
+#' @param swarm CIMseqSwarm; A CIMseqSwarm object.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param edges data.frame; Edges of interest. Edges are indicated by the nodes
 #' they connect with one node in column one and the other node in column 2.
 #' @param ... additional arguments to pass on
@@ -532,8 +548,12 @@ calcResiduals <- function(
 #' @author Jason T. Serviss
 #' @examples
 #'
-#' e <- data.frame("A375", "HOS")
-#' output <- getMultipletsForEdge(CIMseqSwarm_test, 1/10.5, e)
+#' output <- getMultipletsForEdge(
+#' CIMseqSwarm_test, 
+#' CIMseqSinglets_test, 
+#' CIMseqMultiplets_test, 
+#' data.frame("A375", "HOS")
+#' )
 #'
 NULL
 
@@ -541,63 +561,38 @@ NULL
 #' @export
 
 setGeneric("getMultipletsForEdge", function(
-  swarm,
-  ...
+  swarm, ...
 ){
-    standardGeneric("getMultipletsForEdge")
+  standardGeneric("getMultipletsForEdge")
 })
 
 #' @rdname getMultipletsForEdge
 #' @importFrom rlang .data
-#' @importFrom dplyr mutate mutate_if select rename pull
+#' @importFrom dplyr mutate_if
+#' @importFrom purrr map_dfr
+#' @importFrom matrixStats rowSums2
+#' @importFrom tibble tibble
 #' @export
 
 setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
-  swarm, edge.cutoff, edges, ...
+  swarm, singlets, multiplets, edges, ...
 ){
   
   edges <- mutate_if(edges, is.factor, as.character)
+  fractions <- adjustFractions(singlets, multiplets, swarm)
   
-  mulForEdges <- lapply(1:nrow(edges), function(j) {
-    cols <- c(pull(edges, 1)[j], pull(edges, 2)[j])
-    
-    if(identical(cols[1], cols[2])) {
-      .self(j, cols, edges, swarm, edge.cutoff)
-    } else {
-      .nonSelf(j, cols, edges, swarm, edge.cutoff)
-    }
+  map_dfr(1:nrow(edges), function(i) {
+    e <- as.character(edges[i, ])
+    sub <- fractions[, e]
+    rs <- matrixStats::rowSums2(sub)
+    multiplets <- rownames(sub)[rs == 2]
+    tibble(
+      sample = multiplets,
+      from = rep(e[1], length(multiplets)),
+      to = rep(e[2], length(multiplets))
+    )
   })
-  
-  names(mulForEdges) <- paste(pull(edges, 1), pull(edges, 2), sep = "-")
-  namedListToTibble(mulForEdges) %>%
-    mutate(from = gsub("(.*)-.*", "\\1", names)) %>%
-    mutate(to = gsub(".*-(.*)", "\\1", names)) %>%
-    select(.data$variables, .data$from, .data$to, -.data$names) %>%
-    rename(multiplet = .data$variables)
 })
-
-#note to self: when considering self-connections in multiplets it is important
-#to remember that, at least now, if another edge is detected in the multiplet,
-#the self-coonection will not be detected by the swarm optimization. For
-#example, if the multiplet contains cell types A1, A1 and B1, the A1 self-
-#connection will not be detected. On the other hand if the multiplet contains
-#A1, A1, A1, then a self-connection will be reported.
-
-.self <- function(j, cols, edges, spSwarm, edge.cutoff) {
-    mat <- getData(spSwarm, "fractions")
-    logic <- mat > edge.cutoff
-    rs <- rowSums(logic)
-    
-    frac <- getData(spSwarm, "fractions")[, unique(cols)]
-    o <- which(frac > edge.cutoff & rs == 1)
-    rownames(getData(spSwarm, "fractions"))[o]
-}
-
-.nonSelf <- function(j, cols, edges, spSwarm, edge.cutoff) {
-    frac <- getData(spSwarm, "fractions")[, cols]
-    o <- apply(frac, 1, function(x) {all(x > edge.cutoff)})
-    rownames(frac)[o]
-}
 
 #' getEdgesForMultiplet
 #'
@@ -610,14 +605,17 @@ setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
 #' @aliases getEdgesForMultiplet
 #' @param swarm A CIMseqSwarm object.
 #' @param singlets A CIMseqSinglets object.
-#' @param edge.cutoff numeric; The minimum fraction to consider (?).
-#' @param multiplet character; The name of the multiplet of interest.
+#' @param multiplets A CIMseqMultiplets object.
+#' @param multipletName character; The name of the multiplet of interest.
 #' @param ... additional arguments to pass on
 #' @return Edge names.
 #' @author Jason T. Serviss
 #' @examples
 #'
-#' output <- getEdgesForMultiplet(CIMseqSwarm_test, 1/10.5, "m.NJB00204.G04")
+#' output <- getEdgesForMultiplet(
+#' CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test,
+#' "m.NJB00204.G04"
+#' )
 #'
 NULL
 
@@ -627,6 +625,7 @@ NULL
 #' @importFrom purrr map_dfr
 #' @importFrom tibble  tibble
 #' @importFrom utils combn
+#' @importFrom matrixStats rowSums2
 
 setGeneric("getEdgesForMultiplet", function(
   swarm, ...
@@ -638,34 +637,28 @@ setGeneric("getEdgesForMultiplet", function(
 #' @export
 
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
-  swarm, singlets, edge.cutoff, multiplet, ...
+  swarm, singlets, multiplets, multipletName, ...
 ){
-  s <- spSwarmPoisson(swarm, singlets, edge.cutoff)
-  frac <- getData(swarm, "fractions")[multiplet, ]
-  if(length(multiplet) == 1) {
-    .edgeFunSingle(multiplet, edge.cutoff, frac, s)
-  } else {
-    map_dfr(1:length(multiplet), function(i) {
-      .edgeFunSingle(multiplet[i], edge.cutoff, frac[i, ], s)
-    })
-  }
+  s <- calculateEdgeStats(swarm, singlets, multiplets)
+  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
+  frac <- frac[multipletName, , drop = FALSE]
+  
+  #don't count self connections of multiplets with all 0 adjusted fractions
+  rs <- rowSums2(frac)
+  frac <- frac[rs > 1, , drop = FALSE]
+  
+  l <- length(frac)
+  if(l == 0) return(tibble(sample = multipletName, from = NA, to = NA))
+  
+  map_dfr(1:nrow(frac), function(i) {
+    cmb <- combn(colnames(frac)[frac[i, ] == 1], 2)
+    tibble(
+      sample = rep(rownames(frac)[i], ncol(cmb)),
+      from = cmb[1, ],
+      to = cmb[2, ]
+    )
+  })
 })
-
-.edgeFunSingle <- function(multiplet, edge.cutoff, frac, s) {
-  keep <- frac > edge.cutoff
-  n <- names(frac)[keep]
-  if(length(n) == 0) {
-    output <- tibble(multiplet = multiplet, from = NA, to = NA)
-    return(output)
-  } else if(length(n) == 1) {
-    output <- tibble(multiplet = multiplet, from = n, to = n)
-    return(output)
-  } else {
-    c <- combn(n, 2)
-    output <- tibble(multiplet = multiplet, from = c[1, ], to = c[2, ])
-    return(output)
-  }
-}
 
 #' calculateCosts
 #'
@@ -728,7 +721,7 @@ setMethod("calculateCosts", c("CIMseqSinglets", "CIMseqMultiplets", "CIMseqSwarm
   #setup synthetic multiplets
   sngIdx <- getData(swarm, "singletIdx")
   sngSubset <- appropriateSinglets(singlets, sngIdx, selectInd)
-  nSynthMul <- getData(sObj, "arguments")$nSyntheticMultiplets[[1]]
+  nSynthMul <- getData(swarm, "arguments")$nSyntheticMultiplets[[1]]
   
   #calculate costs
   opt.out <- future_lapply(
