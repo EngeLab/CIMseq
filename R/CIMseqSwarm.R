@@ -654,7 +654,10 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
 .edgeFunSingle <- function(multiplet, edge.cutoff, frac, s) {
   keep <- frac > edge.cutoff
   n <- names(frac)[keep]
-  if(length(n) == 1) {
+  if(length(n) == 0) {
+    output <- tibble(multiplet = multiplet, from = NA, to = NA)
+    return(output)
+  } else if(length(n) == 1) {
     output <- tibble(multiplet = multiplet, from = n, to = n)
     return(output)
   } else {
