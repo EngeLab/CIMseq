@@ -27,19 +27,19 @@ rm(packages)
 ## CIMseqSinglets and CIMseqMultiplets
 
 Plot markers.
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8, eval = FALSE}
 plotCountsMarkers(
   CIMseqSinglets_test, CIMseqMultiplets_test, markers = c("CD74", "ANXA3")
 )
 ```
 
 Plot cell number.
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotCountsERCC(CIMseqSinglets_test, CIMseqMultiplets_test)
 ```
 
 Get the plotting data so you can make a custom plot.
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotCountsMarkers(
   CIMseqSinglets_test, CIMseqMultiplets_test, markers = c("CD74", "ANXA3")
 ) %>%
@@ -52,17 +52,17 @@ plotCountsERCC(CIMseqSinglets_test, CIMseqMultiplets_test) %>%
 ```
 
 Plot the clustering and classification.
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotUnsupervisedClass(CIMseqSinglets_test, CIMseqMultiplets_test)
 ```
 
 Plot a single marker.
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotUnsupervisedMarkers(CIMseqSinglets_test, CIMseqMultiplets_test, "CD74")
 ```
 
 Plot markers in different cell types.
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotUnsupervisedMarkers(
   CIMseqSinglets_test, CIMseqMultiplets_test,
   markers = c("CD74", "ANXA3", "ACTG2")
@@ -70,7 +70,7 @@ plotUnsupervisedMarkers(
 ```
 
 Plot mean of multiple markers for the same cell type.
-```{r, message = FALSE}
+```{r, fig.align="center", fig.width=10, fig.height=8, message = FALSE}
 #use the data instead
 plotUnsupervisedMarkers(
   CIMseqSinglets_test, CIMseqMultiplets_test, 
@@ -110,28 +110,28 @@ plotUnsupervisedMarkers(
 
 ### Graph-based plots
 
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
 ```
 
 ### Non-graph-based plots
 
 Edge bar graph.
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
 ```
 
 P-value bar graph.
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotSwarmPbar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
 ```
 
 Heatmap.
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotSwarmHeat(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
 ```
 
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotSwarmCircos(
   CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test
 )
@@ -149,7 +149,7 @@ plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %
 
 
 ### Gene plots
-```{r}
+```{r, fig.align="center", fig.width=10, fig.height=8}
 plotSwarmGenes(
   CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test,
   c("CD74", "ANXA3", "ACTG2"), rownames(getData(CIMseqSwarm_test, "fractions"))
