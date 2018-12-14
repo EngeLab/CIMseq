@@ -382,7 +382,7 @@ NULL
 #' @importFrom stats ppois
 #' @importFrom dplyr filter mutate
 #' @importFrom purrr map_int map2_dbl map2_int
-#' @importFrom matrixStats rowSums2
+#' @importFrom matrixStats rowSums2 colSums2
 #' @importFrom rlang .data
 #' @export
 
@@ -396,7 +396,7 @@ calculateEdgeStats <- function(
   edges <- .calculateWeight(mat)
 
   #calculate p-value
-  out <- .calculateP(edges, classes)
+  out <- .calculateP(edges, mat)
 
   return(out)
 }
@@ -415,29 +415,31 @@ calculateEdgeStats <- function(
 }
 
 .calculateP <- function(
-  edges, classes, ...
+  edges, mat, ...
 ){
   from <- to <- jp <- weight <- expected.edges <- NULL
   #calculate total number of edges
   total.edges <- sum(edges[, "weight"])
   
-  #calculate joint probabilities
-  ct.freq <- as.numeric(table(classes) / length(classes))
-  names(ct.freq) <- names(table(classes))
+  #calculate expected edges
+  class.freq <- colSums2(mat) #multiplet estimated cell type frequency
+  names(class.freq) <- colnames(mat)
   
   allProbs <- expand.grid(
-    from = names(ct.freq), to = names(ct.freq), stringsAsFactors = FALSE
+    from = names(class.freq), to = names(class.freq), 
+    stringsAsFactors = FALSE
   ) %>%
-    mutate(jp = map2_dbl(from, to, function(f, t) {
-      ct.freq[f] * ct.freq[t]
-    })) %>%
     filter(from != to) %>%
-    mutate(jp = jp / sum(jp))
+    mutate(edges = map2_dbl(from, to, function(f, t) {
+      abs <- class.freq[names(class.freq) != t]
+      rel <- abs / sum(abs)
+      as.numeric(rel[f]) * class.freq[t]
+    })) %>%
+    mutate(rel = edges / sum(edges)) %>%
+    mutate(expected = total.edges * rel)
   
-  #calculate expected edges
-  edges <- mutate(
-    edges, expected.edges = map2_dbl(from, to, function(f, t) {
-      total.edges * allProbs[allProbs$from == f & allProbs$to == t, "jp"]
+  edges <- mutate(edges, expected.edges = map2_dbl(from, to, function(f, t){
+    allProbs[allProbs$from == f & allProbs$to == t, "expected"]
   }))
   
   #calculate p-value based on observed (weight) vs. expected (expected.edges)
@@ -643,7 +645,7 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
   frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
   frac <- frac[multipletName, , drop = FALSE]
   
-  #don't count self connections of multiplets with all 0 adjusted fractions
+  #don't count self connections or multiplets with all 0 adjusted fractions
   rs <- rowSums2(frac)
   frac <- frac[rs > 1, , drop = FALSE]
   
@@ -651,11 +653,12 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
   if(l == 0) return(tibble(sample = multipletName, from = NA, to = NA))
   
   map_dfr(1:nrow(frac), function(i) {
-    cmb <- combn(colnames(frac)[frac[i, ] == 1], 2)
+    p.fracs <- colnames(frac)[frac[i, ] == 1]
+    cmb <- expand.grid(p.fracs, p.fracs, stringsAsFactors = FALSE)
+    cmb <- cmb[cmb[, 1] != cmb[, 2], ]
     tibble(
-      sample = rep(rownames(frac)[i], ncol(cmb)),
-      from = cmb[1, ],
-      to = cmb[2, ]
+      sample = rep(rownames(frac)[i], nrow(cmb)),
+      from = cmb[, 1], to = cmb[, 2]
     )
   })
 })
@@ -697,12 +700,10 @@ setGeneric("calculateCosts", function(
 #' @rdname calculateCosts
 #' @export
 
-setMethod("calculateCosts", c("CIMseqSinglets", "CIMseqMultiplets", "CIMseqSwarm"), function(
-  singlets,
-  multiplets,
-  swarm,
-  fractions = NULL,
-  ...
+setMethod(
+  "calculateCosts", c("CIMseqSinglets", "CIMseqMultiplets", "CIMseqSwarm"), 
+  function(
+    singlets, multiplets, swarm, fractions = NULL, ...
 ){
   if(is.null(fractions)) fractions <- getData(swarm, "fractions")
   if(is.null(dim(fractions))) fractions <- matrix(fractions, ncol = length(fractions))

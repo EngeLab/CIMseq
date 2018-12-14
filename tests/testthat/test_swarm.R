@@ -56,16 +56,16 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
   ###TEST1####
   #setup expected data
   expected1 <- tibble::tibble(
-    sample = "m.NJB00204.D07",
-    from = "HCT116",
-    to = "HOS"
+    sample = c("m.NJB00204.D07", "m.NJB00204.D07"),
+    from =  c("HOS", "HCT116"),
+    to = c("HCT116", "HOS")
   )
   expected2 <- tibble::tibble(
-    sample = "m.NJB00204.G04",
-    from = "A375",
-    to = "HOS"
+    sample = c("m.NJB00204.G04", "m.NJB00204.G04"),
+    from = c("HOS", "A375"),
+    to = c("A375", "HOS")
   )
-
+  
   #run function
   output1 <- getEdgesForMultiplet(
     CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, 'm.NJB00204.D07'
@@ -81,9 +81,9 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
   ###TEST2####
   #setup expected data
   expected1 <- tibble::tibble(
-    sample = c("m.NJB00204.G04", "m.NJB00204.D07"),
-    from = c("A375", "HCT116"), 
-    to = c("HOS", "HOS")
+    sample = rep(c("m.NJB00204.G04", "m.NJB00204.D07"), each = 2),
+    from = c("HOS", "A375", "HOS", "HCT116"), 
+    to = c("A375", "HOS", "HCT116", "HOS")
   )
   
   #run function
@@ -128,6 +128,49 @@ test_that("check that adjustFractions outputs the expected result", {
   #test
   expect_identical(expected1, output1)
   expect_identical(expected2, output2)
+})
+
+test_that("check that calculateEdgeStats outputs the expected result", {
+  
+  ###TEST1####
+  #setup input data
+  set.seed(93223)
+  mat <- matrix(
+    sample(c(0, 1), 30, replace = TRUE), ncol = 3, 
+    dimnames = list(NULL, LETTERS[1:3])
+  )
+  
+  #setup expected data
+  expected <- c(2L, 5L, 2L, 3L, 5L, 3L)
+  
+  #run function
+  output <- .calculateWeight(mat)
+  
+  #test
+  expect_identical(expected, output$weight)
+  
+  ###TEST2####
+  #setup input
+  set.seed(9322)
+  edges <- expand.grid(
+    from = LETTERS[1:3], to = LETTERS[1:3], stringsAsFactors = FALSE
+  )
+  edges <- edges[edges[, 1] != edges[, 2], ]
+  edges$weight <- sample(1:5, nrow(edges), replace = TRUE)
+  mat <- matrix(
+    sample(c(0, 1), 30, replace = TRUE), ncol = 3, 
+    dimnames = list(NULL, LETTERS[1:3])
+  )
+  
+  #setup expected data
+  expected <- c(7, 1, 8, 2, 1, 1)
+  
+  #run function
+  output <- CIMseq:::.calculateP(edges, mat)
+  
+  #test
+  expect_identical(expected, round(output$expected.edges))
+  expect_identical(output$score, output$weight / output$expected.edges)
 })
 
 ################################################################################
