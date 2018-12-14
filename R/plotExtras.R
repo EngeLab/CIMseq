@@ -232,3 +232,88 @@ processMarkers <- function(counts.log, markers) {
   #tidy markers
   matrix_to_tibble(markExpressNorm, rowname = "Sample")
 }
+
+#' longFormConnections
+#'
+#' Helper function for plotSwarmCircos.
+#'
+#' @name longFormConnections
+#' @rdname longFormConnections
+#' @author Jason T. Serviss
+#' @param swarm CIMseqSwarm; A CIMseqSwarm object.
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
+NULL
+
+#' @rdname longFormConnections
+#' @importFrom dplyr "%>%" mutate select group_by ungroup
+#' @importFrom purrr pmap_chr
+#' @importFrom readr parse_factor
+#' @importFrom tidyr unite gather
+
+longFormConnections <- function(swarm, singlets, multiplets) {
+  fractions <- getData(swarm, "fractions")
+  getEdgesForMultiplet(swarm, singlets, multiplets, rownames(fractions)) %>%
+    #add connectionID
+    mutate(tmp = pmap_chr(list(sample, from, to), function(x, y, z) {
+      paste(x, sort(c(y, z)), collapse = "-")
+    })) %>%
+    mutate(sub = as.numeric(parse_factor(tmp, levels = unique(tmp)))) %>%
+    select(-tmp) %>%
+    mutate(super = 1:nrow(.)) %>%
+    unite(connectionID, super, sub, sep = ".") %>%
+    #reformat
+    gather(direction, class, -sample, -connectionID) %>%
+    select(-direction) %>%
+    #add classes
+    group_by(connectionID) %>%
+    mutate(from = class[1], to = class[2]) %>%
+    ungroup() %>%
+    unite(connectionName, from, to, remove = FALSE, sep = "--") %>%
+    #add fractions
+    mutate(frac = map2_dbl(sample, class, ~fractions[.x, .y]))
+}
+
+#' draw_legend
+#'
+#' Helper function for plotSwarmCircos.
+#'
+#' @name draw_legend
+#' @rdname draw_legend
+#' @author Jason T. Serviss
+#' @param l A grob containing a legend.
+NULL
+
+#' @rdname draw_legend
+#' @importFrom gridBase baseViewports
+
+draw_legend <- function(l){
+  ##https://stackoverflow.com/questions/25192838/arrange-base-plots-and-grid-tables-on-the-same-page
+  frame()
+  vps <- baseViewports()
+  grid::pushViewport(vps$inner, vps$figure, vps$plot)
+  grid::grid.draw(l)
+  grid::popViewport(3)
+}
+
+#' g_legend
+#'
+#' Helper function for plotSwarmCircos.
+#'
+#' @name g_legend
+#' @rdname g_legend
+#' @author Jason T. Serviss
+#' @param a.gplot A ggplot.
+#' @keywords g_legend
+NULL
+
+#' @rdname g_legend
+#' @importFrom ggplot2 ggplot_gtable ggplot_build
+
+g_legend<-function(a.gplot){
+  tmp <- ggplot_gtable(ggplot_build(a.gplot))
+  leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend <- tmp$grobs[[leg]]
+  return(legend)
+}
+

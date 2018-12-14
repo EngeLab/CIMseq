@@ -36,7 +36,8 @@ Imports:
     future.apply (>= 0.2.0),
     RANN (>= 2.6),
     gmodels (>= 2.18.1),
-    circlize (>= 0.4.4)
+    circlize (>= 0.4.4),
+    gridBase (>= 0.4-7)
 Suggests: 
     knitr (>= 1.20),
     rmarkdown (>= 1.9),
