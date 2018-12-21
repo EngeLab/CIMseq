@@ -2,7 +2,6 @@
 NULL
 
 #' @rdname CIMseqSinglets
-#' @importFrom S4Vectors show
 #' @importFrom utils head
 #' @export
 
@@ -78,7 +77,7 @@ setMethod("show", "CIMseqSwarm", function(object){
 }
 
 .showList <- function(obj){
-  show(as(obj, "List"))
+  print("List of length ", length(obj))
   cat("-----------\n\n")
 }
 
