@@ -87,7 +87,7 @@ test_that("check that the .showBasics function outputs the expected result", {
 
 test_that("check that the .showList function outputs the expected result", {
   output <- evaluate_promise(.showList(list(a = 1:5)))
-  expected <- "List of length 1\nnames(1): a\n-----------\n"
+  expected <- "[1] \"List of length 1\"\n-----------\n"
   expect_identical(output$output, expected)
 })
 

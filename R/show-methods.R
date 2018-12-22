@@ -77,7 +77,7 @@ setMethod("show", "CIMseqSwarm", function(object){
 }
 
 .showList <- function(obj){
-  print("List of length ", length(obj))
+  print(paste0("List of length ", length(obj)))
   cat("-----------\n\n")
 }
 
