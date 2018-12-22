@@ -36,7 +36,8 @@ Imports:
     RANN (>= 2.6),
     gmodels (>= 2.18.1),
     circlize (>= 0.4.4),
-    gridBase (>= 0.4-7)
+    gridBase (>= 0.4-7),
+    S4Vectors (>= 0.18.2)
 Suggests: 
     knitr (>= 1.20),
     rmarkdown (>= 1.9),
