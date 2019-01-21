@@ -339,7 +339,7 @@ adjustFractions <- function(
     {setNames(pull(., medianCellNumber), pull(., class))}
   
   cnc <- cnc[match(colnames(fractions), names(cnc))]
-  if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
+  #if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
   
   #calculate cell number per multiplet
   cnm <- estimateCells(singlets, multiplets) %>%
@@ -347,7 +347,7 @@ adjustFractions <- function(
     {setNames(pull(., estimatedCellNumber), pull(., sample))}
   
   cnm <- cnm[match(names(cnm), rownames(fractions))]
-  if(!identical(names(cnm), rownames(fractions))) stop("cnm name mismatch")
+  #if(!identical(names(cnm), rownames(fractions))) stop("cnm name mismatch")
   
   #adjust fractions
   frac.renorm <- t(t(fractions) / cnc)
