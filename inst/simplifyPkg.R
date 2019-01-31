@@ -33,7 +33,7 @@ currentSugg <- dplyr::filter(desc$get_deps(), type == "Suggests")$package
 purrr::map(currentSugg, ~desc_del_dep(.x))
 
 #remove files including plotting functions
-f <- list.files(path = "R", pattern = "Plot", full.names = TRUE)
+f <- list.files(path = "R", pattern = "plot", full.names = TRUE)
 file.remove(f)
 
 #remove vignette
