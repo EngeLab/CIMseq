@@ -7,7 +7,7 @@ output:
         theme: flatly
         toc: yes
 vignette: >
-    %\VignetteIndexEntry{ClusterSignificance Vignette} 
+    %\VignetteIndexEntry{CIMseq Vignette} 
     %\usepackage[utf8]{inputenc}
     %\SweaveUTF8
     %\VignetteEngine{knitr::rmarkdown} 
