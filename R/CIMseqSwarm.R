@@ -78,7 +78,10 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   #put a check here to make sure all slots in the spUnsupervised object are
   #filled. This should actually be regulated by the class definition BUT you
   #should probably double check that it works as expected via unit tests.
-    
+  
+  #check for same genes in singlets counts and multiplets counts
+  
+  
   #input and input checks
   sngCPM <- getData(singlets, "counts.cpm")
   mulCPM <- getData(multiplets, "counts.cpm")
@@ -237,6 +240,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 #' \code{\link{sampleSinglets}} function. THIS IS ZERO BASED since upstream 
 #' calculations are done in C++.
 #' @param features numeric; Indices of selected features used for deconvolution.
+#'  If null, all genes are used.
 #' @param ... additional arguments to pass on
 #' @return Appropriated singlets.
 #' @author Jason T. Serviss
@@ -253,10 +257,11 @@ NULL
 #' @export
 
 appropriateSinglets <- function(
-  singlets, idx, features
+  singlets, idx, features = NULL
 ){
   classes <- getData(singlets, "classification")
   sngCPM <- getData(singlets, "counts.cpm")
+  if(is.null(features)) features <- 1:nrow(sngCPM)
   singlets <- matrix(
     sngCPM[features, ],
     ncol = ncol(sngCPM),
@@ -282,7 +287,7 @@ appropriateSinglets <- function(
   genes <- str_replace(rownames(singletSubset), "(.*)\\..*", "\\1")
   rn <- parse_factor(
     genes,
-    levels = unique(rn)
+    levels = unique(genes)
   )
   
   out <- split(singletSubset, rn) %>%
@@ -339,7 +344,7 @@ adjustFractions <- function(
     {setNames(pull(., medianCellNumber), pull(., class))}
   
   cnc <- cnc[match(colnames(fractions), names(cnc))]
-  #if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
+  if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
   
   #calculate cell number per multiplet
   cnm <- estimateCells(singlets, multiplets) %>%
@@ -347,7 +352,7 @@ adjustFractions <- function(
     {setNames(pull(., estimatedCellNumber), pull(., sample))}
   
   cnm <- cnm[match(names(cnm), rownames(fractions))]
-  #if(!identical(names(cnm), rownames(fractions))) stop("cnm name mismatch")
+  if(!identical(names(cnm), rownames(fractions))) stop("cnm name mismatch")
   
   #adjust fractions
   frac.renorm <- t(t(fractions) / cnc)
@@ -390,7 +395,6 @@ calculateEdgeStats <- function(
   swarm, singlets, multiplets, ...
 ){
   mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
-  classes <- getData(singlets, "classification")
 
   #calcluate weight
   edges <- .calculateWeight(mat)
@@ -639,10 +643,11 @@ setGeneric("getEdgesForMultiplet", function(
 #' @export
 
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, multipletName, ...
+  swarm, singlets, multiplets, multipletName = NULL, ...
 ){
   s <- calculateEdgeStats(swarm, singlets, multiplets)
   frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
+  if(is.null(multipletName)) multipletName <- rownames(getData(swarm, "fractions"))
   frac <- frac[multipletName, , drop = FALSE]
   
   #don't count self connections or multiplets with all 0 adjusted fractions

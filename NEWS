@@ -4,9 +4,11 @@ v.0.2.0.2
 * adding cellNumberPerClass function
 * adding checks for classification and dim.red slots in CIMseqSinglets objects
 * removing calculation for cellNumberMin and cellNumberMax from estimateCells function
+* estimateCells function now correctly only uses singlets for estimatedCellNumber calculation
 * renaming spSwarmPoisson to calculateEdgeStats and re-writing to use adjusted fractions
 * updated p-value calculation
 * getEdgesForMultiplet now returns edges in both directions
+* better defaults for getEdgesForMultiplet and appropriateSinglets
 * Adding circos plot and accessory functions
 
 v.0.2.0.1
