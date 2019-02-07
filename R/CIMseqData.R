@@ -243,25 +243,26 @@ setMethod("estimateCells", "CIMseqSinglets", function(
   singlets, multiplets, warning = TRUE, ...
 ){
   frac.ercc <- NULL
-  sng.counts <- getData(singlets, "counts")
-  mul.counts <- getData(multiplets, "counts")
-  sng.ercc <- getData(singlets, "counts.ercc")
-  mul.ercc <- getData(multiplets, "counts.ercc")
-  
-  counts <- cbind(sng.counts, mul.counts)
-  counts.ercc <- cbind(sng.ercc, mul.ercc)
+  counts <- cbind(
+    getData(singlets, "counts"), 
+    getData(multiplets, "counts")
+  )
+  counts.ercc <- cbind(
+    getData(singlets, "counts.ercc"), 
+    getData(multiplets, "counts.ercc")
+  )
+  n.sng <- ncol(getData(singlets, "counts"))
+  n.mul <- ncol(getData(cObjMul, "counts"))
   
   #check if any samples have ERCC that are all 0
   if(warning) .checkEstimateCellsInput(counts.ercc)
+  fe <- colSums(counts.ercc) / (colSums(counts.ercc) + colSums(counts))
+  ecn <- median(fe[1:n.sng]) / fe
   
   tibble(
-    sample = c(colnames(sng.counts), colnames(mul.counts)),
-    sampleType = c(
-      rep("Singlet", ncol(sng.counts)),
-      rep("Multiplet", ncol(mul.counts))
-    ),
-    frac.ercc = colSums(counts.ercc) / (colSums(counts.ercc) + colSums(counts)),
-    estimatedCellNumber = median(frac.ercc) / frac.ercc
+    sample = colnames(counts),
+    sampleType = c(rep("Singlet", n.sng), rep("Multiplet", n.mul)),
+    frac.ercc = fe, estimatedCellNumber = ecn
   )
 })
 
