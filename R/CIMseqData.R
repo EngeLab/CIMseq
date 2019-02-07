@@ -252,7 +252,7 @@ setMethod("estimateCells", "CIMseqSinglets", function(
     getData(multiplets, "counts.ercc")
   )
   n.sng <- ncol(getData(singlets, "counts"))
-  n.mul <- ncol(getData(cObjMul, "counts"))
+  n.mul <- ncol(getData(multiplets, "counts"))
   
   #check if any samples have ERCC that are all 0
   if(warning) .checkEstimateCellsInput(counts.ercc)

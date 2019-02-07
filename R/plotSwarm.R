@@ -809,7 +809,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
     
     layout(
       matrix(c(1, 4, 2, 4, 3, 4), nrow = 2), 
-      width = c(1, 1, 1, 1), height = c(1, 8)
+      widths = c(1, 1, 1, 1), heights = c(1, 8)
     )
     
     p <- data %>%

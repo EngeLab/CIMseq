@@ -252,6 +252,7 @@ NULL
 #' @importFrom tidyr unite gather
 
 longFormConnections <- function(swarm, singlets, multiplets) {
+  from <- to <- tmp <- connectionID <- super <- direction <- connectionName <- NULL
   fractions <- getData(swarm, "fractions")
   getEdgesForMultiplet(swarm, singlets, multiplets, rownames(fractions)) %>%
     #add connectionID
@@ -286,6 +287,7 @@ NULL
 
 #' @rdname draw_legend
 #' @importFrom gridBase baseViewports
+#' @importFrom graphics frame
 
 draw_legend <- function(l){
   ##https://stackoverflow.com/questions/25192838/arrange-base-plots-and-grid-tables-on-the-same-page
