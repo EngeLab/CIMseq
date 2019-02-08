@@ -4,7 +4,7 @@
 \alias{appropriateSinglets}
 \title{appropriateSinglets}
 \usage{
-appropriateSinglets(singlets, idx, features)
+appropriateSinglets(singlets, idx, features = NULL)
 }
 \arguments{
 \item{singlets}{A CIMseqSinglets object.}
@@ -13,7 +13,8 @@ appropriateSinglets(singlets, idx, features)
 \code{\link{sampleSinglets}} function. THIS IS ZERO BASED since upstream 
 calculations are done in C++.}
 
-\item{features}{numeric; Indices of selected features used for deconvolution.}
+\item{features}{numeric; Indices of selected features used for deconvolution.
+If null, all genes are used.}
 
 \item{...}{additional arguments to pass on}
 }

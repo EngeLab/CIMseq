@@ -602,7 +602,7 @@ setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
 
 #' getEdgesForMultiplet
 #'
-#' Returns the names of the edges are associated with a multiplet.
+#' Returns the names of the edges detected in a multiplet.
 #'
 #' Description
 #'
@@ -666,6 +666,57 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
       from = cmb[, 1], to = cmb[, 2]
     )
   })
+})
+
+#' getCellsForMultiplet
+#'
+#' Returns the names of the cells detected in a multiplet.
+#'
+#' Description
+#'
+#' @name getCellsForMultiplet
+#' @rdname getCellsForMultiplet
+#' @aliases getCellsForMultiplet
+#' @param swarm A CIMseqSwarm object.
+#' @param singlets A CIMseqSinglets object.
+#' @param multiplets A CIMseqMultiplets object.
+#' @param multipletName character; The name of the multiplet of interest.
+#' @param ... additional arguments to pass on
+#' @return Edge names.
+#' @author Jason T. Serviss
+#' @examples
+#'
+#' output <- getCellsForMultiplet(
+#' CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test,
+#' "m.NJB00204.G04"
+#' )
+#'
+NULL
+
+#' @rdname getCellsForMultiplet
+#' @export
+#' @importFrom rlang .data
+#' @importFrom purrr map2
+#' @importFrom dplyr mutate select distinct
+#' @importFrom tidyr unnest
+
+setGeneric("getCellsForMultiplet", function(
+  swarm, ...
+){
+  standardGeneric("getCellsForMultiplet")
+})
+
+#' @rdname getCellsForMultiplet
+#' @export
+
+setMethod("getCellsForMultiplet", "CIMseqSwarm", function(
+  swarm, singlets, multiplets, multipletName = NULL, ...
+){
+  getEdgesForMultiplet(swarm, singlets, multiplets, multipletName) %>%
+    mutate(cells = map2(.data$from, .data$to, ~c(.x, .y))) %>%
+    select(-.data$from, -.data$to) %>%
+    unnest() %>%
+    distinct()
 })
 
 #' calculateCosts
