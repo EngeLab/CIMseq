@@ -192,6 +192,7 @@ setMethod("getData", "CIMseqSwarm", function(x, n = NULL){
 })
 
 #' @rdname CIMseqSwarm
+#' @importFrom dplyr bind_rows
 #' @export
 
 setMethod("c", c("CIMseqSwarm"), function(x, ...){
@@ -201,9 +202,9 @@ setMethod("c", c("CIMseqSwarm"), function(x, ...){
     fractions = lapply(objs, getData, "fractions") %>% do.call("rbind", .),
     costs = lapply(objs, getData, "costs") %>% do.call("c", .),
     convergence = lapply(objs, getData, "convergence") %>% do.call("c", .),
-    stats = lapply(objs, getData, "stats") %>% do.call("rbind", .),
+    stats = lapply(objs, getData, "stats") %>% do.call("bind_rows", .),
     singletIdx = lapply(objs, getData, "singletIdx") %>% do.call("c", .),
-    arguments = lapply(objs, getData, "arguments") %>% do.call("rbind", .)
+    arguments = lapply(objs, getData, "arguments") %>% do.call("bind_rows", .)
   )
 })
 

@@ -1,5 +1,6 @@
 v0.2.0.3
 * adding getCellsForMultiplet function
+* fixing CIMseqSwarm concatenation function
 
 v0.2.0.2
 * fixing CIMseqSwarm show methods so tibbles do not show as lists
