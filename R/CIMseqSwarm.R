@@ -351,7 +351,7 @@ adjustFractions <- function(
     filter(sampleType == "Multiplet") %>%
     {setNames(pull(., estimatedCellNumber), pull(., sample))}
   
-  cnm <- cnm[match(names(cnm), rownames(fractions))]
+  cnm <- cnm[match(rownames(fractions), names(cnm))]
   if(!identical(names(cnm), rownames(fractions))) stop("cnm name mismatch")
   
   #adjust fractions
