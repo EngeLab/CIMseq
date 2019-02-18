@@ -198,6 +198,9 @@ setMethod("getData", "CIMseqSwarm", function(x, n = NULL){
 setMethod("c", c("CIMseqSwarm"), function(x, ...){
   objs <- c(list(x), list(...))
   #you probably want to do some checks here
+  if(length(unique(lapply(objs, getData, "singletIdx"))) != 1) {
+    stop("singletIdx slot not identical for all objects. Cannot concatenate.")
+  }
   new("CIMseqSwarm",
     fractions = lapply(objs, getData, "fractions") %>% do.call("rbind", .),
     costs = lapply(objs, getData, "costs") %>% do.call("c", .),
