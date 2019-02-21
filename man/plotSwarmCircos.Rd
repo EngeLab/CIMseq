@@ -10,7 +10,7 @@ plotSwarmCircos(swarm, ...)
 
 \S4method{plotSwarmCircos}{CIMseqSwarm}(swarm, singlets, multiplets,
   classOrder = NULL, connectionClass = NULL, alpha = 0.05,
-  weightCut = 10, label.cex = 1, legend = TRUE,
+  weightCut = 0, label.cex = 1, legend = TRUE,
   pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
   nonSigCol = "grey90", ...)
 }
