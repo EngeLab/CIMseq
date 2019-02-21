@@ -750,7 +750,7 @@ setGeneric("plotSwarmCircos", function(
 
 setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, connectionClass = NULL, 
-  alpha = 0.05, weightCut = 10, label.cex = 1, legend = TRUE, 
+  alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
   pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
   nonSigCol = "grey90", ...
 ){
@@ -869,7 +869,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   circos.par(track.margin = c(0, 0))
   circos.initialize(factors = classOrder, xlim = range(data$position))
   circos.trackPlotRegion(
-    ylim = c(0, 1), bg.col = class.colors[sort(unique(c(edges$from, edges$to)))],
+    ylim = c(0, 1), bg.col = class.colors[sort(names(class.colors))],
     bg.border = NA, track.height = 0.1
   )
   
