@@ -280,11 +280,45 @@ setMethod("c", c("CIMseqSwarm"), function(x, ...){
   )
 })
 
-#####################
-#                   #
-#      ggplot2      #
-#                   #
-#####################
+#################
+#               #
+#  Subsetting   #
+#               #
+#################
+
+#' @rdname CIMseqSinglets
+#' @export
+
+setGeneric("subsetSwarm", function(x, ...){
+  standardGeneric("subsetSwarm") 
+})
+
+#' @rdname CIMseqSwarm
+#' @importFrom dplyr bind_rows
+#' @param subset Indicates samples to be retained. Can be a character vector of 
+#' sample names, a logical vector, or integer vector indicating sample indices.
+#' @export
+
+setMethod("subsetSwarm", c("CIMseqSwarm"), function(x, ...){
+  samples <- rownames(getData(x, "fractions"))
+  if(is.character(subset)) subset <- samples %in% subset
+  if(is.integer(subset) | is.numeric(subset)) subset <- 1:length(samples) %in% subset
+  
+  new("CIMseqSwarm",
+      fractions = getData(x, "fractions")[subset, ],
+      costs = getData(x, "costs")[subset],
+      convergence = getData(x, "convergence")[subset],
+      stats = filter(getData(x, "stats"), subset),
+      singletIdx = getData(x, "singletIdx"),
+      arguments = filter(getData(x, "arguments"), subset)
+  )
+})
+
+################################################################################
+#                                                                              #
+#                             ggplot2                                          #
+#                                                                              #
+################################################################################
 
 #' "gg" class
 #'
