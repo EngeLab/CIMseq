@@ -6,6 +6,7 @@
 \alias{CIMseqMultiplets-class}
 \alias{getData,CIMseqMultiplets-method}
 \alias{getData<-,CIMseqMultiplets-method}
+\alias{c,CIMseqMultiplets-method}
 \alias{CIMseqMultiplets}
 \alias{CIMseqMultiplets,missing-method}
 \alias{CIMseqMultiplets,matrix-method}
@@ -16,6 +17,8 @@
 \S4method{getData}{CIMseqMultiplets}(x, n = NULL)
 
 \S4method{getData}{CIMseqMultiplets}(x, n = NULL) <- value
+
+\S4method{c}{CIMseqMultiplets}(x, ...)
 
 CIMseqMultiplets(counts, ...)
 
@@ -35,9 +38,9 @@ CIMseqMultiplets(counts, ...)
 
 \item{value}{Replacment value.}
 
-\item{counts}{matrix; Counts matrix with samples as columns and genes as rows.}
-
 \item{...}{additional arguments to pass on}
+
+\item{counts}{matrix; Counts matrix with samples as columns and genes as rows.}
 
 \item{counts.ercc}{matrix; A matrix containing ercc spike-in reads.}
 

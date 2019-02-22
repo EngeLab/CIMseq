@@ -1,11 +1,11 @@
 #' @include CIMseq-package.R
 NULL
 
-#####################
-#                   #
-#   CIMseqSinglets  #
-#                   #
-#####################
+################################################################################
+#                                                                              #
+#                             CIMseqSinglets                                   #
+#                                                                              #
+################################################################################
 
 #' @rdname CIMseqSinglets
 #' @export
@@ -91,11 +91,42 @@ setMethod("getData<-", "CIMseqSinglets", function(x, n = NULL, value){
   }
 }
 
-######################
-#                    #
-#  CIMseqMultiplets  #
-#                    #
-######################
+#################
+#               #
+# Concatenation #
+#               #
+#################
+
+#' @rdname CIMseqSinglets
+#' @export
+
+setMethod("c", c("CIMseqSinglets"), function(x, ...){
+  objs <- c(list(x), list(...))
+  counts <- lapply(objs, getData, "counts")
+  counts.ercc <- lapply(objs, getData, "counts.ercc")
+  dim.red <- lapply(objs, getData, "dim.red")
+  classification <- lapply(objs, getData, "classification")
+  
+  #checks
+  if(!Reduce(identical, lapply(counts, rownames))) stop("Counts rownames not identical.")
+  if(!Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
+  if(!Reduce(identical, lapply(dim.red, colnames))) stop("dim.red colnames not identical.")
+  
+  new("CIMseqSinglets",
+      counts = do.call("cbind", counts),
+      counts.log = .norm.log.counts,
+      counts.cpm = .norm.counts,
+      counts.ercc = do.call("cbind", counts.ercc),
+      dim.red = do.call("cbind", dim.red),
+      classification = do.call("c", classification)
+  )
+})
+
+################################################################################
+#                                                                              #
+#                             CIMseqMultiplets                                 #
+#                                                                              #
+################################################################################
 
 #' @rdname CIMseqMultiplets
 #' @export
@@ -133,7 +164,6 @@ setMethod("getData", "CIMseqMultiplets", function(x, n = NULL){
 # Replacement #
 #             #
 ###############
-#https://www.bioconductor.org/help/course-materials/2013/CSAMA2013/friday/afternoon/S4-tutorial.pdf
 
 #' @rdname CIMseqMultiplets
 #' @export
@@ -158,11 +188,40 @@ setMethod("getData<-", "CIMseqMultiplets", function(x, n = NULL, value){
   }
 }
 
-#####################
-#                   #
-#    CIMseqSwarm    #
-#                   #
-#####################
+#################
+#               #
+# Concatenation #
+#               #
+#################
+
+#' @rdname CIMseqMultiplets
+#' @export
+
+setMethod("c", c("CIMseqMultiplets"), function(x, ...){
+  objs <- c(list(x), list(...))
+  counts <- lapply(objs, getData, "counts")
+  counts.ercc <- lapply(objs, getData, "counts.ercc")
+  features <- lapply(objs, getData, "features")
+  
+  #checks
+  if(!Reduce(identical, lapply(counts, rownames))) stop("Counts rownames not identical.")
+  if(!Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
+  if(length(unique(features)) != 1) warning("Features not identical, concatenating.")
+  
+  new("CIMseqMultiplets",
+      counts = do.call("cbind", counts),
+      counts.log = .norm.log.counts,
+      counts.cpm = .norm.counts,
+      counts.ercc = do.call("cbind", counts.ercc),
+      features = do.call("c", features)
+  )
+})
+
+################################################################################
+#                                                                              #
+#                             CIMseqSwarm                                      #
+#                                                                              #
+################################################################################
 
 #' @rdname CIMseqSwarm
 #' @export
@@ -190,6 +249,12 @@ setMethod("getData", "CIMseqSwarm", function(x, n = NULL){
     slot(x, n)
   }
 })
+
+#################
+#               #
+# Concatenation #
+#               #
+#################
 
 #' @rdname CIMseqSwarm
 #' @importFrom dplyr bind_rows

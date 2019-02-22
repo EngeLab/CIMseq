@@ -8,6 +8,7 @@
 \alias{getData,CIMseqSinglets-method}
 \alias{getData<-}
 \alias{getData<-,CIMseqSinglets-method}
+\alias{c,CIMseqSinglets-method}
 \alias{CIMseqSinglets}
 \alias{CIMseqSinglets,missing-method}
 \alias{CIMseqSinglets,matrix-method}
@@ -22,6 +23,8 @@ getData(x, ...)
 getData(x, n) <- value
 
 \S4method{getData}{CIMseqSinglets}(x, n = NULL) <- value
+
+\S4method{c}{CIMseqSinglets}(x, ...)
 
 CIMseqSinglets(counts, ...)
 
