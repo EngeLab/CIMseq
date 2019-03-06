@@ -9,6 +9,7 @@
 \alias{getData<-}
 \alias{getData<-,CIMseqSinglets-method}
 \alias{c,CIMseqSinglets-method}
+\alias{filterSwarm}
 \alias{CIMseqSinglets}
 \alias{CIMseqSinglets,missing-method}
 \alias{CIMseqSinglets,matrix-method}
@@ -25,6 +26,8 @@ getData(x, n) <- value
 \S4method{getData}{CIMseqSinglets}(x, n = NULL) <- value
 
 \S4method{c}{CIMseqSinglets}(x, ...)
+
+filterSwarm(x, ...)
 
 CIMseqSinglets(counts, ...)
 

@@ -289,28 +289,31 @@ setMethod("c", c("CIMseqSwarm"), function(x, ...){
 #' @rdname CIMseqSinglets
 #' @export
 
-setGeneric("subsetSwarm", function(x, ...){
-  standardGeneric("subsetSwarm") 
+setGeneric("filterSwarm", function(
+  x, ...
+){
+  standardGeneric("filterSwarm") 
 })
 
 #' @rdname CIMseqSwarm
-#' @importFrom dplyr bind_rows
+#' @importFrom dplyr filter
 #' @param subset Indicates samples to be retained. Can be a character vector of 
 #' sample names, a logical vector, or integer vector indicating sample indices.
 #' @export
 
-setMethod("subsetSwarm", c("CIMseqSwarm"), function(x, ...){
+setMethod("filterSwarm", c("CIMseqSwarm"), function(x, subset){
   samples <- rownames(getData(x, "fractions"))
-  if(is.character(subset)) subset <- samples %in% subset
-  if(is.integer(subset) | is.numeric(subset)) subset <- 1:length(samples) %in% subset
+  s <- subset
+  if(is.character(s)) s <- samples %in% s
+  if(is.integer(s) | is.numeric(s)) s <- 1:length(samples) %in% s
   
   new("CIMseqSwarm",
-      fractions = getData(x, "fractions")[subset, ],
-      costs = getData(x, "costs")[subset],
-      convergence = getData(x, "convergence")[subset],
-      stats = filter(getData(x, "stats"), subset),
+      fractions = getData(x, "fractions")[s, ],
+      costs = getData(x, "costs")[s],
+      convergence = getData(x, "convergence")[s],
+      stats = dplyr::filter(getData(x, "stats"), s),
       singletIdx = getData(x, "singletIdx"),
-      arguments = filter(getData(x, "arguments"), subset)
+      arguments = dplyr::filter(getData(x, "arguments"), s)
   )
 })
 

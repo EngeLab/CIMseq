@@ -6,6 +6,7 @@
 \alias{CIMseqSwarm-class}
 \alias{getData,CIMseqSwarm-method}
 \alias{c,CIMseqSwarm-method}
+\alias{filterSwarm,CIMseqSwarm-method}
 \alias{CIMseqSwarm}
 \alias{CIMseqSwarm,CIMseqSinglets,CIMseqMultiplets-method}
 \alias{initialize,CIMseqSwarm-method}
@@ -15,6 +16,8 @@
 \S4method{getData}{CIMseqSwarm}(x, n = NULL)
 
 \S4method{c}{CIMseqSwarm}(x, ...)
+
+\S4method{filterSwarm}{CIMseqSwarm}(x, subset)
 
 CIMseqSwarm(singlets, multiplets, ...)
 
@@ -35,6 +38,9 @@ CIMseqSwarm(singlets, multiplets, ...)
 \item{n}{character; Data to extract from CIMseqSwarm object.}
 
 \item{...}{additional arguments to pass on.}
+
+\item{subset}{Indicates samples to be retained. Can be a character vector of 
+sample names, a logical vector, or integer vector indicating sample indices.}
 
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
 

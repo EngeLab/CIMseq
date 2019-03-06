@@ -105,7 +105,7 @@ setMethod("plotCountsERCC", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 ){
   plotCountsData(singlets, multiplets) %>%
     ggplot(aes_string(x = "`Sample type`", y = "`Estimated cell number`")) +
-    geom_jitter(height = 0, width = 0.25) +
+    geom_jitter(height = 0, width = 0.25, shape = 16, alpha = 0.75) +
     scale_y_continuous(
       expand = c(0, 0),
       sec.axis = sec_axis(
@@ -158,7 +158,7 @@ setMethod("plotCountsMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), function
   
   plotCountsData(singlets, multiplets, markers) %>%
     ggplot(aes_string(markers[1], markers[2], colour = "`Sample type`")) +
-    geom_point(alpha = 0.85) +
+    geom_point(alpha = 0.75, shape = 16) +
     scale_colour_manual(values = c("#1c54a8", "#f63b32")) +
     theme_few() +
     theme(legend.position = "top")
@@ -208,7 +208,7 @@ setMethod("plotUnsupervisedClass", "CIMseqSinglets", function(
   plotCountsData(singlets, multiplets) %>%
     filter(`Sample type` == "Singlet") %>%
     ggplot(aes_string(x = '`dim.red dim 1`', y = '`dim.red dim 2`')) +
-    geom_point(aes_string(colour = 'Classification'), alpha = 0.7) +
+    geom_point(aes_string(colour = 'Classification'), alpha = 0.75, shape = 16) +
     scale_colour_manual(values = col40()) +
     theme_few() +
     theme(legend.position = "top") +
@@ -285,7 +285,7 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
       ggplot(aes_string(x = '`dim.red dim 1`', y = '`dim.red dim 2`')) +
       theme_few() +
       theme(legend.position = "top") + 
-      geom_point(aes_string(colour = markers)) +
+      geom_point(aes_string(colour = markers), shape = 16) +
       scale_colour_viridis(option = "E")
   } else {
     p <- plotCountsData(singlets, multiplets, markers, pal) %>%
@@ -298,7 +298,7 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
       theme_few() +
       theme(legend.position = "top") +
       geom_point(colour = "black", shape = 21) +
-      geom_point(aes_string(colour = 'Colour'), alpha = .85) +
+      geom_point(aes_string(colour = 'Colour'), alpha = 0.75) +
       scale_colour_identity(
         "Markers", labels = names(pal), breaks = pal,
         guide = "legend", drop = FALSE
