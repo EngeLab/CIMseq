@@ -222,6 +222,7 @@ test_that("check that sampleSinglets outputs the expected result", {
   expect_true(output[1] %in% a)
   expect_true(output[2] %in% b)
   expect_true(output[3] %in% c)
+  expect_true(!identical(sampleSinglets(classes), sampleSinglets(classes)))
 })
 
 ##run test subsetSinglets
