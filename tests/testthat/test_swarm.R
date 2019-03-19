@@ -487,7 +487,7 @@ test_that("check that calculateCost and cost give identical results", {
   expect_equal(expected, output)
   expect_equal(expected2, output)
   
-  #check with "simple exemple"
+  #check with "simple example"
   #setup input data
   classes <- rep(letters[1:2], each = 2)
   singlets <- matrix(c(rep(1:10, 2), rep(11:20, 2)), ncol = 4)
