@@ -742,6 +742,7 @@ setGeneric("plotSwarmCircos", function(
 #' @import ggplot2
 #' @importFrom dplyr mutate if_else group_by ntile ungroup arrange select filter inner_join desc n "%>%" pull
 #' @importFrom viridis viridis
+#' @importFrom tibble tibble
 #' @importFrom tidyr separate
 #' @importFrom graphics par layout
 #' @importFrom grDevices colorRampPalette
@@ -752,13 +753,19 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, connectionClass = NULL, 
   alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
   pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
-  nonSigCol = "grey90", ...
+  nonSigCol = "grey90", layout = NULL, ...
 ){
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
   frac <- connectionID <- super <- connectionName <- position <- NULL
   
   fractions <- getData(swarm, "fractions")
   if(is.null(classOrder)) classOrder <- unique(getData(singlets, "classification"))
+  colours <- tibble(
+    class = classOrder, 
+    colour = col40()[1:length(classOrder)],
+    nr = 1:length(classOrder),
+    combined = paste0("(", nr, ") ", class)
+  )
   
   #calculate statitistics and connection colors
   ps <- calculateEdgeStats(swarm, singlets, multiplets) %>%
@@ -805,78 +812,41 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   
   #add legend
   if(legend) {
+    #layout
     op <- par(mar = par("mar")/2)
-    
     layout(
-      matrix(c(1, 4, 2, 4, 3, 4), nrow = 2), 
-      widths = c(1, 1, 1, 1), heights = c(1, 8)
+      matrix(c(1, 2, 3, 5, 5, 5, 4, 4, 4), nrow = 3, byrow = TRUE), 
+      widths = c(1, 1, 1, 1, 1), heights = c(1, 8, 2)
     )
-    
-    p <- data %>%
-      ggplot() +
-      geom_bar(aes(connectionID, fill = "n.s.")) +
-      guides(fill = guide_legend(
-        label.position = "bottom", title.position = "top",
-        frame.colour = "black"
-      )) +
-      scale_fill_manual(values = nonSigCol) +
-      theme(
-        legend.position = "top",
-        legend.margin = margin(t = 0, unit = 'cm'),
-        legend.key = element_blank(),
-        legend.title = element_blank(),
-        legend.box.background = element_rect(colour = "grey20"),
-        legend.box.margin = margin(t = 3, r = 3, b = 1, l = 3, unit = "pt")
-      )
-    l1 <- g_legend(p)
-    
-    p <- data %>%
-      ggplot() + 
-      geom_point(aes(pval, score, colour = score)) + 
-      scale_colour_gradientn(colours = c(pal[1], pal[length(pal)])) +
-      guides(colour = guide_colorbar(
-        title = "Obs. / Exp.", title.position = "top", title.hjust = 0.5
-      )) +
-      theme(
-        legend.position = "top",
-        legend.margin = margin(t = 0, unit='cm'),
-        legend.key = element_blank(),
-        legend.box.background = element_blank()
-      )
-    l2 <- g_legend(p)
-    
-    p <- data %>%
-      ggplot() + 
-      geom_point(aes(pval, score, colour = frac)) + 
-      scale_colour_viridis_c() +
-      guides(colour = guide_colorbar(
-        title = "Fractions", title.position = "top", title.hjust = 0.5
-      )) +
-      theme(legend.position = "top")
-    l3 <- g_legend(p)
-    
-    #draw
-    draw_legend(l1)
-    draw_legend(l2)
-    draw_legend(l3)
+
+    #create
+    l1 <- .ns_legend(data, nonSigCol)
+    l2 <- .obsexp_legend(data, pal)
+    l3 <- .frac_legend(data)
+    l4 <- .class_legend(colours)
   }
   
   #base circos plot
   class.colors <- col40()[1:length(classOrder)]
   names(class.colors) <- classOrder
   
-  if(is.null(classOrder)) classOrder <- unique(c(edges$from, edges$to))
+  #if(is.null(classOrder)) classOrder <- unique(c(edges$from, edges$to))
   circos.par(track.margin = c(0, 0))
   circos.initialize(factors = classOrder, xlim = range(data$position))
+  # circos.trackPlotRegion(
+  #   ylim = c(0, 1), bg.col = class.colors[sort(names(class.colors))],
+  #   bg.border = NA, track.height = 0.1
+  # )
   circos.trackPlotRegion(
-    ylim = c(0, 1), bg.col = class.colors[sort(names(class.colors))],
+    ylim = c(0, 1), bg.col = pull(colours, colour),
     bg.border = NA, track.height = 0.1
   )
-  
   #add labels
-  for(n in classOrder) { #should be ordered by classOrder
+  for(i in 1:nrow(colours)) { #should be ordered by classOrder
     circos.text(
-      mean(range(data$position)), 0.5, n, n, 1, col = "white",
+      x = mean(range(data$position)), y = 0.5, 
+      labels = as.character(pull(colours, nr)[i]), 
+      sector.index = pull(colours, class)[i], 1, col = "white",
       facing = "bending.inside", cex = label.cex
     )
   }
@@ -911,3 +881,77 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   }
   if(legend) par(op)
 })
+
+.ns_legend <- function(data, nonSigCol) {
+  p <- data %>%
+    ggplot() +
+    geom_bar(aes(connectionID, fill = "n.s.")) +
+    guides(fill = guide_legend(
+      label.position = "bottom", title.position = "top",
+      frame.colour = "black"
+    )) +
+    scale_fill_manual(values = nonSigCol) +
+    theme(
+      legend.position = "top",
+      legend.margin = margin(t = 0, b = 0, unit = 'cm'),
+      legend.key = element_blank(),
+      legend.title = element_blank(),
+      legend.box.background = element_rect(colour = "grey20"),
+      legend.box.margin = margin(t = 3, r = 3, b = 1, l = 3, unit = "pt")
+    )
+  l <- g_legend(p)
+  draw_legend(l)
+}
+
+.obsexp_legend <- function(data, pal) {
+  p <- data %>%
+    ggplot() + 
+    geom_point(aes(pval, score, colour = score)) + 
+    scale_colour_gradientn(colours = c(pal[1], pal[length(pal)])) +
+    guides(colour = guide_colorbar(
+      title = "Obs. / Exp.", title.position = "top", title.hjust = 0.5
+    )) +
+    theme(
+      legend.position = "top",
+      legend.margin = margin(t = 0, b = 0, unit='cm'),
+      legend.key = element_blank(),
+      legend.box.background = element_blank()
+    )
+  l <- g_legend(p)
+  draw_legend(l)
+}
+
+.frac_legend <- function(data) {
+  p <- data %>%
+    ggplot() + 
+    geom_point(aes(pval, score, colour = frac)) + 
+    scale_colour_viridis_c() +
+    guides(colour = guide_colorbar(
+      title = "Fractions", title.position = "top", title.hjust = 0.5
+    )) +
+    theme(
+      legend.position = "top",
+      legend.margin = margin(b = 0, unit='cm')
+    )
+  l <- g_legend(p)
+  draw_legend(l)
+}
+
+.class_legend <- function(colours) {
+  p <- colours %>%
+    mutate(combined = parse_factor(combined, levels = combined)) %>%
+    ggplot() + 
+    geom_bar(aes(combined, fill = colour)) + 
+    scale_fill_identity(
+      guide = "legend", 
+      labels = pull(colours, combined), 
+      breaks = pull(colours, colour)
+    ) +
+    guides(fill = guide_legend(title = NULL)) +
+    theme(
+      legend.position = "bottom", 
+      legend.margin = margin(t = 10, r = 0, b = 50, l = 0, unit = "pt")
+    )
+  l <- g_legend(p)
+  draw_legend(l)
+}
