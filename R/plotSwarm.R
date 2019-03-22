@@ -753,10 +753,11 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, connectionClass = NULL, 
   alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
   pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
-  nonSigCol = "grey90", layout = NULL, ...
+  nonSigCol = "grey90", ...
 ){
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
-  frac <- connectionID <- super <- connectionName <- position <- NULL
+  frac <- connectionID <- super <- connectionName <- position <- nr <- NULL
+  colour <- NULL
   
   fractions <- getData(swarm, "fractions")
   if(is.null(classOrder)) classOrder <- unique(getData(singlets, "classification"))
