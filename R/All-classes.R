@@ -117,7 +117,7 @@ setMethod("c", c("CIMseqSinglets"), function(x, ...){
       counts.log = .norm.log.counts,
       counts.cpm = .norm.counts,
       counts.ercc = do.call("cbind", counts.ercc),
-      dim.red = do.call("cbind", dim.red),
+      dim.red = do.call("rbind", dim.red),
       classification = do.call("c", classification)
   )
 })
@@ -213,7 +213,7 @@ setMethod("c", c("CIMseqMultiplets"), function(x, ...){
       counts.log = .norm.log.counts,
       counts.cpm = .norm.counts,
       counts.ercc = do.call("cbind", counts.ercc),
-      features = do.call("c", features)
+      features = unique(do.call("c", features))
   )
 })
 
@@ -263,6 +263,9 @@ setMethod("getData", "CIMseqSwarm", function(x, n = NULL){
 setMethod("c", c("CIMseqSwarm"), function(x, ...){
   objs <- c(list(x), list(...))
   #you probably want to do some checks here
+  cn <- lapply(objs, function(x) colnames(getData(x, "fractions")))
+  if(length(unique(cn)) != 1) stop("Classes do not match. Cannot concatenate.")
+  
   frac <- lapply(objs, getData, "fractions") %>% do.call("rbind", .)
   si <- lapply(objs, getData, "singletIdx")
   if(length(unique(si)) == 1) {
