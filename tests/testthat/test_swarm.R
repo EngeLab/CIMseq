@@ -466,6 +466,7 @@ test_that("check that calculateCost and cost give identical results", {
   selectInd <- getData(CIMseqSwarm_test, "arguments")$features[[1]]
   singletIdx <- getData(CIMseqSwarm_test, "singletIdx")
   singletSubset <- appropriateSinglets(CIMseqSinglets_test, singletIdx, selectInd)
+  t.singletSubset <- t(singletSubset)
   
   m <- "m.NJB00204.G04"
   oneMultiplet <- ceiling(getData(CIMseqMultiplets_test, "counts.cpm")[, m])
@@ -481,7 +482,7 @@ test_that("check that calculateCost and cost give identical results", {
   expected2 <- .costCalculationR(oneMultiplet, sm)
   
   #output
-  output <- calculateCost(oneMultiplet, singletSubset, fractions, n)
+  output <- calculateCost(oneMultiplet, t.singletSubset, fractions, n)
   
   #test
   expect_equal(expected, output)
@@ -519,7 +520,7 @@ test_that("check that calculateCost and cost give identical results", {
   cost <- sum(lrm) * (-1)
   
   #calculate cost with c++ fun
-  cost.cpp <- calculateCost(oneMultiplet, sm, fractions, n)
+  cost.cpp <- calculateCost(oneMultiplet, t(sm), fractions, n)
   
   #test
   expect_equal(cost.cpp, cost)

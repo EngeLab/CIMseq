@@ -1,3 +1,6 @@
+v.0.2.0.4
+* removing transpose from cost function
+
 v0.2.0.3
 * adding getCellsForMultiplet function
 * fixing CIMseqSwarm concatenation function

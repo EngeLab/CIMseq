@@ -127,13 +127,14 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   }
   
   singletSubset <- appropriateSinglets(singlets, singletIdx, selectInd)
+  t.singletSubset <- t(singletSubset)
   
   #deconvolution
   opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
       .optim.fun(
         i, fractions = fractions, multiplets = mul,
-        singletSubset = singletSubset, n = nSyntheticMultiplets,
+        singletSubset = t.singletSubset, n = nSyntheticMultiplets,
         control = control, ...
       )
   })
@@ -142,7 +143,8 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   cn <- sort(unique(classes))
   rn <- colnames(mul)
   
-  new("CIMseqSwarm",
+  new(
+    "CIMseqSwarm",
     fractions = .processSwarm(opt.out, cn, rn, norm),
     costs = setNames(map_dbl(opt.out, 2), colnames(mul)),
     convergence = setNames(.processConvergence(opt.out), colnames(mul)),
