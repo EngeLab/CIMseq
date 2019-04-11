@@ -27,6 +27,7 @@ NULL
 #'  @param singletIdx list; Singlet indexes to be used to choose singlets and
 #'  synthesize synthetic multiplets. Facilitates using the same synthetic set 
 #'  e.g. with repeated runs or permutation. 
+#'  @param e numeric; Epsilon for complexityPenality unit. Default = 0.001.
 #' @param fractions matrix; The deconvolution results.
 #' @param costs numeric; The costs after optimization.
 #' @param convergence character; The convergence output from \link[pso]{psoptim}.
@@ -72,7 +73,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   singlets, multiplets,
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11, 
   norm = TRUE, report = FALSE, reportRate = NA, vectorize = FALSE,
-  permute = FALSE, singletIdx = NULL, ...
+  permute = FALSE, singletIdx = NULL, e = 0.001, ...
 ){
     
   #put a check here to make sure all slots in the spUnsupervised object are
@@ -129,13 +130,17 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   singletSubset <- appropriateSinglets(singlets, singletIdx, selectInd)
   t.singletSubset <- t(singletSubset)
   
+  #estimate number of cells in multiplet based on ERCC
+  #includes singlets; order?
+  #ec <- round(estimateCells(singlets, multiplets)$estimatedCellNumber)
+  
   #deconvolution
   opt.out <- future_lapply(
     X = 1:to, FUN = function(i) {
       .optim.fun(
         i, fractions = fractions, multiplets = mul,
         singletSubset = t.singletSubset, n = nSyntheticMultiplets,
-        control = control, ...
+        control = control, ec = ec, ...
       )
   })
   
@@ -205,14 +210,31 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 
 .optim.fun <- function(
   i, fractions, multiplets, singletSubset,
-  n, control, ...
+  n, control, ec, e, ...
 ){
   oneMultiplet <- round(multiplets[, i]) #change this to round() ?
+  cellNumber <- ec[i]
   pso::psoptim(
-    par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
+    par = fractions, fn = .tmpWrapper, oneMultiplet = oneMultiplet,
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,
-    control = control, ...
+    control = control, cellNumber = cellNumber, e = e, ...
   )
+}
+
+.tmpWrapper <- function(
+  oneMultiplet, singletSubset, fractions, n, cellNumber, e
+) {
+  cost <- calculateCost(oneMultiplet, singletSubset, fractions, n)
+  normFractions <- fractions / sum(fractions)
+  k <- length(which(normFractions > 0))
+  penalty <- .complexityPenilty(k, e, cellNumber)
+  cost * penalty
+}
+
+.complexityPenilty <- function(k, e, cellNumber, ...) {
+  n <- k / log(round(cellNumber) + 0.1)
+  u <- n * e
+  1 + u
 }
 
 .permuteGenes <- function(counts){

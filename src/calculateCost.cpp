@@ -92,9 +92,6 @@ double calculateCost(
   //normalize fractions
   arma::vec normFractions = fractions / accu(fractions);
   
-  //optimize column-major
-  //arma::mat tSinglets = singletSubset.t();
-  
   //loop over genes
   double cost = 0;
   int ci = 0;
@@ -118,6 +115,7 @@ double calculateCost(
     }
     cost += lpSums;
   }
+  
   return -cost;
 }
 
