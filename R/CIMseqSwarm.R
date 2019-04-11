@@ -142,7 +142,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
       .optim.fun(
         i, fractions = fractions, multiplets = mul,
         singletSubset = t.singletSubset, n = nSyntheticMultiplets,
-        control = control, ec = ec, ...
+        control = control, ec = ec, e = e, ...
       )
   })
   
