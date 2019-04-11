@@ -131,8 +131,10 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   t.singletSubset <- t(singletSubset)
   
   #estimate number of cells in multiplet based on ERCC
-  #includes singlets; order?
-  #ec <- round(estimateCells(singlets, multiplets)$estimatedCellNumber)
+  ecdf <- filter(estimateCells(cObjSng, cObjMul), sampleType == "Multiplet")
+  ec <- ecdf$estimatedCellNumber
+  names(ec) <- ecdf$sample
+  ec <- ec[match(names(ec), colnames(mul))]
   
   #deconvolution
   opt.out <- future_lapply(
