@@ -217,7 +217,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   pso::psoptim(
     par = fractions, fn = .tmpWrapper, oneMultiplet = oneMultiplet,
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,
-    control = control, cellNumber = cellNumber, e = e, ...
+    control = control, cellNumber = ec, e = e, ...
   )
 }
 
