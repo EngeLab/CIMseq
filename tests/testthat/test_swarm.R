@@ -159,9 +159,11 @@ test_that("check that calculateEdgeStats outputs the expected result", {
   )
   edges <- edges[edges[, 1] != edges[, 2], ]
   edges$weight <- sample(1:5, nrow(edges), replace = TRUE)
-  mat <- matrix(
-    sample(c(0, 1), 30, replace = TRUE), ncol = 3, 
-    dimnames = list(NULL, LETTERS[1:3])
+  mat <- structure(
+    c(
+      1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 
+      1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0
+    ), .Dim = c(10L, 3L), .Dimnames = list(NULL, c("A", "B", "C"))
   )
   
   #setup expected data
