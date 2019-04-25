@@ -10,8 +10,7 @@ Author: Jason T. Serviss [aut, cre],
 Maintainer: Jason T Serviss <jason.serviss@ki.se>
 Description: What the package does (one paragraph).
 LinkingTo: Rcpp, RcppArmadillo
-Depends:
-    R (>= 3.5.2)
+Depends: R (>= 2.10)
 Imports:
     methods,
     Rtsne (>= 0.13),

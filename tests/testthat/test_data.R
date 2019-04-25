@@ -95,7 +95,7 @@ test_that("check that estimateCells outputs the expected result", {
   ###TEST1####
   #setup expected data
   expected1 <- tibble::tibble(
-    sampleType=c(rep("Singlet", 78), rep("Multiplet", 3))
+    sampleType=c(rep("Singlet", 79), rep("Multiplet", 3))
   )
   
   expected2 <- tibble::tibble(
