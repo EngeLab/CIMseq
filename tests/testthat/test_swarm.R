@@ -134,10 +134,12 @@ test_that("check that calculateEdgeStats outputs the expected result", {
   
   ###TEST1####
   #setup input data
-  set.seed(93223)
-  mat <- matrix(
-    sample(c(0, 1), 30, replace = TRUE), ncol = 3, 
-    dimnames = list(NULL, LETTERS[1:3])
+  mat <- structure(
+    c(
+      1, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 
+      0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1
+    ), 
+    .Dim = c(10L, 3L), .Dimnames = list(NULL, c("A", "B", "C"))
   )
   
   #setup expected data
@@ -270,7 +272,7 @@ test_that("check that subsetSinglets outputs the expected result", {
   idx <- purrr::map(1:n, ~sampleSinglets(classes))
   
   #check the indexes first
-  idxCheck <- purrr::map_dfc(idx, function(i) tibble::as_tibble(classes[i + 1]))
+  idxCheck <- purrr::map_dfc(idx, function(i) tibble::tibble(classes[i + 1]))
   expect_true(all("a" == unname(unlist(idxCheck[1, ]))))
   expect_true(all("b" == unname(unlist(idxCheck[2, ]))))
   expect_true(all("c" == unname(unlist(idxCheck[3, ]))))
