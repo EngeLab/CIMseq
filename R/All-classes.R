@@ -1,19 +1,22 @@
-#' @include sp.scRNAseq-package.R
+#' @include CIMseq-package.R
 NULL
 
-#####################
-#                   #
-#     spCounts      #
-#                   #
-#####################
+################################################################################
+#                                                                              #
+#                             CIMseqSinglets                                   #
+#                                                                              #
+################################################################################
 
-#' @rdname spCounts
+#' @rdname CIMseqSinglets
 #' @export
-.spCounts <- setClass("spCounts", representation(
+
+setClass("CIMseqSinglets", representation(
   counts = "matrix",
   counts.log = "function",
   counts.cpm = "function",
-  counts.ercc = "matrix"
+  counts.ercc = "matrix",
+  dim.red = "matrix",
+  classification = "character"
 ))
 
 #############
@@ -22,108 +25,25 @@ NULL
 #           #
 #############
 
-#' @rdname spCounts
-setGeneric("getData", function(object, ...){
+#' @rdname CIMseqSinglets
+#' @export
+
+setGeneric("getData", function(x, ...){
   standardGeneric("getData") 
 })
 
-#' @rdname spCounts
+#' @rdname CIMseqSinglets
 #' @export
-setMethod("getData", "spCounts", function(object, n = NULL){
-  if(class(n) == "character"){
-    if(n %in% c("counts", "counts.ercc")) {
-      slot(object, n)
+
+setMethod("getData", "CIMseqSinglets", function(x, n = NULL){
+  if(is.character(n) & .hasSlot(x, n)){
+    slt <- slot(x, n)
+    if(!is.function(slt)) {
+      return(slt)
     } else {
-      fun <- slot(object, n)
-      fun(slot(object, "counts"))
+      return(slt(slot(x, "counts")))
     }
   }
-})
-
-#####################
-#                   #
-#  spUnsupervised   #
-#                   #
-#####################
-
-#' @rdname spUnsupervised
-#' @export
-.spUnsupervised <- setClass("spUnsupervised", representation(
-  tsne = "matrix",
-  tsneMeans = "data.frame",
-  classification = "character",
-  uncertainty = "numeric",
-  selectInd = "numeric"
-))
-
-#############
-#           #
-# Accessors #
-#           #
-#############
-#slot access is achieved with for ex. classification(uObj) <- newClassification
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("getData", "spUnsupervised", function(object, n = NULL){
-  if(class(n) == "character"){
-    slot(object, n)
-  }
-})
-
-#' @rdname spUnsupervised
-setGeneric("tsne", function(object){
-  standardGeneric("tsne")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("tsne", "spUnsupervised", function(object){
-  object@tsne
-})
-
-#' @rdname spUnsupervised
-setGeneric("tsneMeans", function(object){
-  standardGeneric("tsneMeans")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("tsneMeans", "spUnsupervised", function(object){
-  object@tsneMeans
-})
-
-#' @rdname spUnsupervised
-setGeneric("classification", function(object){
-  standardGeneric("classification")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("classification", "spUnsupervised", function(object){
-  object@classification
-})
-
-#' @rdname spUnsupervised
-setGeneric("uncertainty", function(object){
-  standardGeneric("uncertainty")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("uncertainty", "spUnsupervised", function(object){
-  object@uncertainty
-})
-
-#' @rdname spUnsupervised
-setGeneric("selectInd", function(object){
-  standardGeneric("selectInd")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("selectInd", "spUnsupervised", function(object){
-  object@selectInd
 })
 
 ###############
@@ -133,81 +53,90 @@ setMethod("selectInd", "spUnsupervised", function(object){
 ###############
 #https://www.bioconductor.org/help/course-materials/2013/CSAMA2013/friday/afternoon/S4-tutorial.pdf
 
-#' @rdname spUnsupervised
-setGeneric("tsne<-", function(object, value){
-  standardGeneric("tsne<-")
-})
-
-#' @rdname spUnsupervised
+#' @rdname CIMseqSinglets
 #' @export
-setMethod("tsne<-", "spUnsupervised", function(object, value){
-  object@tsne <- value
-  if (validObject(object)) return(object)
+
+setGeneric("getData<-", function(x, n, value){
+  standardGeneric("getData<-") 
 })
 
-#' @rdname spUnsupervised
-setGeneric("tsneMeans<-", function(object, value){
-  standardGeneric("tsneMeans<-")
-})
-
-#' @rdname spUnsupervised
+#' @rdname CIMseqSinglets
 #' @export
-setMethod("tsneMeans<-", "spUnsupervised", function(object, value){
-  object@tsneMeans <- value
-  if (validObject(object)) return(object)
+
+setMethod("getData<-", "CIMseqSinglets", function(x, n = NULL, value){
+  if(class(n) == "character" & .hasSlot(x, n)){
+    .checkCIMseqSingletsReplacement(x, n, value)
+    slot(x, n) <- value
+    return(x)
+  }
 })
 
-#' @rdname spUnsupervised
-setGeneric("classification<-", function(object, value){
-  standardGeneric("classification<-")
-})
+.checkCIMseqSingletsReplacement <- function(x, n, value) {
+  counts <- getData(x, "counts")
+  counts.ercc <- getData(x, "counts.ercc")
+  classification <- getData(x, "classification")
+  dim.red <- getData(x, "dim.red")
+  
+  if(n == "classification" & length(counts) > 0) {
+    stopifnot(length(classification) == ncol(counts))
+  }
+  if(n == "dim.red" & length(counts) > 0) {
+    stopifnot(nrow(dim.red) == ncol(counts))
+  }
+  if(n == "counts.ercc" & length(counts) > 0) {
+    stopifnot(ncol(counts.ercc) == ncol(counts))
+  }
+  if(n == "counts" & length(counts.ercc) > 0) {
+    stopifnot(ncol(counts.ercc) == ncol(counts))
+  }
+}
 
-#' @rdname spUnsupervised
+#################
+#               #
+# Concatenation #
+#               #
+#################
+
+#' @rdname CIMseqSinglets
 #' @export
-setMethod("classification<-", "spUnsupervised", function(object, value){
-  object@classification <- value
-  if (validObject(object)) return(object)
+
+setMethod("c", c("CIMseqSinglets"), function(x, ...){
+  objs <- c(list(x), list(...))
+  counts <- lapply(objs, getData, "counts")
+  counts.ercc <- lapply(objs, getData, "counts.ercc")
+  dim.red <- lapply(objs, getData, "dim.red")
+  classification <- lapply(objs, getData, "classification")
+  
+  #checks
+  if(!Reduce(identical, lapply(counts, rownames))) stop("Counts rownames not identical.")
+  if(!Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
+  if(!Reduce(identical, lapply(dim.red, colnames))) stop("dim.red colnames not identical.")
+  
+  new("CIMseqSinglets",
+      counts = do.call("cbind", counts),
+      counts.log = .norm.log.counts,
+      counts.cpm = .norm.counts,
+      counts.ercc = do.call("cbind", counts.ercc),
+      dim.red = do.call("rbind", dim.red),
+      classification = do.call("c", classification)
+  )
 })
 
-#' @rdname spUnsupervised
-setGeneric("uncertainty<-", function(object, value){
-  standardGeneric("uncertainty<-")
-})
+################################################################################
+#                                                                              #
+#                             CIMseqMultiplets                                 #
+#                                                                              #
+################################################################################
 
-#' @rdname spUnsupervised
+#' @rdname CIMseqMultiplets
 #' @export
-setMethod("uncertainty<-", "spUnsupervised", function(object, value){
-  object@uncertainty <- value
-  if (validObject(object)) return(object)
-})
 
-#' @rdname spUnsupervised
-setGeneric("selectInd<-", function(object, value){
-  standardGeneric("selectInd<-")
-})
-
-#' @rdname spUnsupervised
-#' @export
-setMethod("selectInd<-", "spUnsupervised", function(object, value){
-  object@selectInd <- value
-  if (validObject(object)) return(object)
-})
-
-#####################
-#                   #
-#      spSwarm      #
-#                   #
-#####################
-
-#' @rdname spSwarm
-#' @export
-.spSwarm <- setClass("spSwarm", representation(
-  spSwarm = "data.frame",
-  costs = "numeric",
-  convergence = "character",
-  stats = "tbl_df",
-  singletIdx = "list",
-  arguments = "list"
+setClass("CIMseqMultiplets", representation(
+  counts = "matrix",
+  counts.log = "function",
+  counts.cpm = "function",
+  counts.ercc = "matrix",
+  features = "integer"
 ))
 
 #############
@@ -216,19 +145,186 @@ setMethod("selectInd<-", "spUnsupervised", function(object, value){
 #           #
 #############
 
-#' @rdname spSwarm
+#' @rdname CIMseqMultiplets
 #' @export
-setMethod("getData", "spSwarm", function(object, n = NULL){
-  if(class(n) == "character"){
-    slot(object, n)
+
+setMethod("getData", "CIMseqMultiplets", function(x, n = NULL){
+  if(is.character(n) & .hasSlot(x, n)){
+    slt <- slot(x, n)
+    if(!is.function(slt)) {
+      return(slt)
+    } else {
+      return(slt(slot(x, "counts")))
+    }
   }
 })
 
-#####################
-#                   #
-#      ggplot2      #
-#                   #
-#####################
+###############
+#             #
+# Replacement #
+#             #
+###############
+
+#' @rdname CIMseqMultiplets
+#' @export
+
+setMethod("getData<-", "CIMseqMultiplets", function(x, n = NULL, value){
+  if(class(n) == "character" & .hasSlot(x, n)){
+    .checkCIMseqMultipletsReplacement(x, n, value)
+    slot(x, n) <- value
+    return(x)
+  }
+})
+
+.checkCIMseqMultipletsReplacement <- function(x, n, value) {
+  counts <- getData(x, "counts")
+  counts.ercc <- getData(x, "counts.ercc")
+  
+  if(n == "counts.ercc" & length(counts) > 0) {
+    stopifnot(ncol(counts.ercc) == ncol(counts))
+  }
+  if(n == "counts" & length(counts.ercc) > 0) {
+    stopifnot(ncol(counts.ercc) == ncol(counts))
+  }
+}
+
+#################
+#               #
+# Concatenation #
+#               #
+#################
+
+#' @rdname CIMseqMultiplets
+#' @export
+
+setMethod("c", c("CIMseqMultiplets"), function(x, ...){
+  objs <- c(list(x), list(...))
+  counts <- lapply(objs, getData, "counts")
+  counts.ercc <- lapply(objs, getData, "counts.ercc")
+  features <- lapply(objs, getData, "features")
+  
+  #checks
+  if(!Reduce(identical, lapply(counts, rownames))) stop("Counts rownames not identical.")
+  if(!Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
+  if(length(unique(features)) != 1) warning("Features not identical, concatenating.")
+  
+  new("CIMseqMultiplets",
+      counts = do.call("cbind", counts),
+      counts.log = .norm.log.counts,
+      counts.cpm = .norm.counts,
+      counts.ercc = do.call("cbind", counts.ercc),
+      features = unique(do.call("c", features))
+  )
+})
+
+################################################################################
+#                                                                              #
+#                             CIMseqSwarm                                      #
+#                                                                              #
+################################################################################
+
+#' @rdname CIMseqSwarm
+#' @export
+
+setClass("CIMseqSwarm", representation(
+  fractions = "matrix",
+  costs = "numeric",
+  convergence = "character",
+  stats = "tbl_df",
+  singletIdx = "list",
+  arguments = "tbl_df"
+))
+
+#############
+#           #
+# Accessors #
+#           #
+#############
+
+#' @rdname CIMseqSwarm
+#' @export
+
+setMethod("getData", "CIMseqSwarm", function(x, n = NULL){
+  if(class(n) == "character" & .hasSlot(x, n)){
+    slot(x, n)
+  }
+})
+
+#################
+#               #
+# Concatenation #
+#               #
+#################
+
+#' @rdname CIMseqSwarm
+#' @importFrom dplyr bind_rows
+#' @export
+
+setMethod("c", c("CIMseqSwarm"), function(x, ...){
+  objs <- c(list(x), list(...))
+  #you probably want to do some checks here
+  cn <- lapply(objs, function(x) colnames(getData(x, "fractions")))
+  if(length(unique(cn)) != 1) stop("Classes do not match. Cannot concatenate.")
+  
+  frac <- lapply(objs, getData, "fractions") %>% do.call("rbind", .)
+  si <- lapply(objs, getData, "singletIdx")
+  if(length(unique(si)) == 1) {
+    si <- si[[1]]
+  } else {
+    names(si) <- rownames(frac)
+  }
+  new("CIMseqSwarm",
+    fractions = frac,
+    costs = lapply(objs, getData, "costs") %>% do.call("c", .),
+    convergence = lapply(objs, getData, "convergence") %>% do.call("c", .),
+    stats = lapply(objs, getData, "stats") %>% do.call("bind_rows", .),
+    singletIdx = si,
+    arguments = lapply(objs, getData, "arguments") %>% do.call("bind_rows", .)
+  )
+})
+
+#################
+#               #
+#  Subsetting   #
+#               #
+#################
+
+#' @rdname CIMseqSinglets
+#' @export
+
+setGeneric("filterSwarm", function(
+  x, ...
+){
+  standardGeneric("filterSwarm") 
+})
+
+#' @rdname CIMseqSwarm
+#' @importFrom dplyr filter
+#' @param subset Indicates samples to be retained. Can be a character vector of 
+#' sample names, a logical vector, or integer vector indicating sample indices.
+#' @export
+
+setMethod("filterSwarm", c("CIMseqSwarm"), function(x, subset){
+  samples <- rownames(getData(x, "fractions"))
+  s <- subset
+  if(is.character(s)) s <- samples %in% s
+  if(is.integer(s) | is.numeric(s)) s <- 1:length(samples) %in% s
+  
+  new("CIMseqSwarm",
+      fractions = getData(x, "fractions")[s, ],
+      costs = getData(x, "costs")[s],
+      convergence = getData(x, "convergence")[s],
+      stats = dplyr::filter(getData(x, "stats"), s),
+      singletIdx = getData(x, "singletIdx"),
+      arguments = dplyr::filter(getData(x, "arguments"), s)
+  )
+})
+
+################################################################################
+#                                                                              #
+#                             ggplot2                                          #
+#                                                                              #
+################################################################################
 
 #' "gg" class
 #'

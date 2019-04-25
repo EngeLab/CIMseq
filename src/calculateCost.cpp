@@ -1,6 +1,6 @@
 // -*- mode: C++; c-indent-level: 4; c-basic-offset: 4; indent-tabs-mode: nil; -*-
 
-#include "../inst/include/sp.scRNAseq.h"
+#include "../inst/include/CIMseq.h"
 #include <RcppArmadillo.h>
 
 // [[Rcpp::depends(RcppArmadillo)]]
@@ -93,20 +93,20 @@ double calculateCost(
   arma::vec normFractions = fractions / accu(fractions);
   
   //optimize column-major
-  arma::mat tSinglets = singletSubset.t();
+  //arma::mat tSinglets = singletSubset.t();
   
   //loop over genes
   double cost = 0;
   int ci = 0;
   // Loop over genes
-  for (int i = 0; i != (tSinglets.n_cols / n); i++){
+  for (int i = 0; i != (singletSubset.n_cols / n); i++){
     // Loop over synthetic multiplets
     double pSums = 0;
     for(int k = 0; k != n; k++) {
       double adjustedSums = 0;
       //Loop over fractions
       for (int j = 0; j != normFractions.n_elem; j++) {
-        adjustedSums += normFractions(j) * tSinglets(j, ci);
+        adjustedSums += normFractions(j) * singletSubset(j, ci);
       }
       pSums += R::dpois(oneMultiplet(i), std::round(adjustedSums), false);
       ++ci;

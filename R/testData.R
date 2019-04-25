@@ -1,6 +1,6 @@
 #' Test counts data.
 #'
-#' @title Counts data used to demonstrate sp.scRNAseq package.
+#' @title Counts data used to demonstrate CIMseq package.
 #' @docType data
 #' @name testCounts
 #' @format matrix
@@ -12,8 +12,8 @@
 #' @return Matrix of counts.
 #' @examples
 #' data(testCounts)
-#'
 NULL
+"testCounts"
 
 #' Test counts meta data.
 #'
@@ -32,82 +32,64 @@ NULL
 #' data(testMeta)
 #'
 NULL
+"testMeta"
 
-#' spCounts object with singlets.
+#' CIMseqSinglets_test a CIMseqSinglets object.
 #'
-#' @title spCounts object with singlets corresponding to test dataset.
+#' @title CIMseqSinglets object corresponding to test dataset.
 #' @docType data
-#' @name test_spCountsSng
-#' @format spCounts
+#' @name CIMseqSinglets_test
+#' @format CIMseqSinglets
 #' \describe{
-#'     \item{counts}{See \code{\link{spCounts}}.}
-#'     \item{counts.log}{See \code{\link{spCounts}}.}
-#'     \item{counts.cpm}{See \code{\link{spCounts}}.}
-#'     \item{counts.ercc}{See \code{\link{spCounts}}.}
+#'     \item{counts}{See \code{\link{CIMseqSinglets}}.}
+#'     \item{counts.log}{See \code{\link{CIMseqSinglets}}.}
+#'     \item{counts.cpm}{See \code{\link{CIMseqSinglets}}.}
+#'     \item{counts.ercc}{See \code{\link{CIMseqSinglets}}.}
+#'     \item{dim.red}{See \code{\link{CIMseqSinglets}}.}
+#'     \item{classification}{See \code{\link{CIMseqSinglets}}.}
 #' }
-#' @usage test_spCountsSng
-#' @return An spCounts object.
+#' @return An CIMseqSinglets object.
 #' @examples
-#' data(test_spCountsSng)
+#' data(CIMseqSinglets_test)
+NULL
+"CIMseqSinglets_test"
+
+#' CIMseqMultiplets_test a CIMseqMultiplets object.
+#'
+#' @title CIMseqMultiplets object corresponding to test dataset.
+#' @docType data
+#' @name CIMseqMultiplets_test
+#' @format CIMseqMultiplets
+#' \describe{
+#'     \item{counts}{See \code{\link{CIMseqMultiplets}}.}
+#'     \item{counts.log}{See \code{\link{CIMseqMultiplets}}.}
+#'     \item{counts.cpm}{See \code{\link{CIMseqMultiplets}}.}
+#'     \item{counts.ercc}{See \code{\link{CIMseqMultiplets}}.}
+#'     \item{features}{See \code{\link{CIMseqMultiplets}}.}
+#' }
+#' @return An CIMseqMultiplets object.
+#' @examples
+#' data(CIMseqMultiplets_test)
 #'
 NULL
+"CIMseqMultiplets_test"
 
-#' spCounts object with multiplets.
+#' CIMseqSwarm_test a CIMseqSwarm object.
 #'
-#' @title spCounts object with multiplets corresponding to test dataset.
+#' @title CIMseqSwarm object corresponding to test dataset.
 #' @docType data
-#' @name test_spCountsMul
-#' @format spCounts
+#' @name CIMseqSwarm_test
+#' @format CIMseqSwarm
 #' \describe{
-#'     \item{counts}{See \code{\link{spCounts}}.}
-#'     \item{counts.log}{See \code{\link{spCounts}}.}
-#'     \item{counts.cpm}{See \code{\link{spCounts}}.}
-#'     \item{counts.ercc}{See \code{\link{spCounts}}.}
+#'  \item{fractions}{See \code{\link{CIMseqSwarm}}.}
+#'  \item{costs}{See \code{\link{CIMseqSwarm}}.}
+#'  \item{convergence}{See \code{\link{CIMseqSwarm}}.}
+#'  \item{singletIdx}{See \code{\link{CIMseqSwarm}}.}
+#'  \item{arguments}{See \code{\link{CIMseqSwarm}}.}
 #' }
-#' @usage test_spCountsMul
-#' @return An spCounts object.
+#' @return CIMseqSwarm object.
 #' @examples
-#' data(test_spCountsMul)
+#' data(CIMseqSwarm_test)
 #'
 NULL
-
-#' spUnsupervised object.
-#'
-#' @title spUnsupervised object corresponding to test dataset.
-#' @docType data
-#' @name test_spUnsupervised
-#' @format spUnsupervised
-#' \describe{
-#'     \item{tsne}{See \code{\link{spUnsupervised}}.}
-#'     \item{tsneMeans}{See \code{\link{spUnsupervised}}.}
-#'     \item{classification}{See \code{\link{spUnsupervised}}.}
-#'     \item{uncertainty}{See \code{\link{spUnsupervised}}.}
-#'     \item{selectInd}{See \code{\link{spUnsupervised}}.}
-#' }
-#' @usage test_spUnsupervised
-#' @return An spUnsupervised object.
-#' @examples
-#' data(test_spUnsupervised)
-#'
-NULL
-
-#' spSwarm object.
-#'
-#' @title spSwarm object corresponding to test dataset.
-#' @docType data
-#' @name test_spSwarm
-#' @format spSwarm
-#' \describe{
-#'  \item{spSwarm}{See \code{\link{spSwarm}}.}
-#'  \item{costs}{See \code{\link{spSwarm}}.}
-#'  \item{convergence}{See \code{\link{spSwarm}}.}
-#'  \item{singletIdx}{See \code{\link{spSwarm}}.}
-#'  \item{arguments}{See \code{\link{spSwarm}}.}
-#' }
-#' @usage test_spSwarm
-#' @return spSwarm object.
-#' @examples
-#' data(test_spSwarm)
-#'
-NULL
-
+"CIMseqSwarm_test"

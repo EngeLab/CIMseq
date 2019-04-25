@@ -1,3 +1,5 @@
+Meta
+doc
 inst/doc
 .Rproj
 *.history
@@ -6,3 +8,5 @@ inst/doc
 /revdep/.cache.rds
 .Rproj.user
 .Rproj.user/**
+*.o
+*.so

@@ -1,42 +1,42 @@
-#'@include sp.scRNAseq-package.R
+#'@include CIMseq-package.R
 NULL
 
-#' @rdname spCounts
+#' @rdname CIMseqSinglets
 #' @export
 
-setMethod("initialize","spCounts", function(
-  .Object, ..., counts, counts.log, 
-  counts.cpm, counts.ercc
+setMethod("initialize","CIMseqSinglets", function(
+  .Object, ..., counts, counts.log, counts.cpm, counts.ercc, 
+  dim.red, classification
 ){
   callNextMethod(
     .Object, ..., counts = counts, counts.log = counts.log,
-    counts.cpm = counts.cpm, counts.ercc = counts.ercc
+    counts.cpm = counts.cpm, counts.ercc = counts.ercc,
+    dim.red = dim.red, classification = classification
   )
 })
 
-#' @rdname spUnsupervised
+#' @rdname CIMseqMultiplets
 #' @export
 
-setMethod("initialize","spUnsupervised", function(
-  .Object, ..., tsne, tsneMeans, classification,
-  uncertainty, selectInd
+setMethod("initialize","CIMseqMultiplets", function(
+  .Object, ..., counts, counts.log, counts.cpm, counts.ercc, features
 ){
   callNextMethod(
-    .Object, ..., tsne = tsne, tsneMeans = tsneMeans,
-    classification = classification, uncertainty=uncertainty, 
-    selectInd = selectInd
+    .Object, ..., counts = counts, counts.log = counts.log,
+    counts.cpm = counts.cpm, counts.ercc = counts.ercc, features = features
   )
 })
 
-#' @rdname spSwarm
+#' @rdname CIMseqSwarm
 #' @export
 
-setMethod("initialize","spSwarm", function(
-  .Object, ..., spSwarm, costs, convergence,
+setMethod("initialize","CIMseqSwarm", function(
+  .Object, ..., fractions, costs, convergence,
   stats, singletIdx, arguments
 ){
   callNextMethod(
-    .Object, ..., spSwarm = spSwarm, costs = costs, convergence = convergence,
-    stats = stats, singletIdx = singletIdx, arguments = arguments
+    .Object, ..., fractions = fractions, costs = costs, 
+    convergence = convergence, stats = stats, singletIdx = singletIdx, 
+    arguments = arguments
   )
 })

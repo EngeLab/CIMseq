@@ -1,3 +1,37 @@
+v.0.2.0.4
+* removing transpose from cost function
+
+v0.2.0.3
+* adding getCellsForMultiplet function
+* fixing CIMseqSwarm concatenation function
+* adding check for CIMseqSwarm object concatenation
+* adding CIMseqSinglets and CIMseqMultiplets concatenation methods
+* adding CIMseqSwarm subset method
+
+v0.2.0.2
+* fixing CIMseqSwarm show methods so tibbles do not show as lists
+* adding adjustFractions function
+* adding cellNumberPerClass function
+* adding checks for classification and dim.red slots in CIMseqSinglets objects
+* removing calculation for cellNumberMin and cellNumberMax from estimateCells function
+* estimateCells function now correctly only uses singlets for estimatedCellNumber calculation
+* renaming spSwarmPoisson to calculateEdgeStats and re-writing to use adjusted fractions
+* updated p-value calculation
+* getEdgesForMultiplet now returns edges in both directions
+* better defaults for getEdgesForMultiplet and appropriateSinglets
+* Adding circos plot and accessory functions
+
+v.0.2.0.1
+* adding concatenate function for CIMseqSwarm objects
+* CIMseqSwarm arguments slot now a tibble
+
+v0.2.0.0
+* removed spUnsupervised. Classification, dim.red, and features now user provided.
+* lots of renaming of classes, etc. and even the package. See updated vignette for workflow
+
+v0.1.0.2
+* spUnsupervised now uses kNN classification.
+
 v0.1.0.1
 * spCounts now does not store counts.cpm or counts.log and, instead, computes them when requested.
 * testData is updated to use real data from the countsSorted2 dataset

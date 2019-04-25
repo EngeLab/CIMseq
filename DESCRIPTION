@@ -1,7 +1,6 @@
-Package: sp.scRNAseq
-Title: sp.scRNAseq is a software suite for analysis of scRNAseq data that has
-    been produced using the spatial scRNAseq method
-Version: 0.1.1.0
+Package: CIMseq
+Title: CIMseq is a software suite for analysis of scRNAseq data that has been produced using the cellular interactions by multiplet sequencing method
+Version: 0.2.0.4
 Authors@R: c(
     person("Jason T.", "Serviss", email = "Jason.serviss@ki.se", role = c("aut", "cre"), comment = c(ORCID = 0000-0002-5778-7014)),
     person("Martin", "Enge", email = "Martin.Enge@ki.se", role = c("aut"))
@@ -11,21 +10,19 @@ Author: Jason T. Serviss [aut, cre],
 Maintainer: Jason T Serviss <jason.serviss@ki.se>
 Description: What the package does (one paragraph).
 LinkingTo: Rcpp, RcppArmadillo
-Depends:
-    R (>= 3.5.0)
+Depends: R (>= 2.10)
 Imports:
     methods,
-    mclust (>= 5.4),
     Rtsne (>= 0.13),
     pso (>= 1.0.3),
-    S4Vectors (>= 0.18.2),
     readr (>= 1.1.1),
     rlang (>= 0.2.0),
     matrixStats (>= 0.53.1),
-    dplyr (>= 0.7.5),
+    dplyr (>= 0.7.6),
     tibble (>= 1.4.2),
-    purrr (>= 0.2.4),
+    purrr (>= 0.2.5),
     tidyr (>= 0.8.1),
+    stringr (>= 1.3.1),
     ggplot2 (>= 2.2.1),
     ggthemes (>= 3.5.0),
     igraph (>= 1.2.1),
@@ -33,7 +30,12 @@ Imports:
     ggraph (>= 1.0.1),
     tidygraph (>= 1.1.0),
     Rcpp (>= 0.12.17),
-    future.apply (>= 0.2.0)
+    future.apply (>= 0.2.0),
+    RANN (>= 2.6),
+    gmodels (>= 2.18.1),
+    circlize (>= 0.4.4),
+    gridBase (>= 0.4-7),
+    S4Vectors (>= 0.18.2)
 Suggests: 
     knitr (>= 1.20),
     rmarkdown (>= 1.9),
@@ -46,20 +48,19 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: no
+RoxygenNote: 6.1.1
 Collate: 
-    'sp.scRNAseq-package.R'
+    'CIMseq-package.R'
     'All-classes.R'
+    'CIMseqData.R'
+    'CIMseqSwarm.R'
     'RcppExports.R'
     'debugging.R'
     'initialize-methods.R'
+    'plotCounts.R'
+    'plotExtras.R'
+    'plotSwarm.R'
     'show-methods.R'
-    'spCounts.R'
-    'spPlotCounts.R'
-    'spPlotExtras.R'
-    'spPlotSwarm.R'
-    'spPlotUnsupervised.R'
-    'spSwarm.R'
-    'spUnsupervised.R'
     'testData.R'
     'tidyFunctions.R'
-RoxygenNote: 6.1.0
+    'utlis.R'
