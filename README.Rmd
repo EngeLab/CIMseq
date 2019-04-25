@@ -3,9 +3,9 @@ title: "CIM-seq"
 output: github_document
 ---
 
-Release build: <a href="https://travis-ci.org/jasonserviss/CIMseq"><img src="https://travis-ci.org/jasonserviss/CIMseq.svg?branch=master"></a>
+Release build: <a href="https://travis-ci.com/jasonserviss/CIMseq"><img src="https://travis-ci.com/jasonserviss/CIMseq.svg?branch=master"></a>
 
-Devel build: <a href="https://travis-ci.org/jasonserviss/CIMseq"><img src="https://travis-ci.org/jasonserviss/CIMseq.svg?branch=devel"></a>
+Devel build: <a href="https://travis-ci.com/jasonserviss/CIMseq"><img src="https://travis-ci.com/jasonserviss/CIMseq.svg?branch=devel"></a>
 
 Test coverage: [![Coverage status](https://codecov.io/gh/jasonserviss/CIMseq/branch/master/graph/badge.svg)](https://codecov.io/github/jasonserviss/CIMseq?branch=master)
 
