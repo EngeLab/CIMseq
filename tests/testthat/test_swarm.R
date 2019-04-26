@@ -158,7 +158,7 @@ test_that("check that calculateEdgeStats outputs the expected result", {
     from = LETTERS[1:3], to = LETTERS[1:3], stringsAsFactors = FALSE
   )
   edges <- edges[edges[, 1] != edges[, 2], ]
-  edges$weight <- sample(1:5, nrow(edges), replace = TRUE)
+  edges$weight <- c(1L, 4L, 5L, 2L, 4L, 4L)
   mat <- structure(
     c(
       1, 1, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 
