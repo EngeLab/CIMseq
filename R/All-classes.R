@@ -231,6 +231,7 @@ setClass("CIMseqSwarm", representation(
   costs = "numeric",
   convergence = "character",
   stats = "tbl_df",
+  swarmPos = "list",
   singletIdx = "list",
   arguments = "tbl_df"
 ))

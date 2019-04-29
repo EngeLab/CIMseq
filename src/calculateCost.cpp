@@ -2,6 +2,8 @@
 
 #include "../inst/include/CIMseq.h"
 #include <RcppArmadillo.h>
+#include <string>
+#include <utility>
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
@@ -41,6 +43,21 @@ arma::uvec sampleSinglets(
   }
   return idxToSubset;
 }
+
+
+//' createHashmap
+//' 
+//' Creates C++ hash map and returns external pointer
+//'
+//' @export
+// [[Rcpp::export]]
+
+Rcpp::XPtr< std::unordered_map<std::string, double> > createHashmap() {
+    std::unordered_map<std::string, double>* hmap = new std::unordered_map<std::string, double>;
+    Rcpp::XPtr< std::unordered_map<std::string, double> > p(hmap, true);
+    return p;
+}
+
 
 //' subsetSinglets
 //' 
@@ -91,7 +108,7 @@ double calculateCost(
   
   //normalize fractions
   arma::vec normFractions = fractions / accu(fractions);
-  
+
   //optimize column-major
   //arma::mat tSinglets = singletSubset.t();
   
@@ -120,6 +137,88 @@ double calculateCost(
   }
   return -cost;
 }
+
+//' calculateCostCached
+//'
+//' Empirical cost calculation based on poisson distribution, with cached values to reduce overall computational cost of deconvolution
+//'
+//' @param oneMultiplet Integer; a integer vector of rounded counts per million
+//' for one multiplet.
+//' @param singletSubset Matrix; Numeric matrix with the preallocated singlets.
+//' Each of the n synthetic multiplets should be stacked, i.e. rbind.
+//' @param fractions Numeric; a numeric vector with length equal to
+//' ncol(singlets) indicating the fractions that each column should be
+//' multiplied with.
+//' @param n Integer; length 1 integer indicating the number of synthetic
+//' multiplets to generate.
+//' @param cache external pointer; Pointer to C++ unordered_map
+//' @param resolution Integer; Resolution of cost cache. Do not increase above 127
+//' @export
+// [[Rcpp::export]]
+
+double calculateCostCached(
+  const arma::vec& oneMultiplet,
+  const arma::mat& singletSubset,
+  const arma::vec& fractions,
+  int n,
+  Rcpp::XPtr< std::unordered_map<std::string, double> > cache,
+  int resolution = 20
+  
+){
+  //check all 0 fractions
+  if(accu(fractions) == 0) {
+    return 999999999;
+  }
+  
+  //normalize fractions
+  arma::vec normFractions = fractions / accu(fractions);
+  
+  //optimize column-major
+  //arma::mat tSinglets = singletSubset.t();
+
+  // Check if the key is in the hash
+  std::string key(normFractions.n_elem, (char)0);
+  //  key.resize(normFractions.n_elem);
+  for(int i = 0; i != normFractions.n_elem; ++i) {
+      char c = (char) (normFractions(i) * resolution);
+      key[i] = c;
+  }
+  std::unordered_map<std::string, double>::const_iterator val = cache->find(key);
+  // Early-out of approximate fractions are found in cache
+  if( val != cache->end() )
+      return val->second;
+
+  
+  // Otherwise, calculate cost.
+  double cost = 0;
+  int ci = 0;
+  // Loop over genes
+  for (int i = 0; i != (singletSubset.n_cols / n); i++){
+    // Loop over synthetic multiplets
+    double pSums = 0;
+    for(int k = 0; k != n; k++) {
+      double adjustedSums = 0;
+      //Loop over fractions
+      for (int j = 0; j != normFractions.n_elem; j++) {
+        adjustedSums += normFractions(j) * singletSubset(j, ci);
+      }
+      pSums += R::dpois(oneMultiplet(i), std::round(adjustedSums), false);
+      ++ci;
+    }
+    pSums /= double(n);
+    double lpSums = std::log10(pSums);
+    if(lpSums == -std::numeric_limits<double>::infinity()) {
+      lpSums = -323.0052;
+    }
+    cost += lpSums;
+  }
+  cost = -cost;
+  // Cache cost
+  cache->insert(std::make_pair(key, cost));
+  
+  return cost;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                        FUNCTIONS FOR TESTING ETC.                          //
