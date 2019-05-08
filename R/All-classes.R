@@ -232,7 +232,7 @@ setClass("CIMseqSwarm", representation(
   convergence = "character",
   stats = "tbl_df",
   singletIdx = "list",
-  swarmPositions = "matrix",
+  swarmPositions = "list",
   arguments = "tbl_df"
 ))
 

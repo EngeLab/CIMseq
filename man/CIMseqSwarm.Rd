@@ -24,9 +24,8 @@ CIMseqSwarm(singlets, multiplets, ...)
 \S4method{CIMseqSwarm}{CIMseqSinglets,CIMseqMultiplets}(singlets,
   multiplets, maxiter = 10, swarmsize = 150,
   nSyntheticMultiplets = 200, seed = 11, norm = TRUE,
-  report = FALSE, reportRate = NA, vectorize = FALSE,
-  permute = FALSE, singletIdx = NULL, swarmInit = NULL,
-  psoControl = list(), ...)
+  report = FALSE, reportRate = NA, permute = FALSE,
+  singletIdx = NULL, swarmInit = NULL, psoControl = list(), ...)
 
 \S4method{initialize}{CIMseqSwarm}(.Object, ..., fractions, costs,
   convergence, stats, singletIdx, swarmPositions, arguments)
@@ -63,8 +62,6 @@ optimization should be included.}
 
 \item{reportRate}{integer; If report is TRUE, the iteration interval for 
 which a report should be generated.}
-
-\item{vectorize}{logical, Argument to \link[pso]{psoptim}.}
 
 \item{permute}{logical; indicates if genes should be permuted before
 deconvolution. For use with permutation testing.

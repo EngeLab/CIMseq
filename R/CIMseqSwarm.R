@@ -21,7 +21,6 @@ NULL
 #'   optimization should be included.
 #' @param reportRate integer; If report is TRUE, the iteration interval for 
 #' which a report should be generated.
-#' @param vectorize logical, Argument to \link[pso]{psoptim}.
 #' @param permute logical; indicates if genes should be permuted before
 #'  deconvolution. For use with permutation testing.
 #'  @param singletIdx list; Singlet indexes to be used to choose singlets and
@@ -74,7 +73,7 @@ setGeneric("CIMseqSwarm", function(
 setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   singlets, multiplets,
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11, 
-  norm = TRUE, report = FALSE, reportRate = NA, vectorize = FALSE,
+  norm = TRUE, report = FALSE, reportRate = NA,
   permute = FALSE, singletIdx = NULL, swarmInit = NULL, psoControl = list(), ...
 ){
     
@@ -109,7 +108,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   )
   
   #setup args for optimization
-  control <- list(maxit = maxiter, s = swarmsize, vectorize = vectorize)
+  control <- list(maxit = maxiter, s = swarmsize)
   control <- c(control, psoControl)
   if(report) {
     control <- c(control, list(
@@ -152,12 +151,12 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
     convergence = setNames(.processConvergence(opt.out), colnames(mul)),
     stats = if(report) {.processStats(opt.out, cn, rn)} else {tibble()},
     singletIdx = map(singletIdx, as.integer),
-    swarmPositions = if(!is.null(psoControl[['return.swarm']])) {map(opt.out, "swarm")} else {matrix()},
+    swarmPositions = if(!is.null(psoControl[['return.swarm']])) {map(opt.out, "swarm")} else {list()},
     arguments = tibble(
       maxiter = maxiter, swarmsize = swarmsize,
       nSyntheticMultiplets = nSyntheticMultiplets, seed = seed, norm = norm,
       report = report, reportRate = reportRate, features = list(selectInd),
-      vectorize = vectorize, permute = permute
+      permute = permute, psoControl = list(psoControl)
     )
   )
 })

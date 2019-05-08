@@ -62,8 +62,9 @@ pso.2.0 <- function (
     c.p = .5 + log(2), c.g = .5 + log(2), d = NA, v.max = NA, rand.order = TRUE, 
     max.restart = Inf, maxit.stagnate = Inf, eps.stagnate = 1e-3, 
     vectorize = FALSE, hybrid = FALSE, hybrid.control = NULL, 
-    trace.stats = FALSE, type = "SPSO2007", return.swarm = FALSE
+    trace.stats = FALSE, type = "SPSO2007"
   )
+  #, return.swarm = FALSE
   nmsC <- names(con)
   con[(namc <- names(control))] <- control
   if (length(noNms <- namc[!namc %in% nmsC])) 
@@ -112,7 +113,7 @@ pso.2.0 <- function (
   else
     p.hcontrol["fnscale"] <- p.fnscale
   p.trace.stats <- as.logical(con[["trace.stats"]]) # collect detailed stats?
-  p.returnswarm <- as.logical(con[["return.swarm"]]) # return final swarm?
+  #p.returnswarm <- as.logical(con[["return.swarm"]]) # return final swarm?
   if (p.trace) {
     message(
       "S=", p.s,", K=", con[["k"]], ", p=", signif(p.p, 4),", w0=", 
@@ -308,7 +309,8 @@ pso.2.0 <- function (
       if (p.hybrid == 1) { # not really vectorizing
         for (i in 1:p.s) {
           temp <- optim(
-            X[, i], fn, gr, ..., method = "L-BFGS-B", lower = lower, upper = upper, control = p.hcontrol
+            X[, i], fn, gr, ..., method = "L-BFGS-B", lower = lower, 
+            upper = upper, control = p.hcontrol
           )
           V[, i] <- V[, i] + temp$par - X[, i] # disregards any v.max imposed
           X[, i] <- temp$par
@@ -397,20 +399,48 @@ pso.2.0 <- function (
     convergence = msgcode, message = msg
     )
   if (p.trace && p.trace.stats) {
-    o <- c(o, list(stats = list(it = stats.trace.it, error = stats.trace.error, f = stats.trace.f, x = stats.trace.x)))
+    o <- c(o, list(stats = list(
+      it = stats.trace.it, error = stats.trace.error, 
+      f = stats.trace.f, x = stats.trace.x
+    )))
   }
-  if(p.returnswarm) o <- c(o, list(swarm = X))
+  #if(p.returnswarm) o <- c(o, list(swarm = X))
   return(o)
 }
 
-# startState <- function(singlets, nFracts, k, null.weight = 1) {
-#   num.classes <- length(unique(getData(singlets, "classification")))
-#   comb <- combn(1:nFracts, k)
-#   xdbl <- matrix(
-#     abs(rnorm(nFracts * ncol(comb), mean = 0, sd = null.weight / nFracts)), 
-#     nrow = ncol(comb), ncol = nFracts
-#   )
-#   idx <- matrix(c(rep(1:ncol(comb), each = k), c(comb)), ncol = 2)
-#   xdbl[idx] <- 1
-#   t(xdbl / rowSums(xdbl))
-# }
+#' swarmInit
+#'
+#' Helper function to calculate the swarm initialization positions to provide
+#' as the swarmInit argument to CIMseqSwarm.
+#'
+#' @name swarmInit
+#' @rdname swarmInit
+#' @param singlets CIMseqSinglets; A CIMseqSinglets object.
+#' @param k integer; Number of cells in each combination, i.e. 2 gives doublets, 
+#'  3 gives triplets, etc. Must be >= 2.
+#' @param null.weight numeric; Weight to adjust the amount of noise in the 
+#'  initialization positions. Default = 1.
+#'  @param seed integer; A seed to set.
+#' @return A matrix with the swarm initialization state.
+#' @author Martin Enge
+NULL
+
+#' @rdname swarmInit
+#' @export
+
+swarmInit <- function(singlets, k, null.weight = 1, seed = 9238232) {
+  set.seed(seed)
+  if(k < 2) stop("k must be >= 2")
+  num.classes <- length(unique(getData(singlets, "classification")))
+  comb <- cbind(
+    matrix(rep(1:num.classes, k), nrow = k, byrow = TRUE), 
+    combn(1:num.classes, k)
+  )
+  xdbl <- matrix(
+    abs(rnorm(num.classes * ncol(comb), mean = 0, sd = null.weight / num.classes)),
+    nrow = ncol(comb), ncol = num.classes
+  )
+  idx <- matrix(c(rep(1:ncol(comb), each = k), c(comb)), ncol = 2)
+  xdbl[idx] <- 1
+  t(xdbl / rowSums(xdbl))
+}

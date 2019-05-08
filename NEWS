@@ -1,5 +1,6 @@
 v.0.3.0.1
 * adding modified pso function that accepts swarm initialisation positions and better early stopping criteria.
+* Adding swarmInit function to calculate the initial swarm positions.
 
 v.0.3.0.0
 * merging level to master branch with version bump
