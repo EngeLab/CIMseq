@@ -32,11 +32,11 @@ setMethod("initialize","CIMseqMultiplets", function(
 
 setMethod("initialize","CIMseqSwarm", function(
   .Object, ..., fractions, costs, convergence,
-  stats, singletIdx, swarmPositions, arguments
+  stats, singletIdx, arguments
 ){
   callNextMethod(
     .Object, ..., fractions = fractions, costs = costs, 
     convergence = convergence, stats = stats, singletIdx = singletIdx, 
-    swarmPositions = swarmPositions, arguments = arguments
+    arguments = arguments
   )
 })

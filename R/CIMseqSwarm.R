@@ -36,7 +36,6 @@ NULL
 #' synthesize synthetic multiplets. Facilitates recreation of the synthetic 
 #' multiplets downstream.
 #' @param swarmInit matrix; Initiation positions for the swarm.
-#' @param swarmPositions matrix; Final swarm positions.
 #' @param psoControl list; Additional arguments to pso.2.0 (psoptim) function.
 #' @param x CIMseqSwarm; A CIMseqSwarm object.
 #' @param object CIMseqSwarm; A CIMseqSwarm to show.
@@ -151,7 +150,6 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
     convergence = setNames(.processConvergence(opt.out), colnames(mul)),
     stats = if(report) {.processStats(opt.out, cn, rn)} else {tibble()},
     singletIdx = map(singletIdx, as.integer),
-    swarmPositions = if(!is.null(psoControl[['return.swarm']])) {map(opt.out, "swarm")} else {list()},
     arguments = tibble(
       maxiter = maxiter, swarmsize = swarmsize,
       nSyntheticMultiplets = nSyntheticMultiplets, seed = seed, norm = norm,

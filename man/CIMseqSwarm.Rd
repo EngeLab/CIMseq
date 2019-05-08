@@ -28,7 +28,7 @@ CIMseqSwarm(singlets, multiplets, ...)
   singletIdx = NULL, swarmInit = NULL, psoControl = list(), ...)
 
 \S4method{initialize}{CIMseqSwarm}(.Object, ..., fractions, costs,
-  convergence, stats, singletIdx, swarmPositions, arguments)
+  convergence, stats, singletIdx, arguments)
 
 \S4method{show}{CIMseqSwarm}(object)
 }
@@ -87,8 +87,6 @@ multiplets downstream.}
 One value per multiplet.}
 
 \item{stats}{tbl_df; The stats output from \link[pso]{psoptim}}
-
-\item{swarmPositions}{matrix; Final swarm positions.}
 
 \item{arguments}{list; Arguments passed to the CIMseqSwarm function.}
 
