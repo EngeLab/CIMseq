@@ -25,10 +25,11 @@ CIMseqSwarm(singlets, multiplets, ...)
   multiplets, maxiter = 10, swarmsize = 150,
   nSyntheticMultiplets = 200, seed = 11, norm = TRUE,
   report = FALSE, reportRate = NA, vectorize = FALSE,
-  permute = FALSE, singletIdx = NULL, ...)
+  permute = FALSE, singletIdx = NULL, swarmInit = NULL,
+  psoControl = list(), ...)
 
 \S4method{initialize}{CIMseqSwarm}(.Object, ..., fractions, costs,
-  convergence, stats, singletIdx, arguments)
+  convergence, stats, singletIdx, swarmPositions, arguments)
 
 \S4method{show}{CIMseqSwarm}(object)
 }
@@ -75,6 +76,10 @@ e.g. with repeated runs or permutation.}
 synthesize synthetic multiplets. Facilitates recreation of the synthetic 
 multiplets downstream.}
 
+\item{swarmInit}{matrix; Initiation positions for the swarm.}
+
+\item{psoControl}{list; Additional arguments to pso.2.0 (psoptim) function.}
+
 \item{.Object}{Internal object.}
 
 \item{fractions}{matrix; The deconvolution results.}
@@ -85,6 +90,8 @@ multiplets downstream.}
 One value per multiplet.}
 
 \item{stats}{tbl_df; The stats output from \link[pso]{psoptim}}
+
+\item{swarmPositions}{matrix; Final swarm positions.}
 
 \item{arguments}{list; Arguments passed to the CIMseqSwarm function.}
 

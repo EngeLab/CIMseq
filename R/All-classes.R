@@ -232,6 +232,7 @@ setClass("CIMseqSwarm", representation(
   convergence = "character",
   stats = "tbl_df",
   singletIdx = "list",
+  swarmPositions = "matrix",
   arguments = "tbl_df"
 ))
 
@@ -273,12 +274,14 @@ setMethod("c", c("CIMseqSwarm"), function(x, ...){
   } else {
     names(si) <- rownames(frac)
   }
+  sp <- lapply(objs, getData, "swarmPositions") %>% do.call("rbind", .)
   new("CIMseqSwarm",
     fractions = frac,
     costs = lapply(objs, getData, "costs") %>% do.call("c", .),
     convergence = lapply(objs, getData, "convergence") %>% do.call("c", .),
     stats = lapply(objs, getData, "stats") %>% do.call("bind_rows", .),
     singletIdx = si,
+    swarmPositions = sp,
     arguments = lapply(objs, getData, "arguments") %>% do.call("bind_rows", .)
   )
 })

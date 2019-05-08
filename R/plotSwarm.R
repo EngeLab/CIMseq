@@ -884,6 +884,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
 })
 
 .ns_legend <- function(data, nonSigCol) {
+  connectionID <- NULL
   p <- data %>%
     ggplot() +
     geom_bar(aes(connectionID, fill = "n.s.")) +
@@ -905,6 +906,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
 }
 
 .obsexp_legend <- function(data, pal) {
+  pval <- score <- NULL
   p <- data %>%
     ggplot() + 
     geom_point(aes(pval, score, colour = score)) + 
@@ -923,6 +925,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
 }
 
 .frac_legend <- function(data) {
+  pval <- score <- frac <- NULL
   p <- data %>%
     ggplot() + 
     geom_point(aes(pval, score, colour = frac)) + 
@@ -939,6 +942,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
 }
 
 .class_legend <- function(colours) {
+  combined <- colour <- NULL
   p <- colours %>%
     mutate(combined = parse_factor(combined, levels = combined)) %>%
     ggplot() + 

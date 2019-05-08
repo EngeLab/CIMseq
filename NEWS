@@ -1,4 +1,8 @@
+v.0.3.0.1
+* adding modified pso function that accepts swarm initialisation positions and better early stopping criteria.
+
 v.0.3.0.0
+* merging level to master branch with version bump
 
 v.0.2.0.4
 * removing transpose from cost function

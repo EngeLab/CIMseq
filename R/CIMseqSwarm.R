@@ -36,6 +36,9 @@ NULL
 #' @param singletIdx list; Indexes indicating singlets that were subset to 
 #' synthesize synthetic multiplets. Facilitates recreation of the synthetic 
 #' multiplets downstream.
+#' @param swarmInit matrix; Initiation positions for the swarm.
+#' @param swarmPositions matrix; Final swarm positions.
+#' @param psoControl list; Additional arguments to pso.2.0 (psoptim) function.
 #' @param x CIMseqSwarm; A CIMseqSwarm object.
 #' @param object CIMseqSwarm; A CIMseqSwarm to show.
 #' @param n character; Data to extract from CIMseqSwarm object.
@@ -72,7 +75,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   singlets, multiplets,
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11, 
   norm = TRUE, report = FALSE, reportRate = NA, vectorize = FALSE,
-  permute = FALSE, singletIdx = NULL, ...
+  permute = FALSE, singletIdx = NULL, swarmInit = NULL, psoControl = list(), ...
 ){
     
   #put a check here to make sure all slots in the spUnsupervised object are
@@ -88,7 +91,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
     
   #calculate fractions
   classes <- getData(singlets, "classification")
-  fractions <- rep(1.0 / length(unique(classes)), length(unique(classes)))
+  fractions <- rep(NA, length(unique(classes)))
     
   #subset top genes for use with optimization
   #sholud also check user input selectInd
@@ -106,13 +109,12 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   )
   
   #setup args for optimization
+  control <- list(maxit = maxiter, s = swarmsize, vectorize = vectorize)
+  control <- c(control, psoControl)
   if(report) {
-    control <- list(
-      maxit = maxiter, s = swarmsize, trace = 1,
-      REPORT = reportRate, trace.stats = TRUE
-    )
-  } else {
-    control <- list(maxit = maxiter, s = swarmsize, vectorize = vectorize)
+    control <- c(control, list(
+      trace = 1, REPORT = reportRate, trace.stats = TRUE
+    ))
   }
   
   #run optimization
@@ -135,7 +137,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
       .optim.fun(
         i, fractions = fractions, multiplets = mul,
         singletSubset = t.singletSubset, n = nSyntheticMultiplets,
-        control = control, ...
+        control = control, swarmInit = swarmInit, ...
       )
   })
   
@@ -150,6 +152,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
     convergence = setNames(.processConvergence(opt.out), colnames(mul)),
     stats = if(report) {.processStats(opt.out, cn, rn)} else {tibble()},
     singletIdx = map(singletIdx, as.integer),
+    swarmPositions = if(!is.null(psoControl[['return.swarm']])) {map(opt.out, "swarm")} else {matrix()},
     arguments = tibble(
       maxiter = maxiter, swarmsize = swarmsize,
       nSyntheticMultiplets = nSyntheticMultiplets, seed = seed, norm = norm,
@@ -205,13 +208,13 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 
 .optim.fun <- function(
   i, fractions, multiplets, singletSubset,
-  n, control, ...
+  n, control, swarmInit, ...
 ){
-  oneMultiplet <- round(multiplets[, i]) #change this to round() ?
-  pso::psoptim(
+  oneMultiplet <- round(multiplets[, i])
+  pso.2.0(
     par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,
-    control = control, ...
+    control = control, swarmInit = swarmInit, ...
   )
 }
 

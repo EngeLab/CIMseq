@@ -106,9 +106,15 @@ test_that("check that concatenation outputs the expected result", {
     getData(CIMseqSwarm_test, "arguments")
   )
   
+  swarmPositions <- rbind(
+    getData(CIMseqSwarm_test, "swarmPositions"),
+    getData(CIMseqSwarm_test, "swarmPositions")
+  )
+  
   expected <- new("CIMseqSwarm",
     fractions = fractions, costs = costs, convergence = convergence,
-    stats = stats, singletIdx = singletIdx, arguments = arguments
+    stats = stats, singletIdx = singletIdx, 
+    swarmPositions = swarmPositions, arguments = arguments
   )
   
   #generate output
@@ -120,6 +126,7 @@ test_that("check that concatenation outputs the expected result", {
   expect_identical(getData(expected, "convergence"), getData(output, "convergence"))
   expect_identical(getData(expected, "stats"), getData(output, "stats"))
   expect_identical(getData(expected, "singletIdx"), getData(output, "singletIdx"))
+  expect_identical(getData(expected, "swarmPositions"), getData(output, "swarmPositions"))
   expect_identical(getData(expected, "arguments"), getData(output, "arguments"))
 })
 
