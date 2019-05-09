@@ -420,7 +420,7 @@ pso.2.0 <- function (
 #'  3 gives triplets, etc. Must be >= 2.
 #' @param null.weight numeric; Weight to adjust the amount of noise in the 
 #'  initialization positions. Default = 1.
-#'  @param seed integer; A seed to set.
+#' @param seed integer; A seed to set.
 #' @return A matrix with the swarm initialization state.
 #' @author Martin Enge
 NULL

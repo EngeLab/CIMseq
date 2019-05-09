@@ -13,8 +13,9 @@ swarmInit(singlets, k, null.weight = 1, seed = 9238232)
 3 gives triplets, etc. Must be >= 2.}
 
 \item{null.weight}{numeric; Weight to adjust the amount of noise in the 
-initialization positions. Default = 1.
-@param seed integer; A seed to set.}
+initialization positions. Default = 1.}
+
+\item{seed}{integer; A seed to set.}
 }
 \value{
 A matrix with the swarm initialization state.
