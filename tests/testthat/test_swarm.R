@@ -99,7 +99,7 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
 test_that("check that adjustFractions outputs the expected result", {
   
   ###TEST1####
-  #setup expected data
+  #arg binary = TRUE
   fractions <- getData(CIMseqSwarm_test, "fractions")
   
   cnc <- cellNumberPerClass(CIMseqSinglets_test, CIMseqMultiplets_test) %>%
@@ -121,18 +121,34 @@ test_that("check that adjustFractions outputs the expected result", {
     CIMseqSinglets_test, CIMseqMultiplets_test, CIMseqSwarm_test, binary = TRUE
   )
   
+  #test
+  expect_identical(expected1, output1)
+  
+  ###TEST2####
+  #arg binary = FALSE
   output2 <- adjustFractions(
     CIMseqSinglets_test, CIMseqMultiplets_test, CIMseqSwarm_test, binary = FALSE
   )
   
   #test
-  expect_identical(expected1, output1)
   expect_identical(expected2, output2)
+  
+  ###TEST3####
+  #theoretical.max arg != NULL
+  output3 <- adjustFractions(
+    CIMseqSinglets_test, CIMseqMultiplets_test, CIMseqSwarm_test, binary = TRUE,
+    theoretical.max = 1
+  )
+  expected3 <- expected2
+  expected3['m.NJB00204.G04', 'HOS'] <- 0
+  expected3['m.NJB00204.A02', 'HCT116'] <- 0
+  expect_identical(output3, expected3)
 })
 
 test_that("check that calculateEdgeStats outputs the expected result", {
   
   ###TEST1####
+  #.calculateWeight
   #setup input data
   mat <- structure(
     c(
@@ -152,6 +168,7 @@ test_that("check that calculateEdgeStats outputs the expected result", {
   expect_identical(expected, output$weight)
   
   ###TEST2####
+  #.calculateP
   #setup input
   set.seed(9322)
   edges <- expand.grid(
@@ -175,6 +192,13 @@ test_that("check that calculateEdgeStats outputs the expected result", {
   #test
   expect_identical(expected, round(output$expected.edges))
   expect_identical(output$score, output$weight / output$expected.edges)
+  
+  ###TEST3####
+  #test with theoretical.max arg != NULL
+  expect_true(!identical(
+    calculateEdgeStats(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, theoretical.max = NULL), 
+    calculateEdgeStats(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, theoretical.max = 1)
+  ))
 })
 
 ################################################################################

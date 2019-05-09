@@ -11,8 +11,8 @@ plotSwarmCircos(swarm, ...)
 \S4method{plotSwarmCircos}{CIMseqSwarm}(swarm, singlets, multiplets,
   classOrder = NULL, connectionClass = NULL, alpha = 0.05,
   weightCut = 0, label.cex = 1, legend = TRUE,
-  pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
-  nonSigCol = "grey90", ...)
+  theoretical.max = NULL, pal = colorRampPalette(c("grey90",
+  viridis::viridis(1)))(120)[20:110], nonSigCol = "grey90", ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
@@ -38,6 +38,8 @@ the p-value should not be calculated.}
 size of the cell type labels.}
 
 \item{legend}{logical; indicates if the legends should be plotted.}
+
+\item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
 
 \item{pal}{character; A vector including the colour pallete for the score 
 colours.}

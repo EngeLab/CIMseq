@@ -4,7 +4,8 @@
 \alias{calculateEdgeStats}
 \title{calculateEdgeStats}
 \usage{
-calculateEdgeStats(swarm, singlets, multiplets, ...)
+calculateEdgeStats(swarm, singlets, multiplets, theoretical.max = NULL,
+  ...)
 }
 \arguments{
 \item{swarm}{A CIMseqSwarm object.}
@@ -12,6 +13,8 @@ calculateEdgeStats(swarm, singlets, multiplets, ...)
 \item{singlets}{A CIMseqSinglets object.}
 
 \item{multiplets}{A CIMseqMultiplets object.}
+
+\item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
 
 \item{...}{additional arguments to pass on}
 }

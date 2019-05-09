@@ -313,7 +313,8 @@ appropriateSinglets <- function(
 #' @param swarm CIMseqSwarm or matrix; A CIMseqSwarm object or a matrix of 
 #' fractions.
 #' @param binary logical; Indicates if adjusted fractions should be returned as
-#' binary values. 
+#' binary values.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
 #' @param ... additional arguments to pass on
 #' @return Adjusted fractions matrix.
 #' @author Jason T. Serviss
@@ -332,7 +333,7 @@ NULL
 #' @export
 
 adjustFractions <- function(
-  singlets, multiplets, swarm, binary = TRUE, ...
+  singlets, multiplets, swarm, binary = TRUE, theoretical.max = NULL, ...
 ){
   medianCellNumber <- sampleType <- estimatedCellNumber <- NULL
   if(!is.matrix(swarm)) {
@@ -349,7 +350,7 @@ adjustFractions <- function(
   if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
   
   #calculate cell number per multiplet
-  cnm <- estimateCells(singlets, multiplets) %>%
+  cnm <- estimateCells(singlets, multiplets, theoretical.max) %>%
     filter(sampleType == "Multiplet") %>%
     {setNames(pull(., estimatedCellNumber), pull(., sample))}
   
@@ -374,6 +375,7 @@ adjustFractions <- function(
 #' @param swarm A CIMseqSwarm object.
 #' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
 #' @param ... additional arguments to pass on
 #' @return CIMseqSwarm connection weights and p-values.
 #' @author Jason T. Serviss
@@ -394,9 +396,12 @@ NULL
 #' @export
 
 calculateEdgeStats <- function(
-  swarm, singlets, multiplets, ...
+  swarm, singlets, multiplets, theoretical.max = NULL, ...
 ){
-  mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
+  mat <- adjustFractions(
+    singlets, multiplets, swarm, binary = TRUE, 
+    theoretical.max = theoretical.max
+  )
 
   #calcluate weight
   edges <- .calculateWeight(mat)

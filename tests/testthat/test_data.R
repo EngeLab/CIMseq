@@ -136,3 +136,12 @@ test_that("check that estimateCells gives error with all 0 ercc", {
   getData(tmp, "counts.ercc") <- ercc
   expect_warning(estimateCells(tmp, CIMseqMultiplets_test))
 })
+
+test_that("estimateCells correct with theoretical.max argument non-null", {
+  theoretical.max <- 2
+  output <- estimateCells(
+    CIMseqSinglets_test, CIMseqMultiplets_test, 
+    theoretical.max = theoretical.max
+  )
+  expect_true(max(pull(output, estimatedCellNumber)) <= theoretical.max)
+})
