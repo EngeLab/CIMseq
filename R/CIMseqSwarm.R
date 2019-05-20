@@ -554,6 +554,7 @@ calcResiduals <- function(
 #' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param edges data.frame; Edges of interest. Edges are indicated by the nodes
 #' they connect with one node in column one and the other node in column 2.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
 #' @param ... additional arguments to pass on
 #' @return If the edges argument only includes one row, a vector of multiplet
 #'    names is returned. If several edges are interogated a list is returned
@@ -588,11 +589,13 @@ setGeneric("getMultipletsForEdge", function(
 #' @export
 
 setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, edges, ...
+  swarm, singlets, multiplets, edges, theoretical.max = NULL, ...
 ){
   
   edges <- mutate_if(edges, is.factor, as.character)
-  fractions <- adjustFractions(singlets, multiplets, swarm)
+  fractions <- adjustFractions(
+    singlets, multiplets, swarm, theoretical.max = theoretical.max
+  )
   
   map_dfr(1:nrow(edges), function(i) {
     e <- as.character(edges[i, ])
@@ -620,8 +623,11 @@ setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
 #' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
 #' @param multipletName character; The name of the multiplet of interest.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
+#' @param drop logical; Remove self connections from the results?
 #' @param ... additional arguments to pass on
-#' @return Edge names.
+#' @return Edge names. Note that multiplets that contain no connections are not 
+#'  included in the output.
 #' @author Jason T. Serviss
 #' @examples
 #'
@@ -650,21 +656,23 @@ setGeneric("getEdgesForMultiplet", function(
 #' @export
 
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, multipletName = NULL, ...
+  swarm, singlets, multiplets, multipletName = NULL, theoretical.max = NULL, 
+  drop = TRUE, ...
 ){
-  s <- calculateEdgeStats(swarm, singlets, multiplets)
-  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
+  s <- calculateEdgeStats(swarm, singlets, multiplets, theoretical.max = theoretical.max)
+  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, theoretical.max = theoretical.max)
   if(is.null(multipletName)) multipletName <- rownames(getData(swarm, "fractions"))
   frac <- frac[multipletName, , drop = FALSE]
   
-  #don't count self connections or multiplets with all 0 adjusted fractions
-  rs <- rowSums2(frac)
-  frac <- frac[rs > 1, , drop = FALSE]
+  #count self connections?
+  if(drop) {
+    frac <- frac[matrixStats::rowSums2(frac) > 1, , drop = FALSE]
+  }
   
   l <- length(frac)
   if(l == 0) return(tibble(sample = multipletName, from = NA, to = NA))
   
-  map_dfr(1:nrow(frac), function(i) {
+  output <- map_dfr(1:nrow(frac), function(i) {
     p.fracs <- colnames(frac)[frac[i, ] == 1]
     cmb <- expand.grid(p.fracs, p.fracs, stringsAsFactors = FALSE)
     cmb <- cmb[cmb[, 1] != cmb[, 2], ]
