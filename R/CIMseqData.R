@@ -100,6 +100,9 @@ setMethod("CIMseqSinglets", "matrix", function(
   if(ncol(counts) != length(classification)) {
     message("length(classification) != ncol(counts)")
   }
+  if(!length(unique(classification)) > 1) {
+    message("length(unique(classification)) > 1 is not TRUE")
+  }
   if(nrow(dim.red) != ncol(counts)) {
     message("nrow(dim.red) != ncol(counts)")
   }
