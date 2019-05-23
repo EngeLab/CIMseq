@@ -25,7 +25,8 @@ CIMseqSwarm(singlets, multiplets, ...)
   multiplets, maxiter = 10, swarmsize = 150,
   nSyntheticMultiplets = 200, seed = 11, norm = TRUE,
   report = FALSE, reportRate = NA, permute = FALSE,
-  singletIdx = NULL, swarmInit = NULL, psoControl = list(), ...)
+  singletIdx = NULL, swarmInit = NULL, psoControl = list(),
+  e = 0.001, ...)
 
 \S4method{initialize}{CIMseqSwarm}(.Object, ..., fractions, costs,
   convergence, stats, singletIdx, arguments)
@@ -67,8 +68,7 @@ which a report should be generated.}
 deconvolution. For use with permutation testing.
 @param singletIdx list; Singlet indexes to be used to choose singlets and
 synthesize synthetic multiplets. Facilitates using the same synthetic set 
-e.g. with repeated runs or permutation. 
-@param e numeric; Epsilon for complexityPenality unit. Default = 0.001.}
+e.g. with repeated runs or permutation.}
 
 \item{singletIdx}{list; Indexes indicating singlets that were subset to 
 synthesize synthetic multiplets. Facilitates recreation of the synthetic 
@@ -77,6 +77,8 @@ multiplets downstream.}
 \item{swarmInit}{matrix; Initiation positions for the swarm.}
 
 \item{psoControl}{list; Additional arguments to pso.2.0 (psoptim) function.}
+
+\item{e}{numeric; epsilon for complexity penalty.}
 
 \item{.Object}{Internal object.}
 

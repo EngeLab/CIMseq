@@ -9,7 +9,7 @@
 getEdgesForMultiplet(swarm, ...)
 
 \S4method{getEdgesForMultiplet}{CIMseqSwarm}(swarm, singlets, multiplets,
-  multipletName = NULL, theoretical.max = NULL, drop = TRUE, ...)
+  multipletName = NULL, ...)
 }
 \arguments{
 \item{swarm}{A CIMseqSwarm object.}
@@ -21,14 +21,9 @@ getEdgesForMultiplet(swarm, ...)
 \item{multiplets}{A CIMseqMultiplets object.}
 
 \item{multipletName}{character; The name of the multiplet of interest.}
-
-\item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
-
-\item{drop}{logical; Remove self connections from the results?}
 }
 \value{
-Edge names. Note that multiplets that contain no connections are not 
- included in the output.
+Edge names.
 }
 \description{
 Returns the names of the edges detected in a multiplet.

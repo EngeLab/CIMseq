@@ -9,7 +9,7 @@
 getMultipletsForEdge(swarm, ...)
 
 \S4method{getMultipletsForEdge}{CIMseqSwarm}(swarm, singlets, multiplets,
-  edges, theoretical.max = NULL, ...)
+  edges, ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
@@ -22,8 +22,6 @@ getMultipletsForEdge(swarm, ...)
 
 \item{edges}{data.frame; Edges of interest. Edges are indicated by the nodes
 they connect with one node in column one and the other node in column 2.}
-
-\item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
 }
 \value{
 If the edges argument only includes one row, a vector of multiplet

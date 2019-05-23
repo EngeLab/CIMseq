@@ -26,7 +26,6 @@ NULL
 #'  @param singletIdx list; Singlet indexes to be used to choose singlets and
 #'  synthesize synthetic multiplets. Facilitates using the same synthetic set 
 #'  e.g. with repeated runs or permutation. 
-#'  @param e numeric; Epsilon for complexityPenality unit. Default = 0.001.
 #' @param fractions matrix; The deconvolution results.
 #' @param costs numeric; The costs after optimization.
 #' @param convergence character; The convergence output from \link[pso]{psoptim}.
@@ -38,6 +37,7 @@ NULL
 #' multiplets downstream.
 #' @param swarmInit matrix; Initiation positions for the swarm.
 #' @param psoControl list; Additional arguments to pso.2.0 (psoptim) function.
+#' @param e numeric; epsilon for complexity penalty.
 #' @param x CIMseqSwarm; A CIMseqSwarm object.
 #' @param object CIMseqSwarm; A CIMseqSwarm to show.
 #' @param n character; Data to extract from CIMseqSwarm object.
@@ -77,7 +77,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   permute = FALSE, singletIdx = NULL, swarmInit = NULL, psoControl = list(), 
   e = 0.001, ...
 ){
-    
+  
   #put a check here to make sure all slots in the spUnsupervised object are
   #filled. This should actually be regulated by the class definition BUT you
   #should probably double check that it works as expected via unit tests.
@@ -88,11 +88,11 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   #input and input checks
   sngCPM <- getData(singlets, "counts.cpm")
   mulCPM <- getData(multiplets, "counts.cpm")
-    
+  
   #calculate fractions
   classes <- getData(singlets, "classification")
   fractions <- rep(NA, length(unique(classes)))
-    
+  
   #subset top genes for use with optimization
   #sholud also check user input selectInd
   selectInd <- getData(multiplets, "features")
@@ -143,9 +143,9 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
       .optim.fun(
         i, fractions = fractions, multiplets = mul,
         singletSubset = t.singletSubset, n = nSyntheticMultiplets,
-        control = control, swarmInit = swarmInit, ec = ec, e = e, ...
+        control = control, swarmInit = swarmInit, e = e, ec = ec, ...
       )
-  })
+    })
   
   #process and return results
   cn <- sort(unique(classes))
@@ -180,10 +180,10 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 .processConvergence <- function(opt.out) {
   convergence <- map_dbl(opt.out, 4)
   convergenceKey <- c(
-  "Maximal number of function evaluations reached.",
-  "Maximal number of iterations reached.",
-  "Maximal number of restarts reached.",
-  "Maximal number of iterations without improvement reached."
+    "Maximal number of function evaluations reached.",
+    "Maximal number of iterations reached.",
+    "Maximal number of restarts reached.",
+    "Maximal number of iterations without improvement reached."
   )
   convergenceKey[convergence]
 }
@@ -191,7 +191,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 .processStats <- function(opt.out, cn, rn) {
   position <- NULL
   stats <- map(opt.out, 6)
-
+  
   tibble(
     sample = rn,
     iteration = map(stats, function(x) x$it),
@@ -204,22 +204,22 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
     unnest() %>%
     mutate(position = map(position, function(x) {
       x %>%
-      as.data.frame() %>%
-      setNames(cn) %>%
-      as_tibble() %>%
-      add_column(swarmMemberID = 1:nrow(.), .before = 1)
+        as.data.frame() %>%
+        setNames(cn) %>%
+        as_tibble() %>%
+        add_column(swarmMemberID = 1:nrow(.), .before = 1)
     }))
 }
 
 .optim.fun <- function(
   i, fractions, multiplets, singletSubset,
-  n, control, swarmInit, ec, e, ...
+  n, control, swarmInit, e, ec, ...
 ){
   oneMultiplet <- round(multiplets[, i])
   pso.2.0(
     par = fractions, fn = .tmpWrapper, oneMultiplet = oneMultiplet,
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,
-    control = control, swarmInit = swarmInit, cellNumber = ec, e = e, ...
+    control = control, swarmInit = swarmInit, e = e, cellNumber = ec, ...
   )
 }
 
@@ -246,11 +246,11 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 .costCalculationR <- function(oneMultiplet, syntheticMultiplets) {
   dpois <- NULL
   dpois(round(oneMultiplet), lambda = syntheticMultiplets) %>%
-  matrixStats::rowMeans2() %>%
-  log10() %>%
-  ifelse(is.infinite(.) & . < 0, -323.0052, .) %>%
-  sum() %>%
-  `-` (.)
+    matrixStats::rowMeans2() %>%
+    log10() %>%
+    ifelse(is.infinite(.) & . < 0, -323.0052, .) %>%
+    sum() %>%
+    `-` (.)
 }
 
 #' appropriateSinglets
@@ -319,7 +319,7 @@ appropriateSinglets <- function(
   out <- split(singletSubset, rn) %>%
     map(~matrix(.x, nrow = 1, dimnames = list(NULL, cn))) %>%
     do.call("rbind", .)
-    
+  
   rownames(out) <- unique(genes)
   out
 }
@@ -368,7 +368,7 @@ adjustFractions <- function(
   
   #calculate median cell number per singlet class
   cnc <- cellNumberPerClass(singlets, multiplets) %>%
-    {setNames(pull(., medianCellNumber), pull(., class))}
+  {setNames(pull(., medianCellNumber), pull(., class))}
   
   cnc <- cnc[match(colnames(fractions), names(cnc))]
   if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
@@ -426,13 +426,13 @@ calculateEdgeStats <- function(
     singlets, multiplets, swarm, binary = TRUE, 
     theoretical.max = theoretical.max
   )
-
+  
   #calcluate weight
   edges <- .calculateWeight(mat)
-
+  
   #calculate p-value
   out <- .calculateP(edges, mat)
-
+  
   return(out)
 }
 
@@ -558,7 +558,7 @@ calcResiduals <- function(
         fixNegInf() %>%
         multiply_by(-1) %>%
         matrix_to_tibble(drop = TRUE)
-  }) %>%
+    }) %>%
     reduce(., bind_cols) %>%
     set_names(colnames(multiplets)) %>%
     add_column(gene = rownames(multiplets), .before = 1) %>%
@@ -578,7 +578,6 @@ calcResiduals <- function(
 #' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param edges data.frame; Edges of interest. Edges are indicated by the nodes
 #' they connect with one node in column one and the other node in column 2.
-#' @param theoretical.max integer; See \code{\link{estimateCells}}.
 #' @param ... additional arguments to pass on
 #' @return If the edges argument only includes one row, a vector of multiplet
 #'    names is returned. If several edges are interogated a list is returned
@@ -613,13 +612,11 @@ setGeneric("getMultipletsForEdge", function(
 #' @export
 
 setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, edges, theoretical.max = NULL, ...
+  swarm, singlets, multiplets, edges, ...
 ){
   
   edges <- mutate_if(edges, is.factor, as.character)
-  fractions <- adjustFractions(
-    singlets, multiplets, swarm, theoretical.max = theoretical.max
-  )
+  fractions <- adjustFractions(singlets, multiplets, swarm)
   
   map_dfr(1:nrow(edges), function(i) {
     e <- as.character(edges[i, ])
@@ -647,11 +644,8 @@ setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
 #' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
 #' @param multipletName character; The name of the multiplet of interest.
-#' @param theoretical.max integer; See \code{\link{estimateCells}}.
-#' @param drop logical; Remove self connections from the results?
 #' @param ... additional arguments to pass on
-#' @return Edge names. Note that multiplets that contain no connections are not 
-#'  included in the output.
+#' @return Edge names.
 #' @author Jason T. Serviss
 #' @examples
 #'
@@ -680,23 +674,21 @@ setGeneric("getEdgesForMultiplet", function(
 #' @export
 
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, multipletName = NULL, theoretical.max = NULL, 
-  drop = TRUE, ...
+  swarm, singlets, multiplets, multipletName = NULL, ...
 ){
-  s <- calculateEdgeStats(swarm, singlets, multiplets, theoretical.max = theoretical.max)
-  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, theoretical.max = theoretical.max)
+  s <- calculateEdgeStats(swarm, singlets, multiplets)
+  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
   if(is.null(multipletName)) multipletName <- rownames(getData(swarm, "fractions"))
   frac <- frac[multipletName, , drop = FALSE]
   
-  #count self connections?
-  if(drop) {
-    frac <- frac[matrixStats::rowSums2(frac) > 1, , drop = FALSE]
-  }
+  #don't count self connections or multiplets with all 0 adjusted fractions
+  rs <- rowSums2(frac)
+  frac <- frac[rs > 1, , drop = FALSE]
   
   l <- length(frac)
   if(l == 0) return(tibble(sample = multipletName, from = NA, to = NA))
   
-  output <- map_dfr(1:nrow(frac), function(i) {
+  map_dfr(1:nrow(frac), function(i) {
     p.fracs <- colnames(frac)[frac[i, ] == 1]
     cmb <- expand.grid(p.fracs, p.fracs, stringsAsFactors = FALSE)
     cmb <- cmb[cmb[, 1] != cmb[, 2], ]
@@ -799,33 +791,32 @@ setMethod(
   "calculateCosts", c("CIMseqSinglets", "CIMseqMultiplets", "CIMseqSwarm"), 
   function(
     singlets, multiplets, swarm, fractions = NULL, ...
-){
-  if(is.null(fractions)) fractions <- getData(swarm, "fractions")
-  if(is.null(dim(fractions))) fractions <- matrix(fractions, ncol = length(fractions))
-  mulCPM <- getData(multiplets, "counts.cpm")
-  selectInd <- getData(swarm, "arguments")$features[[1]]
-  
-  multiplets <- matrix(
-    mulCPM[selectInd, ],
-    ncol = ncol(mulCPM),
-    dimnames = list(NULL, colnames(mulCPM))
-  )
-  
-  #run optimization
-  to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
-  
-  #setup synthetic multiplets
-  sngIdx <- getData(swarm, "singletIdx")
-  sngSubset <- appropriateSinglets(singlets, sngIdx, selectInd)
-  nSynthMul <- getData(swarm, "arguments")$nSyntheticMultiplets[[1]]
-  
-  #calculate costs
-  opt.out <- future_lapply(
-    X = 1:to, FUN = function(i) {
-      oneMultiplet <- ceiling(multiplets[, i])
-      calculateCost(oneMultiplet, sngSubset, as.numeric(fractions[i, ]), nSynthMul)
+  ){
+    if(is.null(fractions)) fractions <- getData(swarm, "fractions")
+    if(is.null(dim(fractions))) fractions <- matrix(fractions, ncol = length(fractions))
+    mulCPM <- getData(multiplets, "counts.cpm")
+    selectInd <- getData(swarm, "arguments")$features[[1]]
+    
+    multiplets <- matrix(
+      mulCPM[selectInd, ],
+      ncol = ncol(mulCPM),
+      dimnames = list(NULL, colnames(mulCPM))
+    )
+    
+    #run optimization
+    to <- if(ncol(multiplets) == 1) {to <- 1} else {to <- dim(multiplets)[2]}
+    
+    #setup synthetic multiplets
+    sngIdx <- getData(swarm, "singletIdx")
+    sngSubset <- appropriateSinglets(singlets, sngIdx, selectInd)
+    nSynthMul <- getData(swarm, "arguments")$nSyntheticMultiplets[[1]]
+    
+    #calculate costs
+    opt.out <- future_lapply(
+      X = 1:to, FUN = function(i) {
+        oneMultiplet <- ceiling(multiplets[, i])
+        calculateCost(oneMultiplet, sngSubset, as.numeric(fractions[i, ]), nSynthMul)
+      })
+    names(opt.out) <- colnames(multiplets)
+    opt.out
   })
-  names(opt.out) <- colnames(multiplets)
-  opt.out
-})
-
