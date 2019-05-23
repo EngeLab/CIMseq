@@ -74,7 +74,8 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   singlets, multiplets,
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11, 
   norm = TRUE, report = FALSE, reportRate = NA,
-  permute = FALSE, singletIdx = NULL, swarmInit = NULL, psoControl = list(), ...
+  permute = FALSE, singletIdx = NULL, swarmInit = NULL, psoControl = list(), 
+  e = 0.001, ...
 ){
     
   #put a check here to make sure all slots in the spUnsupervised object are
@@ -142,7 +143,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
       .optim.fun(
         i, fractions = fractions, multiplets = mul,
         singletSubset = t.singletSubset, n = nSyntheticMultiplets,
-        control = control, swarmInit = swarmInit, ...
+        control = control, swarmInit = swarmInit, ec = ec, e = e, ...
       )
   })
   
@@ -212,13 +213,13 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 
 .optim.fun <- function(
   i, fractions, multiplets, singletSubset,
-  n, control, swarmInit, ...
+  n, control, swarmInit, ec, e, ...
 ){
   oneMultiplet <- round(multiplets[, i])
   pso.2.0(
-    par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
+    par = fractions, fn = .tmpWrapper, oneMultiplet = oneMultiplet,
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,
-    control = control, swarmInit = swarmInit, ...
+    control = control, swarmInit = swarmInit, cellNumber = ec, e = e, ...
   )
 }
 
