@@ -95,7 +95,7 @@ test_that("check that estimateCells outputs the expected result", {
   ###TEST1####
   #setup expected data
   expected1 <- tibble::tibble(
-    sampleType=c(rep("Singlet", 78), rep("Multiplet", 3))
+    sampleType=c(rep("Singlet", 79), rep("Multiplet", 3))
   )
   
   expected2 <- tibble::tibble(
@@ -135,4 +135,13 @@ test_that("check that estimateCells gives error with all 0 ercc", {
   tmp <- CIMseqSinglets_test
   getData(tmp, "counts.ercc") <- ercc
   expect_warning(estimateCells(tmp, CIMseqMultiplets_test))
+})
+
+test_that("estimateCells correct with theoretical.max argument non-null", {
+  theoretical.max <- 2
+  output <- estimateCells(
+    CIMseqSinglets_test, CIMseqMultiplets_test, 
+    theoretical.max = theoretical.max
+  )
+  expect_true(max(pull(output, estimatedCellNumber)) <= theoretical.max)
 })

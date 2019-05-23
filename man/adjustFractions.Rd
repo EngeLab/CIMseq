@@ -4,7 +4,8 @@
 \alias{adjustFractions}
 \title{adjustFractions}
 \usage{
-adjustFractions(singlets, multiplets, swarm, binary = TRUE, ...)
+adjustFractions(singlets, multiplets, swarm, binary = TRUE,
+  theoretical.max = NULL, ...)
 }
 \arguments{
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
@@ -16,6 +17,8 @@ fractions.}
 
 \item{binary}{logical; Indicates if adjusted fractions should be returned as
 binary values.}
+
+\item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
 
 \item{...}{additional arguments to pass on}
 }

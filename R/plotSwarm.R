@@ -720,6 +720,7 @@ setMethod("plotSwarmGenes", "CIMseqSwarm", function(
 #' @param label.cex numeric; Vector of length 1 between [0, 1] indicating the
 #'  size of the cell type labels.
 #' @param legend logical; indicates if the legends should be plotted.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
 #' @param pal character; A vector including the colour pallete for the score 
 #' colours.
 #' @param nonSigCol character; Vector of length 1 indicating the colours for 
@@ -752,6 +753,7 @@ setGeneric("plotSwarmCircos", function(
 setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, connectionClass = NULL, 
   alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
+  theoretical.max = NULL,
   pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
   nonSigCol = "grey90", ...
 ){
@@ -769,7 +771,9 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   )
   
   #calculate statitistics and connection colors
-  ps <- calculateEdgeStats(swarm, singlets, multiplets) %>%
+  ps <- calculateEdgeStats(
+    swarm, singlets, multiplets, theoretical.max = theoretical.max
+    ) %>%
     mutate(significant = if_else(
       pval < alpha & weight > weightCut, TRUE, FALSE
     )) %>%
@@ -884,6 +888,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
 })
 
 .ns_legend <- function(data, nonSigCol) {
+  connectionID <- NULL
   p <- data %>%
     ggplot() +
     geom_bar(aes(connectionID, fill = "n.s.")) +
@@ -905,6 +910,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
 }
 
 .obsexp_legend <- function(data, pal) {
+  pval <- score <- NULL
   p <- data %>%
     ggplot() + 
     geom_point(aes(pval, score, colour = score)) + 
@@ -923,6 +929,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
 }
 
 .frac_legend <- function(data) {
+  pval <- score <- frac <- NULL
   p <- data %>%
     ggplot() + 
     geom_point(aes(pval, score, colour = frac)) + 
@@ -939,6 +946,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
 }
 
 .class_legend <- function(colours) {
+  combined <- colour <- NULL
   p <- colours %>%
     mutate(combined = parse_factor(combined, levels = combined)) %>%
     ggplot() + 

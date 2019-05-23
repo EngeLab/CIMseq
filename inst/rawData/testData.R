@@ -34,5 +34,5 @@ CIMseqMultiplets_test <- cObjMul
 CIMseqSwarm_test <- sObj
 save(
   CIMseqSinglets_test, CIMseqMultiplets_test, CIMseqSwarm_test,
-  file = "data/testData.rda"
+  file = "data/testData.rda", compress = "bzip2"
 )

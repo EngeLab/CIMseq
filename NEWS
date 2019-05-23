@@ -1,3 +1,13 @@
+v.0.3.0.1
+* adding modified pso function that accepts swarm initialisation positions and 
+  better early stopping criteria.
+* Adding swarmInit function to calculate the initial swarm positions.
+* Adding theoretical.max argument to estimateCells function and access via 
+  adjustFractions, calculateEdgeStats, and plotSwarmCircos functions.
+
+v.0.3.0.0
+* merging level to master branch with version bump
+
 v.0.2.0.4
 * removing transpose from cost function
 
@@ -13,9 +23,12 @@ v0.2.0.2
 * adding adjustFractions function
 * adding cellNumberPerClass function
 * adding checks for classification and dim.red slots in CIMseqSinglets objects
-* removing calculation for cellNumberMin and cellNumberMax from estimateCells function
-* estimateCells function now correctly only uses singlets for estimatedCellNumber calculation
-* renaming spSwarmPoisson to calculateEdgeStats and re-writing to use adjusted fractions
+* removing calculation for cellNumberMin and cellNumberMax from estimateCells 
+  function
+* estimateCells function now correctly only uses singlets for 
+  estimatedCellNumber calculation
+* renaming spSwarmPoisson to calculateEdgeStats and re-writing to use adjusted 
+  fractions
 * updated p-value calculation
 * getEdgesForMultiplet now returns edges in both directions
 * better defaults for getEdgesForMultiplet and appropriateSinglets
@@ -26,28 +39,38 @@ v.0.2.0.1
 * CIMseqSwarm arguments slot now a tibble
 
 v0.2.0.0
-* removed spUnsupervised. Classification, dim.red, and features now user provided.
-* lots of renaming of classes, etc. and even the package. See updated vignette for workflow
+* removed spUnsupervised. Classification, dim.red, and features now user 
+  provided.
+* lots of renaming of classes, etc. and even the package. See updated vignette 
+  for workflow
 
 v0.1.0.2
 * spUnsupervised now uses kNN classification.
 
 v0.1.0.1
-* spCounts now does not store counts.cpm or counts.log and, instead, computes them when requested.
+* spCounts now does not store counts.cpm or counts.log and, instead, computes 
+  them when requested.
 * testData is updated to use real data from the countsSorted2 dataset
-* The syntheticMultiplets spSwarm obj slot now holds the indices of the singlets used to synthesise synthetic multiplets instead of the subsetted singlets (lower weight).
+* The syntheticMultiplets spSwarm obj slot now holds the indices of the singlets
+  used to synthesise synthetic multiplets instead of the subsetted singlets 
+  (lower weight).
 * Furthermore, the above named slot has been renamed to 'singletIdx'.
 * unit tests updated accordingly for above changes
 
 v0.1.0.0
-* Deconvolution also now using poisson method. Old method moved to legacy branch.
+* Deconvolution also now using poisson method. Old method moved to legacy 
+  branch.
 
 v0.0.2.0
-* Change in spSwarmPoisson that causes the edges to only be calculated for uniquely named cell types (unsure if this is a great idea or not but doing it for now).
+* Change in spSwarmPoisson that causes the edges to only be calculated for 
+  uniquely named cell types (unsure if this is a great idea or not but doing it
+  for now).
 
 v0.0.1.9
-* Fixed bug in complexityPenalty where multiplets with a cell number < 1 gave negative residuals
-* Updated calcResiduals to work with dtsnCellNum although it is not tested with other distance functions
+* Fixed bug in complexityPenalty where multiplets with a cell number < 1 gave 
+  negative residuals
+* Updated calcResiduals to work with dtsnCellNum although it is not tested with 
+  other distance functions
 
 v0.0.1.8
 * Added countsPerClass function.
@@ -57,7 +80,8 @@ v0.0.1.7
 * fixed apparent bug in spSwarmPoisson .calculateWeight unit
 
 v0.0.1.6
-* Issue #46: Improved performance by using matrixStats package for spUnsupervised
+* Issue #46: Improved performance by using matrixStats package for 
+  spUnsupervised
 * Issue #47: Improved performance of spCounts.
 
 v0.0.1.5
@@ -69,7 +93,8 @@ v0.0.1.4
 * Adding unit tests
 
 v0.0.1.3
-* Plots reworked to have more managable code and facilitate users gaining access to plot data to make custom plots.
+* Plots reworked to have more managable code and facilitate users gaining access 
+  to plot data to make custom plots.
 * Added plotting vignette to describe plotting features.
 * tidy functions added for spUnsupervised and spSwarm objects.
 * Several new input checks.
@@ -81,9 +106,10 @@ v0.0.1.3
 * Test data samples now have unique names (colnames).
 * Added matrix_to_tibble and normalizeVec functions, mostly for internal use.
 * README now generated via README.Rmd
-* Unit tests updated accordingly, although there is still some work to be done here.
+* Unit tests updated accordingly, although there is still some work to be done 
+  here.
 
 v0.0.1.2
 * Adding alternative color schemes for plotUnsupervised markers plot.
-* Adding warning for estimateCells when samples exist with ERCC counts that are all 0.
-  Prevents NaN.
+* Adding warning for estimateCells when samples exist with ERCC counts that are 
+  all 0. Prevents NaN.
