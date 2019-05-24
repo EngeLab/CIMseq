@@ -96,17 +96,8 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   #subset top genes for use with optimization
   #sholud also check user input selectInd
   selectInd <- getData(multiplets, "features")
-  
-  mul <- matrix(
-    mulCPM[selectInd, ],
-    ncol = ncol(mulCPM),
-    dimnames = list(rownames(mulCPM)[selectInd], colnames(mulCPM))
-  )
-  sng <- matrix(
-    sngCPM[selectInd, ],
-    ncol = ncol(sngCPM),
-    dimnames = list(rownames(sngCPM)[selectInd], colnames(sngCPM))
-  )
+  mul <- mulCPM[selectInd, , drop = FALSE]
+  sng <- sngCPM[selectInd, , drop = FALSE]
   
   #setup args for optimization
   control <- list(maxit = maxiter, s = swarmsize)
@@ -132,10 +123,11 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   t.singletSubset <- t(singletSubset)
   
   #estimate number of cells in multiplet based on ERCC
-  ecdf <- filter(estimateCells(cObjSng, cObjMul), sampleType == "Multiplet")
+  ecdf <- estimateCells(cObjSng, cObjMul) %>% filter(sampleType == "Multiplet")
   ec <- ecdf$estimatedCellNumber
   names(ec) <- ecdf$sample
-  ec <- ec[match(names(ec), colnames(mul))]
+  ec <- ec[match(colnames(mul), names(ec))]
+  stopifnot(identical(colnames(mul), names(ec)))
   
   #deconvolution
   opt.out <- future_lapply(
@@ -215,11 +207,10 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   i, fractions, multiplets, singletSubset,
   n, control, swarmInit, e, ec, ...
 ){
-  oneMultiplet <- round(multiplets[, i])
   pso.2.0(
-    par = fractions, fn = .tmpWrapper, oneMultiplet = oneMultiplet,
+    par = fractions, fn = .tmpWrapper, oneMultiplet = round(multiplets[, i]),
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,
-    control = control, swarmInit = swarmInit, e = e, cellNumber = ec, ...
+    control = control, swarmInit = swarmInit, e = e, cellNumber = ec[i], ...
   )
 }
 
