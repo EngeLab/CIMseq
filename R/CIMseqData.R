@@ -240,7 +240,7 @@ setGeneric("estimateCells", function(
 #' @export
 
 setMethod("estimateCells", "CIMseqSinglets", function(
-  singlets, multiplets, warning = TRUE, ...
+  singlets, multiplets, warning = TRUE, maxCellsPerMultiplet = Inf, ...
 ){
   frac.ercc <- NULL
   counts <- cbind(
@@ -258,6 +258,7 @@ setMethod("estimateCells", "CIMseqSinglets", function(
   if(warning) .checkEstimateCellsInput(counts.ercc)
   fe <- colSums(counts.ercc) / (colSums(counts.ercc) + colSums(counts))
   ecn <- median(fe[1:n.sng]) / fe
+  ecn[ecn > maxCellsPerMultiplet] <- maxCellsPerMultiplet
   
   tibble(
     sample = colnames(counts),

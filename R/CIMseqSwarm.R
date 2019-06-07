@@ -77,7 +77,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11, 
   norm = TRUE, report = FALSE, reportRate = NA, vectorize = FALSE,
   permute = FALSE, singletIdx = NULL, cacheScores=FALSE, psoControl=list(),
-  startSwarm = NULL, ...
+  startSwarm = NULL, topK=NULL, ...
 ){
     
   #put a check here to make sure all slots in the spUnsupervised object are
@@ -143,6 +143,15 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
                   singletSubset = t.singletSubset, n = nSyntheticMultiplets,
                   control = control, startSwarm = startSwarm, ...
               )
+          } else if(!is.null(topK)){
+              if(topK > length(fractions)) {
+                  stop(paste("trying to use higher number of fractions than available, topK=", topK, ", num fractions=", length(fractions)))
+              }
+              .optim.fun.topK(
+                  i, fractions = fractions, multiplets = mul,
+                  singletSubset = t.singletSubset, n = nSyntheticMultiplets,
+                  control = control, startSwarm = startSwarm, maxNonNull=topK, ...
+              )
           } else {
               .optim.fun(
                   i, fractions = fractions, multiplets = mul,
@@ -155,10 +164,22 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   #process and return results
   cn <- sort(unique(classes))
   rn <- colnames(mul)
-  
+    
+  topKfrac <- function(xmat, maxNonNull=2) {
+      t(apply(xmat, 1, function(x) {
+          x[order(x, decreasing=T)[-1:-maxNonNull]] <- 0
+          x/sum(x)
+      }))
+  }
+
+  fractions = .processSwarm(opt.out, cn, rn, norm)
+  if(!is.null(topK)) {
+      fractions <- topKfrac(fractions, topK)
+  }
+        
   new(
     "CIMseqSwarm",
-    fractions = .processSwarm(opt.out, cn, rn, norm),
+    fractions = fractions,
     costs = setNames(map_dbl(opt.out, 2), colnames(mul)),
     convergence = setNames(.processConvergence(opt.out), colnames(mul)),
     stats = if(report) {.processStats(opt.out, cn, rn)} else {tibble()},
@@ -222,11 +243,42 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   n, control, startSwarm = NULL, ...
 ){
   oneMultiplet <- round(multiplets[, i]) #change this to round() ?
-  psoptim1(
-    par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
-    singletSubset = singletSubset, n = n, lower = 0, upper = 1,
-    control = control, Xinit = startSwarm, ...
-  )
+  if(is.list(startSwarm)) {
+      psoptim1(
+          par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
+          singletSubset = singletSubset, n = n, lower = 0, upper = 1,
+          control = control, Xinit = startSwarm[[i]], ...
+      )
+  }
+  else {
+      psoptim1(
+          par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
+          singletSubset = singletSubset, n = n, lower = 0, upper = 1,
+          control = control, Xinit = startSwarm, ...
+      )
+  }
+}
+
+
+.optim.fun.topK <- function(
+  i, fractions, multiplets, singletSubset,
+  n, control, startSwarm = NULL, maxNonNull=2, ...
+){
+  oneMultiplet <- round(multiplets[, i]) #change this to round() ?
+  if(is.list(startSwarm)) {
+      psoptim1(
+          par = fractions, fn = calculateCostMaxNonNull, oneMultiplet = oneMultiplet,
+          singletSubset = singletSubset, n = n, lower = 0, upper = 1,
+          control = control, Xinit = startSwarm[[i]], maxNonNull=maxNonNull, ...
+      )
+  }
+  else {
+      psoptim1(
+          par = fractions, fn = calculateCostMaxNonNull, oneMultiplet = oneMultiplet,
+          singletSubset = singletSubset, n = n, lower = 0, upper = 1,
+          control = control, Xinit = startSwarm, maxNonNull=maxNonNull, ...
+      )
+  }
 }
 
 .optim.fun.wcache <- function(
@@ -270,6 +322,11 @@ calculateCostWrapper <- function(oneMultiplet, singletSubset, fractions, n, cach
 #        cat(frac.char, "\n")
     }
     return(result)
+}
+
+calculateCostMaxNonNull <- function(oneMultiplet, singletSubset, fractions, n, cache, maxNonNull=2) {
+    fractions[order(fractions, decreasing=T)[-1:-maxNonNull]] <- 0 # Set all non-top maxNonNull fracs to 0
+    calculateCost(oneMultiplet, singletSubset, fractions, n)
 }
 
 calculateCostWrapperCpp <- function(oneMultiplet, singletSubset, fractions, n, cache, resolution) {
@@ -410,7 +467,7 @@ adjustFractions <- function(
   if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
   
   #calculate cell number per multiplet
-  cnm <- estimateCells(singlets, multiplets) %>%
+  cnm <- estimateCells(singlets, multiplets, ...) %>%
     filter(sampleType == "Multiplet") %>%
     {setNames(pull(., estimatedCellNumber), pull(., sample))}
   
@@ -457,7 +514,7 @@ NULL
 calculateEdgeStats <- function(
   swarm, singlets, multiplets, ...
 ){
-  mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
+  mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, ...)
 
   #calcluate weight
   edges <- .calculateWeight(mat)
@@ -510,9 +567,14 @@ calculateEdgeStats <- function(
   }))
   
   #calculate p-value based on observed (weight) vs. expected (expected.edges)
-  edges <- mutate(edges, pval = ppois(
-    q = weight, lambda = expected.edges, lower.tail = FALSE
-  ))
+#  edges <- mutate(edges, pval = ppois(
+#    q = weight, lambda = expected.edges, lower.tail = FALSE
+#  ))
+  edges$pval <- sapply(1:nrow(edges), function(i) {
+      phyper(q=edges$weight[i], m=sum(edges$weight[edges$to == edges$to[i]]), n=sum(edges$weight[edges$to != edges$to[i]]), k=sum(edges$weight[edges$from == edges$from[i]]), lower.tail=F)
+  })
+  edges$qval <- p.adjust(edges$pval, 'fdr')
+#  edges$qval.hyperg <- p.adjust(edges$p.hyperg, 'fdr')
   
   #calculate score = observed / expected
   edges <- mutate(edges, score = weight / expected.edges)

@@ -769,7 +769,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   )
   
   #calculate statitistics and connection colors
-  ps <- calculateEdgeStats(swarm, singlets, multiplets) %>%
+  ps <- calculateEdgeStats(swarm, singlets, multiplets, ...) %>%
     mutate(significant = if_else(
       pval < alpha & weight > weightCut, TRUE, FALSE
     )) %>%
@@ -800,7 +800,8 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
     inner_join(ps, by = c("from", "to")) %>%
     separate(connectionID, into = c("super", "sub"), sep = "\\.", remove = FALSE) %>%
     group_by(sub) %>% 
-    filter(pval == min(pval)) %>%
+    filter(pval == min(pval)) %>% # hypergeometric pval is symmetrical, cannot do this anymore
+#    filter(score == max(score)) %>%
     ungroup() %>%
     select(-sub, -super) %>%
     group_by(class, connectionName) %>%
@@ -855,7 +856,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   #add fractions
   circos.track(
     ylim = c(0, 1), bg.border = "darkgrey", track.height = 0.05, 
-    track.margin = c(0.0001, 0.0001), bg.lwd = 0.3,
+    track.margin = c(0.0001, 0.0001), #bg.lwd = 0.3,
     panel.fun = function(x, y) {
       sector.index = CELL_META$sector.index
       m <- filter(data, class == sector.index)
@@ -877,7 +878,8 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
     circos.link(
       pull(conn, class)[1], pull(conn, position)[1],
       pull(conn, class)[2], pull(conn, position)[2],
-      border = 1, col = unique(pull(conn, p.col))
+      border = 1, col = unique(pull(conn, p.col)),
+      lwd=200/length(unique(data$connectionID))
     )
   }
   if(legend) par(op)
@@ -1011,15 +1013,20 @@ setGeneric("plotSwarmCircos2", function(
 setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, connectionClass = NULL, 
   alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
-  pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
-  nonSigCol = "grey90", ...
+  pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
+  nonSigCol = "grey95", h.ratio=0.5, ...
 ){
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
   frac <- connectionID <- super <- connectionName <- position <- nr <- NULL
   colour <- NULL
     
   fractions <- getData(swarm, "fractions")
-  if(is.null(classOrder)) classOrder <- unique(getData(singlets, "classification"))
+  if(!is.null(classOrder)) {
+      # Check that supplied classOrder is conformant
+      if(!identical(sort(unique(getData(singlets, "classification"))), sort(classOrder))) stop("error, classOrder and singlet classification do not match!")
+  } else {
+      classOrder <- unique(getData(singlets, "classification"))
+  }
   colours <- tibble(
     class = classOrder, 
     colour = col40()[1:length(classOrder)],
@@ -1061,7 +1068,8 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
       inner_join(ps, by = c("from", "to")) %>%
       separate(connectionID, into = c("super", "sub"), sep = "\\.", remove = FALSE) %>%
       group_by(sub) %>% 
-      filter(pval == min(pval)) %>%
+#      filter(pval == min(pval)) %>% #Hypergeometric test is symmetrical
+      filter(score == max(score)) %>%
       ungroup() %>%
       select(-sub, -super) %>% # Remove sub and super cols
       group_by(class) %>%
@@ -1073,7 +1081,11 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
                                         #    ungroup() %>%
       as.data.frame()
 
-  size.table <- cbind(rep(1, length(table(edges$class))), table(edges$class)/2)
+  size.table <- data.frame(rep(1, length(classOrder)), rep(2, length(classOrder)), row.names=classOrder)
+  my.tab <- table(edges$class)
+  size.table[names(my.tab),2] <- my.tab/2+1
+  size.table <- as.matrix(size.table)
+#  size.table <- cbind(rep(1, length(table(edges$class))), table(edges$class)/2)
  
   #add legend
   if(legend) {
@@ -1097,9 +1109,10 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   
   #if(is.null(classOrder)) classOrder <- unique(c(edges$from, edges$to))
   #circos.par(track.margin = c(0, 0))
-  circos.par(gap.degree=12, cell.padding=c(0,0)) # FIXME: gap.degree might have to be adjusted!
-#  circos.initialize(factors=as.character(classOrder), xlim=size.table)
-  circos.initialize(factors=classOrder, xlim=size.table)
+  gap.degree <- 200.0/length(classOrder)
+  circos.par(gap.degree=gap.degree, cell.padding=c(0,0)) # FIXME: gap.degree might have to be adjusted!
+  circos.initialize(factors=as.character(classOrder), xlim=size.table)
+#  circos.initialize(factors=classOrder, xlim=size.table)
   # circos.trackPlotRegion(
   #   ylim = c(0, 1), bg.col = class.colors[sort(names(class.colors))],
   #   bg.border = NA, track.height = 0.1
@@ -1145,8 +1158,10 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
       circos.link(
           pull(conn, class)[1], pull(conn, position)[1],
           pull(conn, class)[2], pull(conn, position)[2],
-          border = 1, col = unique(pull(conn, p.col)),
-          lwd=2
+#          border = 1,
+          col = unique(pull(conn, p.col)),
+          lwd=200/length(unique(data$connectionID)),
+          h.ratio=h.ratio
       )
   }
   if(legend) par(op)
