@@ -24,11 +24,11 @@ getEdgesForMultiplet(swarm, ...)
 
 \item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
 
-\item{drop}{logical; Remove self connections from the results?}
+\item{drop}{logical; Remove self connections?}
 }
 \value{
 Edge names. Note that multiplets that contain no connections are not 
- included in the output.
+ included in the output and neither are self connections.
 }
 \description{
 Returns the names of the edges detected in a multiplet.

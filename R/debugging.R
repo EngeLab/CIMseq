@@ -49,35 +49,11 @@ setMethod("plotSwarmPosition", "CIMseqSwarm", function(
     interval = NULL,
     ...
 ){
-  #get the reported statistics and subset only those multiplets of interest
-  stats <- getData(swarm, "stats")
-  classes <- colnames(getData(swarm, "fractions"))
-  names(stats) <- rownames(getData(swarm, "fractions"))
-  stats <- stats[names(stats) %in% multiplet]
-  
-  #reformat all the matrixes as tibbles and add the appropriate names
-  ll <- stats %>%
-    lapply(.data, `[[`, 4) %>%
-    lapply(.data %>%
-    lapply(.data %>%
-    as_tibble() %>%
-    setNames(paste("v", 1:ncol(.data), sep = "")) %>%
-    mutate(class = .data$classes)
-  ))
-  
-  ll <- lapply(ll, setNames, paste(1:100, sep = ""))
-  
-  position <- lapply(1:length(ll), function(x) {
-    bind_rows(ll[[x]], .id = "iteration")
-  })
-  
-  p <- position %>%
-    setNames(names(stats)) %>%
-    bind_rows(.data, .id = "multiplet") %>%
-    gather(
-      "swarmMember", "position", -.data$iteration, -.data$multiplet,
-      -.data$class
-    ) %>%
+  p <- getData(swarm, "stats") %>%
+    filter(sample %in% multiplet) %>%
+    unnest() %>%
+    gather(class, position, -(sample:swarmMemberID)) %>%
+    mutate(iteration = as.character(iteration)) %>%
     mutate(
       iteration = parse_factor(
         .data$iteration,
@@ -86,14 +62,13 @@ setMethod("plotSwarmPosition", "CIMseqSwarm", function(
     ) %>%
     mutate(class = factor(.data$class)) %>%
     mutate(position = log2(.data$position + 1)) %>%
-    filter(.data$iteration %in% interval) %>%
-    as_tibble() %>%
+    #filter(.data$iteration %in% interval) %>%
     ggplot(aes(position)) +
       geom_density(aes(fill = class, colour = class), alpha = 0.5) +
-      facet_grid(multiplet ~ iteration, scale = "free") +
+      facet_grid(sample ~ iteration, scale = "free") +
       scale_fill_manual(values = col40()) +
       scale_colour_manual(values = col40()) +
-      theme_few() +
+      ggthemes::theme_few() +
       theme(
         legend.position = "top",
         strip.text.y = element_text(angle = 0)
@@ -104,8 +79,7 @@ setMethod("plotSwarmPosition", "CIMseqSwarm", function(
         ),
         colour = FALSE
       ) +
-      labs(
-        x = "Swarm position", y = "Density")
+      labs(x = "Swarm position", y = "Density")
   p
   return(p)
 })

@@ -9,7 +9,7 @@
 getCellsForMultiplet(swarm, ...)
 
 \S4method{getCellsForMultiplet}{CIMseqSwarm}(swarm, singlets, multiplets,
-  multipletName = NULL, ...)
+  multipletName = NULL, drop = TRUE, ...)
 }
 \arguments{
 \item{swarm}{A CIMseqSwarm object.}
@@ -21,6 +21,8 @@ getCellsForMultiplet(swarm, ...)
 \item{multiplets}{A CIMseqMultiplets object.}
 
 \item{multipletName}{character; The name of the multiplet of interest.}
+
+\item{drop}{logical; Remove self connections?}
 }
 \value{
 Edge names.

@@ -624,10 +624,10 @@ setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
 #' @param multiplets A CIMseqMultiplets object.
 #' @param multipletName character; The name of the multiplet of interest.
 #' @param theoretical.max integer; See \code{\link{estimateCells}}.
-#' @param drop logical; Remove self connections from the results?
+#' @param drop logical; Remove self connections?
 #' @param ... additional arguments to pass on
 #' @return Edge names. Note that multiplets that contain no connections are not 
-#'  included in the output.
+#'  included in the output and neither are self connections.
 #' @author Jason T. Serviss
 #' @examples
 #'
@@ -641,10 +641,10 @@ NULL
 #' @rdname getEdgesForMultiplet
 #' @export
 #' @importFrom rlang .data
-#' @importFrom purrr map_dfr
-#' @importFrom tibble  tibble
-#' @importFrom utils combn
-#' @importFrom matrixStats rowSums2
+#' @importFrom dplyr filter everything mutate select
+#' @importFrom purrr map2
+#' @importFrom tibble as_tibble tibble
+#' @importFrom tidyr unnest
 
 setGeneric("getEdgesForMultiplet", function(
   swarm, ...
@@ -659,28 +659,42 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
   swarm, singlets, multiplets, multipletName = NULL, theoretical.max = NULL, 
   drop = TRUE, ...
 ){
-  s <- calculateEdgeStats(swarm, singlets, multiplets, theoretical.max = theoretical.max)
-  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, theoretical.max = theoretical.max)
+  from <- to <- NULL
   if(is.null(multipletName)) multipletName <- rownames(getData(swarm, "fractions"))
-  frac <- frac[multipletName, , drop = FALSE]
   
-  #count self connections?
-  if(drop) {
-    frac <- frac[matrixStats::rowSums2(frac) > 1, , drop = FALSE]
-  }
+  s <- calculateEdgeStats(
+    swarm, singlets, multiplets, theoretical.max = theoretical.max
+  )
+  mat <- adjustFractions(
+    singlets, multiplets, swarm, binary = TRUE, 
+    theoretical.max = theoretical.max
+  )
   
-  l <- length(frac)
-  if(l == 0) return(tibble(sample = multipletName, from = NA, to = NA))
+  edges <- expand.grid(
+    from = colnames(mat), to = colnames(mat),
+    stringsAsFactors = FALSE
+  ) %>%
+    as_tibble() 
   
-  output <- map_dfr(1:nrow(frac), function(i) {
-    p.fracs <- colnames(frac)[frac[i, ] == 1]
-    cmb <- expand.grid(p.fracs, p.fracs, stringsAsFactors = FALSE)
-    cmb <- cmb[cmb[, 1] != cmb[, 2], ]
-    tibble(
-      sample = rep(rownames(frac)[i], nrow(cmb)),
-      from = cmb[, 1], to = cmb[, 2]
-    )
-  })
+  if(drop) edges <- filter(edges, from != to)
+  if(!drop) rs <- rowSums2(mat)
+  
+  data <- edges %>%
+    mutate(sample = map2(from, to, function(f, t) {
+      if(f == t) {
+        rownames(mat)[mat[, colnames(mat) == f] == 1 & rs == 1]
+      } else {
+        sub <- mat[, colnames(mat) %in% c(f, t)]
+        rownames(mat)[which(rowSums2(sub) == 2)]
+      }
+    })) %>%
+    unnest() %>%
+    filter(sample %in% multipletName) %>%
+    select(sample, everything())
+  
+  if(nrow(data) == 0) return(tibble(sample = multipletName, from = NA, to = NA))
+
+  return(data)
 })
 
 #' getCellsForMultiplet
@@ -696,6 +710,7 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
 #' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
 #' @param multipletName character; The name of the multiplet of interest.
+#' @param drop logical; Remove self connections?
 #' @param ... additional arguments to pass on
 #' @return Edge names.
 #' @author Jason T. Serviss
@@ -712,8 +727,9 @@ NULL
 #' @export
 #' @importFrom rlang .data
 #' @importFrom purrr map2
-#' @importFrom dplyr mutate select distinct
+#' @importFrom dplyr mutate select distinct pull bind_rows
 #' @importFrom tidyr unnest
+#' @importFrom tibble tibble
 
 setGeneric("getCellsForMultiplet", function(
   swarm, ...
@@ -725,9 +741,13 @@ setGeneric("getCellsForMultiplet", function(
 #' @export
 
 setMethod("getCellsForMultiplet", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, multipletName = NULL, ...
+  swarm, singlets, multiplets, multipletName = NULL, drop = TRUE, ...
 ){
-  getEdgesForMultiplet(swarm, singlets, multiplets, multipletName) %>%
+  if(is.null(multipletName)) multipletName <- colnames(getData(multiplets, "counts"))
+  
+  getEdgesForMultiplet(
+    swarm, singlets, multiplets, multipletName, drop = drop
+  ) %>%
     mutate(cells = map2(.data$from, .data$to, ~c(.x, .y))) %>%
     select(-.data$from, -.data$to) %>%
     unnest() %>%

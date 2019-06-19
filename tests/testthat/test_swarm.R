@@ -81,9 +81,9 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
   ###TEST2####
   #setup expected data
   expected1 <- tibble::tibble(
-    sample = rep(c("m.NJB00204.G04", "m.NJB00204.D07"), each = 2),
-    from = c("HOS", "A375", "HOS", "HCT116"), 
-    to = c("A375", "HOS", "HCT116", "HOS")
+    sample = rep(c("m.NJB00204.G04", "m.NJB00204.D07"), 2),
+    from = c("HOS", "HOS", "A375", "HCT116"), 
+    to = c("A375", "HCT116", "HOS", "HOS")
   )
   
   #run function

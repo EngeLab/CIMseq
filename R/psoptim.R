@@ -426,6 +426,7 @@ pso.2.0 <- function (
 NULL
 
 #' @rdname swarmInit
+#' @importFrom utils combn
 #' @export
 
 swarmInit <- function(singlets, k, null.weight = 1, seed = 9238232) {

@@ -362,6 +362,7 @@ NULL
 
 #' @rdname estimateTotalConnections
 #' @importFrom dplyr "%>%"
+#' @importFrom utils combn
 #' @export
 
 estimateTotalConnections <- function(singlets, multiplets) {

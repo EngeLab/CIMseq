@@ -1,3 +1,6 @@
+v.0.3.0.2
+* getCellsForMultiplet now reports "self connections".
+
 v.0.3.0.1
 * adding modified pso function that accepts swarm initialisation positions and 
   better early stopping criteria.
