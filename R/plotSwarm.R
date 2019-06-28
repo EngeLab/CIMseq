@@ -725,6 +725,10 @@ setMethod("plotSwarmGenes", "CIMseqSwarm", function(
 #' colours.
 #' @param nonSigCol character; Vector of length 1 indicating the colours for 
 #' non-significant connections.
+#' @param gap.degree numeric; Controls the amount of space between the classes.
+#'  See \code{\link[circlize]{circos.par}}.
+#'  @param clear logical; Should \code{\link[circlize]{circos.clear}} be called
+#'   when finished plotting?
 #' @param ... additional arguments to pass on.
 #' @return A ggplot object.
 #' @author Jason T. Serviss
@@ -755,11 +759,21 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
   theoretical.max = NULL,
   pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
-  nonSigCol = "grey90", ...
+  nonSigCol = "grey90", gap.degree = NULL, clear = TRUE, ...
 ){
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
   frac <- connectionID <- super <- connectionName <- position <- nr <- NULL
   colour <- NULL
+  
+  if(!is.null(classOrder)) {
+    # Check that supplied classOrder is conformant
+    sngClass <- unique(getData(singlets, "classification"))
+    if(!identical(sort(sngClass), sort(classOrder))) {
+      stop("classOrder and singlet classification do not match!")
+    }
+  } else {
+    classOrder <- unique(getData(singlets, "classification"))
+  }
   
   fractions <- getData(swarm, "fractions")
   if(is.null(classOrder)) classOrder <- unique(getData(singlets, "classification"))
@@ -785,7 +799,9 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
     arrange(idx)
   
   #calculate edge data and add fraction colours
-  edges <- longFormConnections(swarm, singlets, multiplets) %>%
+  edges <- longFormConnections(
+    swarm, singlets, multiplets, theoretical.max = theoretical.max
+  ) %>%
     arrange(match(from, classOrder), match(to, classOrder)) %>%
     mutate(idx = rank(frac)) %>%
     mutate(f.col = viridis(max(idx))[idx]) %>%
@@ -807,12 +823,14 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
     filter(pval == min(pval)) %>%
     ungroup() %>%
     select(-sub, -super) %>%
-    group_by(class, connectionName) %>%
-    arrange(significant, desc(pval), frac) %>%
-    ungroup() %>%
     group_by(class) %>%
+    arrange(.closestCircle(
+      match(from, classOrder), match(to, classOrder), 
+      match(class, classOrder), 12
+    ), .by_group=TRUE) %>%
     mutate(position = 1:n()) %>%
     ungroup() %>%
+    arrange(significant, to, frac) %>%
     as.data.frame()
   
   #add legend
@@ -832,42 +850,56 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   }
   
   #base circos plot
-  class.colors <- col40()[1:length(classOrder)]
-  names(class.colors) <- classOrder
+  posdat <- data %>% 
+    group_by(class) %>% 
+    summarize(start = min(position), end = max(position)) %>% 
+    arrange(match(class, colours$class)) %>%
+    full_join(tibble(class = classOrder)) %>%
+    replace_na(list(start = 1, end = 2)) %>%
+    as.data.frame() %>%
+    column_to_rownames("class")
   
-  #if(is.null(classOrder)) classOrder <- unique(c(edges$from, edges$to))
-  circos.par(track.margin = c(0, 0))
-  circos.initialize(factors = classOrder, xlim = range(data$position))
-  # circos.trackPlotRegion(
-  #   ylim = c(0, 1), bg.col = class.colors[sort(names(class.colors))],
-  #   bg.border = NA, track.height = 0.1
-  # )
+  if(is.null(gap.degree)) gap.degree <- 200.0 / length(classOrder)
+  
+  #initialize circos
+  circos.par(gap.degree = gap.degree, cell.padding = c(0, 0))
+  circos.initialize(factors = as.character(classOrder), xlim = posdat)
+  
+  #add labels
+  circos.track(ylim = c(0, 1), bg.border = NA, track.height = 0.05,
+    panel.fun = function(x, y) {
+      sector.index = get.cell.meta.data("sector.index")
+      xcenter = get.cell.meta.data("xcenter")
+      ycenter = get.cell.meta.data("ycenter")
+      circos.text(
+        x = xcenter, y = ycenter, 
+        labels = filter(colours, class == sector.index)$nr, 
+        sector.index = sector.index, col = "grey45", facing = "downward", 
+        cex = label.cex
+      )
+  })
+  
+  #add colour panels
   circos.trackPlotRegion(
     ylim = c(0, 1), bg.col = pull(colours, colour),
     bg.border = NA, track.height = 0.1
   )
-  #add labels
-  for(i in 1:nrow(colours)) { #should be ordered by classOrder
-    circos.text(
-      x = mean(range(data$position)), y = 0.5, 
-      labels = as.character(pull(colours, nr)[i]), 
-      sector.index = pull(colours, class)[i], 1, col = "white",
-      facing = "bending.inside", cex = label.cex
-    )
-  }
   
   #add fractions
   circos.track(
     ylim = c(0, 1), bg.border = "darkgrey", track.height = 0.05, 
     track.margin = c(0.0001, 0.0001), bg.lwd = 0.3,
     panel.fun = function(x, y) {
-      sector.index = CELL_META$sector.index
-      m <- filter(data, class == sector.index)
+      sector.index <- CELL_META$sector.index
+      m <- filter(data, class == sector.index) %>%
+        group_by(to) %>%
+        mutate(frac.pos = sort(position)) %>%
+        ungroup()
       if(nrow(m) == 0) return(NA)
       for(i in 1:nrow(m)) {
         circos.rect(
-          xleft = m$position[i], ybottom = 0,
-          xright = m$position[i], ytop = 1,
+          xleft = m$frac.pos[i], ybottom = 0,
+          xright = m$frac.pos[i], ytop = 1,
           sector.index = sector.index,
           border = m$f.col[i], col = m$f.col[i]
         )
@@ -881,11 +913,30 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
     circos.link(
       pull(conn, class)[1], pull(conn, position)[1],
       pull(conn, class)[2], pull(conn, position)[2],
-      border = 1, col = unique(pull(conn, p.col))
+      col = unique(pull(conn, p.col)),
+      lwd = 200 / length(unique(data$connectionID))
     )
   }
+  if(clear) circos.clear()
   if(legend) par(op)
 })
+
+.closestCircle <- function(from, to, class, max) {
+  o <- class == to
+  to[o] <- from[o]
+  from[o] <- class[o]
+  if(any(is.na(from))) {
+    cat(paste("NA pos: ", from))
+  }
+  mid <- as.integer(max/2)
+  adj <- mid-from
+  from <- (from+adj) %% max
+  to <- (to+adj) %% max
+  pos <- to-from
+  pos[pos < 0] <- -mid-pos[pos < 0]
+  pos[pos > 0] <- mid-pos[pos > 0]
+  return(pos)
+}
 
 .ns_legend <- function(data, nonSigCol) {
   connectionID <- NULL

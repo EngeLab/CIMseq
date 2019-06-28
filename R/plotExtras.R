@@ -243,6 +243,7 @@ processMarkers <- function(counts.log, markers) {
 #' @param swarm CIMseqSwarm; A CIMseqSwarm object.
 #' @param singlets CIMseqSinglets; A CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
 NULL
 
 #' @rdname longFormConnections
@@ -251,10 +252,15 @@ NULL
 #' @importFrom readr parse_factor
 #' @importFrom tidyr unite gather
 
-longFormConnections <- function(swarm, singlets, multiplets) {
+longFormConnections <- function(
+  swarm, singlets, multiplets, theoretical.max = NULL
+){
   from <- to <- tmp <- connectionID <- super <- direction <- connectionName <- NULL
   fractions <- getData(swarm, "fractions")
-  getEdgesForMultiplet(swarm, singlets, multiplets, rownames(fractions)) %>%
+  getEdgesForMultiplet(
+    swarm, singlets, multiplets, rownames(fractions), 
+    theoretical.max = theoretical.max
+  ) %>%
     #add connectionID
     mutate(tmp = pmap_chr(list(sample, from, to), function(x, y, z) {
       paste(x, sort(c(y, z)), collapse = "-")

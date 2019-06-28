@@ -258,6 +258,7 @@ setMethod("getData", "CIMseqSwarm", function(x, n = NULL){
 
 #' @rdname CIMseqSwarm
 #' @importFrom dplyr bind_rows
+#' @importFrom purrr flatten
 #' @export
 
 setMethod("c", c("CIMseqSwarm"), function(x, ...){
@@ -271,7 +272,8 @@ setMethod("c", c("CIMseqSwarm"), function(x, ...){
   if(length(unique(si)) == 1) {
     si <- si[[1]]
   } else {
-    names(si) <- rownames(frac)
+    warning("Non-matching singletIdx. Concatenating.")
+    si <- unique(flatten(si))
   }
   new("CIMseqSwarm",
     fractions = frac,
@@ -309,14 +311,18 @@ setMethod("filterSwarm", c("CIMseqSwarm"), function(x, subset){
   s <- subset
   if(is.character(s)) s <- samples %in% s
   if(is.integer(s) | is.numeric(s)) s <- 1:length(samples) %in% s
+  s <- setNames(s, samples)
   
+  #NOTE
+  #stats may have swarm tracking info in which case there are multiple rows
+  #per sample
   new("CIMseqSwarm",
       fractions = getData(x, "fractions")[s, ],
       costs = getData(x, "costs")[s],
       convergence = getData(x, "convergence")[s],
-      stats = dplyr::filter(getData(x, "stats"), s),
+      stats = dplyr::filter(getData(x, "stats"), sample %in% names(s[s])),
       singletIdx = getData(x, "singletIdx"),
-      arguments = dplyr::filter(getData(x, "arguments"), s)
+      arguments = getData(x, "arguments")
   )
 })
 

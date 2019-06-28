@@ -12,7 +12,8 @@ plotSwarmCircos(swarm, ...)
   classOrder = NULL, connectionClass = NULL, alpha = 0.05,
   weightCut = 0, label.cex = 1, legend = TRUE,
   theoretical.max = NULL, pal = colorRampPalette(c("grey90",
-  viridis::viridis(1)))(120)[20:110], nonSigCol = "grey90", ...)
+  viridis::viridis(1)))(120)[20:110], nonSigCol = "grey90",
+  gap.degree = NULL, clear = TRUE, ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
@@ -46,6 +47,11 @@ colours.}
 
 \item{nonSigCol}{character; Vector of length 1 indicating the colours for 
 non-significant connections.}
+
+\item{gap.degree}{numeric; Controls the amount of space between the classes.
+See \code{\link[circlize]{circos.par}}.
+@param clear logical; Should \code{\link[circlize]{circos.clear}} be called
+ when finished plotting?}
 }
 \value{
 A ggplot object.

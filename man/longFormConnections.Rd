@@ -4,7 +4,7 @@
 \alias{longFormConnections}
 \title{longFormConnections}
 \usage{
-longFormConnections(swarm, singlets, multiplets)
+longFormConnections(swarm, singlets, multiplets, theoretical.max = NULL)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
@@ -12,6 +12,8 @@ longFormConnections(swarm, singlets, multiplets)
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
 
 \item{multiplets}{CIMseqMultiplets; A CIMseqMultiplets object.}
+
+\item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
 }
 \description{
 Helper function for plotSwarmCircos.
