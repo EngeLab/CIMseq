@@ -727,7 +727,7 @@ setMethod("plotSwarmGenes", "CIMseqSwarm", function(
 #' non-significant connections.
 #' @param gap.degree numeric; Controls the amount of space between the classes.
 #'  See \code{\link[circlize]{circos.par}}.
-#'  @param clear logical; Should \code{\link[circlize]{circos.clear}} be called
+#' @param clear logical; Should \code{\link[circlize]{circos.clear}} be called
 #'   when finished plotting?
 #' @param ... additional arguments to pass on.
 #' @return A ggplot object.
@@ -748,7 +748,7 @@ setGeneric("plotSwarmCircos", function(
 #' @importFrom dplyr mutate if_else group_by ntile ungroup arrange select filter inner_join desc n "%>%" pull
 #' @importFrom viridis viridis
 #' @importFrom tibble tibble
-#' @importFrom tidyr separate
+#' @importFrom tidyr separate replace_na
 #' @importFrom graphics par layout
 #' @importFrom grDevices colorRampPalette
 #' @import ggplot2

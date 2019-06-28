@@ -7,6 +7,20 @@ has_zero_range <- function(x, tol = .Machine$double.eps ^ 0.5) {
   isTRUE(all.equal(x[1], x[2], tolerance = tol))
 }
 
+test_that("check that CIMseqSwarm runs without issue", {
+  expect_silent(CIMseqSwarm(
+    CIMseqSinglets_test, CIMseqMultiplets_test, maxiter = 2, swarmsize = 2,
+    nSyntheticMultiplets = 2
+  ))
+})
+
+test_that("check that .optim.fun runs without issue", {
+  expect_silent(CIMseqSwarm(
+    CIMseqSinglets_test, CIMseqMultiplets_test, maxiter = 2, swarmsize = 2,
+    nSyntheticMultiplets = 2
+  ))
+})
+
 #run test getMultipletsForEdge
 test_that("check that getMultipletsForEdge outputs the expected result", {
   
@@ -485,6 +499,10 @@ test_that("check that appropriateSinglets outputs the expected result", {
   expect_identical(unname(col.first.last.gene), unname(output[nrow(output) - 399, ]))
   expect_identical(unname(col.last.last.gene), unname(output[nrow(output), ]))
   expect_true(all(colnames(output) == sort(colnames(output))))
+  expect_identical(
+    appropriateSinglets(CIMseqSinglets_test, idx), 
+    appropriateSinglets(CIMseqSinglets_test, idx, 1:nrow(singlets))
+  )
 })
 
 test_that("check that calculateCost and cost give identical results", {

@@ -49,9 +49,10 @@ colours.}
 non-significant connections.}
 
 \item{gap.degree}{numeric; Controls the amount of space between the classes.
-See \code{\link[circlize]{circos.par}}.
-@param clear logical; Should \code{\link[circlize]{circos.clear}} be called
- when finished plotting?}
+See \code{\link[circlize]{circos.par}}.}
+
+\item{clear}{logical; Should \code{\link[circlize]{circos.clear}} be called
+when finished plotting?}
 }
 \value{
 A ggplot object.
