@@ -15,10 +15,39 @@ test_that("check that CIMseqSwarm runs without issue", {
 })
 
 test_that("check that .optim.fun runs without issue", {
-  expect_silent(CIMseqSwarm(
-    CIMseqSinglets_test, CIMseqMultiplets_test, maxiter = 2, swarmsize = 2,
-    nSyntheticMultiplets = 2
+  idx <- getData(CIMseqSwarm_test, "singletIdx")
+  sngs <- appropriateSinglets(CIMseqSinglets_test, idx)
+  expect_silent(.optim.fun(
+    1, rep(0, 3), getData(CIMseqMultiplets_test, "counts.cpm"), sngs, 
+    length(idx), list(maxit = 2, s = 2), NULL
   ))
+})
+
+test_that("check that .processSwarm returns the correct result", {
+  cn <- paste0("c", 1:5)
+  rn <- paste0("s", 1:3)
+  opt.out <- list(list(1:5), list(2:6), list(3:7))
+  par <- map(opt.out, 1) %>% do.call("rbind", .)
+  colnames(par) <- sort(cn)
+  rownames(par) <- rn
+  expect_identical(par, .processSwarm(opt.out, cn, rn, FALSE))
+  
+  par <- par * 1 / rowSums(par)
+  expect_identical(par, .processSwarm(opt.out, cn, rn, TRUE))
+})
+
+test_that("check that .processConvergence returns the correct result", {
+  opt.out <- list(
+    c(rep(0, 3), 1), c(rep(0, 3), 2), c(rep(0, 3), 3), c(rep(0, 3), 4)
+  )
+  expected <- c(
+    "Maximal number of function evaluations reached.",
+    "Maximal number of iterations reached.",
+    "Maximal number of restarts reached.",
+    "Maximal number of iterations without improvement reached."
+  )
+  output <- .processConvergence(opt.out)
+  expect_identical(output, expected)
 })
 
 #run test getMultipletsForEdge
@@ -157,6 +186,12 @@ test_that("check that adjustFractions outputs the expected result", {
   expected3['m.NJB00204.G04', 'HOS'] <- 0
   expected3['m.NJB00204.A02', 'HCT116'] <- 0
   expect_identical(output3, expected3)
+  
+  ###TEST4####
+  expect_silent(adjustFractions(
+    CIMseqSinglets_test, CIMseqMultiplets_test, 
+    getData(CIMseqSwarm_test, "fractions")
+  ))
 })
 
 test_that("check that calculateEdgeStats outputs the expected result", {
