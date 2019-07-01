@@ -114,6 +114,10 @@ coloursFromTargets <- function(
   markers <- sort(markers)
   pal <- pal[1:length(markers)]
   
+  .f1 <- function(x, y, z) {
+   
+  }
+  
   counts[rownames(counts) %in% markers, ] %>%
   matrix_to_tibble(., 'geneName') %>%
   gather('Sample', 'count', -.data$geneName) %>%
@@ -131,10 +135,8 @@ coloursFromTargets <- function(
   ungroup() %>%
   #convert to rgb and calculate new colors
   mutate('rgb' = pmap(
-    list(.data$colint, .data$normalized, .data$fraction),
-    function(x, y, z) {
-      (255 - ((255 - col2rgb(x)) * y)) * z
-    }
+    list(.data$colint, .data$normalized, .data$fraction), 
+    function(x, y, z)  (255 - ((255 - col2rgb(x)) * y)) * z
   )) %>%
   unnest() %>%
   add_column('col' = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
@@ -145,9 +147,7 @@ coloursFromTargets <- function(
   #convert back to hex
   mutate('Colour' = pmap_chr(
     list(.data$r, .data$g, .data$b),
-    function(x, y, z) {
-      rgb(red = x, green = y, blue = z)
-    }
+    function(x, y, z) rgb(red = x, green = y, blue = z)
   )) %>%
   select(-(.data$b:.data$r)) %>%
   #fix factor levels so ggplot legend will cooperate

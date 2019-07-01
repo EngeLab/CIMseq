@@ -419,10 +419,11 @@ calculateEdgeStats <- function(
     stringsAsFactors = FALSE
   ) %>%
     filter(from != to) %>% #doesn't calculate self edges
-    mutate(weight = map2_int(from, to, function(f, t) {
-      sub <- mat[, colnames(mat) %in% c(f, t)]
-      length(which(rowSums2(sub) == 2))
-    }))
+    # mutate(weight = map2_int(from, to, function(f, t) {
+    #   sub <- mat[, colnames(mat) %in% c(f, t)]
+    #   length(which(rowSums2(sub) == 2))
+    # }))
+    mutate(weight = map2_int(from, to, function(f, t) length(which(rowSums2(mat[, colnames(mat) %in% c(f, t)]) == 2))))
 }
 
 .calculateP <- function(
@@ -436,22 +437,36 @@ calculateEdgeStats <- function(
   class.freq <- colSums2(mat) #multiplet estimated cell type frequency
   names(class.freq) <- colnames(mat)
   
+  .f1 <- function(f, t) {
+    abs <- class.freq[names(class.freq) != t]
+    rel <- abs / sum(abs)
+    as.numeric(rel[f]) * class.freq[t]
+  }
+  
   allProbs <- expand.grid(
     from = names(class.freq), to = names(class.freq), 
     stringsAsFactors = FALSE
   ) %>%
     filter(from != to) %>%
-    mutate(edges = map2_dbl(from, to, function(f, t) {
-      abs <- class.freq[names(class.freq) != t]
-      rel <- abs / sum(abs)
-      as.numeric(rel[f]) * class.freq[t]
-    })) %>%
+    # https://github.com/r-lib/covr/issues/377
+    # mutate(edges = map2_dbl(from, to, function(f, t) {
+    #   abs <- class.freq[names(class.freq) != t]
+    #   rel <- abs / sum(abs)
+    #   as.numeric(rel[f]) * class.freq[t]
+    # })) %>%
+    mutate(edges = map2_dbl(from, to, ~.f1(.x, .y))) %>%
     mutate(rel = edges / sum(edges)) %>%
     mutate(expected = total.edges * rel)
   
-  edges <- mutate(edges, expected.edges = map2_dbl(from, to, function(f, t){
+  # https://github.com/r-lib/covr/issues/377
+  # edges <- mutate(edges, expected.edges = map2_dbl(from, to, function(f, t){
+  #   allProbs[allProbs$from == f & allProbs$to == t, "expected"]
+  # }))
+  
+  .f2 <- function(f, t) {
     allProbs[allProbs$from == f & allProbs$to == t, "expected"]
-  }))
+  }
+  edges <- mutate(edges, expected.edges = map2_dbl(from, to, ~.f2(.x, .y)))
   
   #calculate p-value based on observed (weight) vs. expected (expected.edges)
   edges <- mutate(edges, pval = ppois(
@@ -679,15 +694,26 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
   if(drop) edges <- filter(edges, from != to)
   if(!drop) rs <- rowSums2(mat)
   
+  .f1 <- function(f, t) {
+    if(f == t) {
+      rownames(mat)[mat[, colnames(mat) == f] == 1 & rs == 1]
+    } else {
+      sub <- mat[, colnames(mat) %in% c(f, t)]
+      rownames(mat)[which(rowSums2(sub) == 2)]
+    }
+  }
+  
   data <- edges %>%
-    mutate(sample = map2(from, to, function(f, t) {
-      if(f == t) {
-        rownames(mat)[mat[, colnames(mat) == f] == 1 & rs == 1]
-      } else {
-        sub <- mat[, colnames(mat) %in% c(f, t)]
-        rownames(mat)[which(rowSums2(sub) == 2)]
-      }
-    })) %>%
+    # https://github.com/r-lib/covr/issues/377
+    # mutate(sample = map2(from, to, function(f, t) {
+    #   if(f == t) {
+    #     rownames(mat)[mat[, colnames(mat) == f] == 1 & rs == 1]
+    #   } else {
+    #     sub <- mat[, colnames(mat) %in% c(f, t)]
+    #     rownames(mat)[which(rowSums2(sub) == 2)]
+    #   }
+    # })) %>%
+    mutate(sample = map2(from, to, ~.f1(.x, .y))) %>%
     unnest() %>%
     filter(sample %in% multipletName) %>%
     select(sample, everything())
