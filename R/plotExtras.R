@@ -3,8 +3,7 @@ NULL
 
 #' plotData
 #'
-#' Returns the data used to build plots for spCounts, spUnsupervised, and
-#' spSwarm objects.
+#' Returns the data used to build plots for CIMseqData and CIMseqSwarm objects.
 #'
 #' @name plotData
 #' @rdname plotData
@@ -38,21 +37,21 @@ setMethod("plotData", "gg", function(
   ...
 ){
   if(any(grepl("ggraph", class(plot[[1]])))) {
-    attr(plot[[1]], "graph")
+    attr(plot[[1]], "graph") #can't remember why this was needed
   } else {
-    as_tibble(plot[[1]]) #have a look at ggplot::fortify -> broom package
+    as_tibble(plot[[1]])
   }
 })
 
 #' convertToERCC
 #'
-#' A function to facilitate calculation of the second axis of the plotCounts
-#' type "ercc" plot.
+#' A function to facilitate calculation of the second axis of the
+#' plotCountsERCC plot.
 #'
 #' @name convertToERCC
 #' @rdname convertToERCC
 #' @author Jason T. Serviss
-#' @param ercc The left axis values. Passes as ".".
+#' @param ercc The left axis values.
 #' @param singlets CIMseqSinglets; An CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; An CIMseqMultiplets object.
 #' @keywords convertToERCC

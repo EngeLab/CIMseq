@@ -1,4 +1,4 @@
-context("spPlotCounts")
+context("plotCounts")
 
 ##run test plotCountsData
 test_that("check that plotCountsData outputs the expected result", {
@@ -23,7 +23,7 @@ test_that("check that plotCountsData outputs the expected result", {
 test_that("check that plotCountsERCC outputs the expected result", {
   
   #run function
-  output <- plotCountsMarkers(CIMseqSinglets_test, CIMseqMultiplets_test)
+  output <- plotCountsERCC(CIMseqSinglets_test, CIMseqMultiplets_test)
   
   #test
   expect_type(output, "list")
@@ -40,6 +40,7 @@ test_that("check that plotCountsMarkers outputs the expected result", {
   #test
   expect_type(output, "list")
   expect_is(output, c("gg", "ggplot"))
+  expect_error(plotCountsMarkers(CIMseqSinglets_test, CIMseqMultiplets_test, "A"))
 })
 
 ##run test plotUnsupervisedClass
@@ -64,6 +65,12 @@ test_that("check that plotUnsupervisedMarkers outputs the expected result", {
   #test
   expect_type(output, "list")
   expect_is(output, c("gg", "ggplot"))
+  expect_error(plotUnsupervisedMarkers(
+    CIMseqSinglets_test, CIMseqMultiplets_test, markers = NULL
+  ))
+  expect_error(plotUnsupervisedMarkers(
+    CIMseqSinglets_test, CIMseqMultiplets_test, markers = "not a gene"
+  ))
   
   #run function
   output <- plotUnsupervisedMarkers(

@@ -1,4 +1,4 @@
-context("spPlotSwarm")
+context("plotSwarm")
 
 ##run test plotSwarmGraph
 test_that("check that plotSwarmGraph outputs the expected result", {

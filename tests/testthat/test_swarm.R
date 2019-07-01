@@ -1,4 +1,4 @@
-context("spSwarm")
+context("CIMseqSwarm")
 
 #Function to check if all elements in a vector are identical
 has_zero_range <- function(x, tol = .Machine$double.eps ^ 0.5) {
