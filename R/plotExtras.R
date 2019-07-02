@@ -251,10 +251,10 @@ NULL
 #' @importFrom readr parse_factor
 #' @importFrom tidyr unite gather
 
-longFormConnections <- function(swarm, singlets, multiplets) {
+longFormConnections <- function(swarm, singlets, multiplets, maxCellsPerMultiplet=Inf, depleted=FALSE) {
   from <- to <- tmp <- connectionID <- super <- direction <- connectionName <- NULL
   fractions <- getData(swarm, "fractions")
-  getEdgesForMultiplet(swarm, singlets, multiplets, rownames(fractions)) %>%
+  getEdgesForMultiplet(swarm, singlets, multiplets, rownames(fractions), maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted) %>%
     #add connectionID
     mutate(tmp = pmap_chr(list(sample, from, to), function(x, y, z) {
       paste(x, sort(c(y, z)), collapse = "-")

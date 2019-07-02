@@ -800,8 +800,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
     inner_join(ps, by = c("from", "to")) %>%
     separate(connectionID, into = c("super", "sub"), sep = "\\.", remove = FALSE) %>%
     group_by(sub) %>% 
-    filter(pval == min(pval)) %>% # hypergeometric pval is symmetrical, cannot do this anymore
-#    filter(score == max(score)) %>%
+    filter(pval == min(pval)) %>%
     ungroup() %>%
     select(-sub, -super) %>%
     group_by(class, connectionName) %>%
@@ -1013,8 +1012,8 @@ setGeneric("plotSwarmCircos2", function(
 setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, connectionClass = NULL, 
   alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
-  pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
-  nonSigCol = "grey95", h.ratio=0.5, maxCellsPerMultiplet = Inf, depleted=FALSE, ...
+  pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
+  nonSigCol = "grey90", h.ratio=0.5, ...
 ){
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
   frac <- connectionID <- super <- connectionName <- position <- nr <- NULL
@@ -1024,7 +1023,7 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   if(!is.null(classOrder)) {
       # Check that supplied classOrder is conformant
       if(!identical(sort(unique(getData(singlets, "classification"))), sort(classOrder))) stop("error, classOrder and singlet classification do not match!")
-  } else {
+  } else 
       classOrder <- unique(getData(singlets, "classification"))
   }
   colours <- tibble(
@@ -1035,7 +1034,7 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   )
   
   #calculate statitistics and connection colors
-  ps <- calculateEdgeStats(swarm, singlets, multiplets, maxCellsPerMultiplet, depleted=depleted) %>%
+  ps <- calculateEdgeStats(swarm, singlets, multiplets) %>%
       mutate(significant = if_else(
                  pval < alpha & weight > weightCut, TRUE, FALSE
              )) %>%
@@ -1048,7 +1047,7 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
 
   
   #calculate edge data and add fraction colours
-  edges <- longFormConnections(swarm, singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted) %>%
+  edges <- longFormConnections(swarm, singlets, multiplets) %>%
       arrange(match(from, classOrder),  match(to, classOrder)-match(from, classOrder)) %>%
       mutate(idx = rank(frac)) %>%
       mutate(f.col = viridis(max(idx))[idx]) %>%
@@ -1069,7 +1068,6 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
       separate(connectionID, into = c("super", "sub"), sep = "\\.", remove = FALSE) %>%
       group_by(sub) %>% 
       filter(pval == min(pval)) %>%
-      filter(score == max(score)) %>% # Order makes a difference - IMO selecting max enrichment->pval calc is correct.
       ungroup() %>%
       select(-sub, -super) %>% # Remove sub and super cols
       group_by(class) %>%

@@ -450,7 +450,7 @@ NULL
 #' @export
 
 adjustFractions <- function(
-  singlets, multiplets, swarm, binary = TRUE, ...
+  singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=Inf
 ){
   medianCellNumber <- sampleType <- estimatedCellNumber <- NULL
   if(!is.matrix(swarm)) {
@@ -467,7 +467,7 @@ adjustFractions <- function(
   if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
   
   #calculate cell number per multiplet
-  cnm <- estimateCells(singlets, multiplets, ...) %>%
+  cnm <- estimateCells(singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet) %>%
     filter(sampleType == "Multiplet") %>%
     {setNames(pull(., estimatedCellNumber), pull(., sample))}
   
@@ -512,20 +512,20 @@ NULL
 #' @export
 
 calculateEdgeStats <- function(
-  swarm, singlets, multiplets, ...
+  swarm, singlets, multiplets, depleted=FALSE, ...
 ){
   mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, ...)
 
   #calcluate weight
-  edges <- .calculateWeight(mat)
+  edges <- .calculateWeight(mat, depleted=depleted)
 
   #calculate p-value
-  out <- .calculateP(edges, mat)
+  out <- .calculateP(edges, mat, depleted=depleted)
 
   return(out)
 }
 
-.calculateWeight <- function(mat, ...) {
+.calculateWeight <- function(mat, depleted=FALSE) {
   from <- to <- NULL
   expand.grid(
     from = colnames(mat), to = colnames(mat),
@@ -539,15 +539,16 @@ calculateEdgeStats <- function(
 }
 
 .calculateP <- function(
-  edges, mat, ...
+  edges, mat, depleted=FALSE, ...
 ){
   from <- to <- jp <- weight <- expected.edges <- NULL
   #calculate total number of edges
   total.edges <- sum(edges[, "weight"])
-  
+  edg <- edges
   #calculate expected edges
   class.freq <- colSums2(mat) #multiplet estimated cell type frequency
   names(class.freq) <- colnames(mat)
+#  cs <- colSums(mat)
   
   allProbs <- expand.grid(
     from = names(class.freq), to = names(class.freq), 
@@ -555,29 +556,51 @@ calculateEdgeStats <- function(
   ) %>%
     filter(from != to) %>%
     mutate(edges = map2_dbl(from, to, function(f, t) {
-      abs <- class.freq[names(class.freq) != t]
+      abs <- class.freq[names(class.freq) != f]
       rel <- abs / sum(abs)
-      as.numeric(rel[f]) * class.freq[t]
-    })) %>%
-    mutate(rel = edges / sum(edges)) %>%
-    mutate(expected = total.edges * rel)
+      as.numeric(rel[t])
+    }))# %>%
   
-  edges <- mutate(edges, expected.edges = map2_dbl(from, to, function(f, t){
-    allProbs[allProbs$from == f & allProbs$to == t, "expected"]
+  edges <- mutate(edges, frac.edges = map2_dbl(from, to, function(f, t){
+      allProbs[allProbs$from == f & allProbs$to == t, "edges"]
   }))
+  edges$expected.edges <- edges$frac.edges * class.freq[edges$from]
+
+   #   mutate(expected = sum(edg$weight))#[edg$from == from & edg$to == to])) # * edges) # Bad
+  # Previously:
+#    mutate(edges = map2_dbl(from, to, function(f, t) {
+#      abs <- class.freq[names(class.freq) != t]
+#      rel <- abs / sum(abs)
+#      as.numeric(rel[f]) * class.freq[t]
+#    })) %>%
+#    mutate(rel = edges / sum(edges)) %>%
+#    mutate(expected = total.edges * rel)
+
+  # Previously
+#  edges <- mutate(edges, expected.edges = map2_dbl(from, to, function(f, t){
+#    allProbs[allProbs$from == f & allProbs$to == t, "expected"]
+#  }))
   
   #calculate p-value based on observed (weight) vs. expected (expected.edges)
 #  edges <- mutate(edges, pval = ppois(
 #    q = weight, lambda = expected.edges, lower.tail = FALSE
 #  ))
   edges$pval <- sapply(1:nrow(edges), function(i) {
-      phyper(q=edges$weight[i], m=sum(edges$weight[edges$to == edges$to[i]]), n=sum(edges$weight[edges$to != edges$to[i]]), k=sum(edges$weight[edges$from == edges$from[i]]), lower.tail=F)
-  })
-  edges$qval <- p.adjust(edges$pval, 'fdr')
+      phyper(q=edges$weight[i], m=class.freq[edges$to[i]], n=sum(class.freq)-class.freq[edges$to[i]], k=sum(edges$weight[edges$from == edges$from[i]]), lower.tail=depleted)
+#      phyper(q=edges$weight[i], m=class.freq[edges$to[i]], n=sum(class.freq)-class.freq[edges$to[i]], k=class.freq[edges$from[i]], lower.tail=F)
+#      phyper(q=edges$weight[i], m=sum(edges$weight[edges$to == edges$to[i]]), n=sum(edges$weight[edges$to != edges$to[i] & edges$from != edges$to[i]])/2, k=sum(edges$weight[edges$from == edges$from[i]]), lower.tail=F) 
+#      phyper(q=edges$weight[i], m=sum(edges$weight[edges$to == edges$to[i]]), n=sum(edges$weight[edges$to != edges$to[i]]), k=sum(edges$weight[edges$from == edges$from[i]]), lower.tail=F)
+ })
+#  edges$qval <- p.adjust(edges$pval, 'fdr')
+  edges$pval <- p.adjust(edges$pval, 'fdr')
 #  edges$qval.hyperg <- p.adjust(edges$p.hyperg, 'fdr')
   
   #calculate score = observed / expected
-  edges <- mutate(edges, score = weight / expected.edges)
+  if(depleted) {
+      edges <- mutate(edges, score = expected.edges / weight)
+  } else {  
+      edges <- mutate(edges, score = weight / expected.edges)
+  }
   edges
 }
 
@@ -768,10 +791,10 @@ setGeneric("getEdgesForMultiplet", function(
 #' @export
 
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, multipletName = NULL, ...
+  swarm, singlets, multiplets, multipletName = NULL, maxCellsPerMultiplet=Inf, depleted=FALSE
 ){
-  s <- calculateEdgeStats(swarm, singlets, multiplets)
-  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
+  s <- calculateEdgeStats(swarm, singlets, multiplets, depleted=depleted)
+  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=maxCellsPerMultiplet)
   if(is.null(multipletName)) multipletName <- rownames(getData(swarm, "fractions"))
   frac <- frac[multipletName, , drop = FALSE]
   
