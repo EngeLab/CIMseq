@@ -4,7 +4,7 @@
 \alias{calculateEdgeStats}
 \title{calculateEdgeStats}
 \usage{
-calculateEdgeStats(swarm, singlets, multiplets, theoretical.max = NULL,
+calculateEdgeStats(swarm, singlets, multiplets, theoretical.max = Inf,
   ...)
 }
 \arguments{

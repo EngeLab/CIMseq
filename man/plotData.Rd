@@ -19,8 +19,7 @@ plotData(plot, ...)
 A tibble containing the plot data.
 }
 \description{
-Returns the data used to build plots for spCounts, spUnsupervised, and
-spSwarm objects.
+Returns the data used to build plots for CIMseqData and CIMseqSwarm objects.
 }
 \examples{
 

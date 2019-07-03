@@ -7,7 +7,7 @@
 \title{estimateCells}
 \usage{
 \S4method{estimateCells}{CIMseqSinglets}(singlets, multiplets,
-  theoretical.max = NULL, warning = TRUE, ...)
+  theoretical.max = Inf, warning = TRUE, ...)
 }
 \arguments{
 \item{singlets}{A CIMseqSinglets object.}

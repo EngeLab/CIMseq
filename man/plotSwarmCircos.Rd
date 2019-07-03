@@ -4,7 +4,7 @@
 \name{plotSwarmCircos}
 \alias{plotSwarmCircos}
 \alias{plotSwarmCircos,CIMseqSwarm-method}
-\title{plotSwarmGenes}
+\title{plotSwarmCircos}
 \usage{
 plotSwarmCircos(swarm, ...)
 
@@ -58,7 +58,7 @@ when finished plotting?}
 A ggplot object.
 }
 \description{
-plotSwarmGenes
+plotSwarmCircos
 }
 \author{
 Jason T. Serviss

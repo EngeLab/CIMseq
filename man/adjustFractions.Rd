@@ -5,7 +5,7 @@
 \title{adjustFractions}
 \usage{
 adjustFractions(singlets, multiplets, swarm, binary = TRUE,
-  theoretical.max = NULL, ...)
+  theoretical.max = Inf, ...)
 }
 \arguments{
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}

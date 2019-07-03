@@ -9,7 +9,7 @@
 getEdgesForMultiplet(swarm, ...)
 
 \S4method{getEdgesForMultiplet}{CIMseqSwarm}(swarm, singlets, multiplets,
-  multipletName = NULL, theoretical.max = NULL, drop = TRUE, ...)
+  multipletName = NULL, theoretical.max = Inf, drop = TRUE, ...)
 }
 \arguments{
 \item{swarm}{A CIMseqSwarm object.}

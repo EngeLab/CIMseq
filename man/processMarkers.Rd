@@ -13,8 +13,9 @@ processMarkers(counts.log, markers)
 rownames(counts.log).}
 }
 \description{
-Helper function for plotCountsMarkers and plotUnsupervisedMarkers. Gathers
-and returns data in an expected format.
+Helper function for plotCountsMarkers and plotUnsupervisedMarkers. Normalizes
+values in the [0, 1] interval, gathers and returns the data in the expected 
+format.
 }
 \author{
 Jason T. Serviss
