@@ -2,6 +2,7 @@ v.0.3.0.2
 * getCellsForMultiplet now reports "self connections".
 * updates to plotSwarmCircos to match publication figures.
 * default value for theoretical.max arg now Inf.
+* adding "log" and "normalise" args to plotCountsMarkers.
 
 v.0.3.0.1
 * adding modified pso function that accepts swarm initialisation positions and 

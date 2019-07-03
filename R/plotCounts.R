@@ -3,7 +3,7 @@ NULL
 
 #' plotCountsData
 #'
-#' Assembles all data for plotCounts plots. Not exported. End users should use
+#' Assembles all data for plotCounts plots. End users should use
 #' the \code{\link{plotData}} function.
 #'
 #' @name plotCountsData
@@ -13,6 +13,9 @@ NULL
 #' @param multiplets CIMseqMultiplets; An CIMseqMultiplets object.
 #' @param markers character; A vector with the 2 markers to plot. Must be
 #'  present in rownames of counts.
+#' @param log logical; Use log2 + 1 values?
+#' @param normalize logical; Use [0, 1] normalized values? 
+#'  See \code{\link{processMarkers}}.
 #' @param ... additional arguments to pass on.
 #' @return A tibble with columns:
 #' @author Jason T. Serviss
@@ -37,13 +40,14 @@ setGeneric("plotCountsData", function(
 #' @importFrom readr parse_factor
 
 setMethod("plotCountsData", c("CIMseqSinglets", "CIMseqMultiplets"), function(
-  singlets, multiplets, markers = NULL, ...
+  singlets, multiplets, markers = NULL, log = TRUE, normalize = TRUE, ...
 ){
+  if(log) {slot <- "counts.log"} else {slot <- "counts.cpm"}
   
-  s <- getData(singlets, "counts.log")
-  m <- getData(multiplets, "counts.log")
+  s <- getData(singlets, slot)
+  m <- getData(multiplets, slot)
   
-  processMarkers(cbind(s, m), markers) %>%
+  processMarkers(cbind(s, m), markers, normalize) %>%
   full_join(
     estimateCells(singlets, multiplets),
     by = c("Sample" = "sample")
@@ -126,6 +130,9 @@ setMethod("plotCountsERCC", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 #' @param singlets CIMseqSinglets; An CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; An CIMseqMultiplets object.
 #' @param markers character; A vector with the 2 markers to plot.
+#' @param log logical; Use log2 values? See \code{\link{plotCountsData}}.
+#' @param normalize logical; Use [0, 1] normalized values? 
+#'  See \code{\link{processMarkers}}.
 #' @param ... additional arguments to pass on.
 #' @return A ggplot2 object containing the plot. See examples or the plotting
 #'  vignette for further help.
@@ -150,13 +157,13 @@ setGeneric("plotCountsMarkers", function(
 #' @importFrom ggthemes theme_few scale_colour_economist
 
 setMethod("plotCountsMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), function(
-  singlets, multiplets, markers = NULL, ...
+  singlets, multiplets, markers = NULL, log = TRUE, normalize = TRUE, ...
 ){
   if((!is.null(markers)) & length(markers) != 2) {
     stop("Markers must be a character vector of length = 2.")
   }
   
-  plotCountsData(singlets, multiplets, markers) %>%
+  plotCountsData(singlets, multiplets, markers, log, normalize) %>%
     ggplot(aes_string(markers[1], markers[2], colour = "`Sample type`")) +
     geom_point(alpha = 0.75, shape = 16) +
     scale_colour_manual(values = c("#1c54a8", "#f63b32")) +

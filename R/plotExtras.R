@@ -195,6 +195,7 @@ col40 <- function() {
 #' @param counts.log matrix; A matrix containing log2(cpm).
 #' @param markers character; The markers to process. Must be present in
 #'  rownames(counts.log).
+#' @param normalize logical, Normalize values to interval [0, 1]?
 #' @keywords processMarkers
 NULL
 
@@ -202,7 +203,7 @@ NULL
 #' @importFrom dplyr "%>%"
 #' @importFrom tibble tibble
 
-processMarkers <- function(counts.log, markers) {
+processMarkers <- function(counts.log, markers, normalize = TRUE) {
   
   if(is.null(markers)) {
     return(tibble(Sample = colnames(counts.log)))
@@ -217,20 +218,13 @@ processMarkers <- function(counts.log, markers) {
   }
   
   #normalize the marker expression
-  markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
-  
-  if(length(markers) == 1) {
-    markExpressNorm <- matrix(
-      normalizeVec(markExpress),
-      ncol = 1,
-      dimnames = list(colnames(counts.log), markers)
-    )
-  } else {
-    markExpressNorm <- apply(markExpress, 2, normalizeVec)
-  }
+  markExpress <- t(counts.log[rownames(counts.log) %in% markers, , drop = FALSE])
+  if(normalize) {
+    markExpress <- apply(markExpress, 2, normalizeVec)
+  } 
   
   #tidy markers
-  matrix_to_tibble(markExpressNorm, rowname = "Sample")
+  matrix_to_tibble(markExpress, rowname = "Sample")
 }
 
 #' longFormConnections

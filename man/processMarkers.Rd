@@ -4,13 +4,15 @@
 \alias{processMarkers}
 \title{processMarkers}
 \usage{
-processMarkers(counts.log, markers)
+processMarkers(counts.log, markers, normalize = TRUE)
 }
 \arguments{
 \item{counts.log}{matrix; A matrix containing log2(cpm).}
 
 \item{markers}{character; The markers to process. Must be present in
 rownames(counts.log).}
+
+\item{normalize}{logical, Normalize values to interval [0, 1]?}
 }
 \description{
 Helper function for plotCountsMarkers and plotUnsupervisedMarkers. Normalizes
