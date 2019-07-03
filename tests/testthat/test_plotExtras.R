@@ -40,3 +40,33 @@ test_that("check that convertToERCC outputs the expected result", {
   )
   expect_identical(expected, round(output))
 })
+
+test_that("check that processMarkers outputs the expected result", {
+  output <- processMarkers(getData(CIMseqSinglets_test, "counts.log"), "ACTB")
+  expect_identical(colnames(output), c("Sample", "ACTB"))
+  expect_identical(nrow(output), ncol(getData(CIMseqSinglets_test, "counts")))
+  expect_gte(min(pull(output, ACTB)), 0)
+  expect_lte(max(pull(output, ACTB)), 1)
+  
+  expect_error(processMarkers(getData(CIMseqSinglets_test, "counts.log"), NA))
+  expect_error(processMarkers(getData(CIMseqSinglets_test, "counts.log"), "random"))
+})
+
+test_that("check that longFormConnections outputs the expected result", {
+  output <- longFormConnections(
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test
+  )
+  expect_identical(
+    colnames(output),
+    c("sample", "connectionID", "class", "connectionName", "from", "to", "frac")
+  )
+  expect_identical(nrow(output), 12L)
+  expect_identical(
+    sort(pull(output, sample)), 
+    rep(sort(colnames(getData(CIMseqMultiplets_test, "counts"))), each = 4)
+  )
+  expect_equal(
+    output %>% group_by(sample, connectionID) %>% summarize(n = n()) %>% pull(n),
+    rep(2, length(colnames(getData(CIMseqMultiplets_test, "counts"))) * 2)
+  )
+})

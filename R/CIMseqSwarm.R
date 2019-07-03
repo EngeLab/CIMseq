@@ -333,7 +333,7 @@ NULL
 #' @export
 
 adjustFractions <- function(
-  singlets, multiplets, swarm, binary = TRUE, theoretical.max = NULL, ...
+  singlets, multiplets, swarm, binary = TRUE, theoretical.max = Inf, ...
 ){
   medianCellNumber <- sampleType <- estimatedCellNumber <- NULL
   if(!is.matrix(swarm)) {
@@ -396,7 +396,7 @@ NULL
 #' @export
 
 calculateEdgeStats <- function(
-  swarm, singlets, multiplets, theoretical.max = NULL, ...
+  swarm, singlets, multiplets, theoretical.max = Inf, ...
 ){
   mat <- adjustFractions(
     singlets, multiplets, swarm, binary = TRUE, 
@@ -604,7 +604,7 @@ setGeneric("getMultipletsForEdge", function(
 #' @export
 
 setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, edges, theoretical.max = NULL, ...
+  swarm, singlets, multiplets, edges, theoretical.max = Inf, ...
 ){
   
   edges <- mutate_if(edges, is.factor, as.character)
@@ -671,7 +671,7 @@ setGeneric("getEdgesForMultiplet", function(
 #' @export
 
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, multipletName = NULL, theoretical.max = NULL, 
+  swarm, singlets, multiplets, multipletName = NULL, theoretical.max = Inf, 
   drop = TRUE, ...
 ){
   from <- to <- NULL

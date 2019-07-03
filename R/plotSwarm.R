@@ -702,7 +702,7 @@ setMethod("plotSwarmGenes", "CIMseqSwarm", function(
     )
 }
 
-#' plotSwarmGenes
+#' plotSwarmCircos
 #'
 #'
 #' @name plotSwarmCircos

@@ -246,7 +246,7 @@ setGeneric("estimateCells", function(
 #' @export
 
 setMethod("estimateCells", "CIMseqSinglets", function(
-  singlets, multiplets, theoretical.max = NULL, warning = TRUE, ...
+  singlets, multiplets, theoretical.max = Inf, warning = TRUE, ...
 ){
   frac.ercc <- NULL
   counts <- cbind(

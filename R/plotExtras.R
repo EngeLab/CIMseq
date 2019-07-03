@@ -185,8 +185,9 @@ col40 <- function() {
 
 #' processMarkers
 #'
-#' Helper function for plotCountsMarkers and plotUnsupervisedMarkers. Gathers
-#' and returns data in an expected format.
+#' Helper function for plotCountsMarkers and plotUnsupervisedMarkers. Normalizes
+#' values in the [0, 1] interval, gathers and returns the data in the expected 
+#' format.
 #'
 #' @name processMarkers
 #' @rdname processMarkers
@@ -256,14 +257,17 @@ longFormConnections <- function(
 ){
   from <- to <- tmp <- connectionID <- super <- direction <- connectionName <- NULL
   fractions <- getData(swarm, "fractions")
+  
+  .f1 <- function(x, y, z) paste(x, sort(c(y, z)), collapse = "-")
+  
   getEdgesForMultiplet(
     swarm, singlets, multiplets, rownames(fractions), 
     theoretical.max = theoretical.max
   ) %>%
     #add connectionID
-    mutate(tmp = pmap_chr(list(sample, from, to), function(x, y, z) {
-      paste(x, sort(c(y, z)), collapse = "-")
-    })) %>%
+    mutate(
+      tmp = pmap_chr(list(sample, from, to), function(x, y, z) .f1(x, y, z))
+    ) %>%
     mutate(sub = as.numeric(parse_factor(tmp, levels = unique(tmp)))) %>%
     select(-tmp) %>%
     mutate(super = 1:nrow(.)) %>%

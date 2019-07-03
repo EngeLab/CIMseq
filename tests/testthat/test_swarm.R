@@ -192,6 +192,15 @@ test_that("check that adjustFractions outputs the expected result", {
     CIMseqSinglets_test, CIMseqMultiplets_test, 
     getData(CIMseqSwarm_test, "fractions")
   ))
+  
+  ###TEST5####
+  tmp <- CIMseqSwarm_test
+  frac <- getData(CIMseqSwarm_test, "fractions")
+  colnames(frac) <- paste0("s", colnames(frac))
+  tmp@fractions <- frac
+  expect_error(adjustFractions(
+    CIMseqSinglets_test, CIMseqMultiplets_test, tmp
+  ))
 })
 
 test_that("check that calculateEdgeStats outputs the expected result", {
@@ -250,6 +259,41 @@ test_that("check that calculateEdgeStats outputs the expected result", {
   ))
 })
 
+#run test getMultipletsForEdge
+test_that("check that getCellsForMultiplet outputs the expected result", {
+  
+  ###TEST1####
+  #setup expected data
+  sample <- "m.NJB00204.G04"
+  expected <- tibble(
+    sample = rep(sample, 2),
+    cells = c("HOS", "A375")
+  )
+  
+  #run function
+  output <- getCellsForMultiplet(
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, sample
+  )
+  
+  #test
+  expect_identical(output, expected)
+  
+  ###TEST2####
+  #setup expected data
+  samples <- colnames(getData(CIMseqMultiplets_test, "counts"))[c(3, 1, 2)]
+  expected <- tibble(
+    sample = rep(samples, each = 2),
+    cells = c("HCT116", "A375", "HOS", "A375", "HOS", "HCT116")
+  )
+  
+  #run function
+  output <- getCellsForMultiplet(
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test
+  )
+  
+  #test
+  expect_identical(output, expected)
+})
 ################################################################################
 #                                                                              #
 #                                C++ functions                                 #
