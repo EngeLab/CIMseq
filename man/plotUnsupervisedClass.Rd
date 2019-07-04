@@ -8,7 +8,8 @@
 \usage{
 plotUnsupervisedClass(singlets, ...)
 
-\S4method{plotUnsupervisedClass}{CIMseqSinglets}(singlets, multiplets, ...)
+\S4method{plotUnsupervisedClass}{CIMseqSinglets}(singlets, multiplets,
+  classColours = NULL, ...)
 }
 \arguments{
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
@@ -16,6 +17,8 @@ plotUnsupervisedClass(singlets, ...)
 \item{...}{additional arguments to pass on.}
 
 \item{multiplets}{CIMseqMultiplets; A CIMseqMultiplets object.}
+
+\item{classColours}{character; Named vector of colours with classes as names.}
 }
 \value{
 The ggplot2 object containing the plot. See examples or the plotting
