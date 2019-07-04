@@ -61,7 +61,8 @@ setMethod("plotCountsData", c("CIMseqSinglets", "CIMseqMultiplets"), function(
     Classification = getData(singlets, "classification")
   ), by = "Sample") %>%
   full_join(
-    ., matrix_to_tibble(getData(singlets, "dim.red"), "Sample"), by = "Sample"
+    ., matrix_to_tibble(getData(singlets, "dim.red"), "Sample"), 
+    by = "Sample"
   ) %>%
   rename(
     `Estimated cell number` = .data$estimatedCellNumber,
@@ -180,6 +181,7 @@ setMethod("plotCountsMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), function
 #' @rdname plotUnsupervisedClass
 #' @param singlets CIMseqSinglets; A CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
+#' @param classColours character; Named vector of colours with classes as names.
 #' @param ... additional arguments to pass on.
 #' @return The ggplot2 object containing the plot. See examples or the plotting
 #'  vignette for further help.
@@ -209,14 +211,20 @@ setGeneric("plotUnsupervisedClass", function(
 # methods to perform DR and classification. POtentially it is sufficient in its
 # present form but this might need to be considered further...
 setMethod("plotUnsupervisedClass", "CIMseqSinglets", function(
-  singlets, multiplets, ...
+  singlets, multiplets, classColours = NULL, ...
 ){
   `Sample type` <- NULL
+  if(is.null(classColours)) {
+    classColours <- col40() 
+  } else {
+    classColors <- classColors[order(names(classColours))]
+  }
+  
   plotCountsData(singlets, multiplets) %>%
     filter(`Sample type` == "Singlet") %>%
     ggplot(aes_string(x = '`dim.red dim 1`', y = '`dim.red dim 2`')) +
     geom_point(aes_string(colour = 'Classification'), alpha = 0.75, shape = 16) +
-    scale_colour_manual(values = col40()) +
+    scale_colour_manual(values = classColours) +
     theme_few() +
     theme(legend.position = "top") +
     guides(colour = guide_legend(override.aes = list(size = 3)))
