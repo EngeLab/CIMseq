@@ -287,7 +287,7 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
   pal <- pal[order(names(pal))]
   
   if(length(markers) == 1) {
-    p <- plotCountsData(singlets, multiplets, markers, pal) %>%
+    p <- plotCountsData(singlets, multiplets, markers) %>%
       filter(`Sample type` == "Singlet") %>%
       ggplot(aes_string(x = '`dim.red dim 1`', y = '`dim.red dim 2`')) +
       theme_few() +
@@ -295,7 +295,7 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
       geom_point(aes_string(colour = markers), shape = 16) +
       scale_colour_viridis(option = "E")
   } else {
-    p <- plotCountsData(singlets, multiplets, markers, pal) %>%
+    p <- plotCountsData(singlets, multiplets, markers) %>%
       filter(`Sample type` == "Singlet") %>%
       full_join(
         coloursFromTargets(pal, getData(singlets, "counts.cpm"), markers),
