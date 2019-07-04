@@ -217,7 +217,7 @@ setMethod("plotUnsupervisedClass", "CIMseqSinglets", function(
   if(is.null(classColours)) {
     classColours <- col40() 
   } else {
-    classColors <- classColors[order(names(classColours))]
+    classColours <- classColours[order(names(classColours))]
   }
   
   plotCountsData(singlets, multiplets) %>%
