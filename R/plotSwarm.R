@@ -725,6 +725,8 @@ setMethod("plotSwarmGenes", "CIMseqSwarm", function(
 #' colours.
 #' @param nonSigCol character; Vector of length 1 indicating the colours for 
 #' non-significant connections.
+#' @param classColour character; Colours for the classes. Order should 
+#'  correspond to classOrder argument.
 #' @param gap.degree numeric; Controls the amount of space between the classes.
 #'  See \code{\link[circlize]{circos.par}}.
 #' @param clear logical; Should \code{\link[circlize]{circos.clear}} be called
@@ -759,7 +761,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
   theoretical.max = NULL,
   pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
-  nonSigCol = "grey90", gap.degree = NULL, clear = TRUE, ...
+  nonSigCol = "grey90", classColour = NULL, gap.degree = NULL, clear = TRUE, ...
 ){
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
   frac <- connectionID <- super <- connectionName <- position <- nr <- NULL
@@ -777,9 +779,10 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   
   fractions <- getData(swarm, "fractions")
   if(is.null(classOrder)) classOrder <- unique(getData(singlets, "classification"))
+  if(is.null(classColour)) classColour <- col40()[1:length(classOrder)]
   colours <- tibble(
     class = classOrder, 
-    colour = col40()[1:length(classOrder)],
+    colour = classColour,
     nr = 1:length(classOrder),
     combined = paste0("(", nr, ") ", class)
   )

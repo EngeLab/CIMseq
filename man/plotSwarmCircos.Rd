@@ -13,7 +13,7 @@ plotSwarmCircos(swarm, ...)
   weightCut = 0, label.cex = 1, legend = TRUE,
   theoretical.max = NULL, pal = colorRampPalette(c("grey90",
   viridis::viridis(1)))(120)[20:110], nonSigCol = "grey90",
-  gap.degree = NULL, clear = TRUE, ...)
+  classColour = NULL, gap.degree = NULL, clear = TRUE, ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
@@ -47,6 +47,9 @@ colours.}
 
 \item{nonSigCol}{character; Vector of length 1 indicating the colours for 
 non-significant connections.}
+
+\item{classColour}{character; Colours for the classes. Order should 
+correspond to classOrder argument.}
 
 \item{gap.degree}{numeric; Controls the amount of space between the classes.
 See \code{\link[circlize]{circos.par}}.}
