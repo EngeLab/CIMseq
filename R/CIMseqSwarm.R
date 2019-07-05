@@ -398,35 +398,81 @@ NULL
 calculateEdgeStats <- function(
   swarm, singlets, multiplets, theoretical.max = Inf, ...
 ){
-  mat <- adjustFractions(
+  adj <- adjustFractions(
     singlets, multiplets, swarm, binary = TRUE, 
     theoretical.max = theoretical.max
   )
 
   #calcluate weight
-  edges <- .calculateWeight(mat)
+  edges <- .calculateWeight(adj)
 
   #calculate p-value
-  out <- .calculateP(edges, mat)
+  out <- .calculateP(edges, adj)
 
   return(out)
 }
 
-.calculateWeight <- function(mat, ...) {
+.calculateWeight <- function(adj, ...) {
   from <- to <- NULL
+  
+  .f1 <- function(f, t, ...) {
+    length(which(rowSums2(adj[, colnames(adj) %in% c(f, t)]) == 2))
+  }
+  
   expand.grid(
-    from = colnames(mat), to = colnames(mat),
+    from = colnames(adj), to = colnames(adj),
     stringsAsFactors = FALSE
   ) %>%
     filter(from != to) %>% #doesn't calculate self edges
+    # https://github.com/r-lib/covr/issues/377
     # mutate(weight = map2_int(from, to, function(f, t) {
     #   sub <- mat[, colnames(mat) %in% c(f, t)]
     #   length(which(rowSums2(sub) == 2))
     # }))
-    mutate(weight = map2_int(from, to, function(f, t) length(which(rowSums2(mat[, colnames(mat) %in% c(f, t)]) == 2))))
+    mutate(weight = map2_int(from, to, function(f, t) .f1(f, t)))
 }
 
 .calculateP <- function(
+  edges, mat, ...
+){
+  from <- to <- jp <- weight <- expected.edges <- NULL
+  
+  #calculate expected edges
+  class.freq <- colSums2(mat) #multiplet estimated cell type frequency
+  names(class.freq) <- colnames(mat)
+  
+  # https://github.com/r-lib/covr/issues/377
+  .f1 <- function(f, d) {
+    freq <- class.freq[names(class.freq) != f]
+    rel <- freq / sum(freq)
+    rel[pull(d, to)]
+  }
+  
+  edges <- edges %>%
+    nest(-from) %>%
+    mutate(to.freq = map2(from, data, ~.f1(.x, .y))) %>%
+    mutate(expected.edges = map2(to.freq, data, ~sum(pull(.y, weight)) * .x)) %>%
+    unnest() %>%
+    select(from, to, weight, to.freq, expected.edges)
+  
+  #calculate score = observed / expected
+  edges <- mutate(edges, score = weight / expected.edges)
+  
+  #calculate p-value
+  edges %>%
+    mutate(pval = map_dbl(1:nrow(.),
+      ~phyper(
+        q = edges$weight[.x], 
+        m = class.freq[edges$to[.x]], 
+        n = sum(class.freq) - class.freq[edges$to[.x]], 
+        k = sum(edges$weight[edges$from == edges$from[.x]]), 
+        lower.tail = FALSE
+      )
+    )) %>% 
+    mutate(qval = p.adjust(pval, 'fdr'))
+}
+
+.calculateP.poisson <- function(
   edges, mat, ...
 ){
   from <- to <- jp <- weight <- expected.edges <- NULL
