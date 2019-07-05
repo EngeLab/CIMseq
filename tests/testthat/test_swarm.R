@@ -242,7 +242,7 @@ test_that("check that calculateEdgeStats outputs the expected result", {
   )
   
   #setup expected data
-  expected <- c(7, 1, 8, 2, 1, 1)
+  expected <- c(4, 1, 3, 3, 8, 1)
   
   #run function
   output <- CIMseq:::.calculateP(edges, mat)
