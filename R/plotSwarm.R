@@ -721,6 +721,7 @@ setMethod("plotSwarmGenes", "CIMseqSwarm", function(
 #'  size of the cell type labels.
 #' @param legend logical; indicates if the legends should be plotted.
 #' @param theoretical.max integer; See \code{\link{estimateCells}}.
+#' @param h.ratio; numeric; See \code{\link[circlize]{circos.link}}.
 #' @param pal character; A vector including the colour pallete for the score 
 #' colours.
 #' @param nonSigCol character; Vector of length 1 indicating the colours for 
@@ -759,7 +760,7 @@ setGeneric("plotSwarmCircos", function(
 setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, connectionClass = NULL, 
   alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
-  theoretical.max = NULL,
+  theoretical.max = NULL, h.ratio = 0.5,
   pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
   nonSigCol = "grey90", classColour = NULL, gap.degree = NULL, clear = TRUE, ...
 ){
@@ -847,7 +848,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
 
     #create
     l1 <- .ns_legend(data, nonSigCol)
-    l2 <- .obsexp_legend(data, pal)
+    l2 <- .obsexp_legend(data, pal, alpha)
     l3 <- .frac_legend(data)
     l4 <- .class_legend(colours)
   }
@@ -917,7 +918,8 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
       pull(conn, class)[1], pull(conn, position)[1],
       pull(conn, class)[2], pull(conn, position)[2],
       col = unique(pull(conn, p.col)),
-      lwd = 200 / length(unique(data$connectionID))
+      lwd = 200 / length(unique(data$connectionID)),
+      h.ratio = h.ratio
     )
   }
   if(clear) circos.clear()
@@ -963,9 +965,10 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   draw_legend(l)
 }
 
-.obsexp_legend <- function(data, pal) {
+.obsexp_legend <- function(data, pal, alpha) {
   pval <- score <- NULL
   p <- data %>%
+    filter(pval < alpha) %>%
     ggplot() + 
     geom_point(aes(pval, score, colour = score)) + 
     scale_colour_gradientn(colours = c(pal[1], pal[length(pal)])) +

@@ -4,7 +4,9 @@ v.0.3.0.2
 * default value for theoretical.max arg now Inf.
 * adding "log" and "normalise" args to plotCountsMarkers.
 * classColour arg to plotSwarmCircos and plotUnsupervisedClass.
-* implementing hypergeometric expected edges and p-value calculation
+* implementing hypergeometric expected edges and p-value calculation.
+* bug fix in .obsexp_legend. Filtering < alpha.
+* adding h.ration arg to plotSwarmCircos.
 
 v.0.3.0.1
 * adding modified pso function that accepts swarm initialisation positions and 
@@ -14,10 +16,10 @@ v.0.3.0.1
   adjustFractions, calculateEdgeStats, and plotSwarmCircos functions.
 
 v.0.3.0.0
-* merging level to master branch with version bump
+* merging level to master branch with version bump.
 
 v.0.2.0.4
-* removing transpose from cost function
+* removing transpose from cost function for better efficiency.
 
 v0.2.0.3
 * adding getCellsForMultiplet function
