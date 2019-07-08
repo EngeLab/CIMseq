@@ -564,7 +564,12 @@ calculateEdgeStats <- function(
   edges <- mutate(edges, frac.edges = map2_dbl(from, to, function(f, t){
       allProbs[allProbs$from == f & allProbs$to == t, "edges"]
   }))
-  edges$expected.edges <- edges$frac.edges * class.freq[edges$from]
+
+  
+  edges$totalFrom <- sapply(1:nrow(edges), function(i) {
+      sum(edges$weight[edges$from == edges$from[i]])
+  })
+  edges$expected.edges <- edges$frac.edges * edges$totalFrom
 
    #   mutate(expected = sum(edg$weight))#[edg$from == from & edg$to == to])) # * edges) # Bad
   # Previously:
