@@ -6,7 +6,7 @@ v.0.3.0.2
 * classColour arg to plotSwarmCircos and plotUnsupervisedClass.
 * implementing hypergeometric expected edges and p-value calculation.
 * bug fix in .obsexp_legend. Filtering < alpha.
-* adding h.ration arg to plotSwarmCircos.
+* adding h.ratio arg to plotSwarmCircos.
 
 v.0.3.0.1
 * adding modified pso function that accepts swarm initialisation positions and 

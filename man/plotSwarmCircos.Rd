@@ -43,6 +43,8 @@ size of the cell type labels.}
 
 \item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
 
+\item{h.ratio}{numeric; See \code{\link[circlize]{circos.link}}.}
+
 \item{pal}{character; A vector including the colour pallete for the score 
 colours.}
 
@@ -57,8 +59,6 @@ See \code{\link[circlize]{circos.par}}.}
 
 \item{clear}{logical; Should \code{\link[circlize]{circos.clear}} be called
 when finished plotting?}
-
-\item{h.ratio;}{numeric; See \code{\link[circlize]{circos.link}}.}
 }
 \value{
 A ggplot object.

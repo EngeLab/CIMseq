@@ -721,7 +721,7 @@ setMethod("plotSwarmGenes", "CIMseqSwarm", function(
 #'  size of the cell type labels.
 #' @param legend logical; indicates if the legends should be plotted.
 #' @param theoretical.max integer; See \code{\link{estimateCells}}.
-#' @param h.ratio; numeric; See \code{\link[circlize]{circos.link}}.
+#' @param h.ratio numeric; See \code{\link[circlize]{circos.link}}.
 #' @param pal character; A vector including the colour pallete for the score 
 #' colours.
 #' @param nonSigCol character; Vector of length 1 indicating the colours for 
