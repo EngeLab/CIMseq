@@ -7,6 +7,7 @@ v.0.3.0.2
 * implementing hypergeometric expected edges and p-value calculation.
 * bug fix in .obsexp_legend. Filtering < alpha.
 * adding h.ratio arg to plotSwarmCircos.
+* plotting value instead of pvalue in plotSwarmCircos
 
 v.0.3.0.1
 * adding modified pso function that accepts swarm initialisation positions and 

@@ -469,7 +469,7 @@ calculateEdgeStats <- function(
         lower.tail = FALSE
       )
     )) %>% 
-    mutate(qval = p.adjust(pval, 'fdr'))
+    mutate(pval = p.adjust(pval, 'fdr'))
 }
 
 .calculateP.poisson <- function(
