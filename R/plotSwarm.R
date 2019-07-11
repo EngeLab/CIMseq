@@ -769,7 +769,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   )
   
   #calculate statitistics and connection colors
-  ps <- calculateEdgeStats(swarm, singlets, multiplets, ...) %>%
+  ps <- calculateEdgeStats(swarm, singlets, multiplets) %>%
     mutate(significant = if_else(
       pval < alpha & weight > weightCut, TRUE, FALSE
     )) %>%
@@ -1035,7 +1035,7 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   )
   
   #calculate statitistics and connection colors
-  ps <- calculateEdgeStats(swarm, singlets, multiplets, maxCellsPerMultiplet, depleted=depleted) %>%
+  ps <- calculateEdgeStats(swarm, singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted) %>%
       mutate(significant = if_else(
                  pval < alpha & weight > weightCut, TRUE, FALSE
              )) %>%

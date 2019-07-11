@@ -512,9 +512,9 @@ NULL
 #' @export
 
 calculateEdgeStats <- function(
-  swarm, singlets, multiplets, depleted=FALSE, ...
+  swarm, singlets, multiplets, depleted=FALSE, maxCellsPerMultiplet=Inf
 ){
-  mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, ...)
+  mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=maxCellsPerMultiplet)
 
   #calcluate weight
   edges <- .calculateWeight(mat, depleted=depleted)
@@ -734,11 +734,11 @@ setGeneric("getMultipletsForEdge", function(
 #' @export
 
 setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, edges, ...
+  swarm, singlets, multiplets, edges, maxCellsPerMultiplet=Inf
 ){
   
   edges <- mutate_if(edges, is.factor, as.character)
-  fractions <- adjustFractions(singlets, multiplets, swarm)
+  fractions <- adjustFractions(singlets, multiplets, swarm, maxCellsPerMultiplet=maxCellsPerMultiplet)
   
   map_dfr(1:nrow(edges), function(i) {
     e <- as.character(edges[i, ])
@@ -798,7 +798,7 @@ setGeneric("getEdgesForMultiplet", function(
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
   swarm, singlets, multiplets, multipletName = NULL, maxCellsPerMultiplet=Inf, depleted=FALSE
 ){
-  s <- calculateEdgeStats(swarm, singlets, multiplets, depleted=depleted)
+#  s <- calculateEdgeStats(swarm, singlets, multiplets, depleted=depleted, maxCellsPerMultiplet=maxCellsPerMultiplet)
   frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=maxCellsPerMultiplet)
   if(is.null(multipletName)) multipletName <- rownames(getData(swarm, "fractions"))
   frac <- frac[multipletName, , drop = FALSE]
