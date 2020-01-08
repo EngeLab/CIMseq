@@ -449,11 +449,11 @@ calculateEdgeStats <- function(
   }
   
   edges <- edges %>%
-    nest(-from) %>%
+    nest(data = -from) %>%
     mutate(to.freq = map2(from, data, ~.f1(.x, .y))) %>%
     mutate(expected.edges = map2(to.freq, data, ~sum(pull(.y, weight)) * .x)) %>%
-    unnest() %>%
-    select(from, to, weight, to.freq, expected.edges)
+    unnest(cols = c("data", "to.freq", "expected.edges"))
+    
   
   #calculate score = observed / expected
   edges <- mutate(edges, score = weight / expected.edges)

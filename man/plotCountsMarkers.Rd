@@ -30,7 +30,7 @@ A ggplot2 object containing the plot. See examples or the plotting
  vignette for further help.
 }
 \description{
-Plot method for spCounts objects to display "markers", typically genes
+Plot method for CIMseqSinglets objects to display "markers", typically genes
 thought to be discreetly expressed in one cell type, in all samples.
 }
 \examples{

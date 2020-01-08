@@ -123,7 +123,7 @@ setMethod("plotCountsERCC", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 
 #' plotCountsMarkers
 #'
-#' Plot method for spCounts objects to display "markers", typically genes
+#' Plot method for CIMseqSinglets objects to display "markers", typically genes
 #' thought to be discreetly expressed in one cell type, in all samples.
 #'
 #' @name plotCountsMarkers
@@ -242,6 +242,9 @@ setMethod("plotUnsupervisedClass", "CIMseqSinglets", function(
 #' @param singlets CIMseqSinglets; A CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param markers character; A vector with markers to be included plot.
+#' @param log logical; Use log2 values? See \code{\link{plotCountsData}}.
+#' @param normalize logical; Use [0, 1] normalized values? 
+#'  See \code{\link{processMarkers}}.
 #' @param pal character; A palette of colors with length(pal) = length(markers).
 #' @param ... additional arguments to pass on.
 #' @return A ggplot2 object with plot. See examples or the plotting vignette
@@ -275,7 +278,7 @@ setGeneric("plotUnsupervisedMarkers", function(
 # methods to perform DR and classification. POtentially it is sufficient in its
 # present form but this might need to be considered further...
 setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), function(
-  singlets, multiplets, markers = NULL, pal = col40(), ...
+  singlets, multiplets, markers = NULL, log = TRUE, normalize = TRUE, pal = col40(), ...
 ){
   `Sample type` <- NULL
   if(is.null(markers)) {
@@ -284,7 +287,7 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
   if(!all(markers %in% rownames(getData(singlets, "counts")))) {
     rn <- rownames(getData(singlets, "counts"))
     msg <- paste0(
-      "The following markers were not found in the spCountsSng object: ",
+      "The following markers were not found in the CIMseqSinglets object: ",
       rn[!rn %in% markers]
     )
     stop(msg)
@@ -295,7 +298,7 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
   pal <- pal[order(names(pal))]
   
   if(length(markers) == 1) {
-    p <- plotCountsData(singlets, multiplets, markers) %>%
+    p <- plotCountsData(singlets, multiplets, markers, log, normalize) %>%
       filter(`Sample type` == "Singlet") %>%
       ggplot(aes_string(x = '`dim.red dim 1`', y = '`dim.red dim 2`')) +
       theme_few() +
@@ -303,7 +306,7 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
       geom_point(aes_string(colour = markers), shape = 16) +
       scale_colour_viridis(option = "E")
   } else {
-    p <- plotCountsData(singlets, multiplets, markers) %>%
+    p <- plotCountsData(singlets, multiplets, markers, log, normalize) %>%
       filter(`Sample type` == "Singlet") %>%
       full_join(
         coloursFromTargets(pal, getData(singlets, "counts.cpm"), markers),

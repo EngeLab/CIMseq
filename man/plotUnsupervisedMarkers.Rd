@@ -10,7 +10,8 @@ plotUnsupervisedMarkers(singlets, multiplets, ...)
 
 
   \S4method{plotUnsupervisedMarkers}{CIMseqSinglets,CIMseqMultiplets}(singlets,
-  multiplets, markers = NULL, pal = col40(), ...)
+  multiplets, markers = NULL, log = TRUE, normalize = TRUE,
+  pal = col40(), ...)
 }
 \arguments{
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
@@ -20,6 +21,11 @@ plotUnsupervisedMarkers(singlets, multiplets, ...)
 \item{...}{additional arguments to pass on.}
 
 \item{markers}{character; A vector with markers to be included plot.}
+
+\item{log}{logical; Use log2 values? See \code{\link{plotCountsData}}.}
+
+\item{normalize}{logical; Use [0, 1] normalized values? 
+See \code{\link{processMarkers}}.}
 
 \item{pal}{character; A palette of colors with length(pal) = length(markers).}
 }
