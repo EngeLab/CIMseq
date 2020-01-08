@@ -483,36 +483,20 @@ calculateEdgeStats <- function(
   class.freq <- colSums2(mat) #multiplet estimated cell type frequency
   names(class.freq) <- colnames(mat)
   
-  .f1 <- function(f, t) {
-    abs <- class.freq[names(class.freq) != t]
-    rel <- abs / sum(abs)
-    as.numeric(rel[f]) * class.freq[t]
-  }
-  
   allProbs <- expand.grid(
     from = names(class.freq), to = names(class.freq), 
     stringsAsFactors = FALSE
   ) %>%
     filter(from != to) %>%
-    # https://github.com/r-lib/covr/issues/377
-    # mutate(edges = map2_dbl(from, to, function(f, t) {
-    #   abs <- class.freq[names(class.freq) != t]
-    #   rel <- abs / sum(abs)
-    #   as.numeric(rel[f]) * class.freq[t]
-    # })) %>%
-    mutate(edges = map2_dbl(from, to, ~.f1(.x, .y))) %>%
-    mutate(rel = edges / sum(edges)) %>%
-    mutate(expected = total.edges * rel)
+    mutate(edges = map2_dbl(from, to, function(f, t) {
+      abs <- class.freq[names(class.freq) != t]
+      rel <- abs / sum(abs)
+      as.numeric(rel[f]) * class.freq[t]
+    }))
   
-  # https://github.com/r-lib/covr/issues/377
-  # edges <- mutate(edges, expected.edges = map2_dbl(from, to, function(f, t){
-  #   allProbs[allProbs$from == f & allProbs$to == t, "expected"]
-  # }))
-  
-  .f2 <- function(f, t) {
+  edges <- mutate(edges, expected.edges = map2_dbl(from, to, function(f, t){
     allProbs[allProbs$from == f & allProbs$to == t, "expected"]
-  }
-  edges <- mutate(edges, expected.edges = map2_dbl(from, to, ~.f2(.x, .y)))
+  }))
   
   #calculate p-value based on observed (weight) vs. expected (expected.edges)
   edges <- mutate(edges, pval = ppois(
