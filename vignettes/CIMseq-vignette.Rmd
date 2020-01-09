@@ -103,6 +103,11 @@ cObjSng <- CIMseqSinglets(singlets, singletERCC, dim.red, classes)
 cObjMul <- CIMseqMultiplets(multiplets, multipletERCC, selected)
 ```
 
+```{r, echo = FALSE}
+cObjSng <- CIMseqSinglets_test
+cObjMul <- CIMseqMultiplets_test
+```
+
 The CIMseqSinglets object contains:  
 1. The raw counts data input by the user.  
 2. A function to calculate log normalized counts per million on the fly.  
@@ -197,7 +202,7 @@ argument and also filter results for a specific significance level with the
 The resulting "connectome" can be plotted via the command below.
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
-plotSwarmGraph(sObj, cObjSng, cObjMul)
+plotSwarmCircos(sObj, cObjSng, cObjMul, alpha = 1)
 ```
 
 Multiple additional plot types are possible for the deconvolution results and 

@@ -49,6 +49,8 @@ setMethod("plotSwarmPosition", "CIMseqSwarm", function(
     interval = NULL,
     ...
 ){
+  position <- swarmMemberID <- iteration <- NULL
+  
   p <- getData(swarm, "stats") %>%
     filter(sample %in% multiplet) %>%
     unnest() %>%
@@ -65,7 +67,7 @@ setMethod("plotSwarmPosition", "CIMseqSwarm", function(
     #filter(.data$iteration %in% interval) %>%
     ggplot(aes(position)) +
       geom_density(aes(fill = class, colour = class), alpha = 0.5) +
-      facet_grid(sample ~ iteration, scale = "free") +
+      facet_grid(sample ~ iteration, scales = "free") +
       scale_fill_manual(values = col40()) +
       scale_colour_manual(values = col40()) +
       ggthemes::theme_few() +

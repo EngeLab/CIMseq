@@ -94,10 +94,7 @@ NULL
 #' @importFrom readr parse_factor
 
 coloursFromTargets <- function(
-  pal,
-  counts,
-  markers,
-  ...
+  pal, counts, markers, ...
 ){
   
   if(is.null(markers) | is.null(pal) | length(markers) == 1) {
@@ -112,10 +109,6 @@ coloursFromTargets <- function(
   
   markers <- sort(markers)
   pal <- pal[1:length(markers)]
-  
-  .f1 <- function(x, y, z) {
-   
-  }
   
   counts[rownames(counts) %in% markers, ] %>%
   matrix_to_tibble(., 'geneName') %>%
@@ -137,7 +130,7 @@ coloursFromTargets <- function(
     list(.data$colint, .data$normalized, .data$fraction), 
     function(x, y, z)  (255 - ((255 - col2rgb(x)) * y)) * z
   )) %>%
-  unnest() %>%
+  unnest(cols = c(.data$rgb)) %>%
   add_column('col' = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
   group_by(.data$Sample, .data$col) %>%
   summarize('sumRGB' = sum(.data$rgb) / 256) %>%

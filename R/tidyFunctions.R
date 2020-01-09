@@ -139,7 +139,7 @@ tidySwarm <- function(swarm) {
     matrix_to_tibble("sample") %>%
     mutate('costs' = getData(swarm, "costs")) %>%
     mutate('convergence' = getData(swarm, "convergence")) %>%
-    nest(names, .key = "fractions")
+    nest(fractions = names)
 }
 
 #' divide_by

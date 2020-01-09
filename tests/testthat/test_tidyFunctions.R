@@ -52,7 +52,7 @@ test_that("check that tidySwarm outputs the expected result", {
     HOS = round(c(0, 1, 0))
   )
   output <- tidySwarm(CIMseqSwarm_test) %>%
-    unnest() %>%
+    unnest(cols = .data$fractions) %>%
     mutate_if(is.numeric, round)
   expect_identical(expected, output)
 })

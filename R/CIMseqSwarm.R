@@ -393,6 +393,7 @@ NULL
 #' @importFrom purrr map_int map2_dbl map2_int
 #' @importFrom matrixStats rowSums2 colSums2
 #' @importFrom rlang .data
+#' @importFrom stats p.adjust
 #' @export
 
 calculateEdgeStats <- function(
@@ -415,42 +416,34 @@ calculateEdgeStats <- function(
 .calculateWeight <- function(adj, ...) {
   from <- to <- NULL
   
-  .f1 <- function(f, t, ...) {
-    length(which(rowSums2(adj[, colnames(adj) %in% c(f, t)]) == 2))
-  }
-  
   expand.grid(
     from = colnames(adj), to = colnames(adj),
     stringsAsFactors = FALSE
   ) %>%
     filter(from != to) %>% #doesn't calculate self edges
-    # https://github.com/r-lib/covr/issues/377
-    # mutate(weight = map2_int(from, to, function(f, t) {
-    #   sub <- mat[, colnames(mat) %in% c(f, t)]
-    #   length(which(rowSums2(sub) == 2))
-    # }))
-    mutate(weight = map2_int(from, to, function(f, t) .f1(f, t)))
+    mutate(weight = map2_int(from, to, function(f, t) {
+      sub <- adj[, colnames(adj) %in% c(f, t)]
+      length(which(rowSums2(sub) == 2))
+    }))
 }
 
 .calculateP <- function(
   edges, mat, ...
 ){
-  from <- to <- jp <- weight <- expected.edges <- NULL
+  data <- to.freq <- p.adjust <- pval <- NULL
+  from <- to <- weight <- expected.edges <- NULL
   
   #calculate expected edges
   class.freq <- colSums2(mat) #multiplet estimated cell type frequency
   names(class.freq) <- colnames(mat)
   
-  # https://github.com/r-lib/covr/issues/377
-  .f1 <- function(f, d) {
-    freq <- class.freq[names(class.freq) != f]
-    rel <- freq / sum(freq)
-    rel[pull(d, to)]
-  }
-  
   edges <- edges %>%
     nest(data = -from) %>%
-    mutate(to.freq = map2(from, data, ~.f1(.x, .y))) %>%
+    mutate(to.freq = map2(from, data, function(f, d) {
+      freq <- class.freq[names(class.freq) != f]
+      rel <- freq / sum(freq)
+      rel[pull(d, to)]
+    })) %>%
     mutate(expected.edges = map2(to.freq, data, ~sum(pull(.y, weight)) * .x)) %>%
     unnest(cols = c("data", "to.freq", "expected.edges"))
     
@@ -724,27 +717,16 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
   if(drop) edges <- filter(edges, from != to)
   if(!drop) rs <- rowSums2(mat)
   
-  .f1 <- function(f, t) {
-    if(f == t) {
-      rownames(mat)[mat[, colnames(mat) == f] == 1 & rs == 1]
-    } else {
-      sub <- mat[, colnames(mat) %in% c(f, t)]
-      rownames(mat)[which(rowSums2(sub) == 2)]
-    }
-  }
-  
   data <- edges %>%
-    # https://github.com/r-lib/covr/issues/377
-    # mutate(sample = map2(from, to, function(f, t) {
-    #   if(f == t) {
-    #     rownames(mat)[mat[, colnames(mat) == f] == 1 & rs == 1]
-    #   } else {
-    #     sub <- mat[, colnames(mat) %in% c(f, t)]
-    #     rownames(mat)[which(rowSums2(sub) == 2)]
-    #   }
-    # })) %>%
-    mutate(sample = map2(from, to, ~.f1(.x, .y))) %>%
-    unnest() %>%
+    mutate(sample = map2(from, to, function(f, t) {
+      if(f == t) {
+        rownames(mat)[mat[, colnames(mat) == f] == 1 & rs == 1]
+      } else {
+        sub <- mat[, colnames(mat) %in% c(f, t)]
+        rownames(mat)[which(rowSums2(sub) == 2)]
+      }
+    })) %>%
+    unnest(cols = c(.data$sample)) %>%
     filter(sample %in% multipletName) %>%
     select(sample, everything())
   
@@ -806,7 +788,7 @@ setMethod("getCellsForMultiplet", "CIMseqSwarm", function(
   ) %>%
     mutate(cells = map2(.data$from, .data$to, ~c(.x, .y))) %>%
     select(-.data$from, -.data$to) %>%
-    unnest() %>%
+    unnest(cols = c(.data$cells)) %>%
     distinct()
 })
 

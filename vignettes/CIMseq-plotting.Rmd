@@ -139,8 +139,8 @@ plotSwarmCircos(
 
 Get data to make a custom plot.
 ```{r}
-plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %>%
-  plotData()
+# plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %>%
+#  plotData()
 
 plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %>%
   plotData() %>%
@@ -149,12 +149,11 @@ plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %
 
 
 ### Gene plots
-```{r, fig.align="center", fig.width=10, fig.height=8}
+```{r, fig.align="center", fig.width=10, fig.height=8, eval = FALSE}
+#taking too long... why?
 plotSwarmGenes(
   CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test,
   c("CD74", "ANXA3", "ACTG2"), rownames(getData(CIMseqSwarm_test, "fractions"))
 )
 ```
-
-### Residual plots
 
