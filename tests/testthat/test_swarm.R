@@ -1,4 +1,4 @@
-context("spSwarm")
+context("CIMseqSwarm")
 
 #Function to check if all elements in a vector are identical
 has_zero_range <- function(x, tol = .Machine$double.eps ^ 0.5) {
@@ -7,9 +7,52 @@ has_zero_range <- function(x, tol = .Machine$double.eps ^ 0.5) {
   isTRUE(all.equal(x[1], x[2], tolerance = tol))
 }
 
+test_that("check that CIMseqSwarm runs without issue", {
+  expect_silent(CIMseqSwarm(
+    CIMseqSinglets_test, CIMseqMultiplets_test, maxiter = 2, swarmsize = 2,
+    nSyntheticMultiplets = 2
+  ))
+})
+
+test_that("check that .optim.fun runs without issue", {
+  idx <- getData(CIMseqSwarm_test, "singletIdx")
+  sngs <- appropriateSinglets(CIMseqSinglets_test, idx)
+  expect_silent(.optim.fun(
+    1, rep(0, 3), getData(CIMseqMultiplets_test, "counts.cpm"), sngs, 
+    length(idx), list(maxit = 2, s = 2), NULL
+  ))
+})
+
+test_that("check that .processSwarm returns the correct result", {
+  cn <- paste0("c", 1:5)
+  rn <- paste0("s", 1:3)
+  opt.out <- list(list(1:5), list(2:6), list(3:7))
+  par <- map(opt.out, 1) %>% do.call("rbind", .)
+  colnames(par) <- sort(cn)
+  rownames(par) <- rn
+  expect_identical(par, .processSwarm(opt.out, cn, rn, FALSE))
+  
+  par <- par * 1 / rowSums(par)
+  expect_identical(par, .processSwarm(opt.out, cn, rn, TRUE))
+})
+
+test_that("check that .processConvergence returns the correct result", {
+  opt.out <- list(
+    c(rep(0, 3), 1), c(rep(0, 3), 2), c(rep(0, 3), 3), c(rep(0, 3), 4)
+  )
+  expected <- c(
+    "Maximal number of function evaluations reached.",
+    "Maximal number of iterations reached.",
+    "Maximal number of restarts reached.",
+    "Maximal number of iterations without improvement reached."
+  )
+  output <- .processConvergence(opt.out)
+  expect_identical(output, expected)
+})
+
 #run test getMultipletsForEdge
 test_that("check that getMultipletsForEdge outputs the expected result", {
-
+  
   ###TEST1####
   #setup expected data
   #A1 and B1 should have an edge
@@ -29,8 +72,8 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
     from = c("A375", "A375"),
     to = c("HCT116", "HOS")
   )
-
-    #run function
+  
+  #run function
   output1 <- getMultipletsForEdge(
     CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, 
     data.frame("A375", "HOS")
@@ -43,8 +86,8 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
     CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test,
     data.frame(c("A375", "A375"), c("HCT116", "HOS"))
   )
-
-    #test
+  
+  #test
   expect_identical(output1, expected1)
   expect_identical(output2, expected2)
   expect_identical(output3, expected3)
@@ -52,7 +95,7 @@ test_that("check that getMultipletsForEdge outputs the expected result", {
 
 ##run test getEdgesForMultiplet
 test_that("check that getEdgesForMultiplet outputs the expected result", {
-
+  
   ###TEST1####
   #setup expected data
   expected1 <- tibble::tibble(
@@ -73,7 +116,7 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
   output2 <- getEdgesForMultiplet(
     CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, 'm.NJB00204.G04'
   )
-
+  
   #test
   expect_identical(output1, expected1)
   expect_identical(output2, expected2)
@@ -81,9 +124,9 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
   ###TEST2####
   #setup expected data
   expected1 <- tibble::tibble(
-    sample = rep(c("m.NJB00204.G04", "m.NJB00204.D07"), each = 2),
-    from = c("HOS", "A375", "HOS", "HCT116"), 
-    to = c("A375", "HOS", "HCT116", "HOS")
+    sample = rep(c("m.NJB00204.G04", "m.NJB00204.D07"), 2),
+    from = c("HOS", "HOS", "A375", "HCT116"), 
+    to = c("A375", "HCT116", "HOS", "HOS")
   )
   
   #run function
@@ -99,7 +142,7 @@ test_that("check that getEdgesForMultiplet outputs the expected result", {
 test_that("check that adjustFractions outputs the expected result", {
   
   ###TEST1####
-  #setup expected data
+  #arg binary = TRUE
   fractions <- getData(CIMseqSwarm_test, "fractions")
   
   cnc <- cellNumberPerClass(CIMseqSinglets_test, CIMseqMultiplets_test) %>%
@@ -121,18 +164,49 @@ test_that("check that adjustFractions outputs the expected result", {
     CIMseqSinglets_test, CIMseqMultiplets_test, CIMseqSwarm_test, binary = TRUE
   )
   
+  #test
+  expect_identical(expected1, output1)
+  
+  ###TEST2####
+  #arg binary = FALSE
   output2 <- adjustFractions(
     CIMseqSinglets_test, CIMseqMultiplets_test, CIMseqSwarm_test, binary = FALSE
   )
   
   #test
-  expect_identical(expected1, output1)
   expect_identical(expected2, output2)
+  
+  ###TEST3####
+  #theoretical.max arg != NULL
+  output3 <- adjustFractions(
+    CIMseqSinglets_test, CIMseqMultiplets_test, CIMseqSwarm_test, binary = TRUE,
+    theoretical.max = 1
+  )
+  expected3 <- expected2
+  expected3['m.NJB00204.G04', 'HOS'] <- 0
+  expected3['m.NJB00204.A02', 'HCT116'] <- 0
+  expect_identical(output3, expected3)
+  
+  ###TEST4####
+  expect_silent(adjustFractions(
+    CIMseqSinglets_test, CIMseqMultiplets_test, 
+    getData(CIMseqSwarm_test, "fractions")
+  ))
+  
+  ###TEST5####
+  tmp <- CIMseqSwarm_test
+  frac <- getData(CIMseqSwarm_test, "fractions")
+  colnames(frac) <- paste0("s", colnames(frac))
+  tmp@fractions <- frac
+  expect_error(adjustFractions(
+    CIMseqSinglets_test, CIMseqMultiplets_test, tmp
+  ))
 })
 
 test_that("check that calculateEdgeStats outputs the expected result", {
   
   ###TEST1####
+  #.calculateWeight
   #setup input data
   mat <- structure(
     c(
@@ -152,6 +226,7 @@ test_that("check that calculateEdgeStats outputs the expected result", {
   expect_identical(expected, output$weight)
   
   ###TEST2####
+  #.calculateP
   #setup input
   set.seed(9322)
   edges <- expand.grid(
@@ -167,7 +242,7 @@ test_that("check that calculateEdgeStats outputs the expected result", {
   )
   
   #setup expected data
-  expected <- c(7, 1, 8, 2, 1, 1)
+  expected <- c(4, 1, 3, 3, 8, 1)
   
   #run function
   output <- CIMseq:::.calculateP(edges, mat)
@@ -175,8 +250,50 @@ test_that("check that calculateEdgeStats outputs the expected result", {
   #test
   expect_identical(expected, round(output$expected.edges))
   expect_identical(output$score, output$weight / output$expected.edges)
+  
+  ###TEST3####
+  #test with theoretical.max arg != NULL
+  expect_true(!identical(
+    calculateEdgeStats(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, theoretical.max = NULL), 
+    calculateEdgeStats(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, theoretical.max = 1)
+  ))
 })
 
+#run test getMultipletsForEdge
+test_that("check that getCellsForMultiplet outputs the expected result", {
+  
+  ###TEST1####
+  #setup expected data
+  sample <- "m.NJB00204.G04"
+  expected <- tibble(
+    sample = rep(sample, 2),
+    cells = c("HOS", "A375")
+  )
+  
+  #run function
+  output <- getCellsForMultiplet(
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, sample
+  )
+  
+  #test
+  expect_identical(output, expected)
+  
+  ###TEST2####
+  #setup expected data
+  samples <- colnames(getData(CIMseqMultiplets_test, "counts"))[c(3, 1, 2)]
+  expected <- tibble(
+    sample = rep(samples, each = 2),
+    cells = c("HCT116", "A375", "HOS", "A375", "HOS", "HCT116")
+  )
+  
+  #run function
+  output <- getCellsForMultiplet(
+    CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test
+  )
+  
+  #test
+  expect_identical(output, expected)
+})
 ################################################################################
 #                                                                              #
 #                                C++ functions                                 #
@@ -461,6 +578,10 @@ test_that("check that appropriateSinglets outputs the expected result", {
   expect_identical(unname(col.first.last.gene), unname(output[nrow(output) - 399, ]))
   expect_identical(unname(col.last.last.gene), unname(output[nrow(output), ]))
   expect_true(all(colnames(output) == sort(colnames(output))))
+  expect_identical(
+    appropriateSinglets(CIMseqSinglets_test, idx), 
+    appropriateSinglets(CIMseqSinglets_test, idx, 1:nrow(singlets))
+  )
 })
 
 test_that("check that calculateCost and cost give identical results", {
@@ -504,7 +625,7 @@ test_that("check that calculateCost and cost give identical results", {
     purrr::map2(., 1:n, function(x, i) {
       rownames(x) <- paste(rownames(singlets), i, sep = ".")
       x
-      }) %>%
+    }) %>%
     purrr::map(., function(x) {colnames(x) <- sort(unique(classes)); x}) %>%
     do.call("rbind", .) %>%
     .[order(rownames(.)), ]

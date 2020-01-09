@@ -9,7 +9,7 @@
 plotCountsMarkers(singlets, multiplets, ...)
 
 \S4method{plotCountsMarkers}{CIMseqSinglets,CIMseqMultiplets}(singlets,
-  multiplets, markers = NULL, ...)
+  multiplets, markers = NULL, log = TRUE, normalize = TRUE, ...)
 }
 \arguments{
 \item{singlets}{CIMseqSinglets; An CIMseqSinglets object.}
@@ -19,13 +19,18 @@ plotCountsMarkers(singlets, multiplets, ...)
 \item{...}{additional arguments to pass on.}
 
 \item{markers}{character; A vector with the 2 markers to plot.}
+
+\item{log}{logical; Use log2 values? See \code{\link{plotCountsData}}.}
+
+\item{normalize}{logical; Use [0, 1] normalized values? 
+See \code{\link{processMarkers}}.}
 }
 \value{
 A ggplot2 object containing the plot. See examples or the plotting
  vignette for further help.
 }
 \description{
-Plot method for spCounts objects to display "markers", typically genes
+Plot method for CIMseqSinglets objects to display "markers", typically genes
 thought to be discreetly expressed in one cell type, in all samples.
 }
 \examples{

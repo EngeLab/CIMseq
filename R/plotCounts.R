@@ -3,7 +3,7 @@ NULL
 
 #' plotCountsData
 #'
-#' Assembles all data for plotCounts plots. Not exported. End users should use
+#' Assembles all data for plotCounts plots. End users should use
 #' the \code{\link{plotData}} function.
 #'
 #' @name plotCountsData
@@ -13,6 +13,9 @@ NULL
 #' @param multiplets CIMseqMultiplets; An CIMseqMultiplets object.
 #' @param markers character; A vector with the 2 markers to plot. Must be
 #'  present in rownames of counts.
+#' @param log logical; Use log2 + 1 values?
+#' @param normalize logical; Use [0, 1] normalized values? 
+#'  See \code{\link{processMarkers}}.
 #' @param ... additional arguments to pass on.
 #' @return A tibble with columns:
 #' @author Jason T. Serviss
@@ -37,13 +40,14 @@ setGeneric("plotCountsData", function(
 #' @importFrom readr parse_factor
 
 setMethod("plotCountsData", c("CIMseqSinglets", "CIMseqMultiplets"), function(
-  singlets, multiplets, markers = NULL, ...
+  singlets, multiplets, markers = NULL, log = TRUE, normalize = TRUE, ...
 ){
+  if(log) {slot <- "counts.log"} else {slot <- "counts.cpm"}
   
-  s <- getData(singlets, "counts.log")
-  m <- getData(multiplets, "counts.log")
+  s <- getData(singlets, slot)
+  m <- getData(multiplets, slot)
   
-  processMarkers(cbind(s, m), markers) %>%
+  processMarkers(cbind(s, m), markers, normalize) %>%
   full_join(
     estimateCells(singlets, multiplets),
     by = c("Sample" = "sample")
@@ -57,7 +61,8 @@ setMethod("plotCountsData", c("CIMseqSinglets", "CIMseqMultiplets"), function(
     Classification = getData(singlets, "classification")
   ), by = "Sample") %>%
   full_join(
-    ., matrix_to_tibble(getData(singlets, "dim.red"), "Sample"), by = "Sample"
+    ., matrix_to_tibble(getData(singlets, "dim.red"), "Sample"), 
+    by = "Sample"
   ) %>%
   rename(
     `Estimated cell number` = .data$estimatedCellNumber,
@@ -118,7 +123,7 @@ setMethod("plotCountsERCC", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 
 #' plotCountsMarkers
 #'
-#' Plot method for spCounts objects to display "markers", typically genes
+#' Plot method for CIMseqSinglets objects to display "markers", typically genes
 #' thought to be discreetly expressed in one cell type, in all samples.
 #'
 #' @name plotCountsMarkers
@@ -126,6 +131,9 @@ setMethod("plotCountsERCC", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 #' @param singlets CIMseqSinglets; An CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; An CIMseqMultiplets object.
 #' @param markers character; A vector with the 2 markers to plot.
+#' @param log logical; Use log2 values? See \code{\link{plotCountsData}}.
+#' @param normalize logical; Use [0, 1] normalized values? 
+#'  See \code{\link{processMarkers}}.
 #' @param ... additional arguments to pass on.
 #' @return A ggplot2 object containing the plot. See examples or the plotting
 #'  vignette for further help.
@@ -150,13 +158,13 @@ setGeneric("plotCountsMarkers", function(
 #' @importFrom ggthemes theme_few scale_colour_economist
 
 setMethod("plotCountsMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), function(
-  singlets, multiplets, markers = NULL, ...
+  singlets, multiplets, markers = NULL, log = TRUE, normalize = TRUE, ...
 ){
   if((!is.null(markers)) & length(markers) != 2) {
     stop("Markers must be a character vector of length = 2.")
   }
   
-  plotCountsData(singlets, multiplets, markers) %>%
+  plotCountsData(singlets, multiplets, markers, log, normalize) %>%
     ggplot(aes_string(markers[1], markers[2], colour = "`Sample type`")) +
     geom_point(alpha = 0.75, shape = 16) +
     scale_colour_manual(values = c("#1c54a8", "#f63b32")) +
@@ -173,6 +181,7 @@ setMethod("plotCountsMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), function
 #' @rdname plotUnsupervisedClass
 #' @param singlets CIMseqSinglets; A CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
+#' @param classColours character; Named vector of colours with classes as names.
 #' @param ... additional arguments to pass on.
 #' @return The ggplot2 object containing the plot. See examples or the plotting
 #'  vignette for further help.
@@ -202,14 +211,20 @@ setGeneric("plotUnsupervisedClass", function(
 # methods to perform DR and classification. POtentially it is sufficient in its
 # present form but this might need to be considered further...
 setMethod("plotUnsupervisedClass", "CIMseqSinglets", function(
-  singlets, multiplets, ...
+  singlets, multiplets, classColours = NULL, ...
 ){
   `Sample type` <- NULL
+  if(is.null(classColours)) {
+    classColours <- col40() 
+  } else {
+    classColours <- classColours[order(names(classColours))]
+  }
+  
   plotCountsData(singlets, multiplets) %>%
     filter(`Sample type` == "Singlet") %>%
     ggplot(aes_string(x = '`dim.red dim 1`', y = '`dim.red dim 2`')) +
     geom_point(aes_string(colour = 'Classification'), alpha = 0.75, shape = 16) +
-    scale_colour_manual(values = col40()) +
+    scale_colour_manual(values = classColours) +
     theme_few() +
     theme(legend.position = "top") +
     guides(colour = guide_legend(override.aes = list(size = 3)))
@@ -227,6 +242,9 @@ setMethod("plotUnsupervisedClass", "CIMseqSinglets", function(
 #' @param singlets CIMseqSinglets; A CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param markers character; A vector with markers to be included plot.
+#' @param log logical; Use log2 values? See \code{\link{plotCountsData}}.
+#' @param normalize logical; Use [0, 1] normalized values? 
+#'  See \code{\link{processMarkers}}.
 #' @param pal character; A palette of colors with length(pal) = length(markers).
 #' @param ... additional arguments to pass on.
 #' @return A ggplot2 object with plot. See examples or the plotting vignette
@@ -260,7 +278,7 @@ setGeneric("plotUnsupervisedMarkers", function(
 # methods to perform DR and classification. POtentially it is sufficient in its
 # present form but this might need to be considered further...
 setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), function(
-  singlets, multiplets, markers = NULL, pal = col40(), ...
+  singlets, multiplets, markers = NULL, log = TRUE, normalize = TRUE, pal = col40(), ...
 ){
   `Sample type` <- NULL
   if(is.null(markers)) {
@@ -269,7 +287,7 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
   if(!all(markers %in% rownames(getData(singlets, "counts")))) {
     rn <- rownames(getData(singlets, "counts"))
     msg <- paste0(
-      "The following markers were not found in the spCountsSng object: ",
+      "The following markers were not found in the CIMseqSinglets object: ",
       rn[!rn %in% markers]
     )
     stop(msg)
@@ -280,7 +298,7 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
   pal <- pal[order(names(pal))]
   
   if(length(markers) == 1) {
-    p <- plotCountsData(singlets, multiplets, markers, pal) %>%
+    p <- plotCountsData(singlets, multiplets, markers, log, normalize) %>%
       filter(`Sample type` == "Singlet") %>%
       ggplot(aes_string(x = '`dim.red dim 1`', y = '`dim.red dim 2`')) +
       theme_few() +
@@ -288,7 +306,7 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
       geom_point(aes_string(colour = markers), shape = 16) +
       scale_colour_viridis(option = "E")
   } else {
-    p <- plotCountsData(singlets, multiplets, markers, pal) %>%
+    p <- plotCountsData(singlets, multiplets, markers, log, normalize) %>%
       filter(`Sample type` == "Singlet") %>%
       full_join(
         coloursFromTargets(pal, getData(singlets, "counts.cpm"), markers),

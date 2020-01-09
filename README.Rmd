@@ -1,6 +1,8 @@
 ---
 title: "CIM-seq"
 output: github_document
+params: 
+  output_dir: "../README.md"
 ---
 
 Release build: <a href="https://travis-ci.com/jasonserviss/CIMseq"><img src="https://travis-ci.com/jasonserviss/CIMseq.svg?branch=master"></a>

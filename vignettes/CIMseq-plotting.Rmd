@@ -108,53 +108,31 @@ plotUnsupervisedMarkers(
 
 ## CIMseqSwarm
 
-### Graph-based plots
-
 ```{r, fig.align="center", fig.width=10, fig.height=8}
 plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
 ```
 
-### Non-graph-based plots
-
-Edge bar graph.
-```{r, fig.align="center", fig.width=10, fig.height=8}
-plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
-```
-
-P-value bar graph.
-```{r, fig.align="center", fig.width=10, fig.height=8}
-plotSwarmPbar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
-```
-
-Heatmap.
-```{r, fig.align="center", fig.width=10, fig.height=8}
-plotSwarmHeat(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
-```
-
 ```{r, fig.align="center", fig.width=10, fig.height=8}
 plotSwarmCircos(
-  CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test
+  CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test, alpha = 1
 )
 ```
+
+## Custom plots
 
 Get data to make a custom plot.
 ```{r}
 plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %>%
-  plotData()
-
-plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %>%
-  plotData() %>%
-  head()
+ plotData()
 ```
 
 
-### Gene plots
-```{r, fig.align="center", fig.width=10, fig.height=8}
+## Gene plots
+```{r, fig.align="center", fig.width=10, fig.height=8, eval = FALSE}
+#taking too long... why?
 plotSwarmGenes(
   CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test,
   c("CD74", "ANXA3", "ACTG2"), rownames(getData(CIMseqSwarm_test, "fractions"))
 )
 ```
-
-### Residual plots
 

@@ -4,7 +4,8 @@
 \alias{calculateEdgeStats}
 \title{calculateEdgeStats}
 \usage{
-calculateEdgeStats(swarm, singlets, multiplets, ...)
+calculateEdgeStats(swarm, singlets, multiplets, theoretical.max = Inf,
+  ...)
 }
 \arguments{
 \item{swarm}{A CIMseqSwarm object.}
@@ -13,16 +14,16 @@ calculateEdgeStats(swarm, singlets, multiplets, ...)
 
 \item{multiplets}{A CIMseqMultiplets object.}
 
+\item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
+
 \item{...}{additional arguments to pass on}
 }
 \value{
 CIMseqSwarm connection weights and p-values.
 }
 \description{
-Subtitle
-}
-\details{
-Description
+Calculates the score (obs / expected) and p-value for all possible 
+connections.
 }
 \examples{
 

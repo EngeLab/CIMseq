@@ -4,11 +4,17 @@
 \name{plotData}
 \alias{plotData}
 \alias{plotData,gg-method}
+\alias{plotData,data.frame-method}
+\alias{plotData,ggraph-method}
 \title{plotData}
 \usage{
 plotData(plot, ...)
 
 \S4method{plotData}{gg}(plot, ...)
+
+\S4method{plotData}{data.frame}(plot, ...)
+
+\S4method{plotData}{ggraph}(plot, ...)
 }
 \arguments{
 \item{plot}{A ggplot object of class "gg" "ggplot".}
@@ -19,8 +25,7 @@ plotData(plot, ...)
 A tibble containing the plot data.
 }
 \description{
-Returns the data used to build plots for spCounts, spUnsupervised, and
-spSwarm objects.
+Returns the data used to build plots for CIMseqData and CIMseqSwarm objects.
 }
 \examples{
 

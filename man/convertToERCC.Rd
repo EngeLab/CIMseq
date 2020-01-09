@@ -7,15 +7,15 @@
 convertToERCC(ercc, singlets, multiplets)
 }
 \arguments{
-\item{ercc}{The left axis values. Passes as ".".}
+\item{ercc}{The left axis values.}
 
 \item{singlets}{CIMseqSinglets; An CIMseqSinglets object.}
 
 \item{multiplets}{CIMseqMultiplets; An CIMseqMultiplets object.}
 }
 \description{
-A function to facilitate calculation of the second axis of the plotCounts
-type "ercc" plot.
+A function to facilitate calculation of the second axis of the
+plotCountsERCC plot.
 }
 \author{
 Jason T. Serviss

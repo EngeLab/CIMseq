@@ -9,7 +9,7 @@
 plotCountsData(singlets, multiplets, ...)
 
 \S4method{plotCountsData}{CIMseqSinglets,CIMseqMultiplets}(singlets,
-  multiplets, markers = NULL, ...)
+  multiplets, markers = NULL, log = TRUE, normalize = TRUE, ...)
 }
 \arguments{
 \item{singlets}{CIMseqSinglets; An CIMseqSinglets object.}
@@ -20,12 +20,17 @@ plotCountsData(singlets, multiplets, ...)
 
 \item{markers}{character; A vector with the 2 markers to plot. Must be
 present in rownames of counts.}
+
+\item{log}{logical; Use log2 + 1 values?}
+
+\item{normalize}{logical; Use [0, 1] normalized values? 
+See \code{\link{processMarkers}}.}
 }
 \value{
 A tibble with columns:
 }
 \description{
-Assembles all data for plotCounts plots. Not exported. End users should use
+Assembles all data for plotCounts plots. End users should use
 the \code{\link{plotData}} function.
 }
 \examples{

@@ -100,6 +100,9 @@ setMethod("CIMseqSinglets", "matrix", function(
   if(ncol(counts) != length(classification)) {
     message("length(classification) != ncol(counts)")
   }
+  if(!length(unique(classification)) > 1) {
+    message("length(unique(classification)) > 1 is not TRUE")
+  }
   if(nrow(dim.red) != ncol(counts)) {
     message("nrow(dim.red) != ncol(counts)")
   }
@@ -210,9 +213,12 @@ setMethod("CIMseqMultiplets", "matrix", function(
 #' @rdname estimateCells
 #' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
+#' @param theoretical.max integer; Cuts the estimated cell number at the 
+#'  provided value such that all values > than the theoretical.max become equal
+#'  to the theoretical.max.
 #' @param warning logical; Indicates if a warning should be issued when all ERCC
 #'  counts for a sample are equal to 0. If this warning is issued it can be
-#'  satisfactorily resolved by setting the ERCC reads for these samples to NA.
+#'  resolved by setting the ERCC reads for these samples to NA.
 #' @param ... additional arguments to pass on
 #' @return A data frame including the fraction of ercc reads and cell counts for
 #'    each sample.
@@ -226,9 +232,7 @@ NULL
 #' @export
 
 setGeneric("estimateCells", function(
-  singlets,
-  multiplets,
-  ...
+  singlets, multiplets, ...
 ){
   standardGeneric("estimateCells")
 })
@@ -240,7 +244,7 @@ setGeneric("estimateCells", function(
 #' @export
 
 setMethod("estimateCells", "CIMseqSinglets", function(
-  singlets, multiplets, warning = TRUE, ...
+  singlets, multiplets, theoretical.max = Inf, warning = TRUE, ...
 ){
   frac.ercc <- NULL
   counts <- cbind(
@@ -258,6 +262,7 @@ setMethod("estimateCells", "CIMseqSinglets", function(
   if(warning) .checkEstimateCellsInput(counts.ercc)
   fe <- colSums(counts.ercc) / (colSums(counts.ercc) + colSums(counts))
   ecn <- median(fe[1:n.sng]) / fe
+  if(!is.null(theoretical.max)) ecn[ecn > theoretical.max] <- theoretical.max
   
   tibble(
     sample = colnames(counts),

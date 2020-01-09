@@ -3,8 +3,7 @@ NULL
 
 #' plotData
 #'
-#' Returns the data used to build plots for spCounts, spUnsupervised, and
-#' spSwarm objects.
+#' Returns the data used to build plots for CIMseqData and CIMseqSwarm objects.
 #'
 #' @name plotData
 #' @rdname plotData
@@ -34,25 +33,39 @@ setGeneric("plotData", function(
 #' @importFrom tibble as_tibble
 
 setMethod("plotData", "gg", function(
-  plot,
-  ...
+  plot, ...
 ){
-  if(any(grepl("ggraph", class(plot[[1]])))) {
-    attr(plot[[1]], "graph")
-  } else {
-    as_tibble(plot[[1]]) #have a look at ggplot::fortify -> broom package
-  }
+  as_tibble(plot[[1]])
+})
+
+#' @rdname plotData
+#' @export
+#' @importFrom tibble as_tibble
+
+setMethod("plotData", "data.frame", function(
+  plot, ...
+){
+  as_tibble(plot)
+})
+
+#' @rdname plotData
+#' @export
+
+setMethod("plotData", "ggraph", function(
+  plot, ...
+){
+  attr(plot[[1]], "graph")
 })
 
 #' convertToERCC
 #'
-#' A function to facilitate calculation of the second axis of the plotCounts
-#' type "ercc" plot.
+#' A function to facilitate calculation of the second axis of the
+#' plotCountsERCC plot.
 #'
 #' @name convertToERCC
 #' @rdname convertToERCC
 #' @author Jason T. Serviss
-#' @param ercc The left axis values. Passes as ".".
+#' @param ercc The left axis values.
 #' @param singlets CIMseqSinglets; An CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; An CIMseqMultiplets object.
 #' @keywords convertToERCC
@@ -95,10 +108,7 @@ NULL
 #' @importFrom readr parse_factor
 
 coloursFromTargets <- function(
-  pal,
-  counts,
-  markers,
-  ...
+  pal, counts, markers, ...
 ){
   
   if(is.null(markers) | is.null(pal) | length(markers) == 1) {
@@ -131,12 +141,10 @@ coloursFromTargets <- function(
   ungroup() %>%
   #convert to rgb and calculate new colors
   mutate('rgb' = pmap(
-    list(.data$colint, .data$normalized, .data$fraction),
-    function(x, y, z) {
-      (255 - ((255 - col2rgb(x)) * y)) * z
-    }
+    list(.data$colint, .data$normalized, .data$fraction), 
+    function(x, y, z)  (255 - ((255 - col2rgb(x)) * y)) * z
   )) %>%
-  unnest() %>%
+  unnest(cols = c(.data$rgb)) %>%
   add_column('col' = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
   group_by(.data$Sample, .data$col) %>%
   summarize('sumRGB' = sum(.data$rgb) / 256) %>%
@@ -145,9 +153,7 @@ coloursFromTargets <- function(
   #convert back to hex
   mutate('Colour' = pmap_chr(
     list(.data$r, .data$g, .data$b),
-    function(x, y, z) {
-      rgb(red = x, green = y, blue = z)
-    }
+    function(x, y, z) rgb(red = x, green = y, blue = z)
   )) %>%
   select(-(.data$b:.data$r)) %>%
   #fix factor levels so ggplot legend will cooperate
@@ -186,8 +192,9 @@ col40 <- function() {
 
 #' processMarkers
 #'
-#' Helper function for plotCountsMarkers and plotUnsupervisedMarkers. Gathers
-#' and returns data in an expected format.
+#' Helper function for plotCountsMarkers and plotUnsupervisedMarkers. Normalizes
+#' values in the [0, 1] interval, gathers and returns the data in the expected 
+#' format.
 #'
 #' @name processMarkers
 #' @rdname processMarkers
@@ -195,6 +202,7 @@ col40 <- function() {
 #' @param counts.log matrix; A matrix containing log2(cpm).
 #' @param markers character; The markers to process. Must be present in
 #'  rownames(counts.log).
+#' @param normalize logical, Normalize values to interval [0, 1]?
 #' @keywords processMarkers
 NULL
 
@@ -202,7 +210,7 @@ NULL
 #' @importFrom dplyr "%>%"
 #' @importFrom tibble tibble
 
-processMarkers <- function(counts.log, markers) {
+processMarkers <- function(counts.log, markers, normalize = TRUE) {
   
   if(is.null(markers)) {
     return(tibble(Sample = colnames(counts.log)))
@@ -217,20 +225,13 @@ processMarkers <- function(counts.log, markers) {
   }
   
   #normalize the marker expression
-  markExpress <- t(counts.log[rownames(counts.log) %in% markers, ])
-  
-  if(length(markers) == 1) {
-    markExpressNorm <- matrix(
-      normalizeVec(markExpress),
-      ncol = 1,
-      dimnames = list(colnames(counts.log), markers)
-    )
-  } else {
-    markExpressNorm <- apply(markExpress, 2, normalizeVec)
-  }
+  markExpress <- t(counts.log[rownames(counts.log) %in% markers, , drop = FALSE])
+  if(normalize) {
+    markExpress <- apply(markExpress, 2, normalizeVec)
+  } 
   
   #tidy markers
-  matrix_to_tibble(markExpressNorm, rowname = "Sample")
+  matrix_to_tibble(markExpress, rowname = "Sample")
 }
 
 #' longFormConnections
@@ -243,6 +244,7 @@ processMarkers <- function(counts.log, markers) {
 #' @param swarm CIMseqSwarm; A CIMseqSwarm object.
 #' @param singlets CIMseqSinglets; A CIMseqSinglets object.
 #' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
 NULL
 
 #' @rdname longFormConnections
@@ -251,14 +253,22 @@ NULL
 #' @importFrom readr parse_factor
 #' @importFrom tidyr unite gather
 
-longFormConnections <- function(swarm, singlets, multiplets) {
+longFormConnections <- function(
+  swarm, singlets, multiplets, theoretical.max = NULL
+){
   from <- to <- tmp <- connectionID <- super <- direction <- connectionName <- NULL
   fractions <- getData(swarm, "fractions")
-  getEdgesForMultiplet(swarm, singlets, multiplets, rownames(fractions)) %>%
+  
+  .f1 <- function(x, y, z) paste(x, sort(c(y, z)), collapse = "-")
+  
+  getEdgesForMultiplet(
+    swarm, singlets, multiplets, rownames(fractions), 
+    theoretical.max = theoretical.max
+  ) %>%
     #add connectionID
-    mutate(tmp = pmap_chr(list(sample, from, to), function(x, y, z) {
-      paste(x, sort(c(y, z)), collapse = "-")
-    })) %>%
+    mutate(
+      tmp = pmap_chr(list(sample, from, to), function(x, y, z) .f1(x, y, z))
+    ) %>%
     mutate(sub = as.numeric(parse_factor(tmp, levels = unique(tmp)))) %>%
     select(-tmp) %>%
     mutate(super = 1:nrow(.)) %>%

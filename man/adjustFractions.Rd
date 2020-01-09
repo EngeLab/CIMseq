@@ -4,7 +4,8 @@
 \alias{adjustFractions}
 \title{adjustFractions}
 \usage{
-adjustFractions(singlets, multiplets, swarm, binary = TRUE, ...)
+adjustFractions(singlets, multiplets, swarm, binary = TRUE,
+  theoretical.max = Inf, ...)
 }
 \arguments{
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
@@ -17,16 +18,16 @@ fractions.}
 \item{binary}{logical; Indicates if adjusted fractions should be returned as
 binary values.}
 
+\item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
+
 \item{...}{additional arguments to pass on}
 }
 \value{
 Adjusted fractions matrix.
 }
 \description{
-Subtitle
-}
-\details{
-Description
+Transforms continious fractions into a binary martix where 1 indicates a
+connection between classes.
 }
 \examples{
 

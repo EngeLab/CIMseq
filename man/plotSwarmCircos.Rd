@@ -4,15 +4,17 @@
 \name{plotSwarmCircos}
 \alias{plotSwarmCircos}
 \alias{plotSwarmCircos,CIMseqSwarm-method}
-\title{plotSwarmGenes}
+\title{plotSwarmCircos}
 \usage{
 plotSwarmCircos(swarm, ...)
 
 \S4method{plotSwarmCircos}{CIMseqSwarm}(swarm, singlets, multiplets,
   classOrder = NULL, connectionClass = NULL, alpha = 0.05,
   weightCut = 0, label.cex = 1, legend = TRUE,
+  theoretical.max = NULL, h.ratio = 0.5,
   pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
-  nonSigCol = "grey90", ...)
+  nonSigCol = "grey90", classColour = NULL, gap.degree = NULL,
+  clear = TRUE, ...)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}
@@ -39,17 +41,30 @@ size of the cell type labels.}
 
 \item{legend}{logical; indicates if the legends should be plotted.}
 
+\item{theoretical.max}{integer; See \code{\link{estimateCells}}.}
+
+\item{h.ratio}{numeric; See \code{\link[circlize]{circos.link}}.}
+
 \item{pal}{character; A vector including the colour pallete for the score 
 colours.}
 
 \item{nonSigCol}{character; Vector of length 1 indicating the colours for 
 non-significant connections.}
+
+\item{classColour}{character; Colours for the classes. Order should 
+correspond to classOrder argument.}
+
+\item{gap.degree}{numeric; Controls the amount of space between the classes.
+See \code{\link[circlize]{circos.par}}.}
+
+\item{clear}{logical; Should \code{\link[circlize]{circos.clear}} be called
+when finished plotting?}
 }
 \value{
 A ggplot object.
 }
 \description{
-plotSwarmGenes
+plotSwarmCircos
 }
 \author{
 Jason T. Serviss

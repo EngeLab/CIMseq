@@ -1,5 +1,13 @@
 context("showMethods")
 
+test_that("check the CIMseqData show function", {
+  expect_silent(CIMseqSinglets_test)
+})
+
+test_that("check the CIMseqSwarm show function", {
+  expect_silent(CIMseqSwarm_test)
+})
+
 test_that("check that the .showCIMseqData function outputs the expected result", {
   
   output <- evaluate_promise(.showCIMseqData(CIMseqSinglets_test))

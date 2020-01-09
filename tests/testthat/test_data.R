@@ -1,4 +1,21 @@
-context("spCounts")
+context("CIMseqData")
+
+test_that("check that the CIMseqSinglets function outputs the expected result", {
+  expect_silent(CIMseqSinglets(
+    getData(CIMseqSinglets_test, "counts"),
+    getData(CIMseqSinglets_test, "counts.ercc"),
+    getData(CIMseqSinglets_test, "dim.red"),
+    getData(CIMseqSinglets_test, "classification")
+  ))
+})
+
+test_that("check that the CIMseqMultiplets function outputs the expected result", {
+  expect_silent(CIMseqMultiplets(
+    getData(CIMseqMultiplets_test, "counts"),
+    getData(CIMseqMultiplets_test, "counts.ercc"),
+    getData(CIMseqMultiplets_test, "features")
+  ))
+})
 
 test_that("check that the .norm.counts function outputs the expected result", {
     
@@ -18,6 +35,11 @@ test_that("check that the .norm.counts function outputs the expected result", {
   
   #test
   expect_true(all.equal(expected, output))
+})
+
+test_that("check that the .norm.log.counts function outputs the expected result", {
+  c <- getData(CIMseqSinglets_test, "counts")
+  expect_true(all.equal(.norm.log.counts(c), log2(.norm.counts(c) + 1)))
 })
 
 test_that("check that the .inputCheckSinglets outputs the expected result", {
@@ -135,4 +157,17 @@ test_that("check that estimateCells gives error with all 0 ercc", {
   tmp <- CIMseqSinglets_test
   getData(tmp, "counts.ercc") <- ercc
   expect_warning(estimateCells(tmp, CIMseqMultiplets_test))
+  
+  ercc[ ,2:6] <- rep(0, nrow(ercc) * 5)
+  getData(tmp, "counts.ercc") <- ercc
+  expect_warning(estimateCells(tmp, CIMseqMultiplets_test))
+})
+
+test_that("estimateCells correct with theoretical.max argument non-null", {
+  theoretical.max <- 2
+  output <- estimateCells(
+    CIMseqSinglets_test, CIMseqMultiplets_test, 
+    theoretical.max = theoretical.max
+  )
+  expect_true(max(pull(output, estimatedCellNumber)) <= theoretical.max)
 })

@@ -3,9 +3,8 @@ NULL
 
 #' CIMseqSwarm
 #'
-#' Subtitle
+#' Multiplet deconvolution.
 #'
-#' Description
 #'
 #' @name CIMseqSwarm
 #' @rdname CIMseqSwarm
@@ -21,7 +20,6 @@ NULL
 #'   optimization should be included.
 #' @param reportRate integer; If report is TRUE, the iteration interval for 
 #' which a report should be generated.
-#' @param vectorize logical, Argument to \link[pso]{psoptim}.
 #' @param permute logical; indicates if genes should be permuted before
 #'  deconvolution. For use with permutation testing.
 #'  @param singletIdx list; Singlet indexes to be used to choose singlets and
@@ -36,6 +34,8 @@ NULL
 #' @param singletIdx list; Indexes indicating singlets that were subset to 
 #' synthesize synthetic multiplets. Facilitates recreation of the synthetic 
 #' multiplets downstream.
+#' @param swarmInit matrix; Initiation positions for the swarm.
+#' @param psoControl list; Additional arguments to pso.2.0 (psoptim) function.
 #' @param x CIMseqSwarm; A CIMseqSwarm object.
 #' @param object CIMseqSwarm; A CIMseqSwarm to show.
 #' @param n character; Data to extract from CIMseqSwarm object.
@@ -71,8 +71,8 @@ setGeneric("CIMseqSwarm", function(
 setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   singlets, multiplets,
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11, 
-  norm = TRUE, report = FALSE, reportRate = NA, vectorize = FALSE,
-  permute = FALSE, singletIdx = NULL, ...
+  norm = TRUE, report = FALSE, reportRate = NA,
+  permute = FALSE, singletIdx = NULL, swarmInit = NULL, psoControl = list(), ...
 ){
     
   #put a check here to make sure all slots in the spUnsupervised object are
@@ -81,14 +81,13 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   
   #check for same genes in singlets counts and multiplets counts
   
-  
   #input and input checks
   sngCPM <- getData(singlets, "counts.cpm")
   mulCPM <- getData(multiplets, "counts.cpm")
     
   #calculate fractions
   classes <- getData(singlets, "classification")
-  fractions <- rep(1.0 / length(unique(classes)), length(unique(classes)))
+  fractions <- rep(NA, length(unique(classes)))
     
   #subset top genes for use with optimization
   #sholud also check user input selectInd
@@ -106,13 +105,12 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   )
   
   #setup args for optimization
+  control <- list(maxit = maxiter, s = swarmsize)
+  control <- c(control, psoControl)
   if(report) {
-    control <- list(
-      maxit = maxiter, s = swarmsize, trace = 1,
-      REPORT = reportRate, trace.stats = TRUE
-    )
-  } else {
-    control <- list(maxit = maxiter, s = swarmsize, vectorize = vectorize)
+    control <- c(control, list(
+      trace = 1, REPORT = reportRate, trace.stats = TRUE
+    ))
   }
   
   #run optimization
@@ -135,7 +133,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
       .optim.fun(
         i, fractions = fractions, multiplets = mul,
         singletSubset = t.singletSubset, n = nSyntheticMultiplets,
-        control = control, ...
+        control = control, swarmInit = swarmInit, ...
       )
   })
   
@@ -154,7 +152,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
       maxiter = maxiter, swarmsize = swarmsize,
       nSyntheticMultiplets = nSyntheticMultiplets, seed = seed, norm = norm,
       report = report, reportRate = reportRate, features = list(selectInd),
-      vectorize = vectorize, permute = permute
+      permute = permute, psoControl = list(psoControl)
     )
   )
 })
@@ -205,13 +203,13 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 
 .optim.fun <- function(
   i, fractions, multiplets, singletSubset,
-  n, control, ...
+  n, control, swarmInit, ...
 ){
-  oneMultiplet <- round(multiplets[, i]) #change this to round() ?
-  pso::psoptim(
+  oneMultiplet <- round(multiplets[, i])
+  pso.2.0(
     par = fractions, fn = calculateCost, oneMultiplet = oneMultiplet,
     singletSubset = singletSubset, n = n, lower = 0, upper = 1,
-    control = control, ...
+    control = control, swarmInit = swarmInit, ...
   )
 }
 
@@ -231,9 +229,8 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 
 #' appropriateSinglets
 #'
-#' Subtitle
+#' Sets up the singlets in long form for C++ calculation.
 #'
-#' Description
 #'
 #' @name appropriateSinglets
 #' @rdname appropriateSinglets
@@ -248,14 +245,17 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 #' @author Jason T. Serviss
 #' @examples
 #'
-#' #use demo data
-#'
+#' classes <- getData(CIMseqSinglets_test, "classification")
+#' idx <- purrr::map(1:10, ~sampleSinglets(classes))
+#' out <- singletSubset <- appropriateSinglets(CIMseqSinglets_test, idx, 1:20)
 #'
 NULL
 
 #' @rdname appropriateSinglets
 #' @importFrom purrr map
 #' @importFrom dplyr "%>%"
+#' @importFrom stringr str_replace
+#' @importFrom readr parse_factor
 #' @export
 
 appropriateSinglets <- function(
@@ -302,9 +302,8 @@ appropriateSinglets <- function(
 
 #' adjustFractions
 #'
-#' Subtitle
-#'
-#' Description
+#' Transforms continious fractions into a binary martix where 1 indicates a
+#' connection between classes.
 #'
 #' @name adjustFractions
 #' @rdname adjustFractions
@@ -313,7 +312,8 @@ appropriateSinglets <- function(
 #' @param swarm CIMseqSwarm or matrix; A CIMseqSwarm object or a matrix of 
 #' fractions.
 #' @param binary logical; Indicates if adjusted fractions should be returned as
-#' binary values. 
+#' binary values.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
 #' @param ... additional arguments to pass on
 #' @return Adjusted fractions matrix.
 #' @author Jason T. Serviss
@@ -332,7 +332,7 @@ NULL
 #' @export
 
 adjustFractions <- function(
-  singlets, multiplets, swarm, binary = TRUE, ...
+  singlets, multiplets, swarm, binary = TRUE, theoretical.max = Inf, ...
 ){
   medianCellNumber <- sampleType <- estimatedCellNumber <- NULL
   if(!is.matrix(swarm)) {
@@ -349,7 +349,7 @@ adjustFractions <- function(
   if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
   
   #calculate cell number per multiplet
-  cnm <- estimateCells(singlets, multiplets) %>%
+  cnm <- estimateCells(singlets, multiplets, theoretical.max) %>%
     filter(sampleType == "Multiplet") %>%
     {setNames(pull(., estimatedCellNumber), pull(., sample))}
   
@@ -365,15 +365,15 @@ adjustFractions <- function(
 
 #' calculateEdgeStats
 #'
-#' Subtitle
-#'
-#' Description
+#' Calculates the score (obs / expected) and p-value for all possible 
+#' connections.
 #'
 #' @name calculateEdgeStats
 #' @rdname calculateEdgeStats
 #' @param swarm A CIMseqSwarm object.
 #' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
 #' @param ... additional arguments to pass on
 #' @return CIMseqSwarm connection weights and p-values.
 #' @author Jason T. Serviss
@@ -391,36 +391,79 @@ NULL
 #' @importFrom purrr map_int map2_dbl map2_int
 #' @importFrom matrixStats rowSums2 colSums2
 #' @importFrom rlang .data
+#' @importFrom stats p.adjust
 #' @export
 
 calculateEdgeStats <- function(
-  swarm, singlets, multiplets, ...
+  swarm, singlets, multiplets, theoretical.max = Inf, ...
 ){
-  mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
+  adj <- adjustFractions(
+    singlets, multiplets, swarm, binary = TRUE, 
+    theoretical.max = theoretical.max
+  )
 
   #calcluate weight
-  edges <- .calculateWeight(mat)
+  edges <- .calculateWeight(adj)
 
   #calculate p-value
-  out <- .calculateP(edges, mat)
+  out <- .calculateP(edges, adj)
 
   return(out)
 }
 
-.calculateWeight <- function(mat, ...) {
+.calculateWeight <- function(adj, ...) {
   from <- to <- NULL
+  
   expand.grid(
-    from = colnames(mat), to = colnames(mat),
+    from = colnames(adj), to = colnames(adj),
     stringsAsFactors = FALSE
   ) %>%
     filter(from != to) %>% #doesn't calculate self edges
     mutate(weight = map2_int(from, to, function(f, t) {
-      sub <- mat[, colnames(mat) %in% c(f, t)]
+      sub <- adj[, colnames(adj) %in% c(f, t)]
       length(which(rowSums2(sub) == 2))
     }))
 }
 
 .calculateP <- function(
+  edges, mat, ...
+){
+  data <- to.freq <- p.adjust <- pval <- NULL
+  from <- to <- weight <- expected.edges <- NULL
+  
+  #calculate expected edges
+  class.freq <- colSums2(mat) #multiplet estimated cell type frequency
+  names(class.freq) <- colnames(mat)
+  
+  edges <- edges %>%
+    nest(data = -from) %>%
+    mutate(to.freq = map2(from, data, function(f, d) {
+      freq <- class.freq[names(class.freq) != f]
+      rel <- freq / sum(freq)
+      rel[pull(d, to)]
+    })) %>%
+    mutate(expected.edges = map2(to.freq, data, ~sum(pull(.y, weight)) * .x)) %>%
+    unnest(cols = c("data", "to.freq", "expected.edges"))
+    
+  
+  #calculate score = observed / expected
+  edges <- mutate(edges, score = weight / expected.edges)
+  
+  #calculate p-value
+  edges %>%
+    mutate(pval = map_dbl(1:nrow(.),
+      ~phyper(
+        q = edges$weight[.x], 
+        m = class.freq[edges$to[.x]], 
+        n = sum(class.freq) - class.freq[edges$to[.x]], 
+        k = sum(edges$weight[edges$from == edges$from[.x]]), 
+        lower.tail = FALSE
+      )
+    )) %>% 
+    mutate(pval = p.adjust(pval, 'fdr'))
+}
+
+.calculateP.poisson <- function(
   edges, mat, ...
 ){
   from <- to <- jp <- weight <- expected.edges <- NULL
@@ -440,9 +483,7 @@ calculateEdgeStats <- function(
       abs <- class.freq[names(class.freq) != t]
       rel <- abs / sum(abs)
       as.numeric(rel[f]) * class.freq[t]
-    })) %>%
-    mutate(rel = edges / sum(edges)) %>%
-    mutate(expected = total.edges * rel)
+    }))
   
   edges <- mutate(edges, expected.edges = map2_dbl(from, to, function(f, t){
     allProbs[allProbs$from == f & allProbs$to == t, "expected"]
@@ -460,10 +501,8 @@ calculateEdgeStats <- function(
 
 #' calcResiduals
 #'
-#' Subtitle
-#'
 #' Calculates the residuals for each gene and multiplet after deconvolution
-#' based on the spSwarm results.
+#' based on the CIMseqSwarm results.
 #'
 #' @name calcResiduals
 #' @rdname calcResiduals
@@ -540,7 +579,6 @@ calcResiduals <- function(
 #'
 #' Returns the names of the multiplets that are associated with an edge.
 #'
-#' Description
 #'
 #' @name getMultipletsForEdge
 #' @rdname getMultipletsForEdge
@@ -549,6 +587,7 @@ calcResiduals <- function(
 #' @param multiplets CIMseqMultiplets; A CIMseqMultiplets object.
 #' @param edges data.frame; Edges of interest. Edges are indicated by the nodes
 #' they connect with one node in column one and the other node in column 2.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
 #' @param ... additional arguments to pass on
 #' @return If the edges argument only includes one row, a vector of multiplet
 #'    names is returned. If several edges are interogated a list is returned
@@ -583,11 +622,13 @@ setGeneric("getMultipletsForEdge", function(
 #' @export
 
 setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, edges, ...
+  swarm, singlets, multiplets, edges, theoretical.max = Inf, ...
 ){
   
   edges <- mutate_if(edges, is.factor, as.character)
-  fractions <- adjustFractions(singlets, multiplets, swarm)
+  fractions <- adjustFractions(
+    singlets, multiplets, swarm, theoretical.max = theoretical.max
+  )
   
   map_dfr(1:nrow(edges), function(i) {
     e <- as.character(edges[i, ])
@@ -604,9 +645,7 @@ setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
 
 #' getEdgesForMultiplet
 #'
-#' Returns the names of the edges detected in a multiplet.
-#'
-#' Description
+#' Returns the edges detected in a multiplet.
 #'
 #' @name getEdgesForMultiplet
 #' @rdname getEdgesForMultiplet
@@ -615,8 +654,11 @@ setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
 #' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
 #' @param multipletName character; The name of the multiplet of interest.
+#' @param theoretical.max integer; See \code{\link{estimateCells}}.
+#' @param drop logical; Remove self connections?
 #' @param ... additional arguments to pass on
-#' @return Edge names.
+#' @return Edge names. Note that multiplets that contain no connections are not 
+#'  included in the output and neither are self connections.
 #' @author Jason T. Serviss
 #' @examples
 #'
@@ -630,10 +672,10 @@ NULL
 #' @rdname getEdgesForMultiplet
 #' @export
 #' @importFrom rlang .data
-#' @importFrom purrr map_dfr
-#' @importFrom tibble  tibble
-#' @importFrom utils combn
-#' @importFrom matrixStats rowSums2
+#' @importFrom dplyr filter everything mutate select
+#' @importFrom purrr map2
+#' @importFrom tibble as_tibble tibble
+#' @importFrom tidyr unnest
 
 setGeneric("getEdgesForMultiplet", function(
   swarm, ...
@@ -645,36 +687,51 @@ setGeneric("getEdgesForMultiplet", function(
 #' @export
 
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, multipletName = NULL, ...
+  swarm, singlets, multiplets, multipletName = NULL, theoretical.max = Inf, 
+  drop = TRUE, ...
 ){
-  s <- calculateEdgeStats(swarm, singlets, multiplets)
-  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE)
+  from <- to <- NULL
   if(is.null(multipletName)) multipletName <- rownames(getData(swarm, "fractions"))
-  frac <- frac[multipletName, , drop = FALSE]
   
-  #don't count self connections or multiplets with all 0 adjusted fractions
-  rs <- rowSums2(frac)
-  frac <- frac[rs > 1, , drop = FALSE]
+  s <- calculateEdgeStats(
+    swarm, singlets, multiplets, theoretical.max = theoretical.max
+  )
+  mat <- adjustFractions(
+    singlets, multiplets, swarm, binary = TRUE, 
+    theoretical.max = theoretical.max
+  )
   
-  l <- length(frac)
-  if(l == 0) return(tibble(sample = multipletName, from = NA, to = NA))
+  edges <- expand.grid(
+    from = colnames(mat), to = colnames(mat),
+    stringsAsFactors = FALSE
+  ) %>%
+    as_tibble() 
   
-  map_dfr(1:nrow(frac), function(i) {
-    p.fracs <- colnames(frac)[frac[i, ] == 1]
-    cmb <- expand.grid(p.fracs, p.fracs, stringsAsFactors = FALSE)
-    cmb <- cmb[cmb[, 1] != cmb[, 2], ]
-    tibble(
-      sample = rep(rownames(frac)[i], nrow(cmb)),
-      from = cmb[, 1], to = cmb[, 2]
-    )
-  })
+  if(drop) edges <- filter(edges, from != to)
+  if(!drop) rs <- rowSums2(mat)
+  
+  data <- edges %>%
+    mutate(sample = map2(from, to, function(f, t) {
+      if(f == t) {
+        rownames(mat)[mat[, colnames(mat) == f] == 1 & rs == 1]
+      } else {
+        sub <- mat[, colnames(mat) %in% c(f, t)]
+        rownames(mat)[which(rowSums2(sub) == 2)]
+      }
+    })) %>%
+    unnest(cols = c(.data$sample)) %>%
+    filter(sample %in% multipletName) %>%
+    select(sample, everything())
+  
+  if(nrow(data) == 0) return(tibble(sample = multipletName, from = NA, to = NA))
+
+  return(data)
 })
 
 #' getCellsForMultiplet
 #'
-#' Returns the names of the cells detected in a multiplet.
+#' Returns the names of the cell types detected in a multiplet.
 #'
-#' Description
 #'
 #' @name getCellsForMultiplet
 #' @rdname getCellsForMultiplet
@@ -683,6 +740,7 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
 #' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
 #' @param multipletName character; The name of the multiplet of interest.
+#' @param drop logical; Remove self connections?
 #' @param ... additional arguments to pass on
 #' @return Edge names.
 #' @author Jason T. Serviss
@@ -699,8 +757,9 @@ NULL
 #' @export
 #' @importFrom rlang .data
 #' @importFrom purrr map2
-#' @importFrom dplyr mutate select distinct
+#' @importFrom dplyr mutate select distinct pull bind_rows
 #' @importFrom tidyr unnest
+#' @importFrom tibble tibble
 
 setGeneric("getCellsForMultiplet", function(
   swarm, ...
@@ -712,19 +771,22 @@ setGeneric("getCellsForMultiplet", function(
 #' @export
 
 setMethod("getCellsForMultiplet", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, multipletName = NULL, ...
+  swarm, singlets, multiplets, multipletName = NULL, drop = TRUE, ...
 ){
-  getEdgesForMultiplet(swarm, singlets, multiplets, multipletName) %>%
+  if(is.null(multipletName)) multipletName <- colnames(getData(multiplets, "counts"))
+  
+  getEdgesForMultiplet(
+    swarm, singlets, multiplets, multipletName, drop = drop
+  ) %>%
     mutate(cells = map2(.data$from, .data$to, ~c(.x, .y))) %>%
     select(-.data$from, -.data$to) %>%
-    unnest() %>%
+    unnest(cols = c(.data$cells)) %>%
     distinct()
 })
 
 #' calculateCosts
 #'
-#'
-#' Description
+#' Calculates cost outside of pso using R instead of C++. Convience function.
 #'
 #' @name calculateCosts
 #' @rdname calculateCosts
@@ -747,10 +809,7 @@ NULL
 #' @export
 
 setGeneric("calculateCosts", function(
-  singlets,
-  multiplets,
-  swarm,
-  ...
+  singlets, multiplets, swarm, ...
 ){
   standardGeneric("calculateCosts")
 })
