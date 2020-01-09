@@ -33,14 +33,28 @@ setGeneric("plotData", function(
 #' @importFrom tibble as_tibble
 
 setMethod("plotData", "gg", function(
-  plot,
-  ...
+  plot, ...
 ){
-  if(any(grepl("ggraph", class(plot[[1]])))) {
-    attr(plot[[1]], "graph") #can't remember why this was needed
-  } else {
-    as_tibble(plot[[1]])
-  }
+  as_tibble(plot[[1]])
+})
+
+#' @rdname plotData
+#' @export
+#' @importFrom tibble as_tibble
+
+setMethod("plotData", "data.frame", function(
+  plot, ...
+){
+  as_tibble(plot)
+})
+
+#' @rdname plotData
+#' @export
+
+setMethod("plotData", "ggraph", function(
+  plot, ...
+){
+  attr(plot[[1]], "graph")
 })
 
 #' convertToERCC

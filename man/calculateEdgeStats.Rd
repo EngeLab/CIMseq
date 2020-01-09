@@ -22,10 +22,8 @@ calculateEdgeStats(swarm, singlets, multiplets, theoretical.max = Inf,
 CIMseqSwarm connection weights and p-values.
 }
 \description{
-Subtitle
-}
-\details{
-Description
+Calculates the score (obs / expected) and p-value for all possible 
+connections.
 }
 \examples{
 

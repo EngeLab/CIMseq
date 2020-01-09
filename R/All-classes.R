@@ -328,7 +328,7 @@ setMethod("filterSwarm", c("CIMseqSwarm"), function(x, subset){
 
 ################################################################################
 #                                                                              #
-#                             ggplot2                                          #
+#                             ggplot2 and ggraph                               #
 #                                                                              #
 ################################################################################
 
@@ -340,3 +340,12 @@ setMethod("filterSwarm", c("CIMseqSwarm"), function(x, subset){
 #'
 #' @exportClass gg
 setOldClass("gg")
+
+#' "ggraph" class
+#'
+#' @name ggraph-class
+#' @aliases ggraph
+#' @family ggraph
+#'
+#' @exportClass ggraph
+setOldClass("ggraph")

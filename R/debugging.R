@@ -5,8 +5,8 @@ NULL
 #'
 #' Subtitle
 #'
-#' Plots the swarm position in a spSwarm object for each reported iteration
-#' (specified by reportRate) when report equals TRUE.
+#' Plots the swarm position in a CIMseqSwarm object for each reported iteration
+#' (specified by reportRate) when report was equal to TRUE during deconvolution.
 #'
 #' @name plotSwarmPosition
 #' @rdname plotSwarmPosition
@@ -50,6 +50,11 @@ setMethod("plotSwarmPosition", "CIMseqSwarm", function(
     ...
 ){
   position <- swarmMemberID <- iteration <- NULL
+  
+  if(length(getData(swarm, "stats")) == 0) {
+    print(paste("Stats slot empty. Positions not tracked."))
+    return()
+  }
   
   p <- getData(swarm, "stats") %>%
     filter(sample %in% multiplet) %>%

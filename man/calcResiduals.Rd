@@ -27,11 +27,8 @@ the CIMseqSwarm object are used.}
 Residuals (add more description).
 }
 \description{
-Subtitle
-}
-\details{
 Calculates the residuals for each gene and multiplet after deconvolution
-based on the spSwarm results.
+based on the CIMseqSwarm results.
 }
 \author{
 Jason T. Serviss

@@ -232,9 +232,7 @@ NULL
 #' @export
 
 setGeneric("estimateCells", function(
-  singlets,
-  multiplets,
-  ...
+  singlets, multiplets, ...
 ){
   standardGeneric("estimateCells")
 })

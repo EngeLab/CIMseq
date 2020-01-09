@@ -27,7 +27,7 @@ calculateCosts(singlets, multiplets, swarm, ...)
 Costs
 }
 \description{
-Description
+Calculates cost outside of pso using R instead of C++. Convience function.
 }
 \examples{
 

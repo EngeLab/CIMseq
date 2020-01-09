@@ -26,10 +26,8 @@ binary values.}
 Adjusted fractions matrix.
 }
 \description{
-Subtitle
-}
-\details{
-Description
+Transforms continious fractions into a binary martix where 1 indicates a
+connection between classes.
 }
 \examples{
 

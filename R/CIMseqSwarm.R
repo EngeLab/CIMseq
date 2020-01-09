@@ -3,9 +3,8 @@ NULL
 
 #' CIMseqSwarm
 #'
-#' Subtitle
+#' Multiplet deconvolution.
 #'
-#' Description
 #'
 #' @name CIMseqSwarm
 #' @rdname CIMseqSwarm
@@ -81,7 +80,6 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   #should probably double check that it works as expected via unit tests.
   
   #check for same genes in singlets counts and multiplets counts
-  
   
   #input and input checks
   sngCPM <- getData(singlets, "counts.cpm")
@@ -231,9 +229,8 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 
 #' appropriateSinglets
 #'
-#' Subtitle
+#' Sets up the singlets in long form for C++ calculation.
 #'
-#' Description
 #'
 #' @name appropriateSinglets
 #' @rdname appropriateSinglets
@@ -248,14 +245,17 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
 #' @author Jason T. Serviss
 #' @examples
 #'
-#' #use demo data
-#'
+#' classes <- getData(CIMseqSinglets_test, "classification")
+#' idx <- purrr::map(1:10, ~sampleSinglets(classes))
+#' out <- singletSubset <- appropriateSinglets(CIMseqSinglets_test, idx, 1:20)
 #'
 NULL
 
 #' @rdname appropriateSinglets
 #' @importFrom purrr map
 #' @importFrom dplyr "%>%"
+#' @importFrom stringr str_replace
+#' @importFrom readr parse_factor
 #' @export
 
 appropriateSinglets <- function(
@@ -302,9 +302,8 @@ appropriateSinglets <- function(
 
 #' adjustFractions
 #'
-#' Subtitle
-#'
-#' Description
+#' Transforms continious fractions into a binary martix where 1 indicates a
+#' connection between classes.
 #'
 #' @name adjustFractions
 #' @rdname adjustFractions
@@ -366,9 +365,8 @@ adjustFractions <- function(
 
 #' calculateEdgeStats
 #'
-#' Subtitle
-#'
-#' Description
+#' Calculates the score (obs / expected) and p-value for all possible 
+#' connections.
 #'
 #' @name calculateEdgeStats
 #' @rdname calculateEdgeStats
@@ -503,10 +501,8 @@ calculateEdgeStats <- function(
 
 #' calcResiduals
 #'
-#' Subtitle
-#'
 #' Calculates the residuals for each gene and multiplet after deconvolution
-#' based on the spSwarm results.
+#' based on the CIMseqSwarm results.
 #'
 #' @name calcResiduals
 #' @rdname calcResiduals
@@ -583,7 +579,6 @@ calcResiduals <- function(
 #'
 #' Returns the names of the multiplets that are associated with an edge.
 #'
-#' Description
 #'
 #' @name getMultipletsForEdge
 #' @rdname getMultipletsForEdge
@@ -650,9 +645,7 @@ setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
 
 #' getEdgesForMultiplet
 #'
-#' Returns the names of the edges detected in a multiplet.
-#'
-#' Description
+#' Returns the edges detected in a multiplet.
 #'
 #' @name getEdgesForMultiplet
 #' @rdname getEdgesForMultiplet
@@ -737,9 +730,8 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
 
 #' getCellsForMultiplet
 #'
-#' Returns the names of the cells detected in a multiplet.
+#' Returns the names of the cell types detected in a multiplet.
 #'
-#' Description
 #'
 #' @name getCellsForMultiplet
 #' @rdname getCellsForMultiplet
@@ -794,8 +786,7 @@ setMethod("getCellsForMultiplet", "CIMseqSwarm", function(
 
 #' calculateCosts
 #'
-#'
-#' Description
+#' Calculates cost outside of pso using R instead of C++. Convience function.
 #'
 #' @name calculateCosts
 #' @rdname calculateCosts
@@ -818,10 +809,7 @@ NULL
 #' @export
 
 setGeneric("calculateCosts", function(
-  singlets,
-  multiplets,
-  swarm,
-  ...
+  singlets, multiplets, swarm, ...
 ){
   standardGeneric("calculateCosts")
 })

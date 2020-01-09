@@ -108,27 +108,8 @@ plotUnsupervisedMarkers(
 
 ## CIMseqSwarm
 
-### Graph-based plots
-
 ```{r, fig.align="center", fig.width=10, fig.height=8}
 plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
-```
-
-### Non-graph-based plots
-
-Edge bar graph.
-```{r, fig.align="center", fig.width=10, fig.height=8}
-plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
-```
-
-P-value bar graph.
-```{r, fig.align="center", fig.width=10, fig.height=8}
-plotSwarmPbar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
-```
-
-Heatmap.
-```{r, fig.align="center", fig.width=10, fig.height=8}
-plotSwarmHeat(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
 ```
 
 ```{r, fig.align="center", fig.width=10, fig.height=8}
@@ -137,18 +118,16 @@ plotSwarmCircos(
 )
 ```
 
+## Custom plots
+
 Get data to make a custom plot.
 ```{r}
-# plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %>%
-#  plotData()
-
-plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %>%
-  plotData() %>%
-  head()
+plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %>%
+ plotData()
 ```
 
 
-### Gene plots
+## Gene plots
 ```{r, fig.align="center", fig.width=10, fig.height=8, eval = FALSE}
 #taking too long... why?
 plotSwarmGenes(

@@ -31,10 +31,7 @@ Edge names. Note that multiplets that contain no connections are not
  included in the output and neither are self connections.
 }
 \description{
-Returns the names of the edges detected in a multiplet.
-}
-\details{
-Description
+Returns the edges detected in a multiplet.
 }
 \examples{
 

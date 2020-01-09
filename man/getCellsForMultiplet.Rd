@@ -28,10 +28,7 @@ getCellsForMultiplet(swarm, ...)
 Edge names.
 }
 \description{
-Returns the names of the cells detected in a multiplet.
-}
-\details{
-Description
+Returns the names of the cell types detected in a multiplet.
 }
 \examples{
 

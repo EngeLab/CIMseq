@@ -96,10 +96,7 @@ One value per multiplet.}
 CIMseqSwarm output.
 }
 \description{
-Subtitle
-}
-\details{
-Description
+Multiplet deconvolution.
 }
 \examples{
 

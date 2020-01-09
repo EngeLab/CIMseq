@@ -33,9 +33,6 @@ If the edges argument only includes one row, a vector of multiplet
 \description{
 Returns the names of the multiplets that are associated with an edge.
 }
-\details{
-Description
-}
 \examples{
 
 output <- getMultipletsForEdge(

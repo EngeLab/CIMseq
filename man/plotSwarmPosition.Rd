@@ -28,8 +28,8 @@ The plotSwarmPosition function returns an object of class spCounts.
 Subtitle
 }
 \details{
-Plots the swarm position in a spSwarm object for each reported iteration
-(specified by reportRate) when report equals TRUE.
+Plots the swarm position in a CIMseqSwarm object for each reported iteration
+(specified by reportRate) when report was equal to TRUE during deconvolution.
 }
 \examples{
 

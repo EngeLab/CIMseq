@@ -22,15 +22,13 @@ If null, all genes are used.}
 Appropriated singlets.
 }
 \description{
-Subtitle
-}
-\details{
-Description
+Sets up the singlets in long form for C++ calculation.
 }
 \examples{
 
-#use demo data
-
+classes <- getData(CIMseqSinglets_test, "classification")
+idx <- purrr::map(1:10, ~sampleSinglets(classes))
+out <- singletSubset <- appropriateSinglets(CIMseqSinglets_test, idx, 1:20)
 
 }
 \author{
