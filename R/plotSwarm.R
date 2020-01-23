@@ -65,7 +65,10 @@ setMethod(
     activate(edges) %>%
     filter(.data$weight > 0) %>%
     #plot base plot with custom layout according to tsne
-    ggraph(layout = tsneMeans) +
+    ggraph(
+      layout = 'manual',
+      node.positions = create_layout(., 'manual', node.positions = tsneMeans)
+    ) +
     #plot edges
     geom_edge_link(
       edge_colour = "black", aes_string(edge_width = 'weight'), 

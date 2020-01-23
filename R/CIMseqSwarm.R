@@ -436,14 +436,14 @@ calculateEdgeStats <- function(
   names(class.freq) <- colnames(mat)
   
   edges <- edges %>%
-    nest(data = -from) %>%
+    nest(-from) %>%
     mutate(to.freq = map2(from, data, function(f, d) {
       freq <- class.freq[names(class.freq) != f]
       rel <- freq / sum(freq)
       rel[pull(d, to)]
     })) %>%
     mutate(expected.edges = map2(to.freq, data, ~sum(pull(.y, weight)) * .x)) %>%
-    unnest(cols = c("data", "to.freq", "expected.edges"))
+    unnest(data, to.freq, expected.edges)
     
   
   #calculate score = observed / expected
@@ -719,7 +719,7 @@ setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
         rownames(mat)[which(rowSums2(sub) == 2)]
       }
     })) %>%
-    unnest(cols = c(.data$sample)) %>%
+    unnest(sample) %>%
     filter(sample %in% multipletName) %>%
     select(sample, everything())
   
@@ -780,7 +780,7 @@ setMethod("getCellsForMultiplet", "CIMseqSwarm", function(
   ) %>%
     mutate(cells = map2(.data$from, .data$to, ~c(.x, .y))) %>%
     select(-.data$from, -.data$to) %>%
-    unnest(cols = c(.data$cells)) %>%
+    unnest(cells) %>%
     distinct()
 })
 

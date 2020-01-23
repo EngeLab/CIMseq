@@ -144,7 +144,7 @@ coloursFromTargets <- function(
     list(.data$colint, .data$normalized, .data$fraction), 
     function(x, y, z)  (255 - ((255 - col2rgb(x)) * y)) * z
   )) %>%
-  unnest(cols = c(.data$rgb)) %>%
+  unnest(rgb) %>%
   add_column('col' = rep(c("r", "g", "b"), nrow(.) / 3)) %>%
   group_by(.data$Sample, .data$col) %>%
   summarize('sumRGB' = sum(.data$rgb) / 256) %>%
