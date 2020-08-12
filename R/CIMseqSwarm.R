@@ -492,6 +492,7 @@ adjustFractions <- function(
 #' @param swarm A CIMseqSwarm object.
 #' @param singlets A CIMseqSinglets object.
 #' @param multiplets A CIMseqMultiplets object.
+#' @param groups Groupings, to obtain p-values based on replicates
 #' @param ... additional arguments to pass on
 #' @return CIMseqSwarm connection weights and p-values.
 #' @author Jason T. Serviss
@@ -509,19 +510,36 @@ NULL
 #' @importFrom purrr map_int map2_dbl map2_int
 #' @importFrom matrixStats rowSums2 colSums2
 #' @importFrom rlang .data
+#' @importFrom poolr fisher
 #' @export
 
 calculateEdgeStats <- function(
-  swarm, singlets, multiplets, depleted=FALSE, maxCellsPerMultiplet=Inf
+  swarm, singlets, multiplets, depleted=FALSE, maxCellsPerMultiplet=Inf, groups=NULL
 ){
   mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=maxCellsPerMultiplet)
 
   #calcluate weight
   edges <- .calculateWeight(mat, depleted=depleted)
-
+  
   #calculate p-value
   out <- .calculateP(edges, mat, depleted=depleted)
 
+  if(!is.null(groups)) {
+      if(nrow(mat) != length(groups)) {
+          return(FALSE) # TODO: throw error instead.
+      }
+      mat.split <- split(as.data.frame(mat), groups)
+      mat.edges <- lapply(mat.split, function(x) { .calculateWeight(as.matrix(x), depleted=depleted) })
+      mat.pvals <- lapply(1:length(mat.split), function(i) {.calculateP(mat.edges[[i]], as.matrix(mat.split[[i]]), depleted=depleted)})
+      pvals <- do.call(cbind, lapply(mat.pvals, function(x) {x$pval}))
+      scores <- do.call(cbind, lapply(mat.pvals, function(x) {x$score}))
+      pvals[is.nan(scores)] <- NaN
+      fisher.p <- apply(pvals, 1, function(x) {
+          x <- x[!is.nan(x)]
+          fisher(x)$p
+      })
+      out$pval <- fisher.p
+  }
   return(out)
 }
 
@@ -1073,6 +1091,7 @@ psoptim1 <- function (par, fn, gr = NULL, ..., lower=-1, upper=1,
     V <- V%*%diag(temp)
   }
   f.x <- apply(X,2,fn1) # first evaluations
+#  f.x[is.na(f.x)] <- 3000 # MARTIN
   stats.feval <- p.s
   P <- X
   f.p <- f.x
@@ -1151,6 +1170,9 @@ psoptim1 <- function (par, fn, gr = NULL, ..., lower=-1, upper=1,
           stats.feval <- stats.feval+as.integer(temp$counts[1])
         } else {
           f.x[i] <- fn1(X[,i])
+#          if(is.na(f.x[i])) {  #MARTIN
+#              f.x[i] <- 3000   #MARTIN
+#          }                    #MARTIN
           stats.feval <- stats.feval+1
         }
         if (f.x[i]<f.p[i]) { # improvement
@@ -1220,6 +1242,7 @@ psoptim1 <- function (par, fn, gr = NULL, ..., lower=-1, upper=1,
         }
       } else {
         f.x <- apply(X,2,fn1)
+#        f.x[is.na(f.x)] <- 3000 # MARTIN
         stats.feval <- stats.feval+p.s
       }
       temp <- f.x<f.p
@@ -1272,7 +1295,13 @@ psoptim1 <- function (par, fn, gr = NULL, ..., lower=-1, upper=1,
         stats.trace.x <- c(stats.trace.x,list(X))
       }
     }
+#    cat("stats.iter: ", stats.iter,
+#        ", stats.feval: ", stats.feval,
+#        ", error: ", error,
+#        ", stats.restart: ", stats.restart,
+#        ", stats.stagnate: ", stats.stagnate, "\n")
   }
+  
   if (error<=p.abstol) {
     msg <- "Converged"
     msgcode <- 0

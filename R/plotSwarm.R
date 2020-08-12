@@ -1012,9 +1012,10 @@ setGeneric("plotSwarmCircos2", function(
 
 setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, connectionClass = NULL, 
-  alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
+  alpha = 0.05, weightCut = 0, expectedWeightCut = 0, label.cex = 1, legend = TRUE, 
   pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
-  nonSigCol = "grey95", h.ratio=0.5, maxCellsPerMultiplet = Inf, depleted=FALSE, ...
+  nonSigCol = "grey95", h.ratio=0.5, maxCellsPerMultiplet = Inf, depleted=FALSE,
+  groups=NULL, ...
 ){
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
   frac <- connectionID <- super <- connectionName <- position <- nr <- NULL
@@ -1035,9 +1036,9 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   )
   
   #calculate statitistics and connection colors
-  ps <- calculateEdgeStats(swarm, singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted) %>%
+  ps <- calculateEdgeStats(swarm, singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted, groups=groups) %>%
       mutate(significant = if_else(
-                 pval < alpha & weight > weightCut, TRUE, FALSE
+                 pval < alpha & weight > weightCut & expected.edges > expectedWeightCut, TRUE, FALSE
              )) %>%
       group_by(significant) %>%
       mutate(idx = ntile(score, length(pal))) %>%
