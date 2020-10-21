@@ -1040,9 +1040,9 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
       mutate(significant = if_else(
                  pval < alpha & weight > weightCut & expected.edges > expectedWeightCut, TRUE, FALSE
              )) %>%
-      group_by(significant) %>%
-      mutate(idx = ntile(score, length(pal))) %>%
-      ungroup() %>%
+      mutate(col.idx = score) %>%
+      mutate(col.idx = if_else(!significant, NA_real_, score)) %>%
+      mutate(idx = as.integer(col.idx/max(col.idx, na.rm=T)*(length(pal)-1)+1)) %>%
       mutate(p.col = pal[idx]) %>%
       mutate(p.col = if_else(!significant, nonSigCol, p.col)) %>%
       arrange(idx)
@@ -1050,11 +1050,11 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   
   #calculate edge data and add fraction colours
   edges <- longFormConnections(swarm, singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted) %>%
-      arrange(match(from, classOrder),  match(to, classOrder)-match(from, classOrder)) %>%
-      mutate(idx = rank(frac)) %>%
-      mutate(f.col = viridis(max(idx))[idx]) %>%
-      select(-idx)
-
+      group_by(connectionName) %>%
+      mutate(idx = mean(frac)) %>%
+      ungroup() %>%
+      arrange(match(from, classOrder), match(to, classOrder)) %>%
+      mutate(f.col = viridis(101)[idx/max(idx)*100+1])
   
   if(is.null(connectionClass)) {
     filtered <- edges
@@ -1099,8 +1099,8 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
 
     #create
     l1 <- .ns_legend(data, nonSigCol)
-    l2 <- .obsexp_legend(data, pal)
-    l3 <- .frac_legend(data)
+    l2 <- .obsexp_legend(ps, pal)
+    l3 <- .frac_legend(edges)
     l4 <- .class_legend(colours)
   }
   
@@ -1212,7 +1212,7 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
 .obsexp_legend <- function(data, pal) {
   p <- data %>%
     ggplot() + 
-    geom_point(aes(pval, score, colour = score)) + 
+    geom_point(aes(pval, score, colour = col.idx)) + 
     scale_colour_gradientn(colours = c(pal[1], pal[length(pal)])) +
     guides(colour = guide_colorbar(
       title = "Obs. / Exp.", title.position = "top", title.hjust = 0.5
@@ -1230,7 +1230,7 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
 .frac_legend <- function(data) {
   p <- data %>%
     ggplot() + 
-    geom_point(aes(pval, score, colour = frac)) + 
+    geom_point(aes(frac, idx, colour = idx)) + 
     scale_colour_viridis_c() +
     guides(colour = guide_colorbar(
       title = "Fractions", title.position = "top", title.hjust = 0.5

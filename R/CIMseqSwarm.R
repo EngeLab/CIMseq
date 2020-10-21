@@ -73,7 +73,7 @@ setGeneric("CIMseqSwarm", function(
 ### importFrom pso psoptim
 
 setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
-  singlets, multiplets,
+  singlets, multiplets, useMuSiC = FALSE,
   maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11, 
   norm = TRUE, report = FALSE, reportRate = NA, vectorize = FALSE,
   permute = FALSE, singletIdx = NULL, cacheScores=FALSE, psoControl=list(),
@@ -85,8 +85,36 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   #should probably double check that it works as expected via unit tests.
   
   #check for same genes in singlets counts and multiplets counts
-  
-  
+
+    if(useMuSiC) {
+        require("MuSiC")
+        sng <- getData(singlets, "counts")
+        mul <- getData(multiplets, "counts")
+        phenoData <- AnnotatedDataFrame(data=data.frame(samples=substr(colnames(sng), 3, 8), plates=substr(colnames(sng), 3, 10), row.names = colnames(sng), celltype=getData(singlets, "classification")))
+        sc.eset <- ExpressionSet(sng, phenoData=phenoData)
+
+        
+        bulk.eset <- ExpressionSet(mul)
+
+        Est.prop <- music_prop(bulk.eset=bulk.eset, sc.eset=sc.eset, clusters='celltype', samples='samples')
+
+        return(new(
+            "CIMseqSwarm",
+            fractions = Est.prop$Est.prop.weighted,
+            costs = Est.prop$r.squared.full,
+            convergence = setNames(rep("MuSic", mul), colnames(mul)),
+            stats = tibble(),
+            swarmPos = matrix(),
+            singletIdx = 1:length(colnames(mul)),
+            arguments = tibble(
+                maxiter = maxiter, swarmsize = swarmsize,
+                nSyntheticMultiplets = nSyntheticMultiplets, seed = seed, norm = norm,
+                report = report, reportRate = reportRate, features = list(selectInd),
+                vectorize = vectorize, permute = permute
+            )
+        ))
+    }
+    
   #input and input checks
   sngCPM <- getData(singlets, "counts.cpm")
   mulCPM <- getData(multiplets, "counts.cpm")
