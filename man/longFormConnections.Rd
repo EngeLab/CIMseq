@@ -4,7 +4,13 @@
 \alias{longFormConnections}
 \title{longFormConnections}
 \usage{
-longFormConnections(swarm, singlets, multiplets)
+longFormConnections(
+  swarm,
+  singlets,
+  multiplets,
+  maxCellsPerMultiplet = Inf,
+  depleted = FALSE
+)
 }
 \arguments{
 \item{swarm}{CIMseqSwarm; A CIMseqSwarm object.}

@@ -21,14 +21,37 @@
 
 CIMseqSwarm(singlets, multiplets, ...)
 
-\S4method{CIMseqSwarm}{CIMseqSinglets,CIMseqMultiplets}(singlets,
-  multiplets, maxiter = 10, swarmsize = 150,
-  nSyntheticMultiplets = 200, seed = 11, norm = TRUE,
-  report = FALSE, reportRate = NA, vectorize = FALSE,
-  permute = FALSE, singletIdx = NULL, ...)
+\S4method{CIMseqSwarm}{CIMseqSinglets,CIMseqMultiplets}(
+  singlets,
+  multiplets,
+  useMuSiC = FALSE,
+  maxiter = 10,
+  swarmsize = 150,
+  nSyntheticMultiplets = 200,
+  seed = 11,
+  norm = TRUE,
+  report = FALSE,
+  reportRate = NA,
+  vectorize = FALSE,
+  permute = FALSE,
+  singletIdx = NULL,
+  cacheScores = FALSE,
+  psoControl = list(),
+  startSwarm = NULL,
+  topK = NULL,
+  ...
+)
 
-\S4method{initialize}{CIMseqSwarm}(.Object, ..., fractions, costs,
-  convergence, stats, singletIdx, arguments)
+\S4method{initialize}{CIMseqSwarm}(
+  .Object,
+  ...,
+  fractions,
+  costs,
+  convergence,
+  stats,
+  singletIdx,
+  arguments
+)
 
 \S4method{show}{CIMseqSwarm}(object)
 }
@@ -75,6 +98,8 @@ e.g. with repeated runs or permutation.}
 synthesize synthetic multiplets. Facilitates recreation of the synthetic 
 multiplets downstream.}
 
+\item{cacheScores}{logical; Use score caching optimization (experimental) Requires R package hashmap to be installed}
+
 \item{.Object}{Internal object.}
 
 \item{fractions}{matrix; The deconvolution results.}
@@ -89,6 +114,8 @@ One value per multiplet.}
 \item{arguments}{list; Arguments passed to the CIMseqSwarm function.}
 
 \item{object}{CIMseqSwarm; A CIMseqSwarm to show.}
+
+\item{swarmPos}{matrix; Final swarm positions from \link[pso]{psoptim}}
 }
 \value{
 CIMseqSwarm output.

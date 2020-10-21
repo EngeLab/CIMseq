@@ -4,9 +4,17 @@
 \alias{runTsne}
 \title{runTsne}
 \usage{
-runTsne(my.dist, dims = 2, theta = 0, initial_dims = 50,
-  max_iter = 2000, perplexity = 10, seed = 11, is_distance = TRUE,
-  ...)
+runTsne(
+  my.dist,
+  dims = 2,
+  theta = 0,
+  initial_dims = 50,
+  max_iter = 2000,
+  perplexity = 10,
+  seed = 11,
+  is_distance = TRUE,
+  ...
+)
 }
 \arguments{
 \item{my.dist}{A distance object typically produced with pearsonsDist.}

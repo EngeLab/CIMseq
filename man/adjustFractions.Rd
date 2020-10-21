@@ -4,7 +4,13 @@
 \alias{adjustFractions}
 \title{adjustFractions}
 \usage{
-adjustFractions(singlets, multiplets, swarm, binary = TRUE, ...)
+adjustFractions(
+  singlets,
+  multiplets,
+  swarm,
+  binary = TRUE,
+  maxCellsPerMultiplet = Inf
+)
 }
 \arguments{
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}

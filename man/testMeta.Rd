@@ -4,12 +4,14 @@
 \name{testMeta}
 \alias{testMeta}
 \title{Meta data for the testCounts dataset.}
-\format{tibble
+\format{
+tibble
 \describe{
     \item{sample}{Sample ID}
     \item{cellNumber}{Indicates if samples are singlets or multiplets.}
     \item{cellTypes}{Indicates the cell types included in the sample.}
-}}
+}
+}
 \usage{
 testMeta
 }

@@ -4,11 +4,13 @@
 \name{testCounts}
 \alias{testCounts}
 \title{Counts data used to demonstrate CIMseq package.}
-\format{matrix
+\format{
+matrix
 \describe{
     \item{rownames}{Gene names}
     \item{colnames}{Samples. Singlets prefixed with "s" and multiplets "m".}
-}}
+}
+}
 \usage{
 testCounts
 }

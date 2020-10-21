@@ -4,7 +4,14 @@
 \alias{calculateEdgeStats}
 \title{calculateEdgeStats}
 \usage{
-calculateEdgeStats(swarm, singlets, multiplets, ...)
+calculateEdgeStats(
+  swarm,
+  singlets,
+  multiplets,
+  depleted = FALSE,
+  maxCellsPerMultiplet = Inf,
+  groups = NULL
+)
 }
 \arguments{
 \item{swarm}{A CIMseqSwarm object.}
@@ -12,6 +19,8 @@ calculateEdgeStats(swarm, singlets, multiplets, ...)
 \item{singlets}{A CIMseqSinglets object.}
 
 \item{multiplets}{A CIMseqMultiplets object.}
+
+\item{groups}{Groupings, to obtain p-values based on replicates}
 
 \item{...}{additional arguments to pass on}
 }

@@ -26,8 +26,7 @@ CIMseqMultiplets(counts, ...)
 
 \S4method{CIMseqMultiplets}{matrix}(counts, counts.ercc, features, ...)
 
-\S4method{initialize}{CIMseqMultiplets}(.Object, ..., counts, counts.log,
-  counts.cpm, counts.ercc, features)
+\S4method{initialize}{CIMseqMultiplets}(.Object, ..., counts, counts.log, counts.cpm, counts.ercc, features)
 
 \S4method{show}{CIMseqMultiplets}(object)
 }
