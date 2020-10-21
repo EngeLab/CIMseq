@@ -431,8 +431,8 @@ appropriateSinglets <- function(
 #' @param swarm CIMseqSwarm or matrix; A CIMseqSwarm object or a matrix of 
 #' fractions.
 #' @param binary logical; Indicates if adjusted fractions should be returned as
-#' binary values. 
-#' @param ... additional arguments to pass on
+#' binary values.
+#' @param maxCellsPerMultiplet integer; Theoretical max number of cells in a multipet
 #' @return Adjusted fractions matrix.
 #' @author Jason T. Serviss
 #' @examples
@@ -450,13 +450,17 @@ NULL
 #' @export
 
 adjustFractions <- function(
-  singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=Inf
+  singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=Inf, multiplet.factor=NA, constantCellNumber=NA
 ){
   medianCellNumber <- sampleType <- estimatedCellNumber <- NULL
   if(!is.matrix(swarm)) {
     fractions <- getData(swarm, "fractions")
   } else {
     fractions <- swarm
+  }
+
+  if(!is.na(constantCellNumber)) {
+      return(round(fractions*constantCellNumber))
   }
   
   #calculate median cell number per singlet class
@@ -467,7 +471,7 @@ adjustFractions <- function(
   if(!identical(names(cnc), colnames(fractions))) stop("cnc name mismatch")
   
   #calculate cell number per multiplet
-  cnm <- estimateCells(singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet) %>%
+  cnm <- estimateCells(singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, multiplet.factor=multiplet.factor) %>%
     filter(sampleType == "Multiplet") %>%
     {setNames(pull(., estimatedCellNumber), pull(., sample))}
   
@@ -513,8 +517,8 @@ NULL
 
 calculateEdgeStats <- function(
   swarm, singlets, multiplets, depleted=FALSE, maxCellsPerMultiplet=Inf
-){
-  mat <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=maxCellsPerMultiplet)
+, multiplet.factor=NA, ...){
+  mat <- adjustFractions(singlets=singlets, multiplets=multiplets, swarm=swarm, binary = TRUE, maxCellsPerMultiplet=maxCellsPerMultiplet, multiplet.factor=multiplet.factor, ...)
 
   #calcluate weight
   edges <- .calculateWeight(mat, depleted=depleted)
@@ -539,7 +543,7 @@ calculateEdgeStats <- function(
 }
 
 .calculateP <- function(
-  edges, mat, depleted=FALSE, ...
+  edges, mat, depleted=FALSE
 ){
   from <- to <- jp <- weight <- expected.edges <- NULL
   #calculate total number of edges
@@ -796,10 +800,10 @@ setGeneric("getEdgesForMultiplet", function(
 #' @export
 
 setMethod("getEdgesForMultiplet", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, multipletName = NULL, maxCellsPerMultiplet=Inf, depleted=FALSE
-){
+  swarm, singlets, multiplets, multipletName = NULL, maxCellsPerMultiplet=Inf, depleted=FALSE, multiplet.factor=NA
+, ...){
 #  s <- calculateEdgeStats(swarm, singlets, multiplets, depleted=depleted, maxCellsPerMultiplet=maxCellsPerMultiplet)
-  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=maxCellsPerMultiplet)
+  frac <- adjustFractions(singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=maxCellsPerMultiplet, multiplet.factor=multiplet.factor, ...)
   if(is.null(multipletName)) multipletName <- rownames(getData(swarm, "fractions"))
   frac <- frac[multipletName, , drop = FALSE]
   
@@ -1073,6 +1077,7 @@ psoptim1 <- function (par, fn, gr = NULL, ..., lower=-1, upper=1,
     V <- V%*%diag(temp)
   }
   f.x <- apply(X,2,fn1) # first evaluations
+#  f.x[is.na(f.x)] <- 3000 # MARTIN
   stats.feval <- p.s
   P <- X
   f.p <- f.x
@@ -1151,6 +1156,9 @@ psoptim1 <- function (par, fn, gr = NULL, ..., lower=-1, upper=1,
           stats.feval <- stats.feval+as.integer(temp$counts[1])
         } else {
           f.x[i] <- fn1(X[,i])
+#          if(is.na(f.x[i])) {  #MARTIN
+#              f.x[i] <- 3000   #MARTIN
+#          }                    #MARTIN
           stats.feval <- stats.feval+1
         }
         if (f.x[i]<f.p[i]) { # improvement
@@ -1220,6 +1228,7 @@ psoptim1 <- function (par, fn, gr = NULL, ..., lower=-1, upper=1,
         }
       } else {
         f.x <- apply(X,2,fn1)
+#        f.x[is.na(f.x)] <- 3000 # MARTIN
         stats.feval <- stats.feval+p.s
       }
       temp <- f.x<f.p
@@ -1272,7 +1281,13 @@ psoptim1 <- function (par, fn, gr = NULL, ..., lower=-1, upper=1,
         stats.trace.x <- c(stats.trace.x,list(X))
       }
     }
+#    cat("stats.iter: ", stats.iter,
+#        ", stats.feval: ", stats.feval,
+#        ", error: ", error,
+#        ", stats.restart: ", stats.restart,
+#        ", stats.stagnate: ", stats.stagnate, "\n")
   }
+  
   if (error<=p.abstol) {
     msg <- "Converged"
     msgcode <- 0

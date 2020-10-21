@@ -784,8 +784,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   edges <- longFormConnections(swarm, singlets, multiplets) %>%
     arrange(match(from, classOrder), match(to, classOrder)) %>%
     mutate(idx = rank(frac)) %>%
-    mutate(f.col = viridis(max(idx))[idx]) %>%
-    select(-idx)
+    mutate(f.col = viridis(max(idx))[idx])
   
   if(is.null(connectionClass)) {
     filtered <- edges
@@ -824,7 +823,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
     #create
     l1 <- .ns_legend(data, nonSigCol)
     l2 <- .obsexp_legend(data, pal)
-    l3 <- .frac_legend(data)
+    l3 <- .frac_legend(edges)
     l4 <- .class_legend(colours)
   }
   
@@ -929,7 +928,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
 .frac_legend <- function(data) {
   p <- data %>%
     ggplot() + 
-    geom_point(aes(pval, score, colour = frac)) + 
+    geom_point(aes(idx, frac, colour = idx)) + 
     scale_colour_viridis_c() +
     guides(colour = guide_colorbar(
       title = "Fractions", title.position = "top", title.hjust = 0.5
@@ -1012,10 +1011,10 @@ setGeneric("plotSwarmCircos2", function(
 
 setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, connectionClass = NULL, 
-  alpha = 0.05, weightCut = 0, label.cex = 1, legend = TRUE, 
-  pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
-  nonSigCol = "grey95", h.ratio=0.5, maxCellsPerMultiplet = Inf, depleted=FALSE, ...
-){
+  alpha = 0.05, weightCut = 0, expectedWeightCut = 0, label.cex = 1, legend = TRUE, 
+  pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[20:110],
+  nonSigCol = "grey95", h.ratio=0.5, maxCellsPerMultiplet = Inf, depleted=FALSE, multiplet.factor=NA
+, ...){
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
   frac <- connectionID <- super <- connectionName <- position <- nr <- NULL
   colour <- NULL
@@ -1035,24 +1034,32 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   )
   
   #calculate statitistics and connection colors
-  ps <- calculateEdgeStats(swarm, singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted) %>%
+  ps <- calculateEdgeStats(swarm=swarm, singlets=singlets, multiplets=multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted, multiplet.factor, ...) %>%
       mutate(significant = if_else(
-                 pval < alpha & weight > weightCut, TRUE, FALSE
+                 pval < alpha & weight > weightCut & expected.edges > expectedWeightCut, TRUE, FALSE
              )) %>%
-      group_by(significant) %>%
-      mutate(idx = ntile(score, length(pal))) %>%
-      ungroup() %>%
+      mutate(col.idx = score) %>%
+      mutate(col.idx = if_else(!significant, 0, score)) %>%
+      mutate(idx = as.integer(col.idx/max(col.idx)*(length(pal)-1)+1)) %>%
       mutate(p.col = pal[idx]) %>%
       mutate(p.col = if_else(!significant, nonSigCol, p.col)) %>%
       arrange(idx)
 
   
-  #calculate edge data and add fraction colours
-  edges <- longFormConnections(swarm, singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted) %>%
-      arrange(match(from, classOrder),  match(to, classOrder)-match(from, classOrder)) %>%
-      mutate(idx = rank(frac)) %>%
-      mutate(f.col = viridis(max(idx))[idx]) %>%
-      select(-idx)
+  #calculate edge data and add fraction colours.  New version, mean per class
+  edges <- longFormConnections(swarm=swarm, singlets=singlets, multiplets=multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted, multiplet.factor=multiplet.factor, ...) %>%
+      group_by(connectionName) %>%
+      mutate(idx = mean(frac)) %>%
+      ungroup() %>%
+      arrange(match(from, classOrder), match(to, classOrder)) %>%
+      mutate(f.col = viridis(100)[idx/max(idx)*100])
+
+  # Old version
+#  edges <- longFormConnections(swarm=swarm, singlets=singlets, multiplets=multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted, multiplet.factor=multiplet.factor, ...) %>%
+#      arrange(match(from, classOrder),  match(to, classOrder)-match(from, classOrder)) %>%
+#      mutate(idx = rank(frac)) %>%
+#      mutate(f.col = viridis(max(idx))[idx]) %>%
+#      select(-idx)
 
   
   if(is.null(connectionClass)) {
@@ -1098,8 +1105,8 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
 
     #create
     l1 <- .ns_legend(data, nonSigCol)
-    l2 <- .obsexp_legend(data, pal)
-    l3 <- .frac_legend(data)
+    l2 <- .obsexp_legend(ps, pal)
+    l3 <- .frac_legend(edges)
     l4 <- .class_legend(colours)
   }
   
@@ -1211,7 +1218,7 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
 .obsexp_legend <- function(data, pal) {
   p <- data %>%
     ggplot() + 
-    geom_point(aes(pval, score, colour = score)) + 
+    geom_point(aes(pval, score, colour = col.idx)) + 
     scale_colour_gradientn(colours = c(pal[1], pal[length(pal)])) +
     guides(colour = guide_colorbar(
       title = "Obs. / Exp.", title.position = "top", title.hjust = 0.5
@@ -1229,7 +1236,7 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
 .frac_legend <- function(data) {
   p <- data %>%
     ggplot() + 
-    geom_point(aes(pval, score, colour = frac)) + 
+    geom_point(aes(frac, idx, colour = idx)) + 
     scale_colour_viridis_c() +
     guides(colour = guide_colorbar(
       title = "Fractions", title.position = "top", title.hjust = 0.5

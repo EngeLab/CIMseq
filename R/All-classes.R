@@ -14,7 +14,6 @@ setClass("CIMseqSinglets", representation(
   counts = "matrix",
   counts.log = "function",
   counts.cpm = "function",
-  counts.ercc = "matrix",
   dim.red = "matrix",
   classification = "character"
 ))
@@ -73,7 +72,6 @@ setMethod("getData<-", "CIMseqSinglets", function(x, n = NULL, value){
 
 .checkCIMseqSingletsReplacement <- function(x, n, value) {
   counts <- getData(x, "counts")
-  counts.ercc <- getData(x, "counts.ercc")
   classification <- getData(x, "classification")
   dim.red <- getData(x, "dim.red")
   
@@ -82,12 +80,6 @@ setMethod("getData<-", "CIMseqSinglets", function(x, n = NULL, value){
   }
   if(n == "dim.red" & length(counts) > 0) {
     stopifnot(nrow(dim.red) == ncol(counts))
-  }
-  if(n == "counts.ercc" & length(counts) > 0) {
-    stopifnot(ncol(counts.ercc) == ncol(counts))
-  }
-  if(n == "counts" & length(counts.ercc) > 0) {
-    stopifnot(ncol(counts.ercc) == ncol(counts))
   }
 }
 
@@ -103,20 +95,17 @@ setMethod("getData<-", "CIMseqSinglets", function(x, n = NULL, value){
 setMethod("c", c("CIMseqSinglets"), function(x, ...){
   objs <- c(list(x), list(...))
   counts <- lapply(objs, getData, "counts")
-  counts.ercc <- lapply(objs, getData, "counts.ercc")
   dim.red <- lapply(objs, getData, "dim.red")
   classification <- lapply(objs, getData, "classification")
   
   #checks
   if(!Reduce(identical, lapply(counts, rownames))) stop("Counts rownames not identical.")
-  if(!Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
   if(!Reduce(identical, lapply(dim.red, colnames))) stop("dim.red colnames not identical.")
   
   new("CIMseqSinglets",
       counts = do.call("cbind", counts),
       counts.log = .norm.log.counts,
       counts.cpm = .norm.counts,
-      counts.ercc = do.call("cbind", counts.ercc),
       dim.red = do.call("rbind", dim.red),
       classification = do.call("c", classification)
   )
@@ -135,7 +124,6 @@ setClass("CIMseqMultiplets", representation(
   counts = "matrix",
   counts.log = "function",
   counts.cpm = "function",
-  counts.ercc = "matrix",
   features = "integer"
 ))
 
@@ -178,14 +166,6 @@ setMethod("getData<-", "CIMseqMultiplets", function(x, n = NULL, value){
 
 .checkCIMseqMultipletsReplacement <- function(x, n, value) {
   counts <- getData(x, "counts")
-  counts.ercc <- getData(x, "counts.ercc")
-  
-  if(n == "counts.ercc" & length(counts) > 0) {
-    stopifnot(ncol(counts.ercc) == ncol(counts))
-  }
-  if(n == "counts" & length(counts.ercc) > 0) {
-    stopifnot(ncol(counts.ercc) == ncol(counts))
-  }
 }
 
 #################
@@ -200,19 +180,16 @@ setMethod("getData<-", "CIMseqMultiplets", function(x, n = NULL, value){
 setMethod("c", c("CIMseqMultiplets"), function(x, ...){
   objs <- c(list(x), list(...))
   counts <- lapply(objs, getData, "counts")
-  counts.ercc <- lapply(objs, getData, "counts.ercc")
   features <- lapply(objs, getData, "features")
   
   #checks
   if(!Reduce(identical, lapply(counts, rownames))) stop("Counts rownames not identical.")
-  if(!Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
   if(length(unique(features)) != 1) warning("Features not identical, concatenating.")
   
   new("CIMseqMultiplets",
       counts = do.call("cbind", counts),
       counts.log = .norm.log.counts,
       counts.cpm = .norm.counts,
-      counts.ercc = do.call("cbind", counts.ercc),
       features = unique(do.call("c", features))
   )
 })

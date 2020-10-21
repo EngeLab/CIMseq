@@ -5,13 +5,12 @@ NULL
 #'
 #' Subtitle
 #'
-#' Imports count, count.ercc, dimensionality reduction, and classification data
+#' Imports count, dimensionality reduction, and classification data
 #' to a CIMseqSinglets object for sequenced singlets.
 #'
 #' @name CIMseqSinglets
 #' @rdname CIMseqSinglets
 #' @param counts matrix; Counts matrix with samples as columns and genes as rows.
-#' @param counts.ercc matrix; A matrix containing ercc spike-in reads.
 #' @param counts.cpm matrix; Normalized counts per million.
 #' @param counts.log matrix; Log2 normalized counts per million.
 #' @param dim.red matrix; Dimensionality reduced representation of the data.
@@ -64,7 +63,6 @@ setMethod("CIMseqSinglets", "missing", function(
     counts = matrix(nrow = 0, ncol = 0),
     counts.log = .norm.log.counts,
     counts.cpm = .norm.counts,
-    counts.ercc = matrix(nrow = 0, ncol = 0),
     dim.red = matrix(nrow = 0, ncol = 0),
     classification = character(),
     ...
@@ -75,28 +73,21 @@ setMethod("CIMseqSinglets", "missing", function(
 #' @export
 
 setMethod("CIMseqSinglets", "matrix", function(
-  counts, counts.ercc, dim.red, classification, ...
-){
-  .inputCheckSinglets(counts, counts.ercc, dim.red, classification)
+  counts, dim.red, classification, ...
+  ){
+  .inputCheckSinglets(counts, dim.red, classification)
   new(
     "CIMseqSinglets",
     counts = counts,
     counts.log = .norm.log.counts,
     counts.cpm = .norm.counts,
-    counts.ercc = counts.ercc,
     dim.red = dim.red,
     classification = classification,
     ...
   )
 })
 
-.inputCheckSinglets <- function(counts, counts.ercc, dim.red, classification) {
-  if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
-    message("ncol(counts) != ncol(counts.ercc).")
-  }
-  if(any(is.na(c(counts, counts.ercc)))) {
-    message("is.na(c(counts, counts.ercc) returned TRUE")
-  }
+.inputCheckSinglets <- function(counts, dim.red, classification) {
   if(ncol(counts) != length(classification)) {
     message("length(classification) != ncol(counts)")
   }
@@ -109,8 +100,12 @@ setMethod("CIMseqSinglets", "matrix", function(
   log2(.norm.counts(counts) + 1)
 }
 
-.norm.counts <- function(counts) {
-  t(t(counts) / colSums(counts) * 10^6)
+# Hack, to cater for lower numbers in 10x genomics.
+.norm.counts <- function(counts, norm.factor=10000) { 
+    if(is.na(norm.factor)) {
+        norm.factor <- mean(colSums(counts))
+    }
+  t(t(counts) / colSums(counts) * norm.factor)
 }
 
 #' CIMseqMultiplets
@@ -123,7 +118,6 @@ setMethod("CIMseqSinglets", "matrix", function(
 #' @name CIMseqMultiplets
 #' @rdname CIMseqMultiplets
 #' @param counts matrix; Counts matrix with samples as columns and genes as rows.
-#' @param counts.ercc matrix; A matrix containing ercc spike-in reads.
 #' @param counts.cpm matrix; Normalized counts per million.
 #' @param counts.log matrix; Log2 normalized counts per million.
 #' @param features numeric; The indexes of the features/genes for use in 
@@ -165,7 +159,6 @@ setMethod("CIMseqMultiplets", "missing", function(
     counts = matrix(nrow = 0, ncol = 0),
     counts.log = .norm.log.counts,
     counts.cpm = .norm.counts,
-    counts.ercc = matrix(nrow=0, ncol = 0),
     features = numeric(),
     ...
   )
@@ -175,27 +168,21 @@ setMethod("CIMseqMultiplets", "missing", function(
 #' @export
 
 setMethod("CIMseqMultiplets", "matrix", function(
-  counts, counts.ercc, features, ...
-){
-  .inputCheckMultiplets(counts, counts.ercc)
+  counts, features, ...
+  ){
+        
+  .inputCheckMultiplets(counts)
   new(
     "CIMseqMultiplets",
     counts = counts,
     counts.log = .norm.log.counts,
     counts.cpm = .norm.counts,
-    counts.ercc = counts.ercc,
     features = features,
     ...
   )
 })
 
-.inputCheckMultiplets <- function(counts, counts.ercc) {
-  if((dim(counts)[2]) != (dim(counts.ercc)[2])) {
-    message("ncol(counts) != ncol(counts.ercc).")
-  }
-  if(any(is.na(c(counts, counts.ercc)))) {
-    message("is.na(c(counts, counts.ercc) returned TRUE")
-  }
+.inputCheckMultiplets <- function(counts) {
 }
 
 #' estimateCells
@@ -239,46 +226,63 @@ setGeneric("estimateCells", function(
 #' @importFrom rlang .data
 #' @export
 
+# Changed to use UMI counts.
 setMethod("estimateCells", "CIMseqSinglets", function(
-  singlets, multiplets, warning = TRUE, maxCellsPerMultiplet = Inf, ...
-){
-  frac.ercc <- NULL
+  singlets, multiplets, warning = TRUE, maxCellsPerMultiplet = Inf, multiplet.factor=NA){
   counts <- cbind(
     getData(singlets, "counts"), 
-    getData(multiplets, "counts")
-  )
-  counts.ercc <- cbind(
-    getData(singlets, "counts.ercc"), 
-    getData(multiplets, "counts.ercc")
+    getData(multiplets, "counts")*median(colSums(getData(singlets, "counts")))/median(colSums(getData(multiplets, "counts")))
   )
   n.sng <- ncol(getData(singlets, "counts"))
   n.mul <- ncol(getData(multiplets, "counts"))
-  
-  #check if any samples have ERCC that are all 0
-  if(warning) .checkEstimateCellsInput(counts.ercc)
-  fe <- colSums(counts.ercc) / (colSums(counts.ercc) + colSums(counts))
-  ecn <- median(fe[1:n.sng]) / fe
+
+  fe.sng <- colSums(counts)[1:n.sng]
+  fe.mul <- colSums(counts)[-1:-n.sng]
+  calcFrac <- function(x, fe.sng, fe.mul) {
+      fe.mul <- fe.mul*x
+      ecn.sng <- round(fe.sng / median(fe.sng))
+      ecn.mul <- round(fe.mul / median(fe.sng))
+      frac.sng <- sum(ecn.sng==0)/sum(ecn.sng == 1)
+      frac.mul <- sum(ecn.mul==0)/(sum(ecn.mul==1))*(1+frac.sng*sum(ecn.mul==1)/sum(ecn.mul == 2))
+      log(frac.sng/frac.mul)
+  }
+#  calcFrac <- function(x, fe.sng, fe.mul) {
+#      fe.mul <- fe.mul*x
+#      ecn.sng <- round(fe.sng / median(fe.sng))
+#      ecn.mul <- round(fe.mul / median(fe.sng))
+#      log((sum(ecn.sng==0)/sum(ecn.sng!=0))/(sum(ecn.mul==0)/sum(ecn.mul!=0)))
+#  }
+  if(is.na(multiplet.factor)) {
+      m.factors <- seq(0.05, 5, by=0.05)
+      m.scores <- sapply(m.factors, calcFrac, fe.sng=fe.sng, fe.mul=fe.mul)
+      multiplet.factor <- m.factors[which.min(abs(m.scores))] # Pick the lowest score. min(abs) works since m.scores is logged
+  }
+  fe <- c(fe.sng, fe.mul*multiplet.factor)
+  ecn <- fe / median(fe.sng)
   ecn[ecn > maxCellsPerMultiplet] <- maxCellsPerMultiplet
   
   tibble(
     sample = colnames(counts),
     sampleType = c(rep("Singlet", n.sng), rep("Multiplet", n.mul)),
-    frac.ercc = fe, estimatedCellNumber = ecn
+    estimatedCellNumber = ecn
   )
+
+# Older version
+#    counts <- cbind(
+#    getData(singlets, "counts"), 
+#    getData(multiplets, "counts")*2*median(colSums(getData(singlets, "counts")))/median(colSums(getData(multiplets, "counts"))) # Normalize by multiplet/singlet batch, adjust since median multiplet count is 2
+#  )
+#  n.sng <- ncol(getData(singlets, "counts"))
+#  n.mul <- ncol(getData(multiplets, "counts"))
+  
+#  fe <- colSums(counts)
+#  ecn <- fe / median(fe[1:n.sng])
+#  ecn[ecn > maxCellsPerMultiplet] <- maxCellsPerMultiplet
+  
+#  tibble(
+#    sample = colnames(counts),
+#    sampleType = c(rep("Singlet", n.sng), rep("Multiplet", n.mul)),
+#    estimatedCellNumber = ecn
+#  )
 })
 
-.checkEstimateCellsInput <- function(counts.ercc) {
-  all0 <- apply(counts.ercc, 2, function(x) all(x == 0))
-  if(any(all0, na.rm = TRUE)) {
-    zeroIDs <- colnames(counts.ercc)[which(all0)]
-    if(length(zeroIDs) > 5) {
-      zeroIDs <- paste0(paste(zeroIDs[1:5], collapse = ", "), ", ...")
-    } else {
-      zeroIDs <- paste(zeroIDs, collapse = ", ")
-    }
-    warning(paste0(
-      "Results will not be accurate. ", 
-      "These samples ERCC reads are all 0's: ", zeroIDs
-    ))
-  }
-}

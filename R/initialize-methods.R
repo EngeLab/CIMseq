@@ -5,12 +5,12 @@ NULL
 #' @export
 
 setMethod("initialize","CIMseqSinglets", function(
-  .Object, ..., counts, counts.log, counts.cpm, counts.ercc, 
+  .Object, ..., counts, counts.log, counts.cpm, 
   dim.red, classification
 ){
   callNextMethod(
     .Object, ..., counts = counts, counts.log = counts.log,
-    counts.cpm = counts.cpm, counts.ercc = counts.ercc,
+    counts.cpm = counts.cpm,
     dim.red = dim.red, classification = classification
   )
 })
@@ -19,11 +19,11 @@ setMethod("initialize","CIMseqSinglets", function(
 #' @export
 
 setMethod("initialize","CIMseqMultiplets", function(
-  .Object, ..., counts, counts.log, counts.cpm, counts.ercc, features
+  .Object, ..., counts, counts.log, counts.cpm, features
 ){
   callNextMethod(
     .Object, ..., counts = counts, counts.log = counts.log,
-    counts.cpm = counts.cpm, counts.ercc = counts.ercc, features = features
+    counts.cpm = counts.cpm, features = features
   )
 })
 
