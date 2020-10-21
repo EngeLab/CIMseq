@@ -4,14 +4,16 @@
 \name{CIMseqMultiplets_test}
 \alias{CIMseqMultiplets_test}
 \title{CIMseqMultiplets object corresponding to test dataset.}
-\format{CIMseqMultiplets
+\format{
+CIMseqMultiplets
 \describe{
     \item{counts}{See \code{\link{CIMseqMultiplets}}.}
     \item{counts.log}{See \code{\link{CIMseqMultiplets}}.}
     \item{counts.cpm}{See \code{\link{CIMseqMultiplets}}.}
     \item{counts.ercc}{See \code{\link{CIMseqMultiplets}}.}
     \item{features}{See \code{\link{CIMseqMultiplets}}.}
-}}
+}
+}
 \value{
 An CIMseqMultiplets object.
 }

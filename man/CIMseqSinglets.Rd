@@ -33,11 +33,17 @@ CIMseqSinglets(counts, ...)
 
 \S4method{CIMseqSinglets}{missing}(counts, ...)
 
-\S4method{CIMseqSinglets}{matrix}(counts, counts.ercc, dim.red,
-  classification, ...)
+\S4method{CIMseqSinglets}{matrix}(counts, dim.red, classification, ...)
 
-\S4method{initialize}{CIMseqSinglets}(.Object, ..., counts, counts.log,
-  counts.cpm, counts.ercc, dim.red, classification)
+\S4method{initialize}{CIMseqSinglets}(
+  .Object,
+  ...,
+  counts,
+  counts.log,
+  counts.cpm,
+  dim.red,
+  classification
+)
 
 \S4method{show}{CIMseqSinglets}(object)
 }
@@ -51,8 +57,6 @@ CIMseqSinglets(counts, ...)
 \item{value}{Replacment value.}
 
 \item{counts}{matrix; Counts matrix with samples as columns and genes as rows.}
-
-\item{counts.ercc}{matrix; A matrix containing ercc spike-in reads.}
 
 \item{dim.red}{matrix; Dimensionality reduced representation of the data.}
 
@@ -73,7 +77,7 @@ CIMseqSinglets object.
 Subtitle
 }
 \details{
-Imports count, count.ercc, dimensionality reduction, and classification data
+Imports count, dimensionality reduction, and classification data
 to a CIMseqSinglets object for sequenced singlets.
 }
 \examples{

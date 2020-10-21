@@ -4,7 +4,8 @@
 \name{CIMseqSinglets_test}
 \alias{CIMseqSinglets_test}
 \title{CIMseqSinglets object corresponding to test dataset.}
-\format{CIMseqSinglets
+\format{
+CIMseqSinglets
 \describe{
     \item{counts}{See \code{\link{CIMseqSinglets}}.}
     \item{counts.log}{See \code{\link{CIMseqSinglets}}.}
@@ -12,7 +13,8 @@
     \item{counts.ercc}{See \code{\link{CIMseqSinglets}}.}
     \item{dim.red}{See \code{\link{CIMseqSinglets}}.}
     \item{classification}{See \code{\link{CIMseqSinglets}}.}
-}}
+}
+}
 \value{
 An CIMseqSinglets object.
 }

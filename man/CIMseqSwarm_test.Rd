@@ -4,14 +4,16 @@
 \name{CIMseqSwarm_test}
 \alias{CIMseqSwarm_test}
 \title{CIMseqSwarm object corresponding to test dataset.}
-\format{CIMseqSwarm
+\format{
+CIMseqSwarm
 \describe{
  \item{fractions}{See \code{\link{CIMseqSwarm}}.}
  \item{costs}{See \code{\link{CIMseqSwarm}}.}
  \item{convergence}{See \code{\link{CIMseqSwarm}}.}
  \item{singletIdx}{See \code{\link{CIMseqSwarm}}.}
  \item{arguments}{See \code{\link{CIMseqSwarm}}.}
-}}
+}
+}
 \value{
 CIMseqSwarm object.
 }

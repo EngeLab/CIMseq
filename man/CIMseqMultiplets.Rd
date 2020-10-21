@@ -24,10 +24,9 @@ CIMseqMultiplets(counts, ...)
 
 \S4method{CIMseqMultiplets}{missing}(counts, ...)
 
-\S4method{CIMseqMultiplets}{matrix}(counts, counts.ercc, features, ...)
+\S4method{CIMseqMultiplets}{matrix}(counts, features, ...)
 
-\S4method{initialize}{CIMseqMultiplets}(.Object, ..., counts, counts.log,
-  counts.cpm, counts.ercc, features)
+\S4method{initialize}{CIMseqMultiplets}(.Object, ..., counts, counts.log, counts.cpm, features)
 
 \S4method{show}{CIMseqMultiplets}(object)
 }
@@ -41,8 +40,6 @@ CIMseqMultiplets(counts, ...)
 \item{...}{additional arguments to pass on}
 
 \item{counts}{matrix; Counts matrix with samples as columns and genes as rows.}
-
-\item{counts.ercc}{matrix; A matrix containing ercc spike-in reads.}
 
 \item{features}{numeric; The indexes of the features/genes for use in 
 deconvolution.}

@@ -66,7 +66,6 @@ setGeneric("CIMseqSwarm", function(
 #' @importFrom purrr map map_dbl
 #' @importFrom tibble tibble as_tibble add_column
 #' @importFrom tidyr unnest
-#' @import hashmap
 #' @rdname CIMseqSwarm
 #' @export
 
@@ -286,6 +285,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   n, control, startSwarm = NULL, ...
   )
 {
+    require(hashmap)
   oneMultiplet <- round(multiplets[, i]) #change this to int() ?
 #  my.cache <- new.env(hash=TRUE)
   my.cache <- hashmap(keys="hi", values=18.2)
@@ -302,6 +302,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   n, control, resolution=20, startSwarm = NULL, ...
   )
 {
+    require(hashmap)
   oneMultiplet <- round(multiplets[, i]) #change this to int() ?
 #  my.cache <- new.env(hash=TRUE)
   my.cache <- createHashmap();

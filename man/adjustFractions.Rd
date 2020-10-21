@@ -4,7 +4,15 @@
 \alias{adjustFractions}
 \title{adjustFractions}
 \usage{
-adjustFractions(singlets, multiplets, swarm, binary = TRUE, ...)
+adjustFractions(
+  singlets,
+  multiplets,
+  swarm,
+  binary = TRUE,
+  maxCellsPerMultiplet = Inf,
+  multiplet.factor = NA,
+  constantCellNumber = NA
+)
 }
 \arguments{
 \item{singlets}{CIMseqSinglets; A CIMseqSinglets object.}
@@ -17,7 +25,7 @@ fractions.}
 \item{binary}{logical; Indicates if adjusted fractions should be returned as
 binary values.}
 
-\item{...}{additional arguments to pass on}
+\item{maxCellsPerMultiplet}{integer; Theoretical max number of cells in a multipet}
 }
 \value{
 Adjusted fractions matrix.

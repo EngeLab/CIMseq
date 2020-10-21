@@ -4,8 +4,14 @@
 \alias{calcResiduals}
 \title{calcResiduals}
 \usage{
-calcResiduals(singlets, multiplets, swarm, include = NULL,
-  fractions = NULL, ...)
+calcResiduals(
+  singlets,
+  multiplets,
+  swarm,
+  include = NULL,
+  fractions = NULL,
+  ...
+)
 }
 \arguments{
 \item{singlets}{A CIMseqSinglets object.}
