@@ -75,7 +75,7 @@ setMethod("CIMseqSinglets", "missing", function(
 #' @export
 
 setMethod("CIMseqSinglets", "matrix", function(
-  counts, counts.ercc, dim.red, classification, ...
+  counts, counts.ercc, dim.red, classification, norm.to = 1E6, ...
 ){
   .inputCheckSinglets(counts, counts.ercc, dim.red, classification)
   new(
@@ -86,6 +86,7 @@ setMethod("CIMseqSinglets", "matrix", function(
     counts.ercc = counts.ercc,
     dim.red = dim.red,
     classification = classification,
+    norm.to = norm.to,
     ...
   )
 })
@@ -105,12 +106,12 @@ setMethod("CIMseqSinglets", "matrix", function(
   }
 }
 
-.norm.log.counts <- function(counts) {
-  log2(.norm.counts(counts) + 1)
+.norm.log.counts <- function(counts, norm.to) {
+  log2(.norm.counts(counts, norm.to) + 1)
 }
 
-.norm.counts <- function(counts) {
-  t(t(counts) / colSums(counts) * 10^6)
+.norm.counts <- function(counts, norm.to) {
+  t(t(counts) / colSums(counts) * norm.to)
 }
 
 #' CIMseqMultiplets
@@ -175,7 +176,7 @@ setMethod("CIMseqMultiplets", "missing", function(
 #' @export
 
 setMethod("CIMseqMultiplets", "matrix", function(
-  counts, counts.ercc, features, ...
+  counts, counts.ercc, features, norm.to = 1E6, ...
 ){
   .inputCheckMultiplets(counts, counts.ercc)
   new(
@@ -185,6 +186,7 @@ setMethod("CIMseqMultiplets", "matrix", function(
     counts.cpm = .norm.counts,
     counts.ercc = counts.ercc,
     features = features,
+    norm.to = norm.to,
     ...
   )
 })

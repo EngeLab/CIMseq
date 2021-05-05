@@ -1050,7 +1050,7 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   
   #calculate edge data and add fraction colours
   edges <- longFormConnections(swarm, singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted) %>%
-      group_by(connectionName) %>%
+      group_by(connectionName, class) %>%
       mutate(idx = mean(frac)) %>%
       ungroup() %>%
       arrange(match(from, classOrder), match(to, classOrder)) %>%

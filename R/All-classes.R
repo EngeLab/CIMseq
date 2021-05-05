@@ -16,7 +16,8 @@ setClass("CIMseqSinglets", representation(
   counts.cpm = "function",
   counts.ercc = "matrix",
   dim.red = "matrix",
-  classification = "character"
+  classification = "character",
+  norm.to = "numeric"
 ))
 
 #############
@@ -41,7 +42,7 @@ setMethod("getData", "CIMseqSinglets", function(x, n = NULL){
     if(!is.function(slt)) {
       return(slt)
     } else {
-      return(slt(slot(x, "counts")))
+      return(slt(slot(x, "counts"), slot(x, "norm.to")))
     }
   }
 })
@@ -76,6 +77,7 @@ setMethod("getData<-", "CIMseqSinglets", function(x, n = NULL, value){
   counts.ercc <- getData(x, "counts.ercc")
   classification <- getData(x, "classification")
   dim.red <- getData(x, "dim.red")
+  norm.to <- getData(x, "norm.to")
   
   if(n == "classification" & length(counts) > 0) {
     stopifnot(length(classification) == ncol(counts))
@@ -88,6 +90,9 @@ setMethod("getData<-", "CIMseqSinglets", function(x, n = NULL, value){
   }
   if(n == "counts" & length(counts.ercc) > 0) {
     stopifnot(ncol(counts.ercc) == ncol(counts))
+  }
+  if(n == "norm.to") {
+    stopifnot(!is.na(norm.to) & length(norm.to) > 0)
   }
 }
 
@@ -106,8 +111,10 @@ setMethod("c", c("CIMseqSinglets"), function(x, ...){
   counts.ercc <- lapply(objs, getData, "counts.ercc")
   dim.red <- lapply(objs, getData, "dim.red")
   classification <- lapply(objs, getData, "classification")
+  norm.to <- unique(sapply(objs, getData, "norm.to"))
   
   #checks
+  if(length(norm.to) != 1) stop ("Data needs to be normalized to the same number (norm.to not identical).") # Every dataset has to be normalized to the same number
   if(!Reduce(identical, lapply(counts, rownames))) stop("Counts rownames not identical.")
   if(!Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
   if(!Reduce(identical, lapply(dim.red, colnames))) stop("dim.red colnames not identical.")
@@ -118,7 +125,8 @@ setMethod("c", c("CIMseqSinglets"), function(x, ...){
       counts.cpm = .norm.counts,
       counts.ercc = do.call("cbind", counts.ercc),
       dim.red = do.call("rbind", dim.red),
-      classification = do.call("c", classification)
+      classification = do.call("c", classification),
+      norm.to = norm.to
   )
 })
 
@@ -136,7 +144,8 @@ setClass("CIMseqMultiplets", representation(
   counts.log = "function",
   counts.cpm = "function",
   counts.ercc = "matrix",
-  features = "integer"
+  features = "integer",
+  norm.to = "numeric"
 ))
 
 #############
@@ -154,7 +163,7 @@ setMethod("getData", "CIMseqMultiplets", function(x, n = NULL){
     if(!is.function(slt)) {
       return(slt)
     } else {
-      return(slt(slot(x, "counts")))
+      return(slt(slot(x, "counts"), slot(x, "norm.to")))
     }
   }
 })
@@ -179,12 +188,16 @@ setMethod("getData<-", "CIMseqMultiplets", function(x, n = NULL, value){
 .checkCIMseqMultipletsReplacement <- function(x, n, value) {
   counts <- getData(x, "counts")
   counts.ercc <- getData(x, "counts.ercc")
+  norm.to <- getData(x, "norm.to")
   
   if(n == "counts.ercc" & length(counts) > 0) {
     stopifnot(ncol(counts.ercc) == ncol(counts))
   }
   if(n == "counts" & length(counts.ercc) > 0) {
     stopifnot(ncol(counts.ercc) == ncol(counts))
+  }
+  if(n == "norm.to") {
+    stopifnot(!is.na(norm.to) & length(norm.to) == 1)
   }
 }
 
@@ -202,18 +215,21 @@ setMethod("c", c("CIMseqMultiplets"), function(x, ...){
   counts <- lapply(objs, getData, "counts")
   counts.ercc <- lapply(objs, getData, "counts.ercc")
   features <- lapply(objs, getData, "features")
+  norm.to <- unique(sapply(objs, getData, "norm.to"))
   
   #checks
   if(!Reduce(identical, lapply(counts, rownames))) stop("Counts rownames not identical.")
   if(!Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
   if(length(unique(features)) != 1) warning("Features not identical, concatenating.")
+  if(length(norm.to) != 1) stop ("Data needs to be normalized to the same number (norm.to not identical).") # Every dataset has to be normalized to the same number
   
   new("CIMseqMultiplets",
       counts = do.call("cbind", counts),
       counts.log = .norm.log.counts,
       counts.cpm = .norm.counts,
       counts.ercc = do.call("cbind", counts.ercc),
-      features = unique(do.call("c", features))
+      features = unique(do.call("c", features)),
+      norm.to = norm.to
   )
 })
 

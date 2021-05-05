@@ -85,6 +85,9 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   
   #check for same genes in singlets counts and multiplets counts
 
+    if(getData(singlets, "norm.to") != getData(multiplets, "norm.to")) {
+        stop("norm.to mismatch: singlets and multiplets are not normalized to the same total counts")
+    }
     if(useMuSiC) {
         require("MuSiC")
         sng <- getData(singlets, "counts")
