@@ -86,7 +86,7 @@ setMethod("getData<-", "CIMseqSinglets", function(x, n = NULL, value){
     stopifnot(nrow(dim.red) == ncol(counts))
   }
   if(n == "counts.ercc" & length(counts) > 0) {
-    stopifnot(ncol(counts.ercc) == ncol(counts))
+    stopifnot(length(counts.ercc)==0 | ncol(counts.ercc) == ncol(counts))
   }
   if(n == "counts" & length(counts.ercc) > 0) {
     stopifnot(ncol(counts.ercc) == ncol(counts))
@@ -116,7 +116,7 @@ setMethod("c", c("CIMseqSinglets"), function(x, ...){
   #checks
   if(length(norm.to) != 1) stop ("Data needs to be normalized to the same number (norm.to not identical).") # Every dataset has to be normalized to the same number
   if(!Reduce(identical, lapply(counts, rownames))) stop("Counts rownames not identical.")
-  if(!Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
+  if(any(sapply(counts.ercc, length)) & !Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
   if(!Reduce(identical, lapply(dim.red, colnames))) stop("dim.red colnames not identical.")
   
   new("CIMseqSinglets",
@@ -190,7 +190,7 @@ setMethod("getData<-", "CIMseqMultiplets", function(x, n = NULL, value){
   counts.ercc <- getData(x, "counts.ercc")
   norm.to <- getData(x, "norm.to")
   
-  if(n == "counts.ercc" & length(counts) > 0) {
+  if(n == "counts.ercc" & length(counts) > 0 & length(counts.ercc)) {
     stopifnot(ncol(counts.ercc) == ncol(counts))
   }
   if(n == "counts" & length(counts.ercc) > 0) {
@@ -219,7 +219,7 @@ setMethod("c", c("CIMseqMultiplets"), function(x, ...){
   
   #checks
   if(!Reduce(identical, lapply(counts, rownames))) stop("Counts rownames not identical.")
-  if(!Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
+  if(any(sapply(counts.ercc, length)) & !Reduce(identical, lapply(counts.ercc, rownames))) stop("Counts.ercc rownames not identical.")
   if(length(unique(features)) != 1) warning("Features not identical, concatenating.")
   if(length(norm.to) != 1) stop ("Data needs to be normalized to the same number (norm.to not identical).") # Every dataset has to be normalized to the same number
   
@@ -249,7 +249,8 @@ setClass("CIMseqSwarm", representation(
   stats = "tbl_df",
   swarmPos = "list",
   singletIdx = "list",
-  arguments = "tbl_df"
+  arguments = "tbl_df",
+  multiplet.factor=NA
 ))
 
 #############
@@ -290,6 +291,10 @@ setMethod("c", c("CIMseqSwarm"), function(x, ...){
   } else {
     names(si) <- rownames(frac)
   }
+  mf <- unique(sapply(objs, getData, "multiplet.factor"))
+  if(length(mf) != 1) {
+      stop("multiplet.factors do not match, found: ", paste(mf, collapse=" "))
+  }
   new("CIMseqSwarm",
     fractions = frac,
     costs = lapply(objs, getData, "costs") %>% do.call("c", .),
@@ -297,6 +302,7 @@ setMethod("c", c("CIMseqSwarm"), function(x, ...){
     stats = lapply(objs, getData, "stats") %>% do.call("bind_rows", .),
     singletIdx = si,
     arguments = lapply(objs, getData, "arguments") %>% do.call("bind_rows", .)
+    multiplet.factor = mf
   )
 })
 
