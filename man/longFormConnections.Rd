@@ -9,7 +9,8 @@ longFormConnections(
   singlets,
   multiplets,
   maxCellsPerMultiplet = Inf,
-  depleted = FALSE
+  depleted = FALSE,
+  multiplet.factor = NA
 )
 }
 \arguments{

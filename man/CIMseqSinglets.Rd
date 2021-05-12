@@ -33,7 +33,14 @@ CIMseqSinglets(counts, ...)
 
 \S4method{CIMseqSinglets}{missing}(counts, ...)
 
-\S4method{CIMseqSinglets}{matrix}(counts, counts.ercc, dim.red, classification, ...)
+\S4method{CIMseqSinglets}{matrix}(
+  counts,
+  counts.ercc = matrix(nrow = 0, ncol = 0),
+  dim.red,
+  classification,
+  norm.to = 1e+06,
+  ...
+)
 
 \S4method{initialize}{CIMseqSinglets}(
   .Object,

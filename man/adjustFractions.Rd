@@ -9,7 +9,9 @@ adjustFractions(
   multiplets,
   swarm,
   binary = TRUE,
-  maxCellsPerMultiplet = Inf
+  maxCellsPerMultiplet = Inf,
+  multiplet.factor = NA,
+  constantCellNumber = NA
 )
 }
 \arguments{
@@ -42,4 +44,6 @@ Description
 }
 \author{
 Jason T. Serviss
+
+Martin Enge
 }

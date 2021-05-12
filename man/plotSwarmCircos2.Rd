@@ -24,6 +24,7 @@ plotSwarmCircos2(swarm, ...)
   maxCellsPerMultiplet = Inf,
   depleted = FALSE,
   groups = NULL,
+  multiplet.factor = NA,
   ...
 )
 }

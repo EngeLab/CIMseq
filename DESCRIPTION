@@ -53,6 +53,7 @@ RoxygenNote: 7.1.0
 Collate: 
     'CIMseq-package.R'
     'All-classes.R'
+    'CIMseqConnections.R'
     'CIMseqData.R'
     'CIMseqSwarm.R'
     'RcppExports.R'

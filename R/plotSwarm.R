@@ -744,7 +744,7 @@ setMethod("plotSwarmGenes", "CIMseqSwarm", function(
 .frac_legend <- function(data) {
   p <- data %>%
     ggplot() + 
-    geom_point(aes(pval, score, colour = frac)) + 
+    geom_point(aes(from, to, colour = frac)) + 
     scale_colour_viridis_c() +
     guides(colour = guide_colorbar(
       title = "Fractions", title.position = "top", title.hjust = 0.5
@@ -1016,10 +1016,10 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
     return(pos)
 }
 
-.ns_legend <- function(data, nonSigCol) {
+.ns_legend2<- function(data, nonSigCol) {
   p <- data %>%
     ggplot() +
-    geom_bar(aes(connectionID, fill = "n.s.")) +
+    geom_bar(aes(from, fill = "n.s.")) +
     guides(fill = guide_legend(
       label.position = "bottom", title.position = "top",
       frame.colour = "black"
@@ -1037,28 +1037,28 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   draw_legend(l)
 }
 
-.obsexp_legend <- function(data, pal) {
-  p <- data %>%
-    ggplot() + 
-    geom_point(aes(pval, score, colour = col.idx)) + 
-    scale_colour_gradientn(colours = c(pal[1], pal[length(pal)])) +
-    guides(colour = guide_colorbar(
-      title = "Obs. / Exp.", title.position = "top", title.hjust = 0.5
-    )) +
-    theme(
-      legend.position = "top",
-      legend.margin = margin(t = 0, b = 0, unit='cm'),
-      legend.key = element_blank(),
-      legend.box.background = element_blank()
-    )
-  l <- g_legend(p)
-  draw_legend(l)
+.obsexp_legend2 <- function(data, pal) {
+    p <- data %>%
+        ggplot() + 
+        geom_point(aes(pval, score, colour = score)) + 
+        scale_colour_gradientn(colours = c(pal[1], pal[length(pal)])) +
+        guides(colour = guide_colorbar(
+                   title = "Obs. / Exp.", title.position = "top", title.hjust = 0.5
+               )) +
+        theme(
+            legend.position = "top",
+            legend.margin = margin(t = 0, b = 0, unit='cm'),
+            legend.key = element_blank(),
+            legend.box.background = element_blank()
+        )
+    l <- g_legend(p)
+    draw_legend(l)
 }
 
-.frac_legend <- function(data) {
+.frac_legend2 <- function(data) {
   p <- data %>%
     ggplot() + 
-    geom_point(aes(frac, idx, colour = idx)) + 
+    geom_point(aes(meanFrac, idx, colour = meanFrac)) + 
     scale_colour_viridis_c() +
     guides(colour = guide_colorbar(
       title = "Fractions", title.position = "top", title.hjust = 0.5
@@ -1139,8 +1139,8 @@ setGeneric("plotSwarmCircos", function(
 #' @import circlize
 
 setMethod("plotSwarmCircos", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, connections=NA, classOrder = NULL, connectionClass = NULL, 
-  alpha = 0.05, weightCut = 0, expectedWeightCut = 0, label.cex = 1, legend = FALSE, 
+  swarm, singlets, multiplets, classOrder = NULL, 
+  alpha = 0.05, weightCut = 0, expectedWeightCut = 0, label.cex = 1, legend = TRUE, 
   pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
   nonSigCol = "grey95", h.ratio=0.5, maxCellsPerMultiplet = Inf, depleted=FALSE, drawFractions=T, multiplet.factor=NA, ...
   ) {
@@ -1155,7 +1155,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
       classOrder <- unique(getData(singlets, "classification"))
   }
     
-    adj <- adjustFractions(singlets=singlets, multiplets=multiplets, swarm=swarm, binary=T, maxCellsPerMultiplet=4)
+    adj <- adjustFractions(singlets=singlets, multiplets=multiplets, swarm=swarm, binary=T, maxCellsPerMultiplet=maxCellsPerMultiplet)
     cooc <- matrix(0,nrow=length(classOrder), ncol=length(classOrder), dimnames=list(classOrder, classOrder))
     for(c1 in classOrder) {
         for(c2 in classOrder) {
@@ -1186,8 +1186,8 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
       mutate(significant = if_else(
                  pval < alpha & weight > weightCut & expected.edges > expectedWeightCut, TRUE, FALSE
              )) %>%
-      group_by(significant) %>%
-      mutate(idx = ntile(score, length(pal))) %>%
+        group_by(significant) %>%
+      mutate(idx = as.integer((score-min(score))/(max(score)-min(score))*(length(pal)-1)+1)) %>%
       ungroup() %>%
       mutate(p.col = pal[idx]) %>%
       mutate(p.col = if_else(!significant, nonSigCol, p.col)) %>%
@@ -1221,19 +1221,12 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
         distinct()  %>%
         arrange(match(from, classOrder), match(to, classOrder))
     
-    if(is.null(connectionClass)) {
-        filtered <- edges
-    } else {
-        filtered <- filter(edges, from == connectionClass | to == connectionClass)
-    }
+    if(nrow(edges) == 0) return("none")
+    
+    edges <- edges %>% mutate(OtherClass = if_else(class == from, true=to, false=from))
     
     
-    if(nrow(filtered) == 0) return("none")
-    
-    filtered <- filtered %>% mutate(OtherClass = if_else(class == from, true=to, false=from))
-    
-    
-    data <- filtered %>%
+    data <- edges %>%
         inner_join(ps2, by = c("class"="from", "OtherClass"="to")) %>%
         group_by(class) %>%
         arrange(.closestCircle2(match(class, classOrder), match(OtherClass, classOrder), length(classOrder)), .by_group=TRUE) %>%
@@ -1246,6 +1239,38 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
         arrange(significant,  desc(pval)) %>% # Why is pval needed here?
         as.data.frame()
 
+  class.colors <- col40()[1:length(classOrder)]
+  names(class.colors) <- classOrder
+  
+
+  class.list <- lapply(classOrder, function(x) {
+      ps3 <- ps2 %>% filter(from==x | to==x)  %>% mutate(class=x) %>% mutate(OtherClass = if_else(x == from, true=to, false=from)) %>% arrange(.closestCircle2(match(x, classOrder), match(OtherClass, classOrder), length(classOrder)))
+      
+      ps3$size <- sapply(1:nrow(ps3), function(i) {
+          cooc[ps3$class[i], ps3$OtherClass[i]]
+      })
+      ps3 %>% mutate(PosStart = cumsum(size)-size) %>% mutate(PosEnd = cumsum(size))
+  }) # This section is problematic
+  names(class.list) <- classOrder
+  
+  edges.col <- rbind(edges %>% inner_join(ps2, by=c("class"="from", "OtherClass"="to")), edges %>% inner_join(ps2, by=c("class"="to", "OtherClass"="from"))) %>%
+      filter(weightOk) %>%
+      mutate(maxFrac=max(meanFrac)) %>%
+      mutate(minFrac=min(meanFrac)) %>%
+      mutate(f.col = pal[(meanFrac-minFrac)/(maxFrac-minFrac)*(length(pal)-1)+1])
+  
+  class.list <- lapply(class.list, function(x) {
+      x$f.col <- sapply(1:nrow(x), function(i) {
+          xtmp <- filter(edges.col, class==x$class[i], OtherClass==x$OtherClass[i])$f.col[1]
+          if(is.na(xtmp)) {
+              xtmp <- nonSigCol
+          }
+          xtmp
+      })
+      x
+  })
+  
+  
     #add legend
     if(legend) {
                                         #layout
@@ -1256,16 +1281,15 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
         )
         
     #create
-        l1 <- .ns_legend(data, nonSigCol)
-        l2 <- .obsexp_legend(data, pal)
-        l3 <- .frac_legend(data)
+
+
+        l1 <- .ns_legend2(data, nonSigCol)
+        l2 <- .obsexp_legend2(data %>% filter(significant) %>% filter(weight > weightCut), pal)
+        l3 <- .frac_legend2(data %>% filter(weight > weightCut))
         l4 <- .class_legend(colours)
     }
     
                                         #base circos plot
-    class.colors <- col40()[1:length(classOrder)]
-    names(class.colors) <- classOrder
-    
     gap.degree <- 200.0/length(classOrder)
     circos.par(gap.degree=gap.degree, cell.padding=c(0,0)) # FIXME: gap.degree might have to be adjusted!
     circos.initialize(factors=as.character(classOrder), xlim=size.table)
@@ -1300,32 +1324,6 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
     )
   }
 
-    class.list <- lapply(classOrder, function(x) {
-        ps3 <- ps2 %>% filter(from==x | to==x)  %>% mutate(class=x) %>% mutate(OtherClass = if_else(x == from, true=to, false=from)) %>% arrange(.closestCircle2(match(x, classOrder), match(OtherClass, classOrder), length(classOrder)))
-        
-        ps3$size <- sapply(1:nrow(ps3), function(i) {
-            cooc[ps3$class[i], ps3$OtherClass[i]]
-        })
-        ps3 %>% mutate(PosStart = cumsum(size)-size) %>% mutate(PosEnd = cumsum(size))
-    }) # This section is problematic
-    names(class.list) <- classOrder
-
-    filtered.col <- rbind(filtered %>% inner_join(ps2, by=c("class"="from", "OtherClass"="to")), filtered %>% inner_join(ps2, by=c("class"="to", "OtherClass"="from"))) %>%
-    filter(weightOk) %>%
-    mutate(maxFrac=max(meanFrac)) %>%
-    mutate(minFrac=min(meanFrac)) %>%
-    mutate(f.col = viridis(101)[(meanFrac-minFrac)/(maxFrac-minFrac)*100+1])
-    
-    class.list <- lapply(class.list, function(x) {
-        x$f.col <- sapply(1:nrow(x), function(i) {
-            xtmp <- filter(filtered.col, class==x$class[i], OtherClass==x$OtherClass[i])$f.col[1]
-            if(is.na(xtmp)) {
-                xtmp <- nonSigCol
-            }
-            xtmp
-        })
-        x
-    })
     
 
     #add fractions

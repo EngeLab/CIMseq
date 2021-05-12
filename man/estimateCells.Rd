@@ -10,7 +10,7 @@
   multiplets,
   warning = TRUE,
   maxCellsPerMultiplet = Inf,
-  ...
+  multiplet.factor = NA
 )
 }
 \arguments{

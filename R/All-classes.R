@@ -250,7 +250,7 @@ setClass("CIMseqSwarm", representation(
   swarmPos = "list",
   singletIdx = "list",
   arguments = "tbl_df",
-  multiplet.factor=NA
+  multiplet.factor="numeric"
 ))
 
 #############
@@ -301,7 +301,7 @@ setMethod("c", c("CIMseqSwarm"), function(x, ...){
     convergence = lapply(objs, getData, "convergence") %>% do.call("c", .),
     stats = lapply(objs, getData, "stats") %>% do.call("bind_rows", .),
     singletIdx = si,
-    arguments = lapply(objs, getData, "arguments") %>% do.call("bind_rows", .)
+    arguments = lapply(objs, getData, "arguments") %>% do.call("bind_rows", .),
     multiplet.factor = mf
   )
 })
@@ -342,6 +342,44 @@ setMethod("filterSwarm", c("CIMseqSwarm"), function(x, subset){
       arguments = dplyr::filter(getData(x, "arguments"), s)
   )
 })
+
+
+################################################################################
+#                                                                              #
+#                            CIMseqConnections                                 #
+#                                                                              #
+################################################################################
+
+#' @rdname CIMseqConnections
+#' @export
+
+setClass("CIMseqConnections", representation(
+  conMatr = "matrix",
+  edgeStats = "data.frame",
+  edges = "tbl_df",
+  alpha = "numeric",
+  weightCut = "numeric",
+  expectedWeightCut = "numeric",
+  maxCellsPerMultiplet = "numeric",
+  depleted = "logical",
+  multiplet.factor = "numeric"
+))
+
+#############
+#           #
+# Accessors #
+#           #
+#############
+
+#' @rdname CIMseqConnections
+#' @export
+
+setMethod("getData", "CIMseqConnections", function(x, n = NULL){
+  if(class(n) == "character" & .hasSlot(x, n)){
+    slot(x, n)
+  }
+})
+
 
 ################################################################################
 #                                                                              #

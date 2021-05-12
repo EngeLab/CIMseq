@@ -10,7 +10,8 @@ calculateEdgeStats(
   multiplets,
   depleted = FALSE,
   maxCellsPerMultiplet = Inf,
-  groups = NULL
+  groups = NULL,
+  multiplet.factor = NA
 )
 }
 \arguments{

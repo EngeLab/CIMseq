@@ -13,7 +13,8 @@ getEdgesForMultiplet(swarm, ...)
   multiplets,
   multipletName = NULL,
   maxCellsPerMultiplet = Inf,
-  depleted = FALSE
+  depleted = FALSE,
+  multiplet.factor = NA
 )
 }
 \arguments{
@@ -46,4 +47,6 @@ CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test,
 }
 \author{
 Jason T. Serviss
+
+Martin Enge
 }

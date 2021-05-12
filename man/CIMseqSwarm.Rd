@@ -39,6 +39,7 @@ CIMseqSwarm(singlets, multiplets, ...)
   psoControl = list(),
   startSwarm = NULL,
   topK = NULL,
+  multiplet.factor = NA,
   ...
 )
 

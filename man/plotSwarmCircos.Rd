@@ -12,13 +12,18 @@ plotSwarmCircos(swarm, ...)
   singlets,
   multiplets,
   classOrder = NULL,
-  connectionClass = NULL,
   alpha = 0.05,
   weightCut = 0,
+  expectedWeightCut = 0,
   label.cex = 1,
   legend = TRUE,
-  pal = colorRampPalette(c("grey90", viridis::viridis(1)))(120)[20:110],
-  nonSigCol = "grey90",
+  pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
+  nonSigCol = "grey95",
+  h.ratio = 0.5,
+  maxCellsPerMultiplet = Inf,
+  depleted = FALSE,
+  drawFractions = T,
+  multiplet.factor = NA,
   ...
 )
 }
@@ -32,9 +37,6 @@ plotSwarmCircos(swarm, ...)
 \item{multiplets}{CIMseqMultiplets; A CIMseqMultiplets object.}
 
 \item{classOrder}{character; Order of the cell types / classes on the circos.}
-
-\item{connectionClass}{character; Vector of length 1 specifying the class /
-cell type to plot or NULL to plot all classes / cell types.}
 
 \item{alpha}{numeric; Vector of length 1 specifying the which p-values are 
 considered significant.}
@@ -52,6 +54,9 @@ colours.}
 
 \item{nonSigCol}{character; Vector of length 1 indicating the colours for 
 non-significant connections.}
+
+\item{connectionClass}{character; Vector of length 1 specifying the class /
+cell type to plot or NULL to plot all classes / cell types.}
 }
 \value{
 A ggplot object.
@@ -60,5 +65,5 @@ A ggplot object.
 plotSwarmCircos
 }
 \author{
-Jason T. Serviss
+EngeLab
 }

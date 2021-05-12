@@ -24,7 +24,13 @@ CIMseqMultiplets(counts, ...)
 
 \S4method{CIMseqMultiplets}{missing}(counts, ...)
 
-\S4method{CIMseqMultiplets}{matrix}(counts, counts.ercc, features, ...)
+\S4method{CIMseqMultiplets}{matrix}(
+  counts,
+  counts.ercc = matrix(nrow = 0, ncol = 0),
+  features,
+  norm.to = 1e+06,
+  ...
+)
 
 \S4method{initialize}{CIMseqMultiplets}(.Object, ..., counts, counts.log, counts.cpm, counts.ercc, features)
 
