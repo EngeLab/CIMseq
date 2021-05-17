@@ -1257,7 +1257,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
       filter(weightOk) %>%
       mutate(maxFrac=max(meanFrac)) %>%
       mutate(minFrac=min(meanFrac)) %>%
-      mutate(f.col = pal[(meanFrac-minFrac)/(maxFrac-minFrac)*(length(pal)-1)+1])
+      mutate(f.col = viridis(101)[(meanFrac-minFrac)/(maxFrac-minFrac)*(100)+1])
   
   class.list <- lapply(class.list, function(x) {
       x$f.col <- sapply(1:nrow(x), function(i) {

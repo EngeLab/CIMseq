@@ -118,7 +118,7 @@ setGeneric("plotConnectionCircos", function(
 
 setMethod("plotConnectionCircos", "CIMseqConnections", function(
   connections, classOrder = NULL, label.cex = 1, legend = TRUE, 
-  pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
+  pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[40:120],
   nonSigCol = "grey95", h.ratio=0.5, drawFractions=T, ...
   ) {
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
@@ -231,7 +231,7 @@ setMethod("plotConnectionCircos", "CIMseqConnections", function(
       filter(weightOk) %>%
       mutate(maxFrac=max(meanFrac)) %>%
       mutate(minFrac=min(meanFrac)) %>%
-      mutate(f.col = pal[-1][(meanFrac-minFrac)/(maxFrac-minFrac)*(length(pal)-2)+1])
+      mutate(f.col = viridis(101)[(meanFrac-minFrac)/(maxFrac-minFrac)*100+1])
   
   class.list <- lapply(class.list, function(x) {
       x$f.col <- sapply(1:nrow(x), function(i) {
