@@ -152,7 +152,7 @@ setMethod("plotConnectionCircos", "CIMseqConnections", function(
     nr = 1:length(classOrder),
     combined = paste0("(", nr, ") ", class),
     count = colSums(conMatr)[classOrder],
-    height = colSums(adj[rowSums(adj) > 1,])/max(colSums(adj[rowSums(adj) > 1,]))
+    height = colSums(adj[rowSums(adj) > 1,classOrder])/max(colSums(adj[rowSums(adj) > 1,]))
 #    height = colSums(conMatr)[classOrder]/max(colSums(conMatr))
   )
 
