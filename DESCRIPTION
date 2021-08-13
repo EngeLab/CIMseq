@@ -39,6 +39,7 @@ Imports:
     poolr (>= 0.8)
 Suggests: 
     knitr (>= 1.20),
+    markdown,
     rmarkdown (>= 1.9),
     testthat (>= 2.0.0),
     BiocStyle (>= 2.8.1),
@@ -49,7 +50,7 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: no
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Collate: 
     'CIMseq-package.R'
     'All-classes.R'

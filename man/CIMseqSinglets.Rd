@@ -36,10 +36,9 @@ CIMseqSinglets(counts, ...)
 \S4method{CIMseqSinglets}{matrix}(
   counts,
   counts.ercc = matrix(nrow = 0, ncol = 0),
-  dim.red,
   classification,
   norm.to = 1e+06,
-  ...
+  dim.red = matrix(nrow = 0, ncol = 0)
 )
 
 \S4method{initialize}{CIMseqSinglets}(
@@ -68,9 +67,9 @@ CIMseqSinglets(counts, ...)
 
 \item{counts.ercc}{matrix; A matrix containing ercc spike-in reads.}
 
-\item{dim.red}{matrix; Dimensionality reduced representation of the data.}
-
 \item{classification}{character; Sample classes.}
+
+\item{dim.red}{matrix; Dimensionality reduced representation of the data.}
 
 \item{.Object}{Internal object.}
 

@@ -111,7 +111,7 @@ plotUnsupervisedMarkers(
 ### Graph-based plots
 
 ```{r, fig.align="center", fig.width=10, fig.height=8}
-plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
+plotSwarmCircos(swarm=CIMseqSwarm_test, singlets=CIMseqSinglets_test, multiplets=CIMseqMultiplets_test, weightCut=10, maxCellsPerMultiplet=4, alpha=Inf, h.ratio=0.9, depleted=F)
 ```
 
 ### Non-graph-based plots
@@ -131,17 +131,9 @@ Heatmap.
 plotSwarmHeat(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test)
 ```
 
-```{r, fig.align="center", fig.width=10, fig.height=8}
-plotSwarmCircos(
-  CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test
-)
-```
 
 Get data to make a custom plot.
 ```{r}
-plotSwarmGraph(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %>%
-  plotData()
-
 plotSwarmEdgeBar(CIMseqSwarm_test, CIMseqSinglets_test, CIMseqMultiplets_test) %>%
   plotData() %>%
   head()

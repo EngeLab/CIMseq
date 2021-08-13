@@ -40,32 +40,39 @@ setMethod("plotCountsData", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   singlets, multiplets, markers = NULL, ...
 ){
   
-  s <- getData(singlets, "counts.log")
-  m <- getData(multiplets, "counts.log")
+    s <- getData(singlets, "counts.log")
+    m <- getData(multiplets, "counts.log")
   
-  processMarkers(cbind(s, m), markers) %>%
-  full_join(
-    estimateCells(singlets, multiplets),
-    by = c("Sample" = "sample")
-  ) %>%
-  mutate(sampleType = parse_factor(
-    .data$sampleType,
-    levels = c("Singlet", "Multiplet")
-  )) %>%
-  full_join(., tibble(
-    Sample = colnames(getData(singlets, "counts")),
-    Classification = getData(singlets, "classification")
-  ), by = "Sample") %>%
-  full_join(
-    ., matrix_to_tibble(getData(singlets, "dim.red"), "Sample"), by = "Sample"
-  ) %>%
-  rename(
-    `Estimated cell number` = .data$estimatedCellNumber,
-    `Sample type` = .data$sampleType,
-    `Fraction ERCC` = .data$frac.ercc,
-    `dim.red dim 1` = .data$V1,
-    `dim.red dim 2` = .data$V2
-  )
+    ret <- processMarkers(cbind(s, m), markers) %>%
+        full_join(
+            estimateCells(singlets, multiplets),
+            by = c("Sample" = "sample")
+        ) %>%
+        mutate(sampleType = parse_factor(
+                   .data$sampleType,
+                   levels = c("Singlet", "Multiplet")
+               )) %>%
+        full_join(., tibble(
+                         Sample = colnames(getData(singlets, "counts")),
+                         Classification = getData(singlets, "classification")
+                     ), by = "Sample") %>%
+        rename(
+            `Estimated cell number` = .data$estimatedCellNumber,
+            `Sample type` = .data$sampleType,
+            `Fraction ERCC` = .data$frac.ercc,
+            )
+
+    if(nrow(getData(singlets, "dim.red")) > 0) {
+        ret <- ret %>%
+            full_join(
+                ., matrix_to_tibble(getData(singlets, "dim.red"), "Sample"), by = "Sample"
+            ) %>%
+            rename(
+                `dim.red dim 1` = .data$V1,
+                `dim.red dim 2` = .data$V2
+            )
+    }
+    return(ret)
 })
 
 #' plotCountsERCC
@@ -110,7 +117,8 @@ setMethod("plotCountsERCC", c("CIMseqSinglets", "CIMseqMultiplets"), function(
       expand = c(0, 0),
       sec.axis = sec_axis(
         trans = ~ convertToERCC(., singlets, multiplets),
-        name = "% ERCC"
+        name = "% ERCC",
+        breaks=c(10, 3, 1.5, 0.9, 0.6,0.3, 0.2, 0.1, 0.06, 0.03, 0.01)
       )
     ) +
     theme_few()
@@ -198,12 +206,12 @@ setGeneric("plotUnsupervisedClass", function(
 #' @importFrom dplyr "%>%" filter
 #' @importFrom ggthemes theme_few
 
-#Note to self: This ideally would also work to some degree if users use their own
-# methods to perform DR and classification. POtentially it is sufficient in its
-# present form but this might need to be considered further...
 setMethod("plotUnsupervisedClass", "CIMseqSinglets", function(
   singlets, multiplets, ...
 ){
+  if(nrow(getData(singlets, 'dim.red')) == 0) {
+      stop("Singlet data is missing dim.red slot, which is needed for plotUnsupervisedClass")
+  }
   `Sample type` <- NULL
   plotCountsData(singlets, multiplets) %>%
     filter(`Sample type` == "Singlet") %>%
@@ -265,6 +273,9 @@ setMethod("plotUnsupervisedMarkers", c("CIMseqSinglets", "CIMseqMultiplets"), fu
   `Sample type` <- NULL
   if(is.null(markers)) {
     stop("At least one marker must be provided in the markers argument.")
+  }
+  if(nrow(getData(singlets, 'dim.red')) == 0) {
+      stop("Singlet data is missing dim.red slot, which is needed for plotUnsupervisedMarkers")
   }
   if(!all(markers %in% rownames(getData(singlets, "counts")))) {
     rn <- rownames(getData(singlets, "counts"))

@@ -65,30 +65,29 @@ setMethod("CIMseqSinglets", "missing", function(
     counts.log = .norm.log.counts,
     counts.cpm = .norm.counts,
     counts.ercc = matrix(nrow = 0, ncol = 0),
-    dim.red = matrix(nrow = 0, ncol = 0),
     classification = character(),
-    ...
+    norm.to=1E6,
+    dim.red = matrix(nrow = 0, ncol = 0)
   )
 })
 
 #' @rdname CIMseqSinglets
 #' @export
 
-setMethod("CIMseqSinglets", "matrix", function(
-  counts, counts.ercc=matrix(nrow=0, ncol=0), dim.red, classification, norm.to = 1E6, ...
-){
-  .inputCheckSinglets(counts, counts.ercc, dim.red, classification)
-  new(
-    "CIMseqSinglets",
-    counts = counts,
-    counts.log = .norm.log.counts,
-    counts.cpm = .norm.counts,
-    counts.ercc = counts.ercc,
-    dim.red = dim.red,
-    classification = classification,
-    norm.to = norm.to,
-    ...
-  )
+setMethod("CIMseqSinglets", "matrix", function(counts, counts.ercc=matrix(nrow=0, ncol=0),
+                                               classification, norm.to = 1E6, dim.red=matrix(nrow=0, ncol=0))
+{
+    .inputCheckSinglets(counts, counts.ercc, dim.red, classification)
+    new(
+        "CIMseqSinglets",
+        counts = counts,
+        counts.log = .norm.log.counts,
+        counts.cpm = .norm.counts,
+        counts.ercc = counts.ercc,
+        dim.red = dim.red,
+        classification = classification,
+        norm.to = norm.to
+        )
 })
 
 .inputCheckSinglets <- function(counts, counts.ercc, dim.red, classification) {
@@ -104,8 +103,8 @@ setMethod("CIMseqSinglets", "matrix", function(
   if(ncol(counts) != length(classification)) {
     message("length(classification) != ncol(counts)")
   }
-  if(nrow(dim.red) != ncol(counts)) {
-    message("nrow(dim.red) != ncol(counts)")
+  if(nrow(dim.red) != 0 & nrow(dim.red) != ncol(counts)) {
+      message("nrow(dim.red) != ncol(counts)")
   }
 }
 
@@ -181,20 +180,24 @@ setMethod("CIMseqMultiplets", "missing", function(
 setMethod("CIMseqMultiplets", "matrix", function(
   counts, counts.ercc=matrix(nrow=0, ncol=0), features, norm.to = 1E6, ...
 ){
-  .inputCheckMultiplets(counts, counts.ercc)
+  featInd <- features
+  if(is.character(features)) {
+      featInd <- match(features, rownames(counts))
+  }
+  .inputCheckMultiplets(counts, counts.ercc, featInd)
   new(
     "CIMseqMultiplets",
     counts = counts,
     counts.log = .norm.log.counts,
     counts.cpm = .norm.counts,
     counts.ercc = counts.ercc,
-    features = features,
+    features = featInd,
     norm.to = norm.to,
     ...
   )
 })
 
-.inputCheckMultiplets <- function(counts, counts.ercc) {
+.inputCheckMultiplets <- function(counts, counts.ercc, features) {
   if(!length(counts.ercc)) {
     message("No ERCC controls given, will use counts for size estimation")
   }
@@ -203,6 +206,9 @@ setMethod("CIMseqMultiplets", "matrix", function(
   }
   if(any(is.na(c(counts, counts.ercc)))) {
     message("is.na(c(counts, counts.ercc) returned TRUE")
+  }
+  if(any(is.na(features))) {
+      message("features contains non-existing genes or NA")
   }
 }
 

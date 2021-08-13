@@ -1006,14 +1006,9 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
 }
 
 .closestCircle2 <- function(from, to, max) {
-    mid <- as.integer(max/2)
-    adj <- mid-from
-    from <- (from+adj) %% max
-    to <- (to+adj) %% max
     pos <- to-from
-    pos[pos < 0] <- -mid-pos[pos < 0]
-    pos[pos > 0] <- mid-pos[pos > 0]
-    return(pos)
+    pos[pos < 0] <- pos[pos<0]+max
+    return(-pos)
 }
 
 .ns_legend2<- function(data, nonSigCol) {
@@ -1038,6 +1033,9 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
 }
 
 .obsexp_legend2 <- function(data, pal) {
+    if(nrow(data) == 0) {
+        return(0)
+    }
     p <- data %>%
         ggplot() + 
         geom_point(aes(pval, score, colour = score)) + 
@@ -1142,7 +1140,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, 
   alpha = 0.05, weightCut = 0, expectedWeightCut = 0, label.cex = 1, legend = TRUE, 
   pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
-  nonSigCol = "grey95", h.ratio=0.5, maxCellsPerMultiplet = Inf, depleted=FALSE, drawFractions=T, multiplet.factor=NA, ...
+  nonSigCol = "grey95", h.ratio=0.9, maxCellsPerMultiplet = Inf, depleted=FALSE, drawFractions=T, multiplet.factor=NA, ...
   ) {
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
   frac <- connectionID <- super <- connectionName <- position <- nr <- NULL
@@ -1152,7 +1150,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
       # Check that supplied classOrder is conformant
       if(!identical(sort(unique(getData(singlets, "classification"))), sort(classOrder))) stop("error, classOrder and singlet classification do not match!")
   } else {
-      classOrder <- unique(getData(singlets, "classification"))
+      classOrder <- sort(unique(getData(singlets, "classification")))
   }
     
     adj <- adjustFractions(singlets=singlets, multiplets=multiplets, swarm=swarm, binary=T, maxCellsPerMultiplet=maxCellsPerMultiplet)
@@ -1207,7 +1205,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
         my.tab <- c(unlist(ps2 %>% filter(from == my.class, weight > weightCut) %>% select(to)), unlist(ps2 %>% filter(to == my.class) %>% select(from)))
         size.table[my.class,2] <- sum(cooc[my.class, my.tab])
     }
-    size.table[,2][size.table[,2] < 0.1] <- 0.3
+    size.table[,2][size.table[,2] < 0.1] <- 0.3 # Min size is 0.3
     size.table <- as.matrix(size.table)
 
     
@@ -1272,22 +1270,33 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   
   
     #add legend
-    if(legend) {
+  filtered.data <- data %>% filter(significant) %>% filter(weight > weightCut)
+  if(legend & nrow(filtered.data)) {
                                         #layout
         op <- par(mar = par("mar")/2)
         layout(
             matrix(c(1, 2, 3, 5, 5, 5, 4, 4, 4), nrow = 3, byrow = TRUE), 
             widths = c(1, 1, 1, 1, 1), heights = c(1, 8, 2)
         )
-        
-    #create
-
-
         l1 <- .ns_legend2(data, nonSigCol)
-        l2 <- .obsexp_legend2(data %>% filter(significant) %>% filter(weight > weightCut), pal)
+        l2 <- .obsexp_legend2(filtered.data, pal)
         l3 <- .frac_legend2(data %>% filter(weight > weightCut))
         l4 <- .class_legend(colours)
-    }
+  } else {
+      if(legend) {
+          message(paste0('No significant edges at p=', alpha))
+                                        #layout without obsexp
+          op <- par(mar = par("mar")/2)
+          layout(
+              matrix(c(1, 2, 4, 4, 3, 3), nrow = 3, byrow = TRUE), 
+              widths = c(1, 1, 1, 1), heights = c(1, 8, 2)
+          )
+          l1 <- .ns_legend2(data, nonSigCol)
+          l3 <- .frac_legend2(data %>% filter(weight > weightCut))
+          l4 <- .class_legend(colours)
+      }
+  }
+        
     
                                         #base circos plot
     gap.degree <- 200.0/length(classOrder)
@@ -1303,8 +1312,8 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
       bg.border = NA, track.height = 0.08
     )
     rmin <- get.cell.meta.data("cell.bottom.radius", track.index = 1)
-    rmax <- get.cell.meta.data("cell.top.radius", track.index = 1)
-    for(cell in classOrder) {
+  rmax <- get.cell.meta.data("cell.top.radius", track.index = 1)
+  for(cell in classOrder) {
         draw.sector(get.cell.meta.data("cell.start.degree", sector.index = cell),
                     get.cell.meta.data("cell.end.degree", sector.index = cell),
                     rou1 = rmin+(rmax-rmin)*unlist(filter(colours, class==cell) %>% select(height)),
@@ -1317,9 +1326,10 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   #add labels
   for(i in 1:nrow(colours)) { #should be ordered by classOrder
     circos.text(
-      x = 5, y = 1.5, 
-      labels = as.character(pull(colours, nr)[i]), 
-      sector.index = pull(colours, class)[i], 1, col = "black",
+        x=get.cell.meta.data("xcenter", sector.index = colours$class[i]),
+        y = 1.5,
+      labels = i,
+      sector.index = colours$class[i], 1, col = "black",
       facing = "downward", cex = label.cex
     )
   }
@@ -1362,8 +1372,11 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
         circos.link(from.p, startp, to.p, endp, col=col,h.ratio=h.ratio)
     }
     
-    if(legend) par(op)
   
-    circos.clear()
+  
+  circos.clear()
+  # Reset plotting layout
+  if(legend)  par(op)
+  par(mfrow=c(1,1))
 })
 

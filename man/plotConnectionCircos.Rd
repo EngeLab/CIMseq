@@ -12,7 +12,7 @@ plotConnectionCircos(connections, ...)
   classOrder = NULL,
   label.cex = 1,
   legend = TRUE,
-  pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
+  pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[40:120],
   nonSigCol = "grey95",
   h.ratio = 0.5,
   drawFractions = T,

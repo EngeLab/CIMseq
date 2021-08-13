@@ -19,7 +19,7 @@ plotSwarmCircos(swarm, ...)
   legend = TRUE,
   pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
   nonSigCol = "grey95",
-  h.ratio = 0.5,
+  h.ratio = 0.9,
   maxCellsPerMultiplet = Inf,
   depleted = FALSE,
   drawFractions = T,

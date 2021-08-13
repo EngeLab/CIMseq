@@ -84,7 +84,6 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   #should probably double check that it works as expected via unit tests.
   
   #check for same genes in singlets counts and multiplets counts
-
     if(getData(singlets, "norm.to") != getData(multiplets, "norm.to")) {
         stop("norm.to mismatch: singlets and multiplets are not normalized to the same total counts")
     }
@@ -125,9 +124,15 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   classes <- getData(singlets, "classification")
 #  fractions <- rep(1.0 / length(unique(classes)), length(unique(classes)))
   fractions <- rep(NA, length(unique(classes)))
-   
+
+  # Create startSwarm if none given.
+    if(is.null(startSwarm)) {
+        num.classes <- length(unique(getData(singlets, "classification")))
+        startSwarm <- .createInitSwarm(num.classes, swarmsize, 1.0)
+    }
+
   #subset top genes for use with optimization
-  #sholud also check user input selectInd
+  #shold also check user input selectInd
   selectInd <- getData(multiplets, "features")
   
   mul <- matrix(
@@ -189,7 +194,7 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
                   control = control, startSwarm = startSwarm, ...
               )
           }
-      })
+      }, future.seed=TRUE)
   
   #process and return results
   cn <- sort(unique(classes))
@@ -206,14 +211,14 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   if(!is.null(topK)) {
       fractions <- topKfrac(fractions, topK)
   }
-        
   new(
     "CIMseqSwarm",
     fractions = fractions,
     costs = setNames(map_dbl(opt.out, 2), colnames(mul)),
     convergence = setNames(.processConvergence(opt.out), colnames(mul)),
     stats = if(report) {.processStats(opt.out, cn, rn)} else {tibble()},
-    swarmPos = if( psoControl[['return.swarm']] ) { map(opt.out, "swarm") } else { matrix() },
+                                        #    swarmPos = if( !is.null(psoControl[['return.swarm']]) & length(psoControl[['return.swarm']]) > 0 &  psoControl[['return.swarm']] ) { map(opt.out, "swarm") } else { matrix() },
+    swarmPos = if( is.null(psoControl[['return.swarm']])) { list() } else if(length(psoControl[['return.swarm']]) == 0) { list() } else if(psoControl[['return.swarm']] ) { map(opt.out, "swarm") } else { list() },
     singletIdx = map(singletIdx, as.integer),
     arguments = tibble(
       maxiter = maxiter, swarmsize = swarmsize,
@@ -232,6 +237,19 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   colnames(par) <- sort(cn)
   rownames(par) <- rn
   par
+}
+
+.createInitSwarm <- function(nFracts, swarmSize, null.weight = 1) {
+    dupcombs <- factorial(nFracts)/(factorial(2) * factorial(nFracts-2))
+    n.dups <- as.integer(swarmSize/dupcombs)
+    n.sngs <- as.integer((swarmSize-n.dups*dupcombs)/nFracts+1)
+    do.call("cbind",
+            c(lapply(1:n.dups, function(i) {
+                t(make.combs(nFracts, 2, null.weight))
+            }),
+            lapply(1:n.sngs, function(i) {
+                t(make.combs(nFracts, 1, null.weight))
+            })))[,1:swarmSize]
 }
 
 .processConvergence <- function(opt.out) {
@@ -736,7 +754,7 @@ calcResiduals <- function(
         fixNegInf() %>%
         multiply_by(-1) %>%
         matrix_to_tibble(drop = TRUE)
-  }) %>%
+  }, future.seed=TRUE) %>%
     reduce(., bind_cols) %>%
     set_names(colnames(multiplets)) %>%
     add_column(gene = rownames(multiplets), .before = 1) %>%
@@ -995,7 +1013,7 @@ setMethod(
     X = 1:to, FUN = function(i) {
       oneMultiplet <- ceiling(multiplets[, i])
       calculateCost(oneMultiplet, sngSubset, as.numeric(fractions[i, ]), nSynthMul)
-  })
+  }, future.seed=TRUE)
   names(opt.out) <- colnames(multiplets)
   opt.out
 })
@@ -1031,7 +1049,7 @@ psoptim1 <- function (par, fn, gr = NULL, ..., lower=-1, upper=1,
               s = NA, k = 3, p = NA, w = 1/(2*log(2)),
               c.p = .5+log(2), c.g = .5+log(2), d = NA,
               v.max = NA, rand.order = TRUE, max.restart=Inf,
-              maxit.stagnate = Inf, eps.stagnate = 1e-3,
+              maxit.stagnate = 4, eps.stagnate = 1,
               vectorize=FALSE, hybrid = FALSE, hybrid.control = NULL,
               trace.stats = FALSE, type = "SPSO2007", return.swarm = FALSE)
   nmsC <- names(con)

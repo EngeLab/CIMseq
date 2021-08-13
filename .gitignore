@@ -10,3 +10,5 @@ inst/doc
 .Rproj.user/**
 *.o
 *.so
+/doc/
+/Meta/
