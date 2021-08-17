@@ -194,7 +194,8 @@ argument and also filter results for a specific significance level with the
 
 ### spSwarm plot
 
-The resulting "connectome" can be plotted via the command below.
+The resulting "connectome" can be plotted via the command below. In this test data
+set there are no preferential interactions and no enrichment.
 
 ```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
 plotSwarmCircos(sObj, cObjSng, cObjMul, weightCut=10, maxCellsPerMultiplet=4, alpha=Inf, h.ratio=0.9, depleted=F)

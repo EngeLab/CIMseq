@@ -239,16 +239,26 @@ setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   par
 }
 
+.make.randStart <- function(nFracts, k, null.weight=1) {
+    comb <- combn(1:nFracts, k)
+    xdbl <- matrix(nrow=ncol(comb), ncol=nFracts, abs(rnorm(nFracts*ncol(comb), mean=0, sd=null.weight/nFracts)))
+    for(i in 1:nrow(xdbl)) {
+        xdbl[i,comb[,i]] <- 1
+    }
+    xdbl <- apply(xdbl, 1, function(x) {x/sum(x)})
+    xdbl
+}
+
 .createInitSwarm <- function(nFracts, swarmSize, null.weight = 1) {
     dupcombs <- factorial(nFracts)/(factorial(2) * factorial(nFracts-2))
     n.dups <- as.integer(swarmSize/dupcombs)
     n.sngs <- as.integer((swarmSize-n.dups*dupcombs)/nFracts+1)
     do.call("cbind",
             c(lapply(1:n.dups, function(i) {
-                t(make.combs(nFracts, 2, null.weight))
+                .make.randStart(nFracts, 2, null.weight)
             }),
             lapply(1:n.sngs, function(i) {
-                t(make.combs(nFracts, 1, null.weight))
+                .make.randStart(nFracts, 1, null.weight)
             })))[,1:swarmSize]
 }
 
