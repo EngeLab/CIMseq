@@ -1,0 +1,133 @@
+---
+title: "CIMseq-droplet Vignette"
+author: "Martin Enge"
+date: '`r Sys.Date()`'
+output:
+    html_document:
+        theme: flatly
+        toc: yes
+vignette: >
+    %\VignetteIndexEntry{CIMseq-droplet Vignette} 
+    %\usepackage[utf8]{inputenc}
+    %\SweaveUTF8
+    %\VignetteEngine{knitr::rmarkdown} 
+ditor_options: 
+  chunk_output_type: console
+---
+
+<style>
+    .col2 {
+        columns: 2 200px;         /* number of columns and width in pixels*/
+        -webkit-columns: 2 200px; /* chrome, safari */
+        -moz-columns: 2 200px;    /* firefox */
+    }
+</style>
+
+```{r style, echo = FALSE, results = 'asis', eval = TRUE}
+BiocStyle::markdown()
+packages <- c("CIMseq", "printr", "future", "dplyr")
+purrr::walk(packages, library, character.only = TRUE)
+rm(packages)
+```
+
+## Introduction
+
+In this vignette, we will analyze mRNA-seq data from a droplet-based platform
+(10x genomics 3'tag). The analysis follows the same basic steps as the
+plate-based version, and requires two droplet libraries analyzed separately containig singlets and multiplets:
+
+1. Creating the CIMseqSinglets object and CIMseqMultiplets objects for singlets 
+and multiplets. 
+2. Multuplet deconvolution via swarm optimization. 
+3. Detecting specific interactions by calculating fold enrichment significance
+
+The main difference is that droplet data does not contain spike-in mRNA, which
+means that we are lacking a way to reliably estimate absolute mRNA content of each cell. Instead, we have to estimate mRNA content using unique molecular identifier (UMI) counts. 
+
+## CIMseqSinglets and CIMseqMultiplets method
+
+Create the CIMseqSinglets counts object. The CIMseqSinglets command takes 4 arguments:
+
+1. matrix; The raw counts data with gene IDs as rownames and sample IDs as 
+colnames. 
+2. matrix; The ERCC spike-in counts data with gene IDs as rownames and sample 
+IDs as colnames.
+3. character; A class for each of the individual singlets.
+
+We will use a dataset from cells taken from murine small intestine (SI). First, we initialize the CIMseqSinglets and CIMseqMultiplets objects using UMI count matrices. 
+
+```{r}
+SmallIntest.singlets.counts[1:2, 1:2] #example
+dim(SmallIntest.singlets.counts) #genes and sample numbers
+dim(SmallIntest.multiplets.counts) #genes and sample numbers
+class(SmallIntest.singlets.counts) #should be a matrix
+```
+
+We next want to perform feature selection and classification for the singlets.
+For the testData we have already pre-calculated this information. Once we have
+performed these calculations, we can build the CIMseqSinglets and
+CIMseqMultiplets objects that will be input into the deconvolution method.
+When using droplet data, we do not use spike-in control mRNA, that slot of the
+objects is simply not filled.
+
+It is important to set the normalization factor (norm.to parameter) correctly.
+This parameter should be approximately similar to the average tag count per
+cell, and has to be identical for singlet and multiplet datasets. For 10x
+genomics 3' RNA data, we have found that using a normalization factor of 10000
+to work well.
+ 
+
+```{r, eval=TRUE}
+#build CIMseq objects
+cObjSng.si <- CIMseqSinglets(counts=SmallIntest.singlets.counts, classification=SmallIntest.singlets.classes, norm.to=10000)
+cObjMul.si <- CIMseqMultiplets(counts=SmallIntest.multiplets.counts, features=SmallIntest.marker.genes, norm.to=10000)
+```
+
+## Swarm method
+
+The deconvolution of the multuplets take place in this stage. This is a large dataset and will take several hours to run on a modern desktop computer.
+The CIMseqSinglets and CIMseqMultiplets objects must be provided as arguments.
+In addition, there are multiple parameters that may be tuned depending on the
+complexity of the dataset and the available CPU time. For a production run, we suggest increasing swarmsize to at least 200 and nSyntheticMultiplets to 2000.
+See `help(CIMseqSwarm)`. Parallelization is provided via the 'future' R package.
+
+```{r, eval = FALSE}
+# For single-threaded, use "plan(sequential)" instead
+plan(multicore)
+options(future.globals.maxSize= 1000000000)
+sObj.si <- CIMseqSwarm(cObjSng.si, cObjMul.si, maxiter=100, swarmsize=110, nSyntheticMultiplets=200, seed=123)
+```
+
+### spSwarm results
+
+We can exmaine the resulting connections with the `calculateEdgeStats` command:
+
+```{r, eval = TRUE}
+si.edges <- calculateEdgeStats(sObj.si, cObjSng.si, cObjMul.si, multiplet.factor=2, maxCellsPerMultiplet=2)
+si.edges %>% filter(pval < 1e-4 & weight > 10) %>% arrange(desc(score)) %>% head(n=10)
+```
+
+This reports all of the detected edges. The edge.cutoff argument specifies the 
+fraction above which an edge is considered to be valid. We can specify the 
+number of edges a connection must have to be reported with the *min.num.edges* 
+argument and also filter results for a specific significance level with the 
+*min.pval* argument.
+
+### spSwarm plot
+
+The resulting "connectome" can be plotted via the command below.
+
+```{r, echo = FALSE}
+classOrder <- c("Paneth", "Stem", "Transit amplifying", "Progenitor early", "Progenitor late-1", "Progenitor late-2", "Enterocyte", "Goblet", "Enteroendocrine", "Tuft")
+```
+
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+plotSwarmCircos(sObj.si, cObjSng.si, cObjMul.si, weightCut=10,
+			 maxCellsPerMultiplet=2, alpha=1E-4, h.ratio=0.95,
+			 depleted=F, multiplet.factor=2, classOrder=classOrder)
+```
+
+```{r}
+sessionInfo()
+```
+

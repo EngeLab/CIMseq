@@ -185,6 +185,7 @@ setMethod("CIMseqMultiplets", "matrix", function(
       featInd <- match(features, rownames(counts))
   }
   .inputCheckMultiplets(counts, counts.ercc, featInd)
+  featInd <- featInd[!is.na(featInd)]
   new(
     "CIMseqMultiplets",
     counts = counts,
@@ -208,7 +209,7 @@ setMethod("CIMseqMultiplets", "matrix", function(
     message("is.na(c(counts, counts.ercc) returned TRUE")
   }
   if(any(is.na(features))) {
-      message("features contains non-existing genes or NA")
+      message(paste0("features contains ", sum(is.na(features)), " non-existing genes or NA. After removing them ", sum(!is.na(features)), " features remain."))
   }
 }
 
@@ -254,7 +255,7 @@ setGeneric("estimateCells", function(
 #' @export
 
 setMethod("estimateCells", "CIMseqSinglets", function(
-                                                      singlets, multiplets, warning = TRUE, maxCellsPerMultiplet = Inf, multiplet.factor=NA) {
+                                                      singlets, multiplets, warning = TRUE, maxCellsPerMultiplet = Inf, multiplet.factor=NULL) {
   frac.ercc <- NULL
   counts <- cbind(
     getData(singlets, "counts"), 
@@ -265,6 +266,7 @@ setMethod("estimateCells", "CIMseqSinglets", function(
     getData(multiplets, "counts.ercc")
   )
   if(length(counts.ercc)) {
+      if(!is.null(multiplet.factor)) warning(paste("Spike-in RNA found, multiplet.factor will not be used even though it was defined as: ", multiplet.factor))
       n.sng <- ncol(getData(singlets, "counts"))
       n.mul <- ncol(getData(multiplets, "counts"))
   
@@ -281,33 +283,37 @@ setMethod("estimateCells", "CIMseqSinglets", function(
       ) )
   } else {
       # No ERCC controls, use mRNA counts directly instead
-  n.sng <- ncol(getData(singlets, "counts"))
-  n.mul <- ncol(getData(multiplets, "counts"))
+      if(is.null(multiplet.factor)) {
+          stop("Need to supply multiplet.factor (average number of cells per multiplet), or NA to calculate it from data (not recommended)")
+      }
+      n.sng <- ncol(getData(singlets, "counts"))
+      n.mul <- ncol(getData(multiplets, "counts"))
 
-  fe.sng <- colSums(counts)[1:n.sng]
-  fe.mul <- colSums(counts)[-1:-n.sng]
-  calcFrac <- function(x, fe.sng, fe.mul) {
-      fe.mul <- fe.mul*x
-      ecn.sng <- round(fe.sng / median(fe.sng))
-      ecn.mul <- round(fe.mul / median(fe.sng))
-      frac.sng <- sum(ecn.sng==0)/sum(ecn.sng == 1)
-      frac.mul <- sum(ecn.mul==0)/(sum(ecn.mul==1))*(1+frac.sng*sum(ecn.mul==1)/sum(ecn.mul == 2))
-      log(frac.sng/frac.mul)
-  }
-  if(is.na(multiplet.factor)) {
-      m.factors <- seq(0.05, 5, by=0.05)
-      m.scores <- sapply(m.factors, calcFrac, fe.sng=fe.sng, fe.mul=fe.mul)
-      multiplet.factor <- m.factors[which.min(abs(m.scores))] # Pick the lowest score. min(abs) works since m.scores is logged
-  }
-  fe <- c(fe.sng, fe.mul*multiplet.factor)
-  ecn <- fe / median(fe.sng)
-  ecn[ecn > maxCellsPerMultiplet] <- maxCellsPerMultiplet
-  
-  return( tibble(
-    sample = colnames(counts),
-    sampleType = c(rep("Singlet", n.sng), rep("Multiplet", n.mul)),
-    estimatedCellNumber = ecn
-  ) )
+      fe.sng <- colSums(counts)[1:n.sng]
+      fe.mul <- colSums(counts)[-1:-n.sng]
+      calcFrac <- function(x, fe.sng, fe.mul) {
+          fe.mul <- fe.mul*x
+          ecn.sng <- round(fe.sng / median(fe.sng))
+          ecn.mul <- round(fe.mul / median(fe.sng))
+          frac.sng <- sum(ecn.sng==0)/sum(ecn.sng == 1)
+          frac.mul <- sum(ecn.mul==0)/(sum(ecn.mul==1))*(1+frac.sng*sum(ecn.mul==1)/sum(ecn.mul == 2))
+          log(frac.sng/frac.mul)
+      }
+      if(is.na(multiplet.factor)) {
+          m.factors <- seq(0.05, 5, by=0.05)
+          m.scores <- sapply(m.factors, calcFrac, fe.sng=fe.sng, fe.mul=fe.mul)
+          multiplet.factor <- m.factors[which.min(abs(m.scores))] # Pick the lowest score. min(abs) works since m.scores is logged
+          warning(paste("Calculating multiplet factor from data, calculated factor is:", multiplet.factor))
+      }
+      fe <- c(fe.sng, fe.mul*multiplet.factor)
+      ecn <- fe / median(fe.sng)
+      ecn[ecn > maxCellsPerMultiplet] <- maxCellsPerMultiplet
+      
+      return( tibble(
+          sample = colnames(counts),
+          sampleType = c(rep("Singlet", n.sng), rep("Multiplet", n.mul)),
+          estimatedCellNumber = ecn
+      ) )
   }
 })
   

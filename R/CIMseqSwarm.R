@@ -73,7 +73,7 @@ setGeneric("CIMseqSwarm", function(
 
 setMethod("CIMseqSwarm", c("CIMseqSinglets", "CIMseqMultiplets"), function(
   singlets, multiplets, useMuSiC = FALSE,
-  maxiter = 10, swarmsize = 150, nSyntheticMultiplets = 200, seed = 11, 
+  maxiter = 100, swarmsize = 200, nSyntheticMultiplets = 2000, seed = 11, 
   norm = TRUE, report = FALSE, reportRate = NA, vectorize = FALSE,
   permute = FALSE, singletIdx = NULL, cacheScores=FALSE, psoControl=list(),
   startSwarm = NULL, topK=NULL, multiplet.factor=NA, ...
@@ -511,7 +511,7 @@ NULL
 #' @export
 
 adjustFractions <- function(
-  singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=Inf,  multiplet.factor=NA, constantCellNumber=NA
+  singlets, multiplets, swarm, binary = TRUE, maxCellsPerMultiplet=Inf,  multiplet.factor=NULL, constantCellNumber=NA
 ){
   medianCellNumber <- sampleType <- estimatedCellNumber <- NULL
   if(!is.matrix(swarm)) {
@@ -525,7 +525,7 @@ adjustFractions <- function(
   }
   
   #calculate median cell number per singlet class
-  cnc <- cellNumberPerClass(singlets, multiplets) %>%
+  cnc <- cellNumberPerClass(singlets, multiplets, maxCellsPerMultiplet, multiplet.factor) %>%
     {setNames(pull(., medianCellNumber), pull(., class))}
   
   cnc <- cnc[match(colnames(fractions), names(cnc))]
@@ -533,7 +533,7 @@ adjustFractions <- function(
   
   #calculate cell number per multiplet
   mf <- multiplet.factor
-  if(is.na(mf)) mf <- getData(swarm, "multiplet.factor")
+  if(is.null(mf)) mf <- getData(swarm, "multiplet.factor")
   cnm <- estimateCells(singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, multiplet.factor=mf) %>%
     filter(sampleType == "Multiplet") %>%
     {setNames(pull(., estimatedCellNumber), pull(., sample))}
@@ -581,7 +581,7 @@ NULL
 #' @export
 
 calculateEdgeStats <- function(
-  swarm, singlets, multiplets, depleted=FALSE, maxCellsPerMultiplet=Inf, groups=NULL, multiplet.factor=NA) {
+  swarm, singlets, multiplets, depleted=FALSE, maxCellsPerMultiplet=Inf, groups=NULL, multiplet.factor=NULL) {
   mat <- adjustFractions(singlets=singlets, multiplets=multiplets, swarm=swarm, binary = TRUE, maxCellsPerMultiplet=maxCellsPerMultiplet, multiplet.factor=multiplet.factor)
 
   #calcluate weight
@@ -818,11 +818,11 @@ setGeneric("getMultipletsForEdge", function(
 #' @export
 
 setMethod("getMultipletsForEdge", "CIMseqSwarm", function(
-  swarm, singlets, multiplets, edges, maxCellsPerMultiplet=Inf
+  swarm, singlets, multiplets, edges, maxCellsPerMultiplet=Inf, multiplet.factor=NULL
 ){
   
   edges <- mutate_if(edges, is.factor, as.character)
-  fractions <- adjustFractions(singlets, multiplets, swarm, maxCellsPerMultiplet=maxCellsPerMultiplet)
+  fractions <- adjustFractions(singlets, multiplets, swarm, maxCellsPerMultiplet=maxCellsPerMultiplet, multiplet.factor=multiplet.factor)
   
   map_dfr(1:nrow(edges), function(i) {
     e <- as.character(edges[i, ])

@@ -251,7 +251,7 @@ NULL
 #' @importFrom readr parse_factor
 #' @importFrom tidyr unite gather
 
-longFormConnections <- function(swarm, singlets, multiplets, maxCellsPerMultiplet=Inf, depleted=FALSE, multiplet.factor=NA) {
+longFormConnections <- function(swarm, singlets, multiplets, maxCellsPerMultiplet=Inf, depleted=FALSE, multiplet.factor=NULL) {
   from <- to <- tmp <- connectionID <- super <- direction <- connectionName <- NULL
   fractions <- getData(swarm, "fractions")
   getEdgesForMultiplet(swarm, singlets, multiplets, rownames(fractions), maxCellsPerMultiplet=maxCellsPerMultiplet, depleted=depleted, multiplet.factor=multiplet.factor) %>%

@@ -264,10 +264,10 @@ NULL
 #' @export
 
 cellNumberPerClass <- function(
-  singlets, multiplets
+  singlets, multiplets, maxCellsPerMultiplet, multiplet.factor=NULL
 ){
   estimatedCellNumber <- NULL
-  estimateCells(singlets, multiplets) %>%
+  estimateCells(singlets, multiplets, maxCellsPerMultiplet=maxCellsPerMultiplet, multiplet.factor=multiplet.factor) %>%
     right_join(tibble(
       class = getData(singlets, "classification"),
       sample = colnames(getData(singlets, "counts"))

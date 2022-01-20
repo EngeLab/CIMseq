@@ -830,7 +830,7 @@ setMethod("plotSwarmCircos2", "CIMseqSwarm", function(
   alpha = 0.05, weightCut = 0, expectedWeightCut = 0, label.cex = 1, legend = TRUE, 
   pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
   nonSigCol = "grey95", h.ratio=0.5, maxCellsPerMultiplet = Inf, depleted=FALSE,
-  groups=NULL, multiplet.factor=NA, ...
+  groups=NULL, multiplet.factor=NULL, ...
 ){
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
   frac <- connectionID <- super <- connectionName <- position <- nr <- NULL
@@ -1140,7 +1140,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
   swarm, singlets, multiplets, classOrder = NULL, 
   alpha = 0.05, weightCut = 0, expectedWeightCut = 0, label.cex = 1, legend = TRUE, 
   pal = colorRampPalette(c("grey95", viridis::viridis(1)))(120)[30:120],
-  nonSigCol = "grey95", h.ratio=0.9, maxCellsPerMultiplet = Inf, depleted=FALSE, drawFractions=T, multiplet.factor=NA, ...
+  nonSigCol = "grey95", h.ratio=0.9, maxCellsPerMultiplet = Inf, depleted=FALSE, drawFractions=T, multiplet.factor=NULL, ...
   ) {
   pval <- weight <- significant <- score <- idx <- p.col <- from <- to <- NULL
   frac <- connectionID <- super <- connectionName <- position <- nr <- NULL
@@ -1153,7 +1153,7 @@ setMethod("plotSwarmCircos", "CIMseqSwarm", function(
       classOrder <- sort(unique(getData(singlets, "classification")))
   }
     
-    adj <- adjustFractions(singlets=singlets, multiplets=multiplets, swarm=swarm, binary=T, maxCellsPerMultiplet=maxCellsPerMultiplet)
+    adj <- adjustFractions(singlets=singlets, multiplets=multiplets, swarm=swarm, binary=T, maxCellsPerMultiplet=maxCellsPerMultiplet, multiplet.factor=multiplet.factor)
     cooc <- matrix(0,nrow=length(classOrder), ncol=length(classOrder), dimnames=list(classOrder, classOrder))
     for(c1 in classOrder) {
         for(c2 in classOrder) {

@@ -162,8 +162,12 @@ plotCountsMarkers(cObjSng, cObjMul, markers = c("CD74", "ANXA3"))
 
 The deconvolution of the multuplets take place in this stage. The CIMseqSinglets
 and CIMseqMultiplets objects must be provided as arguments. In addition, there 
-are multiple parameters that may be tuned. See `help(CIMseqSwarm)`. Parallelization
-is provided via the 'future' R package. 
+are multiple parameters that may be tuned. To keep processing time low, we use
+very low values for 'swarmsize', 'nSyntheticMultiplets' and 'maxiter' in this
+simple example. For a real dataset, we recommend using not going below the default
+parameters (swarmsize=200, nSyntheticMultiplets=2000 and maxiter=100). For complex
+datasets, we suggest increasing swarmsize further. See `help(CIMseqSwarm)` for
+further information. Parallelization is provided via the 'future' R package. 
 
 ```{r, eval = FALSE}
 # For single-threaded, use "plan(sequential)" instead
