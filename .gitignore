@@ -1,5 +1,4 @@
 Meta
-doc
 inst/doc
 .Rproj
 *.history
@@ -10,5 +9,4 @@ inst/doc
 .Rproj.user/**
 *.o
 *.so
-/doc/
 /Meta/

@@ -1,0 +1,227 @@
+---
+title: "CIMseq Vignette"
+author: "Jason T. Serviss, Nathanael Andrews, and Martin Enge"
+date: '`r Sys.Date()`'
+output:
+    html_document:
+        theme: flatly
+        toc: yes
+vignette: >
+    %\VignetteIndexEntry{CIMseq Vignette} 
+    %\usepackage[utf8]{inputenc}
+    %\SweaveUTF8
+    %\VignetteEngine{knitr::rmarkdown} 
+editor_options: 
+  chunk_output_type: console
+---
+
+<style>
+    .col2 {
+        columns: 2 200px;         /* number of columns and width in pixels*/
+        -webkit-columns: 2 200px; /* chrome, safari */
+        -moz-columns: 2 200px;    /* firefox */
+    }
+</style>
+
+```{r style, echo = FALSE, results = 'asis', eval = TRUE}
+BiocStyle::markdown()
+packages <- c("CIMseq", "printr", "future")
+purrr::walk(packages, library, character.only = TRUE)
+rm(packages)
+```
+
+## Introduction
+
+CIMseq works in 3 stages:
+
+1. Creating the CIMseqSinglets object and CIMseqMultiplets objects for singlets 
+and multiplets. 
+   * Counts and ercc counts are input and stored. As well, counts per 
+   million (cpm) and log2 cpm are calculated.
+   * The CIMseqSinglets object also holds a dimensionality reduced 
+   representation of the data (used for plotting) and the classification 
+   information.
+   * The CIMseqMultiplets object also holds information concerning which 
+   features to select during deconvolution.  
+
+2. Multuplet deconvolution via swarm optimization. 
+   * Here we utilize swarm optimization to deconvolute the multuplets and, thus,
+   provide an overview of the tissue "connectome".
+
+3. Detecting specific interactions by calculating fold enrichment significance
+        
+## CIMseqSinglets and CIMseqMultiplets method
+
+Make CIMseqSinglets counts object. The CIMseqSinglets command takes 4 arguments:
+
+1. matrix; The raw counts data with gene IDs as rownames and sample IDs as 
+colnames. 
+2. matrix; The ERCC spike-in counts data with gene IDs as rownames and sample 
+IDs as colnames.
+3. matrix; The dimensionality reduced representation of the data.
+4. character; A class for each of the individual singlets.
+
+We use a simple test dataset, included in the package, to initialize the 
+CIMseqSinglets and CIMseqMultiplets objects. It contains a matrix of single-cells (counts.sng) that 
+comprise 3 cell types, 79 in total, and a matrix of 83 multiplets (counts.mul). These multiplets were 
+FACS sorted before sequencing such that their composition is known and we expect
+to detect exactly one connection between each of the cell types in the dataset.
+
+```{r}
+counts.sng[1:2, 1:2] #example
+dim(counts.sng) #genes and sample numbers
+dim(counts.mul) #genes and sample numbers
+class(counts.sng) #should be a matrix
+```
+
+We first extract the ERCC reads. In the test data, ERCC reads can be identified with the regular 
+expression "^ERCC\\-[0-9]*$".
+
+```{r, eval = TRUE}
+ercc.s <- grepl("^ERCC\\-[0-9]*$", rownames(counts.sng))
+singlets <- counts.sng[!ercc.s, ]
+singletERCC <- counts.sng[ercc.s, ]
+ercc.m <- grepl("^ERCC\\-[0-9]*$", rownames(counts.mul))
+multiplets <- counts.mul[!ercc.m, ]
+multipletERCC <- counts.mul[ercc.m, ]
+```
+
+We next want to perform feature selection, dimensionality reduction, and 
+classification for the singlets. For the testData we have already pre-calculated 
+this information. Once we have performed these calculations, we can build the 
+CIMseqSinglets and CIMseqMultiplets objects that will be input into the 
+deconvolution method.
+
+```{r, eval=TRUE}
+#extract pre-calculated data
+dim.red <- getData(CIMseqSinglets_test, "dim.red")
+classes <- getData(CIMseqSinglets_test, "classification")
+selected <- getData(CIMseqMultiplets_test, "features")
+
+#build CIMseq objects
+cObjSng <- CIMseqSinglets(counts=singlets, counts.ercc=singletERCC, classification=classes, dim.red=dim.red)
+cObjMul <- CIMseqMultiplets(counts=multiplets, counts.ercc=multipletERCC, features=selected)
+```
+
+The CIMseqSinglets object contains:  
+1. The raw counts data input by the user.  
+2. A function to calculate log normalized counts per million on the fly.  
+3. A function to calculate counts per million on the fly.  
+4. The counts.ercc input by the user (if these are not available they can be 
+substituted using matrix())  
+5. An optional dimensionality reduced representation of the data for visualization.
+6. The classification for each single cell.  
+
+The CIMseqMultiplets object contains:  
+1. The raw counts data input by the user.  
+2. A function to calculate log normalized counts per million on the fly.
+3. A function to calculate counts per million on the fly.
+4. The counts.ercc input by the user (if these are not available they can be 
+substituted using matrix())
+5. The index of selected genes to use in the deconvolution.
+
+### Accessors
+
+Individual slots within the CIMseq objects can be accessed with the "getData" 
+function. Note that all other CIMseq object slots can be accessed in the same 
+way. See below:
+
+```{r, eval = TRUE}
+counts <- getData(cObjSng, "counts")
+```
+
+## Setters
+
+It is also possible to initiate a empty object and set slots or exchance data
+in the slots in the following manner:
+
+```{r}
+empty <- CIMseqSinglets()
+getData(empty, "counts") <- getData(cObjSng, "counts")
+```
+
+### ERCC fraction plot
+
+The fractions of ERCC spike-ins and the number of approximated cells can be 
+viewed in a plot using the plotCountsERCC function.
+
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+plotCountsERCC(cObjSng, cObjMul)
+```
+
+### Markers plot
+
+Sometimes it may be desireable to view the expression of 2 marker genes in the 
+counts data. This can be accomplished with the plotCountsMarkers function.
+
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+plotCountsMarkers(cObjSng, cObjMul, markers = c("CD74", "ANXA3"))
+```
+
+## Swarm method
+
+The deconvolution of the multuplets take place in this stage. The CIMseqSinglets
+and CIMseqMultiplets objects must be provided as arguments. In addition, there 
+are multiple parameters that may be tuned. To keep processing time low, we use
+very low values for 'swarmsize', 'nSyntheticMultiplets' and 'maxiter' in this
+simple example. For a real dataset, we recommend using not going below the default
+parameters (swarmsize=200, nSyntheticMultiplets=2000 and maxiter=100). For complex
+datasets, we suggest increasing swarmsize further. See `help(CIMseqSwarm)` for
+further information. Parallelization is provided via the 'future' R package. 
+
+```{r, eval = FALSE}
+# For single-threaded, use "plan(sequential)" instead
+plan(multicore)
+sObj <- CIMseqSwarm(
+  cObjSng, cObjMul, swarmsize = 50, 
+  nSyntheticMultiplets = 200, maxiter = 10, seed=123
+)
+```
+
+```{r, echo = FALSE}
+sObj <- CIMseqSwarm_test
+```
+
+### spSwarm results
+
+We can exmaine the resulting connections with the `calculateEdgeStats` command:
+
+```{r, eval = TRUE}
+calculateEdgeStats(sObj, cObjSng, cObjMul)
+```
+
+This reports all of the detected edges. The edge.cutoff argument specifies the 
+fraction above which an edge is considered to be valid. We can specify the 
+number of edges a connection must have to be reported with the *min.num.edges* 
+argument and also filter results for a specific significance level with the 
+*min.pval* argument.
+
+### spSwarm plot
+
+The resulting "connectome" can be plotted via the command below. In this test data
+set there are no preferential interactions and no enrichment.
+
+```{r, fig.align='center', fig.height=8, fig.width=10, eval=TRUE, message=FALSE}
+plotSwarmCircos(sObj, cObjSng, cObjMul, weightCut=10, maxCellsPerMultiplet=4, alpha=Inf, h.ratio=0.9, depleted=F)
+```
+
+### Evaluate results
+
+For this test data set, we know the true composition of each multiplet which means that
+we can measure the performance of the deconvolution. The function "adjustFractions" is
+used to obtain deconvoluted multiplet compositions, which we can then compare to the known
+multiplet compositions.
+
+```{r, eval = TRUE}
+mult.pred <- adjustFractions(singlets=cObjSng, multiplets=cObjMul, swarm=sObj, binary=T, maxCellsPerMultiplet=4)
+mult.truth <- as.matrix(annot[rownames(mult.pred), c('A375', 'HCT116', 'HOS')])
+pred.table <- mult.pred == as.logical(mult.truth)
+mean(pred.table)
+
+barplot(100 * (1-sapply(split(pred.table, rowSums(mult.truth)), mean)), ylab='% Error', xlab='Multiplet complexity', main='Deconvolution error rates')
+```
+
+```{r}
+sessionInfo()
+```
+
